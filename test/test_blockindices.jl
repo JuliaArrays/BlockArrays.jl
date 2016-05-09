@@ -1,4 +1,4 @@
-import BlockArrays.BlockIndices
+import BlockArrays: BlockSizes, BlockIndex, globalrange, nblocks, global2blockindex, blockindex2global
 
 #=
 [1,1  1,2] | [1,3  1,4  1,5]
@@ -11,20 +11,17 @@ import BlockArrays.BlockIndices
 [6,1  6,2] | [6,3  6,4  6,5]
 =#
 
-bi = BlockIndices((1, 2, 3), (2, 3))
+block_size = BlockSizes([1,2,3], [2, 3])
 
-@test nblocks(bi) = 6
-@test nblocks(bi, 3) = 2
-@test nblocks(bi, 2) = 2
+@test nblocks(block_size) == (3,2)
+@test nblocks(block_size, 1) == 3
+@test nblocks(block_size, 2) == 2
 
-@test block_and_index(bi, (1,1)) == ([1,1], [1,1])
-@test block_and_index(bi, (1,4)) == ([1,2], [1,2])
-@test block_and_index(bi, (2,2)) == ([2,1], [1,2])
-@test block_and_index(bi, (5,2)) == ([3,1], [2,2])
-@test block_and_index(bi, (6,5)) == ([3,2], [3,3])
+@test globalrange(block_size, 1,1) == (1:1, 1:2)
+@test globalrange(block_size, 1,2) == (1:1, 3:5)
+@test globalrange(block_size, 2,1) == (2:3, 1:2)
+@test globalrange(block_size, 2,2) == (2:3, 3:5)
 
-@test global_index(bi, (2,2), (2,2)) == [3,4]
-@test global_index(bi, (1,1), (1,1)) == [1,1]
-@test global_index(bi, (3,2), (3,3)) == [6,5]
-@test global_index(bi, (3,1), (1,2)) == [4,2]
-@test global_index(bi, (3,2), (2,2)) == [5,4]
+@test global2blockindex(block_size, 3, 1) == BlockIndex((2,1), (2,1))
+@test global2blockindex(block_size, 1, 4) == BlockIndex((1,2), (1,2))
+@test global2blockindex(block_size, 4, 5) == BlockIndex((3,2), (1,3))

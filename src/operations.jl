@@ -12,18 +12,12 @@ const UNARY_FUNCS = (:-, :~, :conj, :abs,
                   :log, :log2, :log10, :log1p, :exponent, :exp,
                   :exp2, :expm1, :cbrt, :sqrt, :erf,
                   :erfc, :erfcx, :erfi, :dawson, :ceil, :floor,
-                  :trunc, :round, :significand, :lgamma,
-                  :gamma, :lfact, :airy, :airyai,
-                  :airyprime, :airyaiprime, :airybi, :airybiprime,
-                  :besselj0, :besselj1, :bessely0, :bessely1,
-                  :eta, :zeta, :digamma)
+                  :trunc, :round, :significand)
 
 const BINARY_FUNCS  = (:.+, :.-,:.*, :./, :.\, :.^,
                     :+, :-,
                    :min, :max,
-                   :div, :fld, :rem, :mod, :mod1,
-                   :atan2, :besselj, :bessely, :hankelh1, :hankelh2,
-                   :besseli, :besselk, :beta, :lbeta)
+                   :div, :mod)
 
 const BOOLEAN_BINARY_FUNCS = (:.==, :.!=, :.<, :.<=, :.>, :.>=)
 
@@ -90,9 +84,9 @@ end
 # Unary functions #
 ###################
 
-macro blockwise_unary(func)
+macro blockwise_unary(func, Tres)
     esc(quote
-        block_array_new = similar(block_arr)
+        block_array_new = similar(block_array, $Tres)
         @inbounds for I in eachindex(block_array.blocks)
             block_array_new.blocks[I] = $func(block_array.blocks[I])
         end
@@ -103,7 +97,7 @@ end
 
 for f in UNARY_FUNCS
     @eval begin
-        Base.$f(block_array::BlockArray) = @blockwise_unary($f)
+        Base.$f{T}(block_array::BlockArray{T}) = @blockwise_unary($f, typeof($f(one(T))))
     end
 end
 
