@@ -4,15 +4,14 @@
 
 **Note:** Currently, a quite new build of julia master is needed to use this package.
 
-A block array is a partition of an array into blocks or subarrays, see [wikipedia](https://en.wikipedia.org/wiki/Block_matrix) for a good description. This package introduces the abstract type `AbstractBlockArray` for arrays that exhibit this block structure. Currently, two concrete types are implemented that have very similar API but differs in how the blocks are stored in memory. The type `BlockArray` stores each block contiguously while the type `PseudoBlockArray` stores the full matrix contiguously. Which one to use depends on the use case, `BlockArray` supports fast non copying extraction and insertion of blocks while `PseudoBlockArray` supports directly using the underlying full matrix in a linear solver for example. Both these type follow the `AbstractArray` interface and should work in arbitrary dimensions for arbitrary block types, as long as the block type itself satisfies the `AbstractArray` interface.
+A block array is a partition of an array into blocks or subarrays, see [wikipedia](https://en.wikipedia.org/wiki/Block_matrix) for a good description. This package introduces the abstract type `AbstractBlockArray` for arrays that exhibit this block structure. Currently, two concrete types are implemented that have very similar API but differs in how the blocks are stored in memory. The type `BlockArray` stores each block contiguously while the type `PseudoBlockArray` stores the full matrix contiguously. Which one to use depends on your use case, `BlockArray` supports fast non copying extraction and insertion of blocks while `PseudoBlockArray` supports directly using the underlying full matrix in for example a linear solver. Both these types follow the `AbstractArray` interface and should work in arbitrary dimensions for arbitrary block types as long as the block type itself satisfies the `AbstractArray` interface.
 
 This README will first provide an overview over the `BlockArray` type and then later discuss the few differences between `BlockArrays` and `PseudoBlockArrays`.
-
 
 ### Creating uninitialized `BlockArrays`.
 
 A `BlockArray` can be created with the blocks left uninitialized using the `BlockArray(block_type, block_sizes...)` function.
-The `block_type` should be an array type, for example could for example a `Vector{Int}`. The block sizes are each a `Vector{Int}` which determines the size of the blocks in that dimension. We here create a `[1,2]×[3,2]` block matrix of `Float32`s:
+The `block_type` should be an array type, it could for example be `Matrix{Float64}`. The block sizes are each a `Vector{Int}` which determines the size of the blocks in that dimension. We here create a `[1,2]×[3,2]` block matrix of `Float32`s:
 
 ```jl
 julia> BlockArray(Matrix{Float32}, [1,2], [3,2])
@@ -117,9 +116,9 @@ Simple unary/binary functions and reductions are available, for an overview, see
 
 ## `PseudoBlockArrays`
 
-`PseudoBlockArrays` are similar to `BlockArrays` except the full matrix is stored contiguously. This means that it is no longer possible to set and get blocks by simply changing a reference. However, the wrapped array can be directly used in for example linear solvers for.
+`PseudoBlockArrays` are similar to `BlockArrays` except the full matrix is stored contiguously. This means that it is no longer possible to set and get blocks by simply changing a reference. However, the wrapped array can be directly used in for example linear solvers.
 
-Creating a `PseudoBlockArray works in the same way as a `BlockArray`.
+Creating a `PseudoBlockArray` works in the same way as a `BlockArray`.
 
 ```julia
 julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])
@@ -129,6 +128,8 @@ julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])
  0.46358   0.11423   │  0.520826
  0.250737  0.809022  │  0.905993
 ```
+
+This "takes ownership" of the passed in array so no copy of the array is made.
 
 Setting and getting blocks uses the same API as `BlockArrays`. The difference here is that setting a block will update the block in place and getting a block
 will extract a copy of the block and return it. For `PseudoBlockArrays` there is a mutating block getter called `getblock!` which updates a passed in array to avoid a copy:
