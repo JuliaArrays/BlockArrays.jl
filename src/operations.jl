@@ -73,29 +73,23 @@ macro blockwise_binary_scalar_pseudo(func, Tres, mode)
     end)
 end
 
-
-
 for f in BINARY_FUNCS
     @eval begin
         Base.$f{T1, T2, N}(A::BlockArray{T1, N}, B::BlockArray{T2, N}) = @blockwise_binary($f, Base.promote_op($f, T1, T2))
         Base.$f{T1, T2, N}(A::PseudoBlockArray{T1, N}, B::PseudoBlockArray{T2, N}) = @blockwise_binary_pseudo($f, Base.promote_op($f, T1, T2))
 
-        Base.$f{T1 <: Number, T2, N}(A::T1, block_array::BlockArray{T2, N}) = @blockwise_binary_scalar($f, Base.promote_op($f, T1, T2), 1)
-        Base.$f{T1, T2 <: Number, N}(block_array::BlockArray{T1, N}, A::T2) = @blockwise_binary_scalar($f, Base.promote_op($f, T1, T2), 2)
-        Base.$f{T1 <: Number, T2, N}(A::T1, block_array::PseudoBlockArray{T2, N}) = @blockwise_binary_scalar_pseudo($f, Base.promote_op($f, T1, T2), 1)
-        Base.$f{T1, T2 <: Number, N}(block_array::PseudoBlockArray{T1, N}, A::T2) = @blockwise_binary_scalar_pseudo($f, Base.promote_op($f, T1, T2), 2)
-    end
-end
-
-for f in BINARY_FUNCS
-    @eval begin
-        Base.$f{T1, T2, N}(A::T1, B::BlockArray{T2, N}) = @blockwise_binary($f, Base.promote_op($f, T1, T2))
+        # These generate ambiquous errors when called
+        #Base.$f{T1 <: Number, T2, N}(A::T1, block_array::BlockArray{T2, N}) = @blockwise_binary_scalar($f, Base.promote_op($f, T1, T2), 1)
+        #Base.$f{T1, T2 <: Number, N}(block_array::BlockArray{T1, N}, A::T2) = @blockwise_binary_scalar($f, Base.promote_op($f, T1, T2), 2)
+        #Base.$f{T1 <: Number, T2, N}(A::T1, block_array::PseudoBlockArray{T2, N}) = @blockwise_binary_scalar_pseudo($f, Base.promote_op($f, T1, T2), 1)
+        #Base.$f{T1, T2 <: Number, N}(block_array::PseudoBlockArray{T1, N}, A::T2) = @blockwise_binary_scalar_pseudo($f, Base.promote_op($f, T1, T2), 2)
     end
 end
 
 for f in BOOLEAN_BINARY_FUNCS
     @eval begin
         Base.$f{T1, T2, N}(A::BlockArray{T1, N}, B::BlockArray{T2, N}) = @blockwise_binary($f, Bool)
+        Base.$f{T1, T2, N}(A::PseudoBlockArray{T1, N}, B::PseudoBlockArray{T2, N}) = @blockwise_binary_pseudo($f, Bool)
     end
 end
 

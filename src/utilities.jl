@@ -1,14 +1,14 @@
-function _cumsum(v::Vector{Int}, range::UnitRange)
+function _cumsum(v::Vector{Int}, endidx::Int)
     s = 0
-    for i in range
+    @inbounds for i in 1:endidx
         s += v[i]
     end
     return s
 end
 
-@inline function _sumiter(v::Vector{Int}, endidx)
+@inline function _sumiter(v::Vector{Int}, endidx::Int)
     s = 0
-    for i in 1:endidx
+    @inbounds for i in 1:endidx
         s += v[i]
     end
     return s

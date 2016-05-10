@@ -56,17 +56,51 @@ function getblock{T,N}(block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N})
     return block_arr.blocks[range...]
 end
 
-function setblock!{T, N, R}(block_arr::PseudoBlockArray{T, N, R}, v, block::Vararg{Int, N})
-    @boundscheck begin # TODO: Check if this eliminates the boundscheck with @inbounds
-        for i in 1:N
-            if size(v, i) != block_arr.block_sizes[i, block[i]]
-                throw(ArgumentError(string("attempt to assign a $(size(v)) array to a ",  ntuple(i -> block_arr.block_sizes[i][block[i]], Val{N}), " block")))
+# TODO: Can this be written efficiently without a generated function?
+@generated function getblock!{T,N}(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N})
+    return quote
+
+        blockrange = globalrange(block_arr.block_sizes, block...)
+
+        @boundscheck begin
+            for i in 1:N
+                if size(x, i) != length(blockrange[i])
+                    throw(ArgumentError(string("attempt to assign a ",  ntuple(i -> block_arr.block_sizes[i, block[i]], Val{N}), " block to a $(size(x)) array")))
+                end
+            end
+        end
+
+        arr = block_arr.blocks
+        @nexprs $N d -> k_d = 1
+        @inbounds begin
+            @nloops $N i (d->(blockrange[d])) (d-> k_{d-1}=1) (d-> k_d+=1) begin
+                (@nref $N x k) = (@nref $N arr i)
+            end
+        end
+        return x
+    end
+end
+
+# TODO: Can this be written efficiently without a generated function?
+@generated function setblock!{T, N, R}(block_arr::PseudoBlockArray{T, N, R}, v, block::Vararg{Int, N})
+    return quote
+        @boundscheck begin # TODO: Check if this eliminates the boundscheck with @inbounds
+            for i in 1:N
+                if size(v, i) != block_arr.block_sizes[i, block[i]]
+                    throw(ArgumentError(string("attempt to assign a $(size(v)) array to a ",  ntuple(i -> block_arr.block_sizes[i][block[i]], Val{N}), " block")))
+                end
+            end
+        end
+
+        blockrange = globalrange(block_arr.block_sizes, block...)
+        arr = block_arr.blocks
+        @nexprs $N d -> k_d = 1
+        @inbounds begin
+            @nloops $N i (d->(blockrange[d])) (d-> k_{d-1}=1) (d-> k_d+=1) begin
+                (@nref $N arr i) = (@nref $N v k)
             end
         end
     end
-    range = globalrange(block_arr.block_sizes, block...)
-    @inbounds block_arr.blocks[range...] = v
-    return block_arr
 end
 
 ########

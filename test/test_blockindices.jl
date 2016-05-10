@@ -25,3 +25,12 @@ block_size = BlockSizes([1,2,3], [2, 3])
 @test global2blockindex(block_size, 3, 1) == BlockIndex((2,1), (2,1))
 @test global2blockindex(block_size, 1, 4) == BlockIndex((1,2), (1,2))
 @test global2blockindex(block_size, 4, 5) == BlockIndex((3,2), (1,3))
+
+@test blockindex2global(block_size, BlockIndex((2,1), (2,1))) == (3, 1)
+@test blockindex2global(block_size, BlockIndex((1,2), (1,2))) == (1, 4)
+@test blockindex2global(block_size, BlockIndex((3,2), (1,3))) == (4, 5)
+
+
+buf = IOBuffer()
+print(buf, block_size)
+@test takebuf_string(buf) == "[1,2,3]×[2,3]"

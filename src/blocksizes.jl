@@ -34,7 +34,8 @@ Base.copy{N}(block_sizes::BlockSizes{N}) = BlockSizes(ntuple(i -> copy(block_siz
 """
 Computes the global range of an Array that corresponds to a given block_index
 """
-function globalrange{N}(block_sizes::BlockSizes, block_index::Vararg{Int, N})
-    start_indices = ntuple(i -> 1 + _cumsum(block_sizes[i], 1:block_index[i]-1), Val{N})
-    indices = ntuple(i -> start_indices[i]:start_indices[i] + block_sizes[i, block_index[i]] - 1, Val{N})
+@inline function globalrange{N}(block_sizes::BlockSizes, block_index::Vararg{Int, N})
+    @inbounds start_indices = ntuple(i -> 1 + _cumsum(block_sizes[i], block_index[i]-1), Val{N})
+    @inbounds indices = ntuple(i -> start_indices[i]:start_indices[i] + block_sizes[i, block_index[i]] - 1, Val{N})
+    return indices
 end

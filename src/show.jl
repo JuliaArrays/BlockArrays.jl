@@ -67,5 +67,4 @@ function Base.print_matrix_row(io::IO,
             print(io, row_str)
         end
     end
-
 end

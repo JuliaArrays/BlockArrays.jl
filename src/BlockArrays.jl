@@ -1,6 +1,6 @@
 module BlockArrays
 
-export AbstractBlockArray, BlockArray, PseudoBlockArray, Block, getblock, setblock!
+export AbstractBlockArray, BlockArray, PseudoBlockArray, Block, getblock, getblock!, setblock!
 
 import Base: @propagate_inbounds
 using Base.Cartesian
