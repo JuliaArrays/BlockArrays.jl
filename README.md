@@ -144,7 +144,7 @@ julia> A
  0.250737  0.809022
 ```
 
-The underlaying arary is accessed with `full` just like for `BlockArray`.
+The underlying array is accessed with `full` just like for `BlockArray`.
 
 ## TODO
 
