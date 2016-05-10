@@ -32,7 +32,7 @@ PseudoBlockArray{N, R}(blocks::R, block_sizes::Vararg{Vector{Int}, N}) = PseudoB
 ###########################
 
 function Base.similar{T,N,T2}(block_array::PseudoBlockArray{T,N}, ::Type{T2})
-    BlockArray(similar(block_array.blocks, T2), copy(block_array.block_sizes))
+    PseudoBlockArray(similar(block_array.blocks, T2), copy(block_array.block_sizes))
 end
 
 ############
