@@ -22,7 +22,7 @@ end
 Converts from a global index to a `BlockIndex`.
 """
 function global2blockindex{N}(block_sizes::BlockSizes{N}, i::Vararg{Int, N})
-    @inbounds block_index = ntuple(k->_find_block(block_sizes, k, i[k]), Val{N})
+    block_index = ntuple(k->_find_block(block_sizes, k, i[k]), Val{N}) # @inbounds here will cause Core.Box
     @inbounds I = ntuple(k->block_index[k][1], Val{N})
     @inbounds α = ntuple(k->block_index[k][2], Val{N})
     return BlockIndex(I, α)

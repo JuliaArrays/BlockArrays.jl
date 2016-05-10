@@ -17,18 +17,18 @@ block_size = BlockSizes([1,2,3], [2, 3])
 @test nblocks(block_size, 1) == 3
 @test nblocks(block_size, 2) == 2
 
-@test globalrange(block_size, 1,1) == (1:1, 1:2)
-@test globalrange(block_size, 1,2) == (1:1, 3:5)
-@test globalrange(block_size, 2,1) == (2:3, 1:2)
-@test globalrange(block_size, 2,2) == (2:3, 3:5)
+@inferred globalrange(block_size, 1,1) == (1:1, 1:2)
+@inferred globalrange(block_size, 1,2) == (1:1, 3:5)
+@inferred globalrange(block_size, 2,1) == (2:3, 1:2)
+@inferred globalrange(block_size, 2,2) == (2:3, 3:5)
 
-@test global2blockindex(block_size, 3, 1) == BlockIndex((2,1), (2,1))
-@test global2blockindex(block_size, 1, 4) == BlockIndex((1,2), (1,2))
-@test global2blockindex(block_size, 4, 5) == BlockIndex((3,2), (1,3))
+@inferred global2blockindex(block_size, 3, 1) == BlockIndex((2,1), (2,1))
+@inferred global2blockindex(block_size, 1, 4) == BlockIndex((1,2), (1,2))
+@inferred global2blockindex(block_size, 4, 5) == BlockIndex((3,2), (1,3))
 
-@test blockindex2global(block_size, BlockIndex((2,1), (2,1))) == (3, 1)
-@test blockindex2global(block_size, BlockIndex((1,2), (1,2))) == (1, 4)
-@test blockindex2global(block_size, BlockIndex((3,2), (1,3))) == (4, 5)
+@inferred blockindex2global(block_size, BlockIndex((2,1), (2,1))) == (3, 1)
+@inferred blockindex2global(block_size, BlockIndex((1,2), (1,2))) == (1, 4)
+@inferred blockindex2global(block_size, BlockIndex((3,2), (1,3))) == (4, 5)
 
 
 buf = IOBuffer()
