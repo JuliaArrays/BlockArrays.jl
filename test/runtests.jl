@@ -6,6 +6,8 @@ else
     const Test = BaseTestNext
 end
 
+import BlockArrays.nblocks
+
 include("test_blockindices.jl")
 
 let
@@ -35,6 +37,14 @@ let
         @test nblocks(BA_1) == (3,)
         @test nblocks(BA_1,1) == 3
         @test eltype(similar(BA_1, Float32)) == Float32
+        q = rand(1)
+        BA_1[Block(1)] = q
+        @test BA_1[Block(1)] == q
+        if BlockType == PseudoBlockArray
+            q2 = zeros(q)
+            getblock!(q2, BA_1, 1)
+            @test q2 == q
+        end
 
         a_1_sparse = sprand(6, 0.9)
         BA_1_sparse = BlockType(a_1_sparse, [1,2,3])
@@ -49,6 +59,14 @@ let
         @test nblocks(BA_2) == (2,2)
         @test nblocks(BA_2, 1) == 2
         @test eltype(similar(BA_2, Float32)) == Float32
+        q = rand(1,4)
+        BA_2[Block(1,2)] = q
+        @test BA_2[Block(1,2)] == q
+        if BlockType == PseudoBlockArray
+            q2 = zeros(q)
+            getblock!(q2, BA_2, 1, 2)
+            @test q2 == q
+        end
 
         a_2_sparse = sprand(3, 7, 0.9)
         BA_2_sparse = BlockType(a_2_sparse, [1,2], [3,4])

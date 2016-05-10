@@ -8,7 +8,7 @@ immutable BlockSizes{N}
     sizes::NTuple{N, Vector{Int}}
 end
 
-Base.(:(==))(a::BlockSizes, b::BlockSizes) = a.sizes == b.sizes
+Base.:(==)(a::BlockSizes, b::BlockSizes) = a.sizes == b.sizes
 
 BlockSizes{N}(sizes::Vararg{Vector{Int}, N}) = BlockSizes(sizes)
 Base.getindex(block_sizes::BlockSizes, i) = block_sizes.sizes[i]
