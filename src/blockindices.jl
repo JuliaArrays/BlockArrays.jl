@@ -7,14 +7,6 @@ immutable BlockIndex{N}
     α::NTuple{N, Int}
 end
 
-@propagate_inbounds function Base.getindex{T,N}(block_array::BlockArray{T, N}, block_index::BlockIndex)
-    return getblock(block_array, block_index.I...)[block_index.α...]
-end
-
-@propagate_inbounds function Base.setindex!{T,N}(block_array::BlockArray{T, N}, v, block_index::BlockIndex)
-    getblock(block_array, block_index.I...)[block_index.α...] = v
-end
-
 @inline function _find_block(block_sizes::BlockSizes, dim::Int, i::Int)
     accum = 0
     block = 0

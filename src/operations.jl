@@ -1,5 +1,5 @@
-# We just define some convenience function to make playing in the REPL easier.
-# These are probably not too useful in practice.
+# We just define some convenience function to make the experience feel a bit more polished.
+# These are probably not too useful in practice though.
 
 const UNARY_FUNCS = (:-, :~, :conj, :abs,
                   :sin, :cos, :tan, :sinh, :cosh, :tanh,
@@ -41,6 +41,13 @@ macro blockwise_binary(func, Tres)
     end)
 end
 
+macro blockwise_binary_pseudo(func, Tres)
+    esc(quote
+        @assert A.block_sizes == B.block_sizes
+        return PseudoBlockArray($func(A.blocks, B.blocks), copy(A.block_sizes))
+    end)
+end
+
 
 macro blockwise_binary_scalar(func, Tres, mode)
     esc(quote
@@ -56,14 +63,27 @@ macro blockwise_binary_scalar(func, Tres, mode)
     end)
 end
 
+macro blockwise_binary_scalar_pseudo(func, Tres, mode)
+    esc(quote
+        if $mode == 1
+            return PseudoBlockArray($func(A, block_array.blocks), copy(block_array.block_sizes))
+        else
+            return PseudoBlockArray($func(block_array.blocks, A), copy(block_array.block_sizes))
+        end
+    end)
+end
+
 
 
 for f in BINARY_FUNCS
     @eval begin
         Base.$f{T1, T2, N}(A::BlockArray{T1, N}, B::BlockArray{T2, N}) = @blockwise_binary($f, Base.promote_op($f, T1, T2))
+        Base.$f{T1, T2, N}(A::PseudoBlockArray{T1, N}, B::PseudoBlockArray{T2, N}) = @blockwise_binary_pseudo($f, Base.promote_op($f, T1, T2))
 
         Base.$f{T1 <: Number, T2, N}(A::T1, block_array::BlockArray{T2, N}) = @blockwise_binary_scalar($f, Base.promote_op($f, T1, T2), 1)
         Base.$f{T1, T2 <: Number, N}(block_array::BlockArray{T1, N}, A::T2) = @blockwise_binary_scalar($f, Base.promote_op($f, T1, T2), 2)
+        Base.$f{T1 <: Number, T2, N}(A::T1, block_array::PseudoBlockArray{T2, N}) = @blockwise_binary_scalar_pseudo($f, Base.promote_op($f, T1, T2), 1)
+        Base.$f{T1, T2 <: Number, N}(block_array::PseudoBlockArray{T1, N}, A::T2) = @blockwise_binary_scalar_pseudo($f, Base.promote_op($f, T1, T2), 2)
     end
 end
 
@@ -94,10 +114,17 @@ macro blockwise_unary(func, Tres)
     end)
 end
 
+macro blockwise_unary_pseudo(func, Tres)
+    esc(quote
+        return PseudoBlockArray($func(block_array.blocks), copy(block_array.block_sizes))
+    end)
+end
+
 
 for f in UNARY_FUNCS
     @eval begin
         Base.$f{T}(block_array::BlockArray{T}) = @blockwise_unary($f, typeof($f(one(T))))
+        Base.$f{T}(block_array::PseudoBlockArray{T}) = @blockwise_unary_pseudo($f, typeof($f(one(T))))
     end
 end
 
@@ -117,8 +144,15 @@ macro blockwise_reduction(func, merging_func)
     end)
 end
 
+macro blockwise_reduction_pseudo(func, merging_func)
+    esc(quote
+        return $func(block_array.blocks)
+    end)
+end
+
 for (f, f_merge) in REDUCTION_FUNCS
     @eval begin
         Base.$f(block_array::BlockArray) = @blockwise_reduction($f, $f_merge)
+        Base.$f(block_array::PseudoBlockArray) = @blockwise_reduction_pseudo($f, $f_merge)
     end
 end

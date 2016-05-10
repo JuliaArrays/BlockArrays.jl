@@ -3,7 +3,7 @@ import Base.alignment
 
 # A bit of a mess but does the job...
 function Base.print_matrix_row(io::IO,
-        X::BlockVecOrMat, A::Vector,
+        X::AbstractBlockVecOrMat, A::Vector,
         i::Integer, cols::AbstractVector, sep::AbstractString)
     cumul = 0
     block = 1

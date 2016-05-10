@@ -1,10 +1,14 @@
 # BlockArrays.jl
 
-[![Build Status](https://travis-ci.org/KristofferC/BlockArrays.jl.svg?branch=master)](https://travis-ci.org/KristofferC/BlockArrays.jl)
+[![Build Status](https://travis-ci.org/KristofferC/BlockArrays.jl.svg?branch=master)](https://travis-ci.org/KristofferC/BlockArrays.jl) [![codecov](https://codecov.io/gh/KristofferC/BlockArrays.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/KristofferC/BlockArrays.jl)
+
 
 A `BlockArray` is a partition of an array into blocks or subarrays, see the [wikipedia link](https://en.wikipedia.org/wiki/Block_matrix). This package introduces the type `BlockArray` which stores these blocks contiguously such that getting and setting blocks can be done without any copying. `BlockArray`s follow the `AbstractArray` interface and should work in arbitrary dimensions for arbitrary block types, as long as the block type itself satisfies the `AbstractArray` interface.
 
 ### Creating uninitialized `BlockArray`s.
+
+A `BlockArray` can be created with the blocks left uninitialized with the `BlockArray(block_type, block_sizes...)` function. The `block_type` could for example
+be a `Vector{Int}` or some other array type. The block sizes are each a `Vector{Int}` where each index determines the size of the block in that dimension. To create a `[1,2] × [3,2]` block matrix
 
 ```jl
 julia> BlockArray(Matrix{Float32}, [1,2], [3,2])
@@ -101,4 +105,3 @@ Simple unary functions, binary functions and reductions are available:
 ### TODO
 
 - Linear algebra stuff.
-- A new `BlockArray` type which does not store separate blocks contiguously. This can be convenient when using dense solvers.
