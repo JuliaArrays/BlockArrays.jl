@@ -153,4 +153,4 @@ The underlaying arary is accessed with `full` just like for `BlockArray`.
 
 ## Author
 
-This Julia package was written by [Kristoffer Carlsson](kristoffer.carlsson@chalmers.se)
+This Julia package was written by [Kristoffer Carlsson](mailto:kristoffer.carlsson@chalmers.se)
