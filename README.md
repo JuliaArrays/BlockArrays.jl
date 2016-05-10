@@ -9,7 +9,7 @@ A block array is a partition of an array into blocks or subarrays, see [wikipedi
 This README will first provide an overview over the `BlockArray` type and then later discuss the few differences between `BlockArrays` and `PseudoBlockArrays`.
 
 
-### Creating uninitialized `BlockArray`s.
+### Creating uninitialized `BlockArrays`.
 
 A `BlockArray` can be created with the blocks left uninitialized using the `BlockArray(block_type, block_sizes...)` function.
 The `block_type` should be an array type, for example could for example a `Vector{Int}`. The block sizes are each a `Vector{Int}` which determines the size of the blocks in that dimension. We here create a `[1,2]×[3,2]` block matrix of `Float32`s:
@@ -122,7 +122,7 @@ Simple unary/binary functions and reductions are available, for an overview, see
 Creating a `PseudoBlockArray works in the same way as a `BlockArray`.
 
 ```julia
-julia> psuedo = PseudoBlockArray(rand(3,3), [1,2], [2,1])
+julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])
 3×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
  0.282059  0.560107  │  0.540811
  --------------------┿----------
@@ -130,8 +130,8 @@ julia> psuedo = PseudoBlockArray(rand(3,3), [1,2], [2,1])
  0.250737  0.809022  │  0.905993
 ```
 
-Setting and getting blocks uses the same API as `BlockArray`s. The difference here is that setting a block will update the block in place and getting a block
-will extract a copy of the block and return it. For `PseudoBlockArray`s there is a mutating block getter called `getblock!` which updates a passed in array to avoid a copy:
+Setting and getting blocks uses the same API as `BlockArrays`. The difference here is that setting a block will update the block in place and getting a block
+will extract a copy of the block and return it. For `PseudoBlockArrays` there is a mutating block getter called `getblock!` which updates a passed in array to avoid a copy:
 
 ```julia
 julia> A = zeros(2,2)
