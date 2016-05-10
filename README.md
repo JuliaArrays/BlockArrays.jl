@@ -45,7 +45,7 @@ An alternative syntax for this is `block_array[Block(i...)] = v`.
 julia> block_array = BlockArray(Matrix{Float64}, [1,2], [2,2])
 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  #undef  #undef  │  #undef  #undef
- ━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━
+ ----------------┿----------------
  #undef  #undef  │  #undef  #undef
  #undef  #undef  │  #undef  #undef
 
