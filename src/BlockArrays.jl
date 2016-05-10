@@ -1,3 +1,5 @@
+__precompile__()
+
 module BlockArrays
 
 export AbstractBlockArray, BlockArray, PseudoBlockArray, Block, getblock, getblock!, setblock!
