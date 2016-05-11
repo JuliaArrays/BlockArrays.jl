@@ -33,12 +33,12 @@ Base.copy{N}(block_sizes::BlockSizes{N}) = BlockSizes(ntuple(i -> copy(block_siz
 """
 Computes the global range of an Array that corresponds to a given block_index
 """
-@inline function globalrange{N}(block_sizes::BlockSizes, block_index::Vararg{Int, N})
-    start_indices = ntuple(i -> 1 + _cumsum(block_sizes[i], block_index[i]-1), Val{N})
-    return _indices(start_indices, block_sizes, block_index...)
-end
-
-# Manually inlining this causes Core.Box.. so don't do that.
-function _indices{N}(start_indices, block_sizes, block_index::Vararg{Int, N})
-    return ntuple(i -> start_indices[i]:start_indices[i] + block_sizes[i, block_index[i]] - 1, Val{N})
+@generated function globalrange{N}(block_sizes::BlockSizes, block_index::Vararg{Int, N})
+    start_indices_ex = Expr(:tuple, [:(1 + _cumsum(block_sizes[$i], block_index[$i]-1)) for i=1:N]...)
+    indices_ex = Expr(:tuple, [:(start_indices[$i]:start_indices[$i] + block_sizes[$i, block_index[$i]] - 1) for i = 1:N]...)
+    return quote
+        @inbounds start_indices = $start_indices_ex
+        @inbounds indices = $indices_ex
+        return indices
+    end
 end

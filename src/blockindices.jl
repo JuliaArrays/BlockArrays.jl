@@ -21,16 +21,27 @@ end
 """
 Converts from a global index to a `BlockIndex`.
 """
-function global2blockindex{N}(block_sizes::BlockSizes{N}, i::Vararg{Int, N})
-    block_index = ntuple(k->_find_block(block_sizes, k, i[k]), Val{N}) # @inbounds here will cause Core.Box
-    @inbounds I = ntuple(k->block_index[k][1], Val{N})
-    @inbounds α = ntuple(k->block_index[k][2], Val{N})
-    return BlockIndex(I, α)
+@generated function global2blockindex{N}(block_sizes::BlockSizes{N}, i::Vararg{Int, N})
+    # TODO: Try get rid of @generated
+    block_index_ex = Expr(:tuple, [:(_find_block(block_sizes, $k, i[$k])) for k = 1:N]...)
+    I_ex = Expr(:tuple, [:(block_index[$k][1]) for k = 1:N]...)
+    α_ex = Expr(:tuple, [:(block_index[$k][2]) for k = 1:N]...)
+    return quote
+        @inbounds block_index = $block_index_ex
+        @inbounds I = $I_ex
+        @inbounds α = $α_ex
+        return BlockIndex(I, α)
+    end
 end
 
 """
 Converts from a `BlockIndex` to a global index.
 """
-function blockindex2global{N}(block_sizes::BlockSizes{N}, block_index::BlockIndex{N})
-    ntuple(k-> _sumiter(block_sizes[k], block_index.I[k]-1) + block_index.α[k], Val{N})
+@generated function blockindex2global{N}(block_sizes::BlockSizes{N}, block_index::BlockIndex{N})
+    # TODO: Try get rid of @generated
+    ex = Expr(:tuple, [:(_sumiter(block_sizes[$k], block_index.I[$k]-1) + block_index.α[$k]) for k = 1:N]...)
+    return quote
+        @inbounds v = $ex
+        return v
+    end
 end
