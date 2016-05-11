@@ -49,11 +49,11 @@ function Base.print_matrix_row(io::IO,
         end
 
         if i in row_sum
-            print(row_buf, "━"^(n_chars-1))
+            print(row_buf, "─"^(n_chars-1))
             if ndims(X) == 2 && k in col_sum
-                print(row_buf, "┿")
+                print(row_buf, "┼")
             else
-                print(row_buf, "━")
+                print(row_buf, "─")
             end
        end
 
