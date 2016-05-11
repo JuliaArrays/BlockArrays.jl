@@ -77,7 +77,7 @@ let
 end
 
 replstrmime(x) = stringmime("text/plain", x)
-@test replstrmime(BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "4×4 BlockArrays.BlockArray{Int64,2,Array{Int64,2}}:\n 1  5  │   9  13\n ━━━━━━┿━━━━━━━━\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+@test replstrmime(BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "4×4 BlockArrays.BlockArray{Int64,2,Array{Int64,2}}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
 
 let
     for BlockType in (BlockArray, PseudoBlockArray)
