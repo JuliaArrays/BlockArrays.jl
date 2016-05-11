@@ -17,7 +17,7 @@ The `block_type` should be an array type, it could for example be `Matrix{Float6
 julia> BlockArray(Matrix{Float32}, [1,2], [3,2])
 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
  #undef  #undef  #undef  │  #undef  #undef
- ------------------------┿----------------
+ ────────────────────────┼────────────────
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
 ```
@@ -28,7 +28,7 @@ We can also use a `SparseVector` or any other user defined array type:
 julia> BlockArray(SparseVector{Float64, Int}, [1,2])
 3-element BlockArrays.BlockArray{Float64,1,SparseVector{Float64,Int64}}:
  #undef
- ------
+ ──────
  #undef
  #undef
 ```
@@ -44,14 +44,14 @@ An alternative syntax for this is `block_array[Block(i...)] = v`.
 julia> block_array = BlockArray(Matrix{Float64}, [1,2], [2,2])
 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  #undef  #undef  │  #undef  #undef
- ----------------┿----------------
+ ────────────────┼────────────────
  #undef  #undef  │  #undef  #undef
  #undef  #undef  │  #undef  #undef
 
 julia> setblock!(block_array, rand(2,2), 2, 1)
 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  #undef      #undef      │  #undef  #undef
- ------------------------┿----------------
+ ────────────────────────┼────────────────
    0.314407    0.298761  │  #undef  #undef
    0.91585     0.644499  │  #undef  #undef
 
@@ -60,7 +60,7 @@ julia> block_array[Block(1, 1)] = [1 2];
 julia> block_array
 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  1.0       2.0       │  #undef  #undef
- --------------------┿----------------
+ ────────────────────┼────────────────
  0.314407  0.298761  │  #undef  #undef
  0.91585   0.644499  │  #undef  #undef
 ```
@@ -92,7 +92,7 @@ An array can be repacked into a `BlockArray` with`BlockArray(array, block_sizes.
 julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
 4×5 BlockArrays.BlockArray{Float64,2,SparseMatrixCSC{Float64,Int64}}:
  0.0       0.284338  │  0.0         0.52346   0.403969
- --------------------┿--------------------------------
+ ────────────────────┼────────────────────────────────
  0.909193  0.0       │  0.0         0.3401    0.922003
  0.0       0.736793  │  0.00840872  0.804832  0.441806
  0.0       0.0       │  0.553519    0.757454  0.575238
@@ -124,7 +124,7 @@ Creating a `PseudoBlockArray` works in the same way as a `BlockArray`.
 julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])
 3×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
  0.282059  0.560107  │  0.540811
- --------------------┿----------
+ ────────────────────┼──────────
  0.46358   0.11423   │  0.520826
  0.250737  0.809022  │  0.905993
 ```
