@@ -21,7 +21,7 @@ end
 """
 Converts from a global index to a `BlockIndex`.
 """
-@generated function global2blockindex{N}(block_sizes::BlockSizes{N}, i::Vararg{Int, N})
+@generated function global2blockindex{N}(block_sizes::BlockSizes{N}, i::NTuple{N, Int})
     # TODO: Try get rid of @generated
     block_index_ex = Expr(:tuple, [:(_find_block(block_sizes, $k, i[$k])) for k = 1:N]...)
     I_ex = Expr(:tuple, [:(block_index[$k][1]) for k = 1:N]...)

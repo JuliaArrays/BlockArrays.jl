@@ -52,7 +52,7 @@ function Base.setindex!{T, N}(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{In
 end
 
 function getblock{T,N}(block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N})
-    range = globalrange(block_arr.block_sizes, block...)
+    range = globalrange(block_arr.block_sizes, block)
     return block_arr.blocks[range...]
 end
 
@@ -60,7 +60,7 @@ end
 @generated function getblock!{T,N}(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N})
     return quote
 
-        blockrange = globalrange(block_arr.block_sizes, block...)
+        blockrange = globalrange(block_arr.block_sizes, block)
 
         @boundscheck begin
             for i in 1:N
@@ -92,7 +92,7 @@ end
             end
         end
 
-        blockrange = globalrange(block_arr.block_sizes, block...)
+        blockrange = globalrange(block_arr.block_sizes, block)
         arr = block_arr.blocks
         @nexprs $N d -> k_d = 1
         @inbounds begin

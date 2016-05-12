@@ -35,13 +35,13 @@ end
 
 function Base.getindex{T, N}(block_arr::BlockArray{T, N}, i::Vararg{Int, N})
     @boundscheck checkbounds(block_arr, i...)
-    @inbounds v = block_arr[global2blockindex(block_arr.block_sizes, i...)]
+    @inbounds v = block_arr[global2blockindex(block_arr.block_sizes, i)]
     return v
 end
 
 function Base.setindex!{T, N}(block_arr::BlockArray{T, N}, v, i::Vararg{Int, N})
     @boundscheck checkbounds(block_arr, i...)
-    @inbounds block_arr[global2blockindex(block_arr.block_sizes, i...)] = v
+    @inbounds block_arr[global2blockindex(block_arr.block_sizes, i)] = v
     return block_arr
 end
 
@@ -91,7 +91,7 @@ end
 
         @nloops $N i i->(1:length(block_sizes[i])) begin
             block_index = @ntuple $N i
-            indices = globalrange(_block_sizes, block_index...)
+            indices = globalrange(_block_sizes, block_index)
             setblock!(block_arr, arr[indices...], block_index...)
         end
 
@@ -115,7 +115,7 @@ Converts from a `BlockArray` to a normal `Array`
 
         @nloops $N i i->(1:length(block_sizes[i])) begin
             block_index = @ntuple $N i
-            indices = globalrange(block_sizes, block_index...)
+            indices = globalrange(block_sizes, block_index)
             arr[indices...] = block_array[Block(block_index...)]
         end
 
