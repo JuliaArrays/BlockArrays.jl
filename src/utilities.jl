@@ -1,4 +1,4 @@
-function _cumsum(v::Vector{Int}, endidx::Int)
+@inline function _cumsum(v::Vector{Int}, endidx::Int)
     s = 0
     @inbounds for i in 1:endidx
         s += v[i]
