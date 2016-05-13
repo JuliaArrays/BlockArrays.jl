@@ -1,3 +1,6 @@
+# Note: Functions surrounded by a comment blocks are there because `Vararg` is sitll allocating.
+# When Vararg is fast enough, they can simply be removed
+
 ####################
 # PseudoBlockArray #
 ####################
@@ -39,11 +42,39 @@ end
 # Indexing #
 ############
 
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
+function Base.getindex{T, N}(block_arr::PseudoBlockArray{T, N}, i::Int)
+    @boundscheck checkbounds(block_arr, )
+    @inbounds v = block_arr.blocks[i]
+    return v
+end
+
+function Base.getindex{T, N}(block_arr::PseudoBlockArray{T, N}, i::Int, j::Int)
+    @boundscheck checkbounds(block_arr, i, j)
+    @inbounds v = block_arr.blocks[i, j]
+    return v
+end
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
+
 function Base.getindex{T, N}(block_arr::PseudoBlockArray{T, N}, i::Vararg{Int, N})
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr.blocks[i...]
     return v
 end
+
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
+function Base.setindex!{T, N}(block_arr::PseudoBlockArray{T, N}, v, i::Int)
+    @boundscheck checkbounds(block_arr, i)
+    @inbounds block_arr.blocks[i] = v
+    return block_arr
+end
+
+function Base.setindex!{T, N}(block_arr::PseudoBlockArray{T, N}, v, i::Int, j::Int)
+    @boundscheck checkbounds(block_arr, i, j)
+    @inbounds block_arr.blocks[i, j] = v
+    return block_arr
+end
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
 
 function Base.setindex!{T, N}(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Int, N})
     @boundscheck checkbounds(block_arr, i...)
@@ -51,24 +82,67 @@ function Base.setindex!{T, N}(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{In
     return block_arr
 end
 
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
+function getblock{T,N}(block_arr::PseudoBlockArray{T,N}, block_i::Int)
+    range = globalrange(block_arr.block_sizes, (block_i,))
+    return block_arr.blocks[range[1]]
+end
+
+function getblock{T,N}(block_arr::PseudoBlockArray{T,N}, block_i::Int, block_j::Int)
+    range = globalrange(block_arr.block_sizes, (block_i, block_j))
+    return block_arr.blocks[range[1], range[2]]
+end
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
+
 function getblock{T,N}(block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N})
     range = globalrange(block_arr.block_sizes, block)
     return block_arr.blocks[range...]
 end
 
-# TODO: Can this be written efficiently without a generated function?
+function _check_getblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
+    for i in 1:N
+        if size(x, i) != length(blockrange[i])
+            throw(ArgumentError(string("attempt to assign a ",  ntuple(i -> block_arr.block_sizes[i, block[i]], Val{N}), " block to a $(size(x)) array")))
+        end
+    end
+end
+
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
+@propagate_inbounds function getblock!{T}(x, block_arr::PseudoBlockArray{T,1}, block_i::Int)
+    blockrange = globalrange(block_arr.block_sizes, (block_i,))
+    @boundscheck _check_getblock!(blockrange, x, block_arr, (block_i,))
+
+    arr = block_arr.blocks
+    k_1 = 1
+    @inbounds for i in blockrange[1]
+        x[k_1] = arr[i]
+        k_1 += 1
+    end
+    return x
+end
+
+@propagate_inbounds function getblock!{T}(x, block_arr::PseudoBlockArray{T,2}, block_i::Int, block_j::Int)
+    blockrange = globalrange(block_arr.block_sizes, (block_i,block_j))
+    @boundscheck _check_getblock!(blockrange, x, block_arr, (block_i, block_j))
+
+    arr = block_arr.blocks
+    k_2 = 1
+    @inbounds for j in blockrange[2]
+        k_1 = 1
+        for i in blockrange[1]
+            x[k_1, k_2] = arr[i, j]
+            k_1 += 1
+        end
+        k_2 += 1
+    end
+    return x
+end
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
+
 @generated function getblock!{T,N}(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N})
     return quote
-
         blockrange = globalrange(block_arr.block_sizes, block)
-
-        @boundscheck begin
-            for i in 1:N
-                if size(x, i) != length(blockrange[i])
-                    throw(ArgumentError(string("attempt to assign a ",  ntuple(i -> block_arr.block_sizes[i, block[i]], Val{N}), " block to a $(size(x)) array")))
-                end
-            end
-        end
+        @boundscheck _check_getblock!(blockrange, x, block_arr, block)
 
         arr = block_arr.blocks
         @nexprs $N d -> k_d = 1
@@ -81,23 +155,55 @@ end
     end
 end
 
-# TODO: Can this be written efficiently without a generated function?
-@generated function setblock!{T, N, R}(block_arr::PseudoBlockArray{T, N, R}, v, block::Vararg{Int, N})
-    return quote
-        @boundscheck begin # TODO: Check if this eliminates the boundscheck with @inbounds
-            for i in 1:N
-                if size(v, i) != block_arr.block_sizes[i, block[i]]
-                    throw(ArgumentError(string("attempt to assign a $(size(v)) array to a ",  ntuple(i -> block_arr.block_sizes[i][block[i]], Val{N}), " block")))
-                end
-            end
+function _check_setblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
+    for i in 1:N
+        if size(x, i) != block_arr.block_sizes[i, block[i]]
+            throw(ArgumentError(string("attempt to assign a $(size(x)) array to a ",  ntuple(i -> block_arr.block_sizes[i][block[i]], Val{N}), " block")))
         end
+    end
+end
 
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
+@propagate_inbounds function setblock!{T}(block_arr::PseudoBlockArray{T,1}, x, block_i::Int)
+    blockrange = globalrange(block_arr.block_sizes, (block_i,))
+    @boundscheck _check_setblock!(blockrange, x, block_arr, (block_i,))
+
+    arr = block_arr.blocks
+    k_1 = 1
+    @inbounds for i in blockrange[1]
+        arr[i] = x[k_1]
+        k_1 += 1
+    end
+    return x
+end
+
+@propagate_inbounds function setblock!{T}(block_arr::PseudoBlockArray{T,2}, x, block_i::Int, block_j::Int)
+    blockrange = globalrange(block_arr.block_sizes, (block_i,block_j))
+    @boundscheck _check_setblock!(blockrange, x, block_arr, (block_i, block_j))
+
+    arr = block_arr.blocks
+    k_2 = 1
+    @inbounds for j in blockrange[2]
+        k_1 = 1
+        for i in blockrange[1]
+            arr[i, j] = x[k_1, k_2]
+            k_1 += 1
+        end
+        k_2 += 1
+    end
+    return x
+end
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
+
+@generated function setblock!{T, N}(block_arr::PseudoBlockArray{T, N}, x, block::Vararg{Int, N})
+    return quote
         blockrange = globalrange(block_arr.block_sizes, block)
+        @boundscheck _check_setblock!(blockrange, x, block_arr, block)
         arr = block_arr.blocks
         @nexprs $N d -> k_d = 1
         @inbounds begin
             @nloops $N i (d->(blockrange[d])) (d-> k_{d-1}=1) (d-> k_d+=1) begin
-                (@nref $N arr i) = (@nref $N v k)
+                (@nref $N arr i) = (@nref $N x k)
             end
         end
     end

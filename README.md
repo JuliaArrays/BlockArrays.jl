@@ -2,11 +2,11 @@
 
 [![Build Status](https://travis-ci.org/KristofferC/BlockArrays.jl.svg?branch=master)](https://travis-ci.org/KristofferC/BlockArrays.jl) [![codecov](https://codecov.io/gh/KristofferC/BlockArrays.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/KristofferC/BlockArrays.jl)
 
-**Note:** Currently, a quite new build of julia master is needed to use this package.
-
 A block array is a partition of an array into blocks or subarrays, see [wikipedia](https://en.wikipedia.org/wiki/Block_matrix) for a good description. This package introduces the abstract type `AbstractBlockArray` for arrays that exhibit this block structure. Currently, two concrete types are implemented that have very similar API but differs in how the blocks are stored in memory. The type `BlockArray` stores each block contiguously while the type `PseudoBlockArray` stores the full matrix contiguously. Which one to use depends on your use case, `BlockArray` supports fast non copying extraction and insertion of blocks while `PseudoBlockArray` supports directly using the underlying full matrix in for example a linear solver. Both these types follow the `AbstractArray` interface and should work in arbitrary dimensions for arbitrary block types as long as the block type itself satisfies the `AbstractArray` interface.
 
 This README will first provide an overview over the `BlockArray` type and then later discuss the few differences between `BlockArrays` and `PseudoBlockArrays`.
+
+**Note:** Currently, a quite new build of julia master is needed to use this package.
 
 ### Creating uninitialized `BlockArrays`.
 
@@ -150,7 +150,7 @@ The underlying array is accessed with `full` just like for `BlockArray`.
 ## TODO
 
 - Linear algebra stuff
-- Investigate performance
+- Investigate performance (for example that bounds check removal work properly)
 
 ## Author
 
