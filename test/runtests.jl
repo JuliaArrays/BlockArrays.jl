@@ -6,8 +6,6 @@ else
     const Test = BaseTestNext
 end
 
-import BlockArrays.nblocks
-
 include("test_blockindices.jl")
 
 let
@@ -18,15 +16,12 @@ let
     @test BA_1[2] == a_1[1]
     @test_throws ArgumentError BA_1[Block(3)] = rand(4)
 
-
-
     BA_2 = BlockArray(Matrix{Float64}, [1,2], [3,4])
     a_2 = rand(1,4)
     BA_2[Block(1,2)] = a_2
     @test BA_2[Block(1,2)] == a_2
     @test BA_2[1,5] == a_2[2]
     @test_throws ArgumentError BA_2[Block(1,2)] = rand(1,5)
-
 end
 
 let
@@ -44,6 +39,7 @@ let
             q2 = zeros(q)
             getblock!(q2, BA_1, 1)
             @test q2 == q
+            @test_throws ArgumentError getblock!(zeros(2), BA_1, 1)
         end
 
         a_1_sparse = sprand(6, 0.9)
@@ -66,6 +62,7 @@ let
             q2 = zeros(q)
             getblock!(q2, BA_2, 1, 2)
             @test q2 == q
+            @test_throws ArgumentError getblock!(zeros(1,5), BA_2, 1, 2)
         end
 
         a_2_sparse = sprand(3, 7, 0.9)
@@ -73,6 +70,24 @@ let
         @test full(BA_2_sparse) == a_2_sparse
         BA_2_sparse[1,2] = 3.0
         @test BA_2_sparse[1,2] == 3.0
+
+        a_3 = rand(3, 7,4)
+        BA_3 = BlockType(a_3, [1,2], [3,4], [1,2,1])
+        @test full(BA_3) == a_3
+        @test nblocks(BA_3) == (2,2,3)
+        @test nblocks(BA_3, 1) == 2
+        @test nblocks(BA_3, 3) == 3
+        @test eltype(similar(BA_3, Float32)) == Float32
+        q = rand(1,4,2)
+        BA_3[Block(1,2,2)] = q
+        @test BA_3[Block(1,2,2)] == q
+        if BlockType == PseudoBlockArray
+            q3 = zeros(q)
+            getblock!(q3, BA_3, 1, 2, 2)
+            @test q3 == q
+            @test_throws ArgumentError getblock!(zeros(1,3,2), BA_3, 1, 2,2)
+        end
+
     end
 end
 
