@@ -8,7 +8,7 @@ This README will first provide an overview over the `BlockArray` type and then l
 
 **Note:** Currently, a quite new build of julia master is needed to use this package.
 
-### Creating uninitialized `BlockArrays`.
+### Creating uninitialized `BlockArrays`
 
 A `BlockArray` can be created with the blocks left uninitialized using the `BlockArray(block_type, block_sizes...)` function.
 The `block_type` should be an array type, it could for example be `Matrix{Float64}`. The block sizes are each a `Vector{Int}` which determines the size of the blocks in that dimension. We here create a `[1,2]×[3,2]` block matrix of `Float32`s:
