@@ -5,7 +5,12 @@
 # BlockArray #
 ##############
 
-immutable BlockArray{T, N, R} <: AbstractBlockArray{T, N, R}
+"""
+    BlockArray{T, N, R} <: AbstractBlockArray{T, N}
+
+`R` defines the array type that each block has.
+"""
+immutable BlockArray{T, N, R} <: AbstractBlockArray{T, N}
     blocks::Array{R, N}
     block_sizes::BlockSizes{N}
     function BlockArray(blocks::Array{R, N}, block_sizes::BlockSizes{N})
@@ -32,9 +37,7 @@ function Base.similar{T,N,T2}(block_array::BlockArray{T,N}, ::Type{T2})
     BlockArray(similar(block_array.blocks, Array{T2, N}), copy(block_array.block_sizes))
 end
 
-############
-# Indexing #
-############
+Base.size(arr::BlockArray) = map(sum, arr.block_sizes.sizes)
 
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
 function Base.getindex{T, N}(block_arr::BlockArray{T, N}, i::Int)
@@ -79,28 +82,55 @@ function Base.setindex!{T, N}(block_arr::BlockArray{T, N}, v, i::Vararg{Int, N})
     return block_arr
 end
 
+
+################################
+# AbstractBlockArray Interface #
+################################
+
+nblocks(block_array::BlockArray) = nblocks(block_array.block_sizes)
+blocksize{T, N}(block_array::BlockArray{T,N}, i::Vararg{Int, N}) = blocksize(block_array.block_sizes, i)
+
+
+############
+# Indexing #
+############
+
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
-@propagate_inbounds getblock{T}(block_arr::BlockArray{T,1}, block_i::Int) = block_arr.blocks[block_i]
-@propagate_inbounds getblock{T}(block_arr::BlockArray{T,2}, block_i::Int, block_j::Int) = block_arr.blocks[block_i, block_j]
+function getblock{T}(block_arr::BlockArray{T,1}, block_i::Int)
+    @boundscheck blockcheckbounds(block_arr, block_i)
+    @inbounds v = block_arr.blocks[block_i]
+    return v
+end
+
+function getblock{T}(block_arr::BlockArray{T,1}, block_i::Int, block_j::Int)
+    @boundscheck blockcheckbounds(block_arr, block_i, block_j)
+    @inbounds v = block_arr.blocks[block_i, block_j]
+    return v
+end
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
-@propagate_inbounds getblock{T,N}(block_arr::BlockArray{T,N}, block::Vararg{Int, N}) = block_arr.blocks[block...]
+function getblock{T,N}(block_arr::BlockArray{T,N}, block::Vararg{Int, N})
+    @boundscheck blockcheckbounds(block_arr, block...)
+    block_arr.blocks[block...]
+end
 
 function _check_setblock!{T,N}(block_arr::BlockArray{T, N}, v, block::NTuple{N, Int})
     for i in 1:N
         if size(v, i) != block_arr.block_sizes[i, block[i]]
-            throw(ArgumentError(string("attempt to assign a $(size(v)) array to a ",  ntuple(i -> block_arr.block_sizes[i][block[i]], Val{N}), " block")))
+            throw(DimensionMismatch(string("tried to assign $(size(v)) array to ", blocksize(block_arr, block...), " block")))
         end
     end
 end
 
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
 function setblock!{T}(block_arr::BlockArray{T, 1}, v, block_i::Int)
+    @boundscheck blockcheckbounds(block_arr, block_i)
     @boundscheck _check_setblock!(block_arr, v, (block_i,))
     @inbounds block_arr.blocks[block_i] = v
     return block_arr
 end
 
 function setblock!{T}(block_arr::BlockArray{T, 2}, v, block_i::Int, block_j::Int)
+      @boundscheck blockcheckbounds(block_arr, block_i, block_j)
     @boundscheck _check_setblock!(block_arr, v, (block_i, block_j))
     @inbounds block_arr.blocks[block_i, block_j] = v
     return block_arr
@@ -108,6 +138,7 @@ end
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
 
 function setblock!{T, N}(block_arr::BlockArray{T, N}, v, block::Vararg{Int, N})
+    @boundscheck blockcheckbounds(block_arr, block...)
     @boundscheck _check_setblock!(block_arr, v, block)
     @inbounds block_arr.blocks[block...] = v
     return block_arr
@@ -158,9 +189,6 @@ end
 # Misc #
 ########
 
-"""
-Converts from a `BlockArray` to a normal `Array`
-"""
 @generated function Base.full{T,N,R}(block_array::BlockArray{T, N, R})
     # TODO: This will fail for empty block array
     return quote

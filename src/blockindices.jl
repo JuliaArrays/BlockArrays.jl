@@ -1,4 +1,6 @@
 """
+    BlockIndex{N}
+
 A `BlockIndex` is an index which stores a global index in two parts: the block
 and the offset index into the block.
 """
@@ -18,8 +20,11 @@ end
     return block, i - accum
 end
 
+
 """
-Converts from a global index to a `BlockIndex`.
+    global2blockindex{N}(block_sizes::BlockSizes{N}, inds...) -> BlockIndex{N}
+
+Converts from global indices `inds` to a `BlockIndex`.
 """
 @generated function global2blockindex{N}(block_sizes::BlockSizes{N}, i::NTuple{N, Int})
     # TODO: Try get rid of @generated
@@ -35,7 +40,9 @@ Converts from a global index to a `BlockIndex`.
 end
 
 """
-Converts from a `BlockIndex` to a global index.
+    blockindex2global{N}(block_sizes::BlockSizes{N}, block_index::BlockIndex{N}) -> inds
+
+Converts from a block index to a tuple containing the global indices
 """
 @generated function blockindex2global{N}(block_sizes::BlockSizes{N}, block_index::BlockIndex{N})
     # TODO: Try get rid of @generated

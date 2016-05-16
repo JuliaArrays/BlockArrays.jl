@@ -9,8 +9,10 @@ notifications:
   email: false
 # uncomment the following lines to override the default test script
 script:
-    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'Pkg.clone(pwd()); Pkg.test("BlockArrays"; coverage=true)'
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia -e 'Pkg.clone(pwd()); Pkg.test("BlockArrays"; coverage=true)'
 
 after_success:
-- julia -e 'cd(Pkg.dir("BlockArrays")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'cd(Pkg.dir("BlockArrays")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'Pkg.clone("https://github.com/MichaelHatherly/Documenter.jl")'
+  - julia -e 'cd(Pkg.dir("BlockArrays")); include(joinpath("docs", "make.jl"))'
