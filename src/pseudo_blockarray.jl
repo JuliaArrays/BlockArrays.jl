@@ -6,9 +6,37 @@
 ####################
 
 """
-A `PseudoBlockArray` is similar to a `BlockArray` except the full array is stored contigously instead of block by block.
+    PseudoBlockArray{T, N, R} <: AbstractBlockArray{T, N}
+
+A `PseudoBlockArray` is similar to a [`BlockArray`]({ref}) except the full array is stored
+contiguously instead of block by block. This means that is not possible to insert and retrieve
+blocks without copying data. On the other hand `full` on a `PseudoBlockArray` is instead instant since
+it just returns the wrapped array.
+
+When iteratively solving a set of equations with a gradient method the Jacobian typically has a block structure. It can be convenient
+to use a `PseudoBlockArray` to build up the Jacobian block by block and then pass the resulting matrix to
+a direct solver using `full`.
+
+```jlcon
+julia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
+2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
+ 0.599925  0.288788  │  0.55428
+ --------------------┼----------
+ 0.82342   0.394812  │  0.263454
+
+julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
+3-blocked 6-element BlockArrays.PseudoBlockArray{Float64,1,SparseVector{Float64,Int64}}:
+ 0.542401
+ 0.542299
+ 0.0
+ ---------
+ 0.682638
+ 0.0
+ ---------
+ 0.0553841
+```
 """
-immutable PseudoBlockArray{T, N, R} <: AbstractBlockArray{T, N, R}
+immutable PseudoBlockArray{T, N, R} <: AbstractBlockArray{T, N}
     blocks::R
     block_sizes::BlockSizes{N}
     function PseudoBlockArray(blocks::R, block_sizes::BlockSizes{N})
@@ -25,7 +53,7 @@ typealias PseudoBlockMatrix{T, R} PseudoBlockArray{T, 2, R}
 typealias PseudoBlockVector{T, R} PseudoBlockArray{T, 1, R}
 typealias PseudoBlockVecOrMat{T, R} Union{PseudoBlockMatrix{T, R}, PseudoBlockVector{T, R}}
 
-# Auxilary outer constructor
+# Auxiliary outer constructor
 PseudoBlockArray{N, R}(blocks::R, block_sizes::BlockSizes{N}) = PseudoBlockArray{eltype(R), N, R}(blocks, block_sizes)
 PseudoBlockArray{N, R}(blocks::R, block_sizes::Vararg{Vector{Int}, N}) = PseudoBlockArray(blocks, BlockSizes(block_sizes))
 
@@ -38,9 +66,7 @@ function Base.similar{T,N,T2}(block_array::PseudoBlockArray{T,N}, ::Type{T2})
     PseudoBlockArray(similar(block_array.blocks, T2), copy(block_array.block_sizes))
 end
 
-############
-# Indexing #
-############
+Base.size(arr::PseudoBlockArray) = map(sum, arr.block_sizes.sizes)
 
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
 function Base.getindex{T, N}(block_arr::PseudoBlockArray{T, N}, i::Int)
@@ -82,6 +108,19 @@ function Base.setindex!{T, N}(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{In
     return block_arr
 end
 
+################################
+# AbstractBlockArray Interface #
+################################
+
+
+nblocks(block_array::PseudoBlockArray) = nblocks(block_array.block_sizes)
+blocksize{T, N}(block_array::PseudoBlockArray{T,N}, i::Vararg{Int, N}) = blocksize(block_array.block_sizes, i)
+
+
+############
+# Indexing #
+############
+
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
 function getblock{T,N}(block_arr::PseudoBlockArray{T,N}, block_i::Int)
     range = globalrange(block_arr.block_sizes, (block_i,))
@@ -102,7 +141,7 @@ end
 function _check_getblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
     for i in 1:N
         if size(x, i) != length(blockrange[i])
-            throw(ArgumentError(string("attempt to assign a ",  ntuple(i -> block_arr.block_sizes[i, block[i]], Val{N}), " block to a $(size(x)) array")))
+            throw(DimensionMismatch(string("tried to assign ", blocksize(block_arr, block...), " block to $(size(x)) array")))
         end
     end
 end
@@ -158,7 +197,7 @@ end
 function _check_setblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
     for i in 1:N
         if size(x, i) != block_arr.block_sizes[i, block[i]]
-            throw(ArgumentError(string("attempt to assign a $(size(x)) array to a ",  ntuple(i -> block_arr.block_sizes[i][block[i]], Val{N}), " block")))
+            throw(DimensionMismatch(string("tried to assign $(size(x)) array to ", blocksize(block_arr, block...), " block")))
         end
     end
 end
@@ -213,9 +252,6 @@ end
 # Misc #
 ########
 
-"""
-Converts from a `PseudoBlockArray` to a normal `Array`
-"""
 function Base.full{T,N,R}(block_array::PseudoBlockArray{T, N, R})
     return block_array.blocks
 end

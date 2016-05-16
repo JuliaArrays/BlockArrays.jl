@@ -2,34 +2,18 @@ __precompile__()
 
 module BlockArrays
 
-export Block, getblock, getblock!, setblock!, nblocks
-
+# AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
+export Block, getblock, getblock!, setblock!, nblocks, blocksize, blockcheckbounds, BlockBoundsError
+
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat
 export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat
 
-import Base: @propagate_inbounds
+import Base: @propagate_inbounds, full
 using Base.Cartesian
 
-abstract AbstractBlockArray{T, N, R} <: AbstractArray{T, N}
-typealias AbstractBlockMatrix{T, R} AbstractBlockArray{T, 2, R}
-typealias AbstractBlockVector{T, R} AbstractBlockArray{T, 1, R}
-typealias AbstractBlockVecOrMat{T, R} Union{AbstractBlockMatrix{T, R}, AbstractBlockVector{T, R}}
 
-"""
-    nblocks(block_array[, i])
-
-The number of blocks in a block array, optionally in dimension i.
-"""
-nblocks(block_array::AbstractBlockArray, i::Int) = nblocks(block_array.block_sizes, i)
-nblocks(block_array::AbstractBlockArray) = nblocks(block_array.block_sizes)
-
-
-Base.similar{T,N}(block_array::AbstractBlockArray{T,N}) = similar(block_array, T)
-Base.size(arr::AbstractBlockArray) = map(sum, arr.block_sizes.sizes)
-
-Base.linearindexing{BA <: AbstractBlockArray}(::Type{BA}) = Base.LinearSlow()
-
+include("abstractblockarray.jl")
 include("blocksizes.jl")
 include("blockindices.jl")
 include("blockarray.jl")
