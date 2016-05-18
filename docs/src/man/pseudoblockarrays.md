@@ -1,6 +1,6 @@
 # PseudoBlockArrays
 
-A `PseudoBlockArray` is similar to a [`BlockArray`]({ref}) except the full array is stored
+A `PseudoBlockArray` is similar to a [`BlockArray`](@ref) except the full array is stored
 contiguously instead of block by block. This means that is not possible to insert and retrieve
 blocks without copying data. On the other hand `full` on a `PseudoBlockArray` is instead instant since
 it just returns the wrapped array.
