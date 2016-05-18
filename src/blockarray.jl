@@ -8,7 +8,10 @@
 """
     BlockArray{T, N, R} <: AbstractBlockArray{T, N}
 
-`R` defines the array type that each block has.
+A `BlockArray` is an array where each block is stored contiguously. This means that insertions and retrival of blocks
+can be very fast since no copying of data is needed.
+
+In the type definition, `R` defines the array type that each block has, for example `Matrix{Float64}.
 """
 immutable BlockArray{T, N, R} <: AbstractBlockArray{T, N}
     blocks::Array{R, N}

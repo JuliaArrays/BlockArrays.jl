@@ -102,6 +102,27 @@ function getblock{T, N}(A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
     throw("getblock for ", typeof(A), "is not implemented")
 end
 
+"""
+    getindex{T, N}(A::AbstractBlockArray{T,N}, i...::Enum)
+
+Returns the block at the blockindex defined by the values of the enums `i`
+
+```jlcon
+julia> A = PseudoBlockArray(zeros(2,3), [1,1], [2,1]);
+
+julia> @enum vars u = 1 v = 2
+
+julia> A[Block(1,2)] = [3.0];
+
+ulia> A[u, v]
+1×1 Array{Float64,2}:
+ 3.0
+```
+"""
+function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Vararg{Enum, N})
+    getblock(A, map(Int, i)...)
+end
+
 function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Enum)
     getblock(A, Int(i))
 end
@@ -110,9 +131,7 @@ function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Enum, j::Enum)
     getblock(A, Int(i), Int(j))
 end
 
-function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Vararg{Enum, N})
-    getblock(A, map(Int, i)...)
-end
+
 
 
 """
@@ -177,6 +196,30 @@ function setblock!{T, N}(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N})
     throw("setblock! for ", typeof(A), "is not implemented")
 end
 
+"""
+    setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i...::Enum)
+
+Sets the block at the blockindex defined by the values of the enums `i`
+
+
+```jlcon
+julia> A = PseudoBlockArray(zeros(2,3), [1,1], [2,1]);
+
+julia> @enum vars u = 1 v = 2
+
+julia> A[u,v] = [3.0];
+
+julia> A
+2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
+ 0.0  0.0  │  3.0
+ ----------┼-----
+ 0.0  0.0  │  0.0
+```
+"""
+function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Vararg{Enum, N})
+    setblock!(A, v, map(Int, i)...)
+end
+
 function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Enum)
     setblock!(A, v, Int(i))
 end
@@ -185,9 +228,6 @@ function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Enum, j::Enum)
     setblock!(A, v, Int(i), Int(j))
 end
 
-function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Vararg{Enum, N})
-    setblock!(A, v, map(Int, i)...)
-end
 
 """
     BlockBoundsError([A],[inds...])

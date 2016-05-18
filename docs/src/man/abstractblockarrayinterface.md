@@ -1,5 +1,7 @@
 # The AbstractBlockArray interface
 
+In order to follow the `AbstractBlockArray` the following methods should be implemented:
+
 
 | Methods to implement    | Brief description |
 | :---------------------- | :---------------- |
@@ -12,12 +14,14 @@
 | **Optional methods**    |                        |
 | `getblock!(x, A, i)`    | `X[i]`, blocked index assignment with in place storage in `x` |
 
+For a more thorough description of the methods see the public interface documentation.
+
 
 With the methods above implemented the following are automatically provided:
 
 * A pretty printing `show` function that uses unicode lines to split up the blocks:
 
-    julia> BlockArray(rand(4, 5), [1,3], [2,3])
+    julia> A = BlockArray(rand(4, 5), [1,3], [2,3])
     2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
      0.28346   0.234328  │  0.10266   0.0670817  0.941958
      --------------------┼-------------------------------
@@ -25,9 +29,22 @@ With the methods above implemented the following are automatically provided:
      0.74367   0.16049   │  0.704886  0.950269   0.601036
      0.502035  0.259069  │  0.857453  0.197673   0.962873
 
+* Indexing with `Enums` works as a way to access blocks and set blocks.
+
+    julia> @enum vars u=1 v=2
+
+    julia> A[u, v]
+    1×3 Array{Float64,2}:
+     0.10266  0.0670817  0.941958
+
+    julia> A[u, v] = zeros(1,3);
+
+    julia> A[u, v]
+    1×3 Array{Float64,2}:
+     0.0  0.0  0.0
+
 
 * A bounds index checking function for indexing with blocks:
-    julia> A = BlockArray(rand(4, 5), [1,3], [2,3]);
 
     julia> blockcheckbounds(A, 5, 3)
     ERROR: BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,Array{Float64,2}} at block index [5,3]
