@@ -8,10 +8,13 @@ end
 
 include("test_blockindices.jl")
 
+@enum blockenums u=1 γ=2 ξ=3
+
 let
     BA_1 = BlockArray(Vector{Float64}, [1,2,3])
     a_1 = rand(2)
     BA_1[Block(2)] = a_1
+    @test BA_1[γ] == a_1
     @test BA_1[Block(2)] == a_1
     @test BA_1[2] == a_1[1]
     @test_throws DimensionMismatch BA_1[Block(3)] = rand(4)
@@ -22,6 +25,10 @@ let
     a_2 = rand(1,4)
     BA_2[Block(1,2)] = a_2
     @test BA_2[Block(1,2)] == a_2
+    BA_2[Block(1,2)] = zeros(1,4)
+    BA_2[u, γ] = a_2
+    @test BA_2[u, γ] == a_2
+
     @test BA_2[1,5] == a_2[2]
     @test_throws DimensionMismatch BA_2[Block(1,2)] = rand(1,5)
 end
@@ -37,11 +44,15 @@ let
         q = rand(1)
         BA_1[Block(1)] = q
         @test BA_1[Block(1)] == q
+        @test BA_1[u] == q
         if BlockType == PseudoBlockArray
             q2 = zeros(q)
             getblock!(q2, BA_1, 1)
             @test q2 == q
             @test_throws DimensionMismatch getblock!(zeros(2), BA_1, 1)
+            fill!(q2, 0)
+            getblock!(q2, BA_1, u)
+            @test q2 == q
         end
 
         a_1_sparse = sprand(6, 0.9)
@@ -62,11 +73,15 @@ let
         BA_2[Block(1,2)] = q
         @test_throws DimensionMismatch BA_2[Block(1,2)] = rand(1,5)
         @test BA_2[Block(1,2)] == q
+        @test BA_2[u,γ] == q
         if BlockType == PseudoBlockArray
             q2 = zeros(q)
             getblock!(q2, BA_2, 1, 2)
             @test q2 == q
             @test_throws DimensionMismatch getblock!(zeros(1,5), BA_2, 1, 2)
+            fill!(q2, 0)
+            getblock!(q2, BA_2, u, γ)
+            @test q2 == q
         end
 
         a_2_sparse = sprand(3, 7, 0.9)
@@ -86,11 +101,15 @@ let
         q = rand(1,4,2)
         BA_3[Block(1,2,2)] = q
         @test BA_3[Block(1,2,2)] == q
+        @test BA_3[u, γ, γ] == q
         if BlockType == PseudoBlockArray
             q3 = zeros(q)
             getblock!(q3, BA_3, 1, 2, 2)
             @test q3 == q
             @test_throws DimensionMismatch getblock!(zeros(1,3,2), BA_3, 1, 2,2)
+            fill!(q3, 0)
+            getblock!(q3, BA_3, u, γ, γ)
+            @test q3 == q
         end
 
     end

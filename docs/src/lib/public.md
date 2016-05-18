@@ -31,6 +31,8 @@ This sections defines the functions a subtype of `AbstractBlockArray` should def
     getblock
     getblock!
     setblock!
+    getindex
+    setindex!
     full
     blockcheckbounds
 
