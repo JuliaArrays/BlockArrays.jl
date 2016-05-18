@@ -98,8 +98,20 @@ julia> A[Block(1,2)]
  0.471299
 ```
 """
-function getblock{T, N}(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
+function getblock{T, N}(A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
     throw("getblock for ", typeof(A), "is not implemented")
+end
+
+function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Enum)
+    getblock(A, Int(i))
+end
+
+function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Enum, j::Enum)
+    getblock(A, Int(i), Int(j))
+end
+
+function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Vararg{Enum, N})
+    getblock(A, map(Int, i)...)
 end
 
 
@@ -129,6 +141,18 @@ function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
     throw("getblock! for ", typeof(A), "is not implemented")
 end
 
+function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Enum)
+    getblock!(X, A, Int(i))
+end
+
+function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Enum, j::Enum)
+    getblock!(X, A, Int(i), Int(j))
+end
+
+function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Vararg{Enum, N})
+    getblock!(X, A, map(Int, i)...)
+end
+
 """
     setblock!(A, v, inds...)
 
@@ -151,6 +175,18 @@ julia> A
 """
 function setblock!{T, N}(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N})
     throw("setblock! for ", typeof(A), "is not implemented")
+end
+
+function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Enum)
+    setblock!(A, v, Int(i))
+end
+
+function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Enum, j::Enum)
+    setblock!(A, v, Int(i), Int(j))
+end
+
+function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Vararg{Enum, N})
+    setblock!(A, v, map(Int, i)...)
 end
 
 """
@@ -229,7 +265,7 @@ function full(A::AbstractBlockArray) end
 """
     Block(inds...)
 
-A `Block` is simply a wrapper around a set of indices so that it can be used to dispatch on. By
+A `Block` is simply a wrapper around a set of indices or enums so that it can be used to dispatch on. By
 indexing a `AbstractBlockArray` with a `Block` the a block at that block index will be returned instead of
 a single element.
 
@@ -245,11 +281,11 @@ julia> A[Block(1,2)]
  0.471299
 ```
 """
-immutable Block{N}
-    n::NTuple{N, Int}
+immutable Block{N, T}
+    n::NTuple{N, T}
 end
 
-Block{N}(n::Vararg{Int, N}) = Block{N}(n)
+Block{N, T}(n::Vararg{T, N}) = Block{N, T}(n)
 
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
 @propagate_inbounds Base.getindex{T}(block_arr::AbstractBlockArray{T,1}, block::Block{1}) = getblock(block_arr, block.n[1])
