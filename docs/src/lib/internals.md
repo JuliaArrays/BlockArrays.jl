@@ -1,21 +1,25 @@
-    {meta}
-    CurrentModule = BlockArrays
+```@meta
+CurrentModule = BlockArrays
+```
 
 # Internal Documentation
 
 ## Contents
 
-    {contents}
-    Pages = ["internals.md"]
+```@contents
+Pages = ["internals.md"]
+```
 
 ## Index
 
-    {index}
-    Pages = ["internals.md"]
+```@index
+Pages = ["internals.md"]
+```
 
 ## Internals
 
-    {docs}
-    BlockIndex
-    blockindex2global
-    global2blockindex
+```@docs
+BlockIndex
+blockindex2global
+global2blockindex
+```
