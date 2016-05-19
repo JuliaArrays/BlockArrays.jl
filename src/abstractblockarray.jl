@@ -102,6 +102,7 @@ function getblock{T, N}(A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
     throw("getblock for ", typeof(A), "is not implemented")
 end
 
+
 """
     getindex{T, N}(A::AbstractBlockArray{T,N}, i...::Enum)
 
@@ -119,19 +120,17 @@ ulia> A[u, v]
  3.0
 ```
 """
-function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Vararg{Enum, N})
+@propagate_inbounds function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Vararg{Enum, N})
     getblock(A, map(Int, i)...)
 end
 
-function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Enum)
+@propagate_inbounds function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Enum)
     getblock(A, Int(i))
 end
 
-function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Enum, j::Enum)
+@propagate_inbounds function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Enum, j::Enum)
     getblock(A, Int(i), Int(j))
 end
-
-
 
 
 """
@@ -160,15 +159,15 @@ function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
     throw("getblock! for ", typeof(A), "is not implemented")
 end
 
-function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Enum)
+@propagate_inbounds function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Enum)
     getblock!(X, A, Int(i))
 end
 
-function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Enum, j::Enum)
+@propagate_inbounds function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Enum, j::Enum)
     getblock!(X, A, Int(i), Int(j))
 end
 
-function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Vararg{Enum, N})
+@propagate_inbounds function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Vararg{Enum, N})
     getblock!(X, A, map(Int, i)...)
 end
 
@@ -216,15 +215,15 @@ julia> A
  0.0  0.0  │  0.0
 ```
 """
-function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Vararg{Enum, N})
+@propagate_inbounds function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Vararg{Enum, N})
     setblock!(A, v, map(Int, i)...)
 end
 
-function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Enum)
+@propagate_inbounds function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Enum)
     setblock!(A, v, Int(i))
 end
 
-function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Enum, j::Enum)
+@propagate_inbounds function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Enum, j::Enum)
     setblock!(A, v, Int(i), Int(j))
 end
 
