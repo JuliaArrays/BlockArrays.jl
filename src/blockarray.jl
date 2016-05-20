@@ -13,7 +13,7 @@ can be very fast since no copying of data is needed.
 
 In the type definition, `R` defines the array type that each block has, for example `Matrix{Float64}.
 """
-immutable BlockArray{T, N, R} <: AbstractBlockArray{T, N}
+immutable BlockArray{T, N, R <: AbstractArray} <: AbstractBlockArray{T, N}
     blocks::Array{R, N}
     block_sizes::BlockSizes{N}
     function BlockArray(blocks::Array{R, N}, block_sizes::BlockSizes{N})
@@ -201,9 +201,29 @@ end
         @nloops $N i i->(1:length(block_sizes[i])) begin
             block_index = @ntuple $N i
             indices = globalrange(block_sizes, block_index)
-            arr[indices...] = block_array[Block(block_index...)]
+            arr[indices...] = getblock(block_array, block_index...)
         end
 
         return arr
+    end
+end
+
+@generated function Base.copy!{T, N, R <: AbstractArray}(block_array::BlockArray{T, N, R}, arr::R)
+    return quote
+        block_sizes = block_array.block_sizes
+
+        @nloops $N i i->(1:length(block_sizes[i])) begin
+            block_index = @ntuple $N i
+            indices = globalrange(block_sizes, block_index)
+            copy!(getblock(block_array, block_index...), arr[indices...])
+        end
+
+        return block_array
+    end
+end
+
+function Base.fill!(block_array::BlockArray, v)
+    for block in block_array.blocks
+        fill!(block, v)
     end
 end

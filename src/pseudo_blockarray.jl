@@ -36,7 +36,7 @@ julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
  0.0553841
 ```
 """
-immutable PseudoBlockArray{T, N, R} <: AbstractBlockArray{T, N}
+immutable PseudoBlockArray{T, N, R <: AbstractArray} <: AbstractBlockArray{T, N}
     blocks::R
     block_sizes::BlockSizes{N}
     function PseudoBlockArray(blocks::R, block_sizes::BlockSizes{N})
@@ -252,6 +252,14 @@ end
 # Misc #
 ########
 
-function Base.full{T,N,R}(block_array::PseudoBlockArray{T, N, R})
+function Base.full(block_array::PseudoBlockArray)
     return block_array.blocks
+end
+
+function Base.copy!{T, N, R <: AbstractArray}(block_array::PseudoBlockArray{T, N, R}, arr::R)
+    copy!(block_array.blocks, arr)
+end
+
+function Base.fill!(block_array::PseudoBlockArray, v)
+    fill!(block_array.blocks, v)
 end
