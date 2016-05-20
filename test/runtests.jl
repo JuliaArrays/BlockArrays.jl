@@ -54,6 +54,11 @@ let
             getblock!(q2, BA_1, u)
             @test q2 == q
         end
+        fill!(BA_1, 1.0)
+        @test BA_1 == ones(size(BA_1))
+        ran = rand(size(BA_1))
+        copy!(BA_1, ran)
+        @test BA_1 == ran
 
         a_1_sparse = sprand(6, 0.9)
         BA_1_sparse = BlockType(a_1_sparse, [1,2,3])
@@ -83,6 +88,11 @@ let
             getblock!(q2, BA_2, u, γ)
             @test q2 == q
         end
+        fill!(BA_2, 1.0)
+        @test BA_2 == ones(size(BA_2))
+        ran = rand(size(BA_2))
+        copy!(BA_2, ran)
+        @test BA_2 == ran
 
         a_2_sparse = sprand(3, 7, 0.9)
         BA_2_sparse = BlockType(a_2_sparse, [1,2], [3,4])
@@ -111,7 +121,11 @@ let
             getblock!(q3, BA_3, u, γ, γ)
             @test q3 == q
         end
-
+        fill!(BA_3, 1.0)
+        @test BA_3 == ones(size(BA_3))
+        ran = rand(size(BA_3))
+        copy!(BA_3, ran)
+        @test BA_3 == ran
     end
 end
 
