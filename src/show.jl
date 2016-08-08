@@ -22,7 +22,7 @@ function Base.print_matrix_row(io::IO,
         if isassigned(X,Int(i),Int(j)) # isassigned accepts only `Int` indices
             x = X[i,j]
             a = Base.alignment(io, x)
-            sx = sprint(0, Base.showcompact_lim, x, env=io)
+            sx = sprint(0, show, x, env=io)
         else
             a = Base.undef_ref_alignment
             sx = Base.undef_ref_str
