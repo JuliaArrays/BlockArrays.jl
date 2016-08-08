@@ -248,7 +248,7 @@ function Base.showerror(io::IO, ex::BlockBoundsError)
             print(io, summary(ex.a))
         if isdefined(ex, :i)
             print(io, " at block index [")
-            print_joined(io, ex.i, ',')
+            join(io, ex.i, ',')
             print(io, ']')
         end
     end
