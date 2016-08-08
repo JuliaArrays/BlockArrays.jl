@@ -26,8 +26,11 @@ end
 
 Converts from global indices `inds` to a `BlockIndex`.
 """
-@generated function global2blockindex{N}(block_sizes::BlockSizes{N}, i::NTuple{N, Int})
+@generated function global2blockindex{N, Q}(block_sizes::BlockSizes{N}, i::NTuple{Q, Int})
     # TODO: Try get rid of @generated
+    if !(Q == 1 || Q >= N)
+        throw(DimensionMismatch("partial linear indexing not supported"))
+    end
     block_index_ex = Expr(:tuple, [:(_find_block(block_sizes, $k, i[$k])) for k = 1:N]...)
     I_ex = Expr(:tuple, [:(block_index[$k][1]) for k = 1:N]...)
     α_ex = Expr(:tuple, [:(block_index[$k][2]) for k = 1:N]...)
@@ -35,6 +38,7 @@ Converts from global indices `inds` to a `BlockIndex`.
         @inbounds block_index = $block_index_ex
         @inbounds I = $I_ex
         @inbounds α = $α_ex
+
         return BlockIndex(I, α)
     end
 end

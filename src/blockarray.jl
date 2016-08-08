@@ -43,20 +43,20 @@ end
 Base.size(arr::BlockArray) = map(sum, arr.block_sizes.sizes)
 
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
-function Base.getindex{T, N}(block_arr::BlockArray{T, N}, i::Int)
+function Base.getindex(block_arr::BlockArray, i::Int)
     @boundscheck checkbounds(block_arr, i)
     @inbounds v = block_arr[global2blockindex(block_arr.block_sizes, (i,))]
     return v
 end
 
-function Base.getindex{T, N}(block_arr::BlockArray{T, N}, i::Int, j::Int)
+function Base.getindex(block_arr::BlockArray, i::Int, j::Int)
     @boundscheck checkbounds(block_arr, i, j)
     @inbounds v = block_arr[global2blockindex(block_arr.block_sizes, (i,j))]
     return v
 end
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
 
-function Base.getindex{T, N}(block_arr::BlockArray{T, N}, i::Vararg{Int, N})
+function Base.getindex{N}(block_arr::BlockArray, i::Vararg{Int, N})
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr[global2blockindex(block_arr.block_sizes, i)]
     return v
@@ -64,14 +64,14 @@ end
 
 
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
-function Base.setindex!{T, N}(block_arr::BlockArray{T, N}, v, i::Int)
+function Base.setindex!(block_arr::BlockArray, v, i::Int)
     @boundscheck checkbounds(block_arr, i)
     @inbounds block_arr[global2blockindex(block_arr.block_sizes, (i,))] = v
     return block_arr
 end
 
 
-function Base.setindex!{T, N}(block_arr::BlockArray{T, N}, v, i::Int, j::Int)
+function Base.setindex!(block_arr::BlockArray, v, i::Int, j::Int)
     @boundscheck checkbounds(block_arr, i, j)
     @inbounds block_arr[global2blockindex(block_arr.block_sizes, (i,j))] = v
     return block_arr
@@ -79,7 +79,7 @@ end
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
 
 
-function Base.setindex!{T, N}(block_arr::BlockArray{T, N}, v, i::Vararg{Int, N})
+function Base.setindex!{N}(block_arr::BlockArray, v, i::Vararg{Int, N})
     @boundscheck checkbounds(block_arr, i...)
     @inbounds block_arr[global2blockindex(block_arr.block_sizes, i)] = v
     return block_arr
@@ -99,19 +99,19 @@ blocksize{T, N}(block_array::BlockArray{T,N}, i::Vararg{Int, N}) = blocksize(blo
 ############
 
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
-function getblock{T}(block_arr::BlockArray{T,1}, block_i::Int)
+@propagate_inbounds function getblock{T}(block_arr::BlockArray{T,1}, block_i::Int)
     @boundscheck blockcheckbounds(block_arr, block_i)
     @inbounds v = block_arr.blocks[block_i]
     return v
 end
 
-function getblock{T}(block_arr::BlockArray{T,1}, block_i::Int, block_j::Int)
+@propagate_inbounds function getblock{T}(block_arr::BlockArray{T,2}, block_i::Int, block_j::Int)
     @boundscheck blockcheckbounds(block_arr, block_i, block_j)
     @inbounds v = block_arr.blocks[block_i, block_j]
     return v
 end
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
-function getblock{T,N}(block_arr::BlockArray{T,N}, block::Vararg{Int, N})
+@propagate_inbounds function getblock{T,N}(block_arr::BlockArray{T,N}, block::Vararg{Int, N})
     @boundscheck blockcheckbounds(block_arr, block...)
     block_arr.blocks[block...]
 end
@@ -211,11 +211,15 @@ end
 @generated function Base.copy!{T, N, R <: AbstractArray}(block_array::BlockArray{T, N, R}, arr::R)
     return quote
         block_sizes = block_array.block_sizes
+        if size(block_array) != size(arr)
+            throw(DimensionMismatch())
+        end
 
         @nloops $N i i->(1:length(block_sizes[i])) begin
             block_index = @ntuple $N i
             indices = globalrange(block_sizes, block_index)
-            copy!(getblock(block_array, block_index...), arr[indices...])
+            @inbounds block = getblock(block_array, block_index...)
+            copy!(block, arr[indices...])
         end
 
         return block_array

@@ -66,23 +66,25 @@ function Base.similar{T,N,T2}(block_array::PseudoBlockArray{T,N}, ::Type{T2})
     PseudoBlockArray(similar(block_array.blocks, T2), copy(block_array.block_sizes))
 end
 
+Base.size{T}(arr::PseudoBlockArray{T, 1}) = (sum(arr.block_sizes.sizes[1]),)
+Base.size{T}(arr::PseudoBlockArray{T, 2}) = (sum(arr.block_sizes.sizes[1]),sum(arr.block_sizes.sizes[2]))
 Base.size(arr::PseudoBlockArray) = map(sum, arr.block_sizes.sizes)
 
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
-function Base.getindex{T, N}(block_arr::PseudoBlockArray{T, N}, i::Int)
+function Base.getindex(block_arr::PseudoBlockArray, i::Int)
     @boundscheck checkbounds(block_arr, )
     @inbounds v = block_arr.blocks[i]
     return v
 end
 
-function Base.getindex{T, N}(block_arr::PseudoBlockArray{T, N}, i::Int, j::Int)
+function Base.getindex(block_arr::PseudoBlockArray, i::Int, j::Int)
     @boundscheck checkbounds(block_arr, i, j)
     @inbounds v = block_arr.blocks[i, j]
     return v
 end
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
 
-function Base.getindex{T, N}(block_arr::PseudoBlockArray{T, N}, i::Vararg{Int, N})
+function Base.getindex{N}(block_arr::PseudoBlockArray, i::Vararg{Int, N})
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr.blocks[i...]
     return v
@@ -188,6 +190,51 @@ end
         @inbounds begin
             @nloops $N i (d->(blockrange[d])) (d-> k_{d-1}=1) (d-> k_d+=1) begin
                 (@nref $N x k) = (@nref $N arr i)
+            end
+        end
+        return x
+    end
+end
+
+@propagate_inbounds function updateblock!{T}(block_arr::PseudoBlockArray{T,1}, x, f::Function,  block_i::Int, block_j::Int)
+    blockrange = globalrange(block_arr.block_sizes, (block_i,))
+    @boundscheck _check_setblock!(blockrange, x, block_arr, (block_i,))
+    arr = block_arr.blocks
+    k_1 = 1
+    @inbounds for i in blockrange[1]
+        arr[i] = x[k_1]
+        k_1 += 1
+    end
+    return x
+end
+
+
+@propagate_inbounds function updateblock!{T}(block_arr::PseudoBlockArray{T,2}, x, f::Function,  block_i::Int, block_j::Int)
+    blockrange = globalrange(block_arr.block_sizes, (block_i,block_j))
+    @boundscheck _check_getblock!(blockrange, x, block_arr, (block_i, block_j))
+
+    arr = block_arr.blocks
+    k_2 = 1
+    @inbounds for j in blockrange[2]
+        k_1 = 1
+        for i in blockrange[1]
+            arr[i, j] = f(arr[i, j], x[k_1, k_2])
+            k_1 += 1
+        end
+        k_2 += 1
+    end
+    return x
+end
+
+@generated function updateblock!{T,N}(block_arr::PseudoBlockArray{T,N}, x, f::Function, block::Vararg{Int, N})
+    return quote
+        blockrange = globalrange(block_arr.block_sizes, block)
+        @boundscheck _check_setblock!(blockrange, x, block_arr, block)
+        arr = block_arr.blocks
+        @nexprs $N d -> k_d = 1
+        @inbounds begin
+            @nloops $N i (d->(blockrange[d])) (d-> k_{d-1}=1) (d-> k_d+=1) begin
+                (@nref $N arr i) = f((@nref $N arr i), (@nref $N x k))
             end
         end
         return x
