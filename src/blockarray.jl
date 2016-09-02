@@ -1,5 +1,5 @@
 # Note: Functions surrounded by a comment blocks are there because `Vararg` is still allocating.
-# When Vararg is fast enough, they can simply be removed
+# When Vararg is fast enough, they can simply be removed.
 
 ##############
 # BlockArray #
