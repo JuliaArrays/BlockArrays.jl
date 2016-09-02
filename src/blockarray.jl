@@ -1,5 +1,5 @@
-# Note: Functions surrounded by a comment blocks are there because `Vararg` is sitll allocating.
-# When Vararg is fast enough, they can simply be removed
+# Note: Functions surrounded by a comment blocks are there because `Vararg` is still allocating.
+# When Vararg is fast enough, they can simply be removed.
 
 ##############
 # BlockArray #
@@ -8,7 +8,7 @@
 """
     BlockArray{T, N, R} <: AbstractBlockArray{T, N}
 
-A `BlockArray` is an array where each block is stored contiguously. This means that insertions and retrival of blocks
+A `BlockArray` is an array where each block is stored contiguously. This means that insertions and retrieval of blocks
 can be very fast since no copying of data is needed.
 
 In the type definition, `R` defines the array type that each block has, for example `Matrix{Float64}.
