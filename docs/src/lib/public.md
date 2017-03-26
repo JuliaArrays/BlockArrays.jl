@@ -34,9 +34,7 @@ blocksize
 getblock
 getblock!
 setblock!
-getindex
-setindex!
-full
+Array
 blockcheckbounds
 ```
 

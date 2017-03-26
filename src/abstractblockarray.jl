@@ -16,15 +16,15 @@ the `AbstractBlockArray` interface should subtype from this type.
 
 * `AbstractBlockVecOrMat{T}` -> `Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}`
 """
-abstract AbstractBlockArray{T, N} <: AbstractArray{T, N}
-typealias AbstractBlockMatrix{T} AbstractBlockArray{T, 2}
-typealias AbstractBlockVector{T} AbstractBlockArray{T, 1}
-typealias AbstractBlockVecOrMat{T} Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}
+abstract type AbstractBlockArray{T, N} <: AbstractArray{T, N} end
+const AbstractBlockMatrix{T} = AbstractBlockArray{T, 2}
+const AbstractBlockVector{T} = AbstractBlockArray{T, 1}
+const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
 Base.summary(a::AbstractBlockArray) = string(block2string(nblocks(a), size(a)), " ", typeof(a))
 Base.similar{T}(block_array::AbstractBlockArray{T}) = similar(block_array, T)
-Base.linearindexing{BA <: AbstractBlockArray}(::Type{BA}) = Base.LinearSlow()
+Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 
 """
     nblocks(A, [dim...])
@@ -32,17 +32,17 @@ Base.linearindexing{BA <: AbstractBlockArray}(::Type{BA}) = Base.LinearSlow()
 Returns a tuple containing the number of blocks in a block array.  Optionally you can specify
 the dimension(s) you want the number of blocks for.
 
-```jlcon
+```jldoctest
 julia> A =  BlockArray(rand(5,4,6), [1,4], [1,2,1], [1,2,2,1]);
 
 julia> nblocks(A)
-(2,3,4)
+(2, 3, 4)
 
 julia> nblocks(A, 2)
 3
 
 julia> nblocks(A, 3, 2)
-(4,3)
+(4, 3)
 ```
 """
 nblocks(block_array::AbstractBlockArray, i::Int) = nblocks(block_array)[i]
@@ -61,14 +61,14 @@ end
 
 Returns a tuple containing the size of the block at block index `inds...`.
 
-```jlcon
-julia> A = BlockArray(rand(5,4,6), [1,4], [1,2,1], [1,2,2,1]);
+```jldoctest
+julia> A = BlockArray(rand(5, 4, 6), [1, 4], [1, 2, 1], [1, 2, 2, 1]);
 
-julia> blocksize(A,1,3,2)
-(1,1,2)
+julia> blocksize(A, 1, 3, 2)
+(1, 1, 2)
 
-julia> blocksize(A,2,1,3)
-(4,1,2)
+julia> blocksize(A, 2, 1, 3)
+(4, 1, 2)
 ```
 """
 function blocksize{T, N}(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
@@ -82,54 +82,29 @@ end
 Returns the block at blockindex `inds...`. An alternative syntax is `A[Block(inds...)].
 Throws a `BlockBoundsError` if this block is out of bounds.
 
-```jlcon
-julia> A = BlockArray(rand(2,3), [1,1], [2,1])
-2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
- 0.190705  0.798036  │  0.471299
- --------------------┼-----------
- 0.770005  0.845003  │  0.0315575
+```jldoctest
+julia> v = Array(reshape(1:6, (2, 3)))
+2×3 Array{Int64,2}:
+ 1  3  5
+ 2  4  6
+
+julia> A = BlockArray(v, [1,1], [2,1])
+2×2-blocked 2×3 BlockArrays.BlockArray{Int64,2,Array{Int64,2}}:
+ 1  3  │  5
+ ------┼---
+ 2  4  │  6
 
 julia> getblock(A, 2, 1)
-1×2 Array{Float64,2}:
- 0.770005  0.845003
+1×2 Array{Int64,2}:
+ 2  4
 
-julia> A[Block(1,2)]
-1×1 Array{Float64,2}:
- 0.471299
+julia> A[Block(1, 2)]
+1×1 Array{Int64,2}:
+ 5
 ```
 """
 function getblock{T, N}(A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
     throw("getblock for ", typeof(A), "is not implemented")
-end
-
-
-"""
-    getindex{T, N}(A::AbstractBlockArray{T,N}, i...::Enum)
-
-Returns the block at the blockindex defined by the values of the enums `i`
-
-```jlcon
-julia> A = PseudoBlockArray(zeros(2,3), [1,1], [2,1]);
-
-julia> @enum vars u = 1 v = 2
-
-julia> A[Block(1,2)] = [3.0];
-
-ulia> A[u, v]
-1×1 Array{Float64,2}:
- 3.0
-```
-"""
-@propagate_inbounds function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Vararg{Enum, N})
-    getblock(A, map(Int, i)...)
-end
-
-@propagate_inbounds function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Enum)
-    getblock(A, Int(i))
-end
-
-@propagate_inbounds function Base.getindex{T, N}(A::AbstractBlockArray{T,N}, i::Enum, j::Enum)
-    getblock(A, Int(i), Int(j))
 end
 
 
@@ -139,36 +114,24 @@ end
 Stores the block at blockindex `inds` in `X` and returns it. Throws a `BlockBoundsError` if the
 attempted assigned block is out of bounds.
 
-```jlcon
-julia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
+```jldoctest
+julia> A = PseudoBlockArray(ones(2, 3), [1, 1], [2, 1])
 2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
- 0.2062    0.0238446  │  0.0505515
- ---------------------┼-----------
- 0.744768  0.225364   │  0.23028
+ 1.0  1.0  │  1.0
+ ----------┼-----
+ 1.0  1.0  │  1.0
 
-julia> x = zeros(1,2);
+julia> x = zeros(1, 2);
 
 julia> getblock!(x, A, 2, 1);
 
 julia> x
 1×2 Array{Float64,2}:
- 0.744768  0.225364
+ 1.0  1.0
 ```
 """
 function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
     throw("getblock! for ", typeof(A), "is not implemented")
-end
-
-@propagate_inbounds function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Enum)
-    getblock!(X, A, Int(i))
-end
-
-@propagate_inbounds function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Enum, j::Enum)
-    getblock!(X, A, Int(i), Int(j))
-end
-
-@propagate_inbounds function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, i::Vararg{Enum, N})
-    getblock!(X, A, map(Int, i)...)
 end
 
 """
@@ -177,12 +140,12 @@ end
 Stores the block `v` in the block at block index `inds` in `A`. An alternative syntax is `A[Block(inds...)] = v`.
 Throws a `BlockBoundsError` if this block is out of bounds.
 
-```jlcon
-julia> A = PseudoBlockArray(zeros(2,3), [1,1], [2,1]);
+```jldoctest
+julia> A = PseudoBlockArray(zeros(2, 3), [1, 1], [2, 1]);
 
-julia> setblock!(A, [1 2], 1,1);
+julia> setblock!(A, [1 2], 1, 1);
 
-julia> A[Block(2,1)] = [3 4];
+julia> A[Block(2, 1)] = [3 4];
 
 julia> A
 2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
@@ -195,41 +158,9 @@ function setblock!{T, N}(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N})
     throw("setblock! for ", typeof(A), "is not implemented")
 end
 
-"""
-    setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i...::Enum)
-
-Sets the block at the blockindex defined by the values of the enums `i`
-
-
-```jlcon
-julia> A = PseudoBlockArray(zeros(2,3), [1,1], [2,1]);
-
-julia> @enum vars u = 1 v = 2
-
-julia> A[u,v] = [3.0];
-
-julia> A
-2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
- 0.0  0.0  │  3.0
- ----------┼-----
- 0.0  0.0  │  0.0
-```
-"""
-@propagate_inbounds function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Vararg{Enum, N})
-    setblock!(A, v, map(Int, i)...)
-end
-
-@propagate_inbounds function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Enum)
-    setblock!(A, v, Int(i))
-end
-
-@propagate_inbounds function Base.setindex!{T, N}(A::AbstractBlockArray{T,N}, v, i::Enum, j::Enum)
-    setblock!(A, v, Int(i), Int(j))
-end
-
 
 """
-    BlockBoundsError([A],[inds...])
+    BlockBoundsError([A], [inds...])
 
 Thrown when a block indexing operation into a block array, `A`, tried to access an out-of-bounds block, `inds`.
 """
@@ -257,48 +188,59 @@ end
 """
     blockcheckbounds(A, inds...)
 
-Throw a `BlockBoundsError` if the specified block indexes are not in bounds for the given block array. Subtypes of `AbstractBlockArray` should
+Throw a `BlockBoundsError` if the specified block indexes are not in bounds for the given block array.
+Subtypes of `AbstractBlockArray` should
 specialize this method if they need to provide custom block bounds checking behaviors.
 
-```jlcon
+```jldoctest
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
-julia> blockcheckbounds(A, 3,2)
+julia> blockcheckbounds(A, 3, 2)
 ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]
- in blockcheckbounds(::BlockArrays.BlockArray{Float64,2,Array{Float64,2}}, ::Int64, ::Int64)
- in eval(::Module, ::Any) at ./boot.jl:226
+[...]
 ```
 """
-function blockcheckbounds{T, N}(A::AbstractBlockArray{T, N}, i::Vararg{Int, N})
-    n = nblocks(A)
-    for (k, idx) in enumerate(i)
-        if idx <= 0 || idx > n[k]
-            throw(BlockBoundsError(A, i))
-        end
+@inline function blockcheckbounds{T, N}(A::AbstractBlockArray{T, N}, i::Vararg{Int, N})
+    if blockcheckbounds(Bool, A, i...)
+        return
+    else
+        throw(BlockBoundsError(A, i))
     end
-    return
 end
 
+@inline function blockcheckbounds{T, N}(::Type{Bool}, A::AbstractBlockArray{T, N}, i::Vararg{Int, N})
+    n = nblocks(A)
+    k = 0
+    for idx in 1:N # using enumerate here will allocate
+        k += 1
+        @inbounds _i = i[idx]
+        if _i <= 0 || _i > n[k]
+            return false
+        end
+    end
+    return true
+end
+
+
 """
-    full(A)
+    Array(A::AbstractBlockArray)
 
-Returns the full array stored in `A`.
-Full is here not used in the sense of sparse vs dense but in blocked vs unblocked.
+Returns the array stored in `A` as a `Array`.
 
-```jlcon
-julia> A = BlockArray(rand(2,3), [1,1], [2,1])
+```jldoctest
+julia> A = BlockArray(ones(2,3), [1,1], [2,1])
 2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
- 0.770528  0.396896  │  0.443308
- --------------------┼----------
- 0.857069  0.403512  │  0.915934
+ 1.0  1.0  │  1.0
+ ----------┼-----
+ 1.0  1.0  │  1.0
 
-julia> full(A)
+julia> Array(A)
 2×3 Array{Float64,2}:
- 0.770528  0.396896  0.443308
- 0.857069  0.403512  0.915934
+ 1.0  1.0  1.0
+ 1.0  1.0  1.0
 ```
 """
-function full(A::AbstractBlockArray) end
+function Base.Array(A::AbstractBlockArray) end
 
 
 """
@@ -308,16 +250,16 @@ A `Block` is simply a wrapper around a set of indices or enums so that it can be
 indexing a `AbstractBlockArray` with a `Block` the a block at that block index will be returned instead of
 a single element.
 
-```jlcon
-julia> A = BlockArray(rand(2,3), [1,1], [2,1])
+```jldoctest
+julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
 2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
- 0.190705  0.798036  │  0.471299
- --------------------┼-----------
- 0.770005  0.845003  │  0.0315575
+ 1.0  1.0  │  1.0
+ ----------┼-----
+ 1.0  1.0  │  1.0
 
-julia> A[Block(1,2)]
-1×1 Array{Float64,2}:
- 0.471299
+julia> A[Block(1, 1)]
+1×2 Array{Float64,2}:
+ 1.0  1.0
 ```
 """
 immutable Block{N, T}
@@ -326,14 +268,7 @@ end
 
 Block{N, T}(n::Vararg{T, N}) = Block{N, T}(n)
 
-# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
-@propagate_inbounds Base.getindex{T}(block_arr::AbstractBlockArray{T,1}, block::Block{1}) = getblock(block_arr, block.n[1])
-@propagate_inbounds Base.getindex{T}(block_arr::AbstractBlockArray{T,2}, block::Block{2}) = getblock(block_arr, block.n[1], block.n[2])
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
-@propagate_inbounds Base.getindex{T,N}(block_arr::AbstractBlockArray{T,N}, block::Block{N}) = getblock(block_arr, block.n...)
 
-# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv #
-@propagate_inbounds Base.setindex!{T}(block_arr::AbstractBlockArray{T,1}, v, block::Block{1}) =  setblock!(block_arr, v, block.n[1])
-@propagate_inbounds Base.setindex!{T}(block_arr::AbstractBlockArray{T,2}, v, block::Block{2}) =  setblock!(block_arr, v, block.n[1], block.n[2])
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #
-@propagate_inbounds Base.setindex!{T,N}(block_arr::AbstractBlockArray{T,N}, v, block::Block{N}) =  setblock!(block_arr, v, block.n...)
+# Convert to @generated...
+@propagate_inbounds Base.getindex{T, N}( block_arr::AbstractBlockArray{T, N}, block::Block{N})    =  getblock(block_arr, block.n...)
+@propagate_inbounds Base.setindex!{T, N}(block_arr::AbstractBlockArray{T, N}, v, block::Block{N}) =  setblock!(block_arr, v, block.n...)

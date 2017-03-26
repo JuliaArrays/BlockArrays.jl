@@ -11,20 +11,22 @@ g = addgroup!(SUITE, "indexing")
 g_size = addgroup!(SUITE, "size")
 
 for n = (5,)
-    block_vec = BlockArray(rand(n),       [1,3,1])
-    block_mat = BlockArray(rand(n,n),     [1,3,1], [4,1])
-    block_arr = BlockArray(rand(n,n,n),   [1,3,1], [4,1], [3, 2])
-    g["getindex", "vector", n] = @benchmarkable getindex($block_vec, 3)
-    g["getindex", "matrix", n] = @benchmarkable getindex($block_mat, 3, 2)
-    g["getindex", "rank3", n]  = @benchmarkable getindex($block_arr, 3, 2 ,3)
-    
-    g["setindex!", "vector", n] = @benchmarkable setindex!($block_vec, 3)
-    g["setindex!", "matrix", n] = @benchmarkable setindex!($block_mat, 3, 2)
-    g["setindex!", "rank3", n]  = @benchmarkable setindex!($block_arr, 3, 2 ,3)
+    for BT in (BlockArray, PseudoBlockArray)
+        block_vec = BT(rand(n),       [1,3,1])
+        block_mat = BT(rand(n,n),     [1,3,1], [4,1])
+        block_arr = BT(rand(n,n,n),   [1,3,1], [4,1], [3, 2])
+        g["getindex", BT.name.name, "vector", n] = @benchmarkable getindex($block_vec, 3)
+        g["getindex", BT.name.name, "matrix", n] = @benchmarkable getindex($block_mat, 3, 2)
+        g["getindex", BT.name.name, "rank3", n]  = @benchmarkable getindex($block_arr, 3, 2 ,3)
+        
+        g["setindex!", BT.name.name, "vector", n] = @benchmarkable setindex!($block_vec, 3)
+        g["setindex!", BT.name.name, "matrix", n] = @benchmarkable setindex!($block_mat, 3, 2)
+        g["setindex!", BT.name.name, "rank3", n]  = @benchmarkable setindex!($block_arr, 3, 2 ,3)
 
-    g_size["vector", n] = @benchmarkable size($block_vec)
-    g_size["matrix", n] = @benchmarkable size($block_mat)
-    g_size["rank3", n]  = @benchmarkable size($block_arr)
+        g_size[BT.name.name, "vector", n] = @benchmarkable size($block_vec)
+        g_size[BT.name.name, "matrix", n] = @benchmarkable size($block_mat)
+        g_size[BT.name.name, "rank3", n]  = @benchmarkable size($block_arr)
+    end
 end
 
 
