@@ -6,8 +6,6 @@ A block array is a partition of an array into blocks or subarrays, see [wikipedi
 
 Secondly, it also implements two different type of block arrays that follow the `AbstractBlockArray` interface. The type `BlockArray` stores each block contiguously while the type `PseudoBlockArray` stores the full matrix contiguously. This means that `BlockArray` supports fast non copying extraction and insertion of blocks while `PseudoBlockArray` supports fast access to the full matrix to use in in for example a linear solver.
 
-**Note:** Currently, a quite new build of julia master is needed to use this package.
-
 ## Documentation
 
 Documentation is built automatically with help from MkDocs on Travis CI and hosted by GitHub Pages.
