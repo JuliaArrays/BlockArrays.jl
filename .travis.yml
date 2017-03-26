@@ -14,5 +14,4 @@ script:
 
 after_success:
   - julia -e 'cd(Pkg.dir("BlockArrays")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
-  - julia -e 'Pkg.clone("https://github.com/MichaelHatherly/Documenter.jl")'
   - julia -e 'cd(Pkg.dir("BlockArrays")); include(joinpath("docs", "make.jl"))'

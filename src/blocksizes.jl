@@ -2,45 +2,99 @@
 # BlockSizes #
 ##############
 
-# Keeps track of the sizes of all the blocks in the `BlockArray`
+# Keeps track of the (cumulutative) sizes of all the blocks in the `BlockArray`.
 immutable BlockSizes{N}
-    sizes::NTuple{N, Vector{Int}}
+    cumul_sizes::NTuple{N, Vector{Int}}
+    # Takes a tuple of sizes, accumulates them and create a `BlockSizes`
 end
 
-Base.:(==)(a::BlockSizes, b::BlockSizes) = a.sizes == b.sizes
+function BlockSizes{N}(sizes::Vararg{Vector{Int}, N}) where {N}
+    cumul_sizes = ntuple(k -> _cumul_vec(sizes[k]), Val{N})
+    return BlockSizes(cumul_sizes)
+end
 
-BlockSizes{N}(sizes::Vararg{Vector{Int}, N}) = BlockSizes(sizes)
-Base.getindex(block_sizes::BlockSizes, i) = block_sizes.sizes[i]
-Base.getindex(block_sizes::BlockSizes, i, j) = block_sizes.sizes[i][j]
+@inline BlockSizes{N}(sizes::Vararg{Vector{Int}, N}) = BlockSizes{N}(sizes...)
 
-function blocksize{N}(block_sizes::BlockSizes{N}, i::NTuple{N, Int})
-    return ntuple(k->block_sizes[k, i[k]], Val{N})
+Base.:(==)(a::BlockSizes, b::BlockSizes) = a.cumul_sizes == b.cumul_sizes
+
+function _cumul_vec{T}(v::Vector{T})
+    v_cumul = similar(v, length(v) + 1)
+    z = one(T)
+    v_cumul[1] = z
+    for i in eachindex(v)
+        z += v[i]
+        v_cumul[i+1] = z
+    end
+    return v_cumul
+end
+
+@propagate_inbounds Base.getindex(block_sizes::BlockSizes, i) = block_sizes.cumul_sizes[i]
+@propagate_inbounds Base.getindex(block_sizes::BlockSizes, i, j) = block_sizes.cumul_sizes[i][j]
+
+@propagate_inbounds blocksize(block_sizes::BlockSizes, i, j) = block_sizes[i, j+1] - block_sizes[i, j]
+
+# ntuple with Val was slow here. @generated it is!
+@generated function blocksize{N}(block_sizes::BlockSizes{N}, i::NTuple{N, Int})
+    exp = Expr(:tuple, [:(blocksize(block_sizes, $k, i[$k])) for k in 1:N]...)
+    return exp
 end
 
 function Base.show{N}(io::IO, block_sizes::BlockSizes{N})
     if N == 0
         print(io, "[]")
     else
-        print(io, block_sizes.sizes[1])
+        print(io, diff(block_sizes[1]))
         for i in 2:N
-            print(io, "×", block_sizes.sizes[i])
+            print(io, " × ", diff(block_sizes[i]))
         end
     end
 end
 
-nblocks{N}(block_sizes::BlockSizes{N}) = ntuple(i -> length(block_sizes[i]), Val{N})
-nblocks(block_sizes::BlockSizes, i::Int) = length(block_sizes[i])
+@inline function searchlinear(vec::Vector, a)
+    l = length(vec)
+    @inbounds for i in 1:l
+        vec[i] > a && return i - 1
+    end
+    return l
+end
 
-Base.copy{N}(block_sizes::BlockSizes{N}) = BlockSizes(ntuple(i -> copy(block_sizes[i]), Val{N}))
+@inline function _find_block(block_sizes::BlockSizes, dim::Int, i::Int)
+    bs = block_sizes[dim]
+    block = 0
+    if length(bs) > 10
+        block = last(searchsorted(bs, i))
+    else
+        block = searchlinear(bs, i)
+    end
+    @inbounds cum_size = block_sizes[dim, block] - 1
+    return block, i - cum_size
+end
 
-
-# Computes the global range of an Array that corresponds to a given block_index
-@generated function globalrange{N}(block_sizes::BlockSizes, block_index::NTuple{N, Int})
-    start_indices_ex = Expr(:tuple, [:(1 + _cumsum(block_sizes[$i], block_index[$i]-1)) for i=1:N]...)
-    indices_ex = Expr(:tuple, [:(start_indices[$i]:start_indices[$i] + block_sizes[$i, block_index[$i]] - 1) for i = 1:N]...)
+@generated function nblocks{N}(block_sizes::BlockSizes{N})
+    ex = Expr(:tuple, [:(nblocks(block_sizes, $i)) for i in 1:N]...)
     return quote
-        @inbounds start_indices = $start_indices_ex
-        @inbounds indices = $indices_ex
-        return indices
+        @inbounds return $ex
     end
 end
+
+@inline @propagate_inbounds nblocks(block_sizes::BlockSizes, i::Int) = length(block_sizes[i]) - 1
+
+
+# ntuple is yet again slower
+@generated function Base.copy{N}(block_sizes::BlockSizes{N})
+    exp = Expr(:tuple, [:(copy(block_sizes[$k])) for k in 1:N]...)
+    return quote
+        BlockSizes($exp)
+    end
+end
+
+# Computes the global range of an Array that corresponds to a given block_index
+@generated function globalrange{N}(block_sizes::BlockSizes{N}, block_index::NTuple{N, Int})
+    #start_indices_ex = Expr(:tuple, [:(1 + _cumsum(block_sizes[$i], block_index[$i]-1)) for i=1:N]...)
+    indices_ex = Expr(:tuple, [:(block_sizes[$i, block_index[$i]]:block_sizes[$i, block_index[$i] + 1] - 1) for i = 1:N]...)
+    return quote
+        @inbounds inds = $indices_ex
+        return inds
+    end
+end
+

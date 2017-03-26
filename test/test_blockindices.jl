@@ -13,6 +13,7 @@ import BlockArrays: BlockSizes, BlockIndex, globalrange, nblocks, global2blockin
 
 block_size = BlockSizes([1,2,3], [2, 3])
 
+@testset "BlockSizes / BlockIndices" begin
 @test nblocks(block_size) == (3,2)
 @test nblocks(block_size, 1) == 3
 @test nblocks(block_size, 2) == 2
@@ -33,4 +34,6 @@ block_size = BlockSizes([1,2,3], [2, 3])
 
 buf = IOBuffer()
 print(buf, block_size)
-@test takebuf_string(buf) == "[1,2,3]×[2,3]"
+@test String(take!(buf)) == "[1, 2, 3] × [2, 3]"
+
+end
