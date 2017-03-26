@@ -14,4 +14,4 @@ Documentation is built automatically with help from MkDocs on Travis CI and host
 
 ## Author
 
-This Julia package was written by [Kristoffer Carlsson](mailto:kristoffer.carlsson@chalmers.se)
+Kristoffer Carlsson - [@KristofferC](https://github.com/KristofferC)
