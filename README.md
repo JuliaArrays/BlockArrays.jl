@@ -12,6 +12,15 @@ Secondly, it also implements two different type of block arrays that follow the 
 - [**STABLE**][docs-stable-url] &mdash; **most recently tagged version of the documentation.**
 - [**LATEST**][docs-latest-url] &mdash; *in-development version of the documentation.*
 
+## Contributing
+
+Possible ways of contributing to this package include:
+
+* Implement the fusing broadcasting interface for blocked arrays.
+* Make different Linear Algebra function (like matrix / vector multiplications) with blocked arrays work.
+* Implement different reductions functionalities, (`sum` and co.).
+* Audit the performance and make improvements as needed.
+
 ## Author
 
 Kristoffer Carlsson - [@KristofferC](https://github.com/KristofferC)
