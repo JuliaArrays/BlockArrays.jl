@@ -125,7 +125,7 @@ var documenterSearchIndex = {"docs": [
     "page": "PseudoBlockArrays",
     "title": "Setting and getting blocks and values",
     "category": "section",
-    "text": "Setting and getting blocks uses the same API as BlockArrays. The difference here is that setting a block will update the block in place and getting a block will extract a copy of the block and return it. For PseudoBlockArrays there is a mutating block getter called getblock! which updates a passed in array to avoid a copy:julia> A = zeros(2,2)\n2×2 Array{Float64,2}:\n 0.0  0.0\n 0.0  0.0\n\njulia> getblock!(A, pseudo, 2, 1);\n\njulia> A\n2×2 Array{Float64,2}:\n 0.766797  0.794026\n 0.566237  0.854147The underlying array is accessed with Array just like for BlockArray."
+    "text": "Setting and getting blocks uses the same API as BlockArrays. The difference here is that setting a block will update the block in place and getting a block will extract a copy of the block and return it. For PseudoBlockArrays there is a mutating block getter called getblock! which updates a passed in array to avoid a copy:julia> A = zeros(2,2)\n2×2 Array{Float64,2}:\n 0.0  0.0\n 0.0  0.0\n\njulia> getblock!(A, pseudo, 2, 1);\n\njulia> A\n2×2 Array{Float64,2}:\n 0.766797  0.794026\n 0.566237  0.854147It is sometimes convenient to access an index in a certain block. We could of course write this as A[Block(I,J)][i,j] but the problem is that A[Block(I,J)] allocates its output so this type of indexing will be inefficient. Instead, it is possible to use the A[BlockIndex((I,J), (i,j))] indexing. Using the same block matrix A as above:julia> pseudo[BlockIndex((2,1), (2,2))]\n0.8541465903790502The underlying array is accessed with Array just like for BlockArray."
 },
 
 {
@@ -182,6 +182,14 @@ var documenterSearchIndex = {"docs": [
     "title": "BlockArrays.Block",
     "category": "Type",
     "text": "Block(inds...)\n\nA Block is simply a wrapper around a set of indices or enums so that it can be used to dispatch on. By indexing a AbstractBlockArray with a Block the a block at that block index will be returned instead of a single element.\n\njulia> A = BlockArray(ones(2,3), [1, 1], [2, 1])\n2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n 1.0  1.0  │  1.0\n ----------┼-----\n 1.0  1.0  │  1.0\n\njulia> A[Block(1, 1)]\n1×2 Array{Float64,2}:\n 1.0  1.0\n\n\n\n"
+},
+
+{
+    "location": "lib/public.html#BlockArrays.BlockIndex",
+    "page": "Public Documentation",
+    "title": "BlockArrays.BlockIndex",
+    "category": "Type",
+    "text": "BlockIndex{N}\n\nA BlockIndex is an index which stores a global index in two parts: the block and the offset index into the block.\n\nIt can be used to index into BlockArrays in the following manner:\n\njulia> arr = Array(reshape(1:25, (5,5)));\n\njulia> a = PseudoBlockArray(arr, [3,2], [1,4])\n2×2-blocked 5×5 BlockArrays.PseudoBlockArray{Int64,2,Array{Int64,2}}:\n 1  │   6  11  16  21\n 2  │   7  12  17  22\n 3  │   8  13  18  23\n ───┼────────────────\n 4  │   9  14  19  24\n 5  │  10  15  20  25\n\njulia> a[BlockIndex((1,2), (1,2))]\n11\n\njulia> a[BlockIndex((2,2), (2,3))]\n20\n\n\n\n"
 },
 
 {
@@ -245,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public Documentation",
     "title": "AbstractBlockArray interface",
     "category": "section",
-    "text": "This sections defines the functions a subtype of AbstractBlockArray should define to be a part of the AbstractBlockArray interface. An AbstractBlockArray{T, N} is a subtype of AbstractArray{T,N} and should therefore also fulfill the AbstractArray interface.AbstractBlockArray\nBlockBoundsError\nBlock\nnblocks\nblocksize\ngetblock\ngetblock!\nsetblock!\nArray\nblockcheckbounds"
+    "text": "This sections defines the functions a subtype of AbstractBlockArray should define to be a part of the AbstractBlockArray interface. An AbstractBlockArray{T, N} is a subtype of AbstractArray{T,N} and should therefore also fulfill the AbstractArray interface.AbstractBlockArray\nBlockBoundsError\nBlock\nBlockIndex\nnblocks\nblocksize\ngetblock\ngetblock!\nsetblock!\nArray\nblockcheckbounds"
 },
 
 {
@@ -313,14 +321,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#BlockArrays.BlockIndex",
-    "page": "Internal Documentation",
-    "title": "BlockArrays.BlockIndex",
-    "category": "Type",
-    "text": "BlockIndex{N}\n\nA BlockIndex is an index which stores a global index in two parts: the block and the offset index into the block.\n\n\n\n"
-},
-
-{
     "location": "lib/internals.html#BlockArrays.blockindex2global",
     "page": "Internal Documentation",
     "title": "BlockArrays.blockindex2global",
@@ -341,7 +341,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Internal Documentation",
     "title": "Internals",
     "category": "section",
-    "text": "BlockIndex\nblockindex2global\nglobal2blockindex"
+    "text": "blockindex2global\nglobal2blockindex"
 },
 
 ]}
