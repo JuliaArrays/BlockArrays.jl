@@ -75,3 +75,23 @@ Converts from a block index to a tuple containing the global indices
         return $ex
     end
 end
+
+# I hate having these function definitions but the generated function above sometimes(!) generates bad code and starts to allocate
+@inline function blockindex2global(block_sizes::BlockSizes{1}, block_index::BlockIndex{1})
+    @inbounds v =(block_sizes[1, block_index.I[1]] + block_index.α[1] - 1)
+    return v
+end
+
+@inline function blockindex2global(block_sizes::BlockSizes{2}, block_index::BlockIndex{2})
+    @inbounds v =(block_sizes[1, block_index.I[1]] + block_index.α[1] - 1,
+                  block_sizes[2, block_index.I[2]] + block_index.α[2] - 1)
+    return v
+end
+
+@inline function blockindex2global(block_sizes::BlockSizes{3}, block_index::BlockIndex{3})
+    @inbounds v =(block_sizes[1, block_index.I[1]] + block_index.α[1] - 1,
+                  block_sizes[2, block_index.I[2]] + block_index.α[2] - 1,
+                  block_sizes[3, block_index.I[3]] + block_index.α[3] - 1)
+    return v
+end
+
