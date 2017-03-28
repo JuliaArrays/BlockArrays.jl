@@ -29,6 +29,7 @@ This sections defines the functions a subtype of `AbstractBlockArray` should def
 AbstractBlockArray
 BlockBoundsError
 Block
+BlockIndex
 nblocks
 blocksize
 getblock

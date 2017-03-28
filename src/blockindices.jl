@@ -3,12 +3,46 @@
 
 A `BlockIndex` is an index which stores a global index in two parts: the block
 and the offset index into the block.
+
+It can be used to index into `BlockArrays` in the following manner:
+
+```jldoctest
+julia> arr = Array(reshape(1:25, (5,5)));
+
+julia> a = PseudoBlockArray(arr, [3,2], [1,4])
+2×2-blocked 5×5 BlockArrays.PseudoBlockArray{Int64,2,Array{Int64,2}}:
+ 1  │   6  11  16  21
+ 2  │   7  12  17  22
+ 3  │   8  13  18  23
+ ───┼────────────────
+ 4  │   9  14  19  24
+ 5  │  10  15  20  25
+
+julia> a[BlockIndex((1,2), (1,2))]
+11
+
+julia> a[BlockIndex((2,2), (2,3))]
+20
+```
 """
 immutable BlockIndex{N}
     I::NTuple{N, Int}
     α::NTuple{N, Int}
 end
 
+@inline BlockIndex(a::Int, b::Int) = BlockIndex((a,), (b,))
+@inline BlockIndex(a::NTuple, b::Int) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Int, b::NTuple) = BlockIndex((a,), b)
+
+@generated function BlockIndex{M, N}(I::NTuple{N, Int}, α::NTuple{M, Int})
+    @assert M < N
+    α_ex = Expr(:tuple, [k <= M ? :(α[$k]) : :(1) for k = 1:N]...)
+    return quote
+        $Expr(:meta, :inline)
+        @inbounds α2 = $α_ex
+        BlockIndex(I, α2)
+    end
+end
 
 """
     global2blockindex{N}(block_sizes::BlockSizes{N}, inds...) -> BlockIndex{N}
@@ -20,6 +54,7 @@ Converts from global indices `inds` to a `BlockIndex`.
     I_ex = Expr(:tuple, [:(block_index[$k][1]) for k = 1:N]...)
     α_ex = Expr(:tuple, [:(block_index[$k][2]) for k = 1:N]...)
     return quote
+        $Expr(:meta, :inline)
         @inbounds block_index = $block_index_ex
         @inbounds I = $I_ex
         @inbounds α = $α_ex
@@ -35,6 +70,7 @@ Converts from a block index to a tuple containing the global indices
 @generated function blockindex2global{N}(block_sizes::BlockSizes{N}, block_index::BlockIndex{N})
     ex = Expr(:tuple, [:(block_sizes[$k, block_index.I[$k]] + block_index.α[$k] - 1) for k = 1:N]...)
     return quote
+        $Expr(:meta, :inline)
         @inbounds v = $ex
         return $ex
     end

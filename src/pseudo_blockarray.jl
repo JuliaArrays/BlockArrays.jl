@@ -98,6 +98,12 @@ end
 # Indexing #
 ############
 
+@inline function Base.getindex{T, N}(block_arr::PseudoBlockArray{T,N}, blockindex::BlockIndex{N})
+    I = blockindex2global(block_arr.block_sizes, blockindex)
+    @boundscheck checkbounds(block_arr.blocks, I...)
+    @inbounds v = block_arr.blocks[I...]
+    return v
+end
 
 @inline function getblock{T,N}(block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N})
     range = globalrange(block_arr.block_sizes, block)
@@ -129,6 +135,13 @@ end
     end
 end
 
+@inline function Base.setindex!{T, N}(block_arr::PseudoBlockArray{T,N}, v, blockindex::BlockIndex{N})
+    I = blockindex2global(block_arr.block_sizes, blockindex)
+    @boundscheck checkbounds(block_arr.blocks, I...)
+    @inbounds block_arr.blocks[I...] = v
+    return block_arr
+end
+
 function _check_setblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
     blocksizes = blocksize(block_arr, block...)
     for i in 1:N
@@ -137,7 +150,6 @@ function _check_setblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N},
         end
     end
 end
-
 
 @generated function setblock!{T, N}(block_arr::PseudoBlockArray{T, N}, x, block::Vararg{Int, N})
     return quote
@@ -152,6 +164,8 @@ end
         end
     end
 end
+
+
 
 ########
 # Misc #

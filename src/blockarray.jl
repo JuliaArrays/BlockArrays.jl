@@ -148,7 +148,7 @@ end
     return block_arr
 end
 
-@inline function Base.setindex!{T,N}(block_array::BlockArray{T, N}, v, block_index::BlockIndex{N})
+@propagate_inbounds function Base.setindex!{T,N}(block_array::BlockArray{T, N}, v, block_index::BlockIndex{N})
     getblock(block_array, block_index.I...)[block_index.α...] = v
 end
 
