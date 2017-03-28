@@ -19,7 +19,7 @@ a direct solver using `full`.
 
 Creating a `PseudoBlockArray` works in the same way as a `BlockArray`.
 
-```jldoctest
+```jldoctest A
 julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])
 2×2-blocked 3×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
  0.590845  0.460085  │  0.200586
@@ -35,7 +35,7 @@ This "takes ownership" of the passed in array so no copy of the array is made.
 Setting and getting blocks uses the same API as `BlockArrays`. The difference here is that setting a block will update the block in place and getting a block
 will extract a copy of the block and return it. For `PseudoBlockArrays` there is a mutating block getter called `getblock!` which updates a passed in array to avoid a copy:
 
-```jldoctest
+```jldoctest A
 julia> A = zeros(2,2)
 2×2 Array{Float64,2}:
  0.0  0.0
@@ -47,6 +47,13 @@ julia> A
 2×2 Array{Float64,2}:
  0.766797  0.794026
  0.566237  0.854147
+```
+
+It is sometimes convenient to access an index in a certain block. We could of course write this as `A[Block(I,J)][i,j]` but the problem is that `A[Block(I,J)]` allocates its output so this type of indexing will be inefficient. Instead, it is possible to use the `A[BlockIndex((I,J), (i,j))]` indexing. Using the same block matrix `A` as above:
+
+```jldoctest A
+julia> pseudo[BlockIndex((2,1), (2,2))]
+0.8541465903790502
 ```
 
 The underlying array is accessed with `Array` just like for `BlockArray`.

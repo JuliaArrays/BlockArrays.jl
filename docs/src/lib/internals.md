@@ -19,7 +19,6 @@ Pages = ["internals.md"]
 ## Internals
 
 ```@docs
-BlockIndex
 blockindex2global
 global2blockindex
 ```
