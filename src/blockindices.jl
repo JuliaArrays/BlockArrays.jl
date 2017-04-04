@@ -78,7 +78,7 @@ end
 
 # I hate having these function definitions but the generated function above sometimes(!) generates bad code and starts to allocate
 @inline function blockindex2global(block_sizes::BlockSizes{1}, block_index::BlockIndex{1})
-    @inbounds v =(block_sizes[1, block_index.I[1]] + block_index.α[1] - 1)
+    @inbounds v =(block_sizes[1, block_index.I[1]] + block_index.α[1] - 1,)
     return v
 end
 

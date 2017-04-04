@@ -90,7 +90,6 @@ end
 
 # Computes the global range of an Array that corresponds to a given block_index
 @generated function globalrange{N}(block_sizes::BlockSizes{N}, block_index::NTuple{N, Int})
-    #start_indices_ex = Expr(:tuple, [:(1 + _cumsum(block_sizes[$i], block_index[$i]-1)) for i=1:N]...)
     indices_ex = Expr(:tuple, [:(block_sizes[$i, block_index[$i]]:block_sizes[$i, block_index[$i] + 1] - 1) for i = 1:N]...)
     return quote
         $Expr(:meta, :inline)
@@ -98,4 +97,24 @@ end
         return inds
     end
 end
+
+# I hate having these function definitions but the generated function above sometimes(!) generates bad code and starts to allocate
+@inline function globalrange(block_sizes::BlockSizes{1}, block_index::NTuple{1, Int})
+    @inbounds v = (block_sizes[1, block_index[1]]:block_sizes[1, block_index[1] + 1] - 1,)
+    return v
+end
+
+@inline function globalrange(block_sizes::BlockSizes{2}, block_index::NTuple{2, Int})
+    @inbounds v = (block_sizes[1, block_index[1]]:block_sizes[1, block_index[1] + 1] - 1,
+                   block_sizes[2, block_index[2]]:block_sizes[2, block_index[2] + 1] - 1)
+    return v
+end
+
+@inline function globalrange(block_sizes::BlockSizes{3}, block_index::NTuple{3, Int})
+    @inbounds v = (block_sizes[1, block_index[1]]:block_sizes[1, block_index[1] + 1] - 1,
+                   block_sizes[2, block_index[2]]:block_sizes[2, block_index[2] + 1] - 1,
+                   block_sizes[3, block_index[3]]:block_sizes[3, block_index[3] + 1] - 1)
+    return v
+end
+
 
