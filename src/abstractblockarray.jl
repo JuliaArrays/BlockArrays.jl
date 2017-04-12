@@ -75,6 +75,34 @@ function blocksize{T, N}(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
     throw(error("blocksize for ", typeof(A), "is not implemented"))
 end
 
+"""
+    Block(inds...)
+
+A `Block` is simply a wrapper around a set of indices or enums so that it can be used to dispatch on. By
+indexing a `AbstractBlockArray` with a `Block` the a block at that block index will be returned instead of
+a single element.
+
+```jldoctest
+julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
+2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
+ 1.0  1.0  │  1.0
+ ----------┼-----
+ 1.0  1.0  │  1.0
+
+julia> A[Block(1, 1)]
+1×2 Array{Float64,2}:
+ 1.0  1.0
+```
+"""
+immutable Block{N, T}
+    n::NTuple{N, T}
+end
+
+Block{N, T}(n::Vararg{T, N}) = Block{N, T}(n)
+
+@inline function Block{N, T}(blocks::NTuple{N, Block{1, T}})
+    Block{N, T}(ntuple(i -> blocks[i].n[1], Val{N}))
+end
 
 """
     getblock(A, inds...)
@@ -130,9 +158,11 @@ julia> x
  1.0  1.0
 ```
 """
-function getblock!{T, N}(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
-    throw("getblock! for ", typeof(A), "is not implemented")
-end
+getblock!{T, N}(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) = throw("getblock! for ", typeof(A), "is not implemented")
+
+@inline getblock!{T, N}(X, A::AbstractBlockArray{T,N}, block::Block{N})             = getblock!(X, A, block.n...)
+@inline getblock!(X, A::AbstractBlockVector, block::Block{1})                       = getblock!(X, A, block.n[1])
+@inline getblock!{T, N}(X, A::AbstractBlockArray{T, N}, block::Vararg{Block{1}, N}) = getblock!(X, A, (Block(block).n)...)
 
 """
     setblock!(A, v, inds...)
@@ -154,9 +184,11 @@ julia> A
  3.0  4.0  │  0.0
 ```
 """
-function setblock!{T, N}(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N})
-    throw("setblock! for ", typeof(A), "is not implemented")
-end
+setblock!{T, N}(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N}) = throw("setblock! for ", typeof(A), "is not implemented")
+
+@inline setblock!{T, N}(A::AbstractBlockArray{T, N}, v, block::Block{N})            = setblock!(A, v, block.n...)
+@inline setblock!(A::AbstractBlockVector, v, block::Block{1})                       = setblock!(A, v, block.n[1])
+@inline setblock!{T, N}(A::AbstractBlockArray{T, N}, v, block::Vararg{Block{1}, N}) = setblock!(A, v, (Block(blockindex).n)...)
 
 
 """
@@ -242,33 +274,10 @@ julia> Array(A)
 """
 function Base.Array(A::AbstractBlockArray) end
 
-
-"""
-    Block(inds...)
-
-A `Block` is simply a wrapper around a set of indices or enums so that it can be used to dispatch on. By
-indexing a `AbstractBlockArray` with a `Block` the a block at that block index will be returned instead of
-a single element.
-
-```jldoctest
-julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
-2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
- 1.0  1.0  │  1.0
- ----------┼-----
- 1.0  1.0  │  1.0
-
-julia> A[Block(1, 1)]
-1×2 Array{Float64,2}:
- 1.0  1.0
-```
-"""
-immutable Block{N, T}
-    n::NTuple{N, T}
-end
-
-Block{N, T}(n::Vararg{T, N}) = Block{N, T}(n)
-
-
 # Convert to @generated...
-@propagate_inbounds Base.getindex{T, N}( block_arr::AbstractBlockArray{T, N}, block::Block{N})    =  getblock(block_arr, block.n...)
-@propagate_inbounds Base.setindex!{T, N}(block_arr::AbstractBlockArray{T, N}, v, block::Block{N}) =  setblock!(block_arr, v, block.n...)
+@propagate_inbounds Base.getindex{T, N}( block_arr::AbstractBlockArray{T, N}, block::Block{N})       =  getblock(block_arr, block.n...)
+@propagate_inbounds Base.setindex!{T, N}(block_arr::AbstractBlockArray{T, N}, v, block::Block{N})    =  setblock!(block_arr, v, block.n...)
+@propagate_inbounds Base.getindex( block_arr::AbstractBlockVector, block::Block{1})                  =  getblock(block_arr, block.n[1])
+@propagate_inbounds Base.setindex!(block_arr::AbstractBlockVector, v, block::Block{1})               =  setblock!(block_arr, v, block.n[1])
+@inline Base.getindex{T, N}(block_arr::AbstractBlockArray{T,N}, block::Vararg{Block{1}, N})     =  getblock(block_arr, (Block(block).n)...)
+@inline Base.setindex!{T, N}(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) =  setblock!(block_arr, v, (Block(block).n)...)
