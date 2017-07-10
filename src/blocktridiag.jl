@@ -23,8 +23,11 @@ struct BlockTridiagMatrix{T, R <: AbstractMatrix{T}} <: AbstractBlockMatrix{T}
 end
 
 # Auxilary outer constructors
-function BlockTridiagMatrix{T, R <: AbstractArray{T}}(diagl::Vector{R}, lower::Vector{R}, upper::Vector{R},
-                            block_sizes::BlockSizes{2})
+function BlockTridiagMatrix{T, R <: AbstractArray{T}
+                           }(diagl::Vector{R}, 
+                             lower::Vector{R}, 
+                             upper::Vector{R},
+                             block_sizes::BlockSizes{2})
    return BlockTridiagMatrix{T, R}(diagl, lower, upper, block_sizes)
 end
 
@@ -54,7 +57,9 @@ julia> BlockTridiagMatrix(Matrix{Float64}, [1,3], [2,2])
  #undef  │  #undef  #undef  #undef  │
 ```
 """
-@inline function BlockTridiagMatrix{T, R <: AbstractMatrix{T}}(::Type{R}, block_sizes::Vararg{Vector{Int}, 2})
+@inline function BlockTridiagMatrix{T, R <: AbstractMatrix{T}
+                                   }(::Type{R}, 
+                                     block_sizes::Vararg{Vector{Int}, 2})
     BlockTridiagMatrix(R, BlockSizes(block_sizes...))
 end
 
@@ -67,25 +72,27 @@ function BlockTridiagMatrix{T, R <: AbstractMatrix{T}}(::Type{R}, block_sizes::B
     BlockTridiagMatrix{T,R}(diagl, lower, upper, block_sizes)
 end
 
-@generated function BlockTridiagMatrix{T}(arr::AbstractMatrix{T}, 
-                                          block_sizes::Vararg{Vector{Int}, 2})
-    return quote
-        for i in 1:2
-            if sum(block_sizes[i]) != size(arr, i)
-                throw(DimensionMismatch("block size for dimension $i: $(block_sizes[i]) does not sum to the array size: $(size(arr, i))"))
-            end
+function BlockTridiagMatrix(arr::AbstractMatrix, 
+                            block_sizes::Vararg{Vector{Int}, 2})
+    for i in 1:2
+        if sum(block_sizes[i]) != size(arr, i)
+            throw(DimensionMismatch(
+                    "block size for dimension $i: $(block_sizes[i])" *
+                    "does not sum to the array size: $(size(arr, i))"))
         end
-
-        _block_sizes = BlockSizes(block_sizes...)
-        bltrid_mat = BlockTridiagMatrix(typeof(arr), _block_sizes)
-        @nloops 2 i i->(1:nblocks(_block_sizes, i)) begin
-            block_index = @ntuple 2 i
-            indices = globalrange(_block_sizes, block_index)
-            setblock!(bltrid_mat, arr[indices...], block_index...)
-        end
-
-        return bltrid_mat
     end
+
+    _block_sizes = BlockSizes(block_sizes...)
+    bltrid_mat = BlockTridiagMatrix(typeof(arr), _block_sizes)
+    row_blocks, col_blocks = nblocks(bltrid_mat)
+    for brow in 1:row_blocks
+        for bcol in max(1,brow-1):min(brow+1,col_blocks)
+            indices = globalrange(_block_sizes, (brow,bcol))
+            setblock!(bltrid_mat, arr[indices...], brow, bcol)
+        end
+    end
+
+    return bltrid_mat
 end
 
 ################################
@@ -204,44 +211,33 @@ end
     getblock(bltrid_mat, block_index.I...)[block_index.α...] = v
 end
 
-#==============
 ########
 # Misc #
 ########
 
-@generated function Base.Array{T,N,R}(bltrid_mat::BlockTridiagMatrix{T, N, R})
+function Base.Array{T,R}(bltrid_mat::BlockTridiagMatrix{T, R})
     # TODO: This will fail for empty block array
-    return quote
-        block_sizes = bltrid_mat.block_sizes
-        arr = similar(bltrid_mat.blocks[1], size(bltrid_mat)...)
-        @nloops $N i i->(1:nblocks(block_sizes, i)) begin
-            block_index = @ntuple $N i
-            indices = globalrange(block_sizes, block_index)
-            arr[indices...] = getblock(bltrid_mat, block_index...)
+    block_sizes = bltrid_mat.block_sizes
+    row_blocks, col_blocks = nblocks(bltrid_mat)
+    arr = zeros(T, size(bltrid_mat))
+    for brow in 1:row_blocks
+        for bcol in max(1,brow-1):min(brow+1,col_blocks)
+            indices = globalrange(block_sizes, (brow,bcol))
+            arr[indices...] = getblock(bltrid_mat, brow, bcol)
         end
-
-        return arr
     end
+    return arr
 end
 
-@generated function Base.copy!{T, N, R <: AbstractArray}(bltrid_mat::BlockTridiagMatrix{T, N, R}, arr::R)
-    return quote
-        block_sizes = bltrid_mat.block_sizes
-
-        @nloops $N i i->(1:nblocks(block_sizes, i)) begin
-            block_index = @ntuple $N i
-            indices = globalrange(block_sizes, block_index)
-            copy!(getblock(bltrid_mat, block_index...), arr[indices...])
+function Base.copy!{T, R<:AbstractArray{T}, M<:AbstractArray{T}
+                   }(bltrid_mat::BlockTridiagMatrix{T, R}, arr::M)
+    block_sizes = bltrid_mat.block_sizes
+    row_blocks, col_blocks = nblocks(bltrid_mat)
+    for brow in 1:row_blocks
+        for bcol in max(1,brow-1):min(brow+1,col_blocks)
+            indices = globalrange(block_sizes, (brow,bcol))
+            copy!(getblock(bltrid_mat, brow, bcol), view(arr, indices...))
         end
-
-        return bltrid_mat
     end
+    return bltrid_mat
 end
-
-function Base.fill!(bltrid_mat::BlockTridiagMatrix, v)
-    for block in bltrid_mat.blocks
-        fill!(block, v)
-    end
-end
-==========#
-
