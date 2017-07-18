@@ -2,7 +2,7 @@
 # BlockSizes #
 ##############
 
-# Keeps track of the (cumulutative) sizes of all the blocks in the `BlockArray`.
+# Keeps track of the (cumulative) sizes of all the blocks in the `BlockArray`.
 immutable BlockSizes{N}
     cumul_sizes::NTuple{N, Vector{Int}}
     # Takes a tuple of sizes, accumulates them and create a `BlockSizes`
