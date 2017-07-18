@@ -18,6 +18,7 @@ include("blocksizes.jl")
 include("blockindices.jl")
 include("blockarray.jl")
 include("pseudo_blockarray.jl")
+include("convert.jl")
 include("show.jl")
 
 
