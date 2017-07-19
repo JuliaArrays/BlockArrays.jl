@@ -21,4 +21,5 @@ Pages = ["internals.md"]
 ```@docs
 blockindex2global
 global2blockindex
+BlockSlice
 ```
