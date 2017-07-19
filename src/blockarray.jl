@@ -80,6 +80,13 @@ end
     end
 end
 
+
+BlockArray{T, N, R <: AbstractArray{T,N}}(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) =
+    BlockArray(R, Vector{Int}.(block_sizes)...)
+
+BlockArray{T, N}(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) =
+    BlockArray(arr, Vector{Int}.(block_sizes)...)
+
 ################################
 # AbstractBlockArray Interface #
 ################################
