@@ -111,6 +111,36 @@ end
     end
 end
 
+@testset "convert" begin
+    # Could probably be DRY'd.
+    A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
+    C = convert(BlockArray, A)
+    @test C == A == BlockArray(A)
+    @test eltype(C) == eltype(A)
+
+    C = convert(BlockArray{Float32}, A)
+    @test C ≈ A ≈ BlockArray(A)
+    @test eltype(C) == Float32
+
+    C = convert(BlockArray{Float32, 2}, A)
+    @test C ≈ A ≈ BlockArray(A)
+    @test eltype(C) == Float32
+
+
+    A = BlockArray(rand(2,3), [1,1], [2,1])
+    C = convert(PseudoBlockArray, A)
+    @test C == A == PseudoBlockArray(A)
+    @test eltype(C) == eltype(A)
+
+    C = convert(PseudoBlockArray{Float32}, A)
+    @test C ≈ A ≈ PseudoBlockArray(A)
+    @test eltype(C) == Float32
+
+    C = convert(PseudoBlockArray{Float32, 2}, A)
+    @test C ≈ A ≈ PseudoBlockArray(A)
+    @test eltype(C) == Float32
+end
+
 @testset "string" begin
     A = BlockArray(rand(4, 5), [1,3], [2,3]);
     buf = IOBuffer()
