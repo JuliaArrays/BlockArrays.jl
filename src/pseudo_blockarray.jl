@@ -56,6 +56,9 @@ end
     return PseudoBlockArray{T, N, R}(blocks, BlockSizes(block_sizes...))
 end
 
+PseudoBlockArray{T, N, R <: AbstractArray{T, N}}(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) =
+    PseudoBlockArray(blocks, Vector{Int}.(block_sizes)...)
+
 
 ###########################
 # AbstractArray Interface #
@@ -89,8 +92,10 @@ end
 # AbstractBlockArray Interface #
 ################################
 
+
 @inline nblocks(block_array::PseudoBlockArray) = nblocks(block_array.block_sizes)
 @inline blocksize{T, N}(block_array::PseudoBlockArray{T,N}, i::Vararg{Int, N}) = blocksize(block_array.block_sizes, i)
+
 
 ############
 # Indexing #
@@ -108,19 +113,20 @@ end
     return block_arr.blocks[range...]
 end
 
-@inline function _check_getblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
-    blocksizes = blocksize(block_arr, block...)
+function _check_getblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
     for i in 1:N
-        if size(x, i) != blocksizes[i]
+        if size(x, i) != length(blockrange[i])
             throw(DimensionMismatch(string("tried to assign ", blocksize(block_arr, block...), " block to $(size(x)) array")))
         end
     end
 end
 
+
 @generated function getblock!{T,N}(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N})
     return quote
         blockrange = globalrange(block_arr.block_sizes, block)
         @boundscheck _check_getblock!(blockrange, x, block_arr, block)
+
         arr = block_arr.blocks
         @nexprs $N d -> k_d = 1
         @inbounds begin
@@ -128,7 +134,6 @@ end
                 (@nref $N x k) = (@nref $N arr i)
             end
         end
-
         return x
     end
 end
@@ -140,7 +145,7 @@ end
     return block_arr
 end
 
-@inline function _check_setblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
+function _check_setblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
     blocksizes = blocksize(block_arr, block...)
     for i in 1:N
         if size(x, i) != blocksizes[i]
@@ -175,10 +180,6 @@ end
 
 function Base.copy!{T, N, R <: AbstractArray}(block_array::PseudoBlockArray{T, N, R}, arr::R)
     copy!(block_array.blocks, arr)
-end
-
-function Base.copy{T, N, R <: AbstractArray}(block_array::PseudoBlockArray{T, N, R})
-    copy(block_array.blocks)
 end
 
 function Base.fill!(block_array::PseudoBlockArray, v)
