@@ -25,11 +25,18 @@ done(S::BlockSlice, s) = done(S.indices, s)
 
 
 
-function unblock(block_sizes, I)
+function unblock(block_sizes::BlockSizes{N}, I::NTuple{M,Block{1,T}}) where {N, M, T}
     B = first(I)
-    BlockSlice(B,
-            first(globalrange(block_sizes,(first(B.n),))))
+    b = first(B.n)
+    # the size of the tuple I tells us how many indices have been processed
+    J = N - M + 1
+
+    range = block_sizes[J, b]:block_sizes[J, b + 1] - 1
+
+    BlockSlice(B,range)
 end
+
+to_index(::Block) = throw(ArgumentError("blocks must be converted by to_indices(...)"))
 
 @inline to_indices(A, inds, I::Tuple{Block, Vararg{Any}}) =
     (unblock(A.block_sizes, I), to_indices(A, _maybetail(inds), tail(I))...)
