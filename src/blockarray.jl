@@ -27,7 +27,6 @@ function BlockArray(blocks::Array{R, N}, block_sizes::Vararg{Vector{Int}, N}) wh
     return BlockArray{T, N, R}(blocks, BlockSizes(block_sizes...))
 end
 
-
 const BlockMatrix{T, R <: AbstractMatrix{T}} = BlockArray{T, 2, R}
 const BlockVector{T, R <: AbstractVector{T}} = BlockArray{T, 1, R}
 const BlockVecOrMat{T, R} = Union{BlockMatrix{T, R}, BlockVector{T, R}}
@@ -60,19 +59,21 @@ function BlockArray{T, N, R <: AbstractArray{T,N}}(::Type{R}, block_sizes::Block
     BlockArray{T,N,R}(blocks, block_sizes)
 end
 
-@generated function BlockArray{T, N}(arr::AbstractArray{T, N}, block_sizes::Vararg{Vector{Int}, N})
-    return quote
-        for i in 1:N
-            if sum(block_sizes[i]) != size(arr, i)
-                throw(DimensionMismatch("block size for dimension $i: $(block_sizes[i]) does not sum to the array size: $(size(arr, i))"))
-            end
+function BlockArray{T, N}(arr::AbstractArray{T, N}, block_sizes::Vararg{Vector{Int}, N})
+    for i in 1:N
+        if sum(block_sizes[i]) != size(arr, i)
+            throw(DimensionMismatch("block size for dimension $i: $(block_sizes[i]) does not sum to the array size: $(size(arr, i))"))
         end
+    end
+    BlockArray(arr, BlockSizes(block_sizes...))
+end
 
-        _block_sizes = BlockSizes(block_sizes...)
-        block_arr = BlockArray(typeof(arr), _block_sizes)
-        @nloops $N i i->(1:nblocks(_block_sizes, i)) begin
+@generated function BlockArray{T, N}(arr::AbstractArray{T, N}, block_sizes::BlockSizes{N})
+    return quote
+        block_arr = BlockArray(typeof(arr), block_sizes)
+        @nloops $N i i->(1:nblocks(block_sizes, i)) begin
             block_index = @ntuple $N i
-            indices = globalrange(_block_sizes, block_index)
+            indices = globalrange(block_sizes, block_index)
             setblock!(block_arr, arr[indices...], block_index...)
         end
 
