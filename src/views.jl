@@ -25,10 +25,11 @@ done(S::BlockSlice, s) = done(S.indices, s)
 
 
 
-function unblock(block_sizes::BlockSizes{N}, I::NTuple{M,Block{1,T}}) where {N, M, T}
+function unblock(block_sizes::BlockSizes{N}, I::Tuple{Block{1,T},Vararg{Any}}) where {N, T}
     B = first(I)
     b = first(B.n)
     # the size of the tuple I tells us how many indices have been processed
+    M = mapreduce(B -> length(B.n), +, I)
     J = N - M + 1
 
     range = block_sizes[J, b]:block_sizes[J, b + 1] - 1
@@ -38,5 +39,11 @@ end
 
 to_index(::Block) = throw(ArgumentError("blocks must be converted by to_indices(...)"))
 
-@inline to_indices(A, inds, I::Tuple{Block, Vararg{Any}}) =
+
+@inline to_indices(A, inds, I::Tuple{Block{1}, Vararg{Any}}) =
     (unblock(A.block_sizes, I), to_indices(A, _maybetail(inds), tail(I))...)
+
+# splat out higher dimensional blocks
+# this mimics view of a CartesianIndex
+@inline to_indices(A, inds, I::Tuple{Block, Vararg{Any}}) =
+    to_indices(A, inds, (Block.(I[1].n)..., tail(I)...))
