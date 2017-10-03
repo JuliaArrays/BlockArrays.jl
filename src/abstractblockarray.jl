@@ -23,7 +23,7 @@ const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVect
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
 Base.summary(a::AbstractBlockArray) = string(block2string(nblocks(a), size(a)), " ", typeof(a))
-Base.similar{T}(block_array::AbstractBlockArray{T}) = similar(block_array, T)
+Base.similar(block_array::AbstractBlockArray{T}) where {T} = similar(block_array, T)
 Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 
 """
@@ -47,7 +47,7 @@ julia> nblocks(A, 3, 2)
 """
 nblocks(block_array::AbstractBlockArray, i::Int) = nblocks(block_array)[i]
 
-function nblocks{N}(block_array::AbstractBlockArray, i::Vararg{Int, N})
+function nblocks(block_array::AbstractBlockArray, i::Vararg{Int, N}) where {N}
     if N == 0
         throw(error("nblocks(A) not implemented"))
     end
@@ -71,7 +71,7 @@ julia> blocksize(A, 2, 1, 3)
 (4, 1, 2)
 ```
 """
-function blocksize{T, N}(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
+function blocksize(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N}
     throw(error("blocksize for ", typeof(A), "is not implemented"))
 end
 
@@ -94,13 +94,13 @@ julia> A[Block(1, 1)]
  1.0  1.0
 ```
 """
-immutable Block{N, T}
+struct Block{N, T}
     n::NTuple{N, T}
 end
 
-Block{N, T}(n::Vararg{T, N}) = Block{N, T}(n)
+Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
 
-@inline function Block{N, T}(blocks::NTuple{N, Block{1, T}})
+@inline function Block(blocks::NTuple{N, Block{1, T}}) where {N,T}
     Block{N, T}(ntuple(i -> blocks[i].n[1], Val{N}))
 end
 
@@ -131,7 +131,7 @@ julia> A[Block(1, 2)]
  5
 ```
 """
-function getblock{T, N}(A::AbstractBlockArray{T,N}, ::Vararg{Int, N})
+function getblock(A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N}
     throw("getblock for ", typeof(A), "is not implemented")
 end
 
@@ -158,11 +158,11 @@ julia> x
  1.0  1.0
 ```
 """
-getblock!{T, N}(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) = throw("getblock! for ", typeof(A), "is not implemented")
+getblock!(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N} = throw("getblock! for ", typeof(A), "is not implemented")
 
-@inline getblock!{T, N}(X, A::AbstractBlockArray{T,N}, block::Block{N})             = getblock!(X, A, block.n...)
+@inline getblock!(X, A::AbstractBlockArray{T,N}, block::Block{N}) where {T,N}             = getblock!(X, A, block.n...)
 @inline getblock!(X, A::AbstractBlockVector, block::Block{1})                       = getblock!(X, A, block.n[1])
-@inline getblock!{T, N}(X, A::AbstractBlockArray{T, N}, block::Vararg{Block{1}, N}) = getblock!(X, A, (Block(block).n)...)
+@inline getblock!(X, A::AbstractBlockArray{T, N}, block::Vararg{Block{1}, N}) where {T,N} = getblock!(X, A, (Block(block).n)...)
 
 """
     setblock!(A, v, inds...)
@@ -184,11 +184,11 @@ julia> A
  3.0  4.0  │  0.0
 ```
 """
-setblock!{T, N}(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N}) = throw("setblock! for ", typeof(A), "is not implemented")
+setblock!(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N}) where {T,N} = throw("setblock! for ", typeof(A), "is not implemented")
 
-@inline setblock!{T, N}(A::AbstractBlockArray{T, N}, v, block::Block{N})            = setblock!(A, v, block.n...)
+@inline setblock!(A::AbstractBlockArray{T, N}, v, block::Block{N}) where {T,N}      = setblock!(A, v, block.n...)
 @inline setblock!(A::AbstractBlockVector, v, block::Block{1})                       = setblock!(A, v, block.n[1])
-@inline setblock!{T, N}(A::AbstractBlockArray{T, N}, v, block::Vararg{Block{1}, N}) = setblock!(A, v, (Block(blockindex).n)...)
+@inline setblock!(A::AbstractBlockArray{T, N}, v, block::Vararg{Block{1}, N}) where {T,N} = setblock!(A, v, (Block(block).n)...)
 
 
 """
@@ -196,7 +196,7 @@ setblock!{T, N}(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N}) = throw("setblo
 
 Thrown when a block indexing operation into a block array, `A`, tried to access an out-of-bounds block, `inds`.
 """
-immutable BlockBoundsError <: Exception
+struct BlockBoundsError <: Exception
     a::Any
     i::Any
     BlockBoundsError() = new()
@@ -232,7 +232,7 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArrays.BlockAr
 [...]
 ```
 """
-@inline function blockcheckbounds{T, N}(A::AbstractBlockArray{T, N}, i::Vararg{Int, N})
+@inline function blockcheckbounds(A::AbstractBlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
     if blockcheckbounds(Bool, A, i...)
         return
     else
@@ -240,7 +240,7 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArrays.BlockAr
     end
 end
 
-@inline function blockcheckbounds{T, N}(::Type{Bool}, A::AbstractBlockArray{T, N}, i::Vararg{Int, N})
+@inline function blockcheckbounds(::Type{Bool}, A::AbstractBlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
     n = nblocks(A)
     k = 0
     for idx in 1:N # using enumerate here will allocate
@@ -275,9 +275,9 @@ julia> Array(A)
 function Base.Array(A::AbstractBlockArray) end
 
 # Convert to @generated...
-@propagate_inbounds Base.getindex{T, N}( block_arr::AbstractBlockArray{T, N}, block::Block{N})       =  getblock(block_arr, block.n...)
-@propagate_inbounds Base.setindex!{T, N}(block_arr::AbstractBlockArray{T, N}, v, block::Block{N})    =  setblock!(block_arr, v, block.n...)
+@propagate_inbounds Base.getindex( block_arr::AbstractBlockArray{T, N}, block::Block{N}) where {T,N}       =  getblock(block_arr, block.n...)
+@propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T, N}, v, block::Block{N}) where {T,N}    =  setblock!(block_arr, v, block.n...)
 @propagate_inbounds Base.getindex( block_arr::AbstractBlockVector, block::Block{1})                  =  getblock(block_arr, block.n[1])
 @propagate_inbounds Base.setindex!(block_arr::AbstractBlockVector, v, block::Block{1})               =  setblock!(block_arr, v, block.n[1])
-@inline Base.getindex{T, N}(block_arr::AbstractBlockArray{T,N}, block::Vararg{Block{1}, N})     =  getblock(block_arr, (Block(block).n)...)
-@inline Base.setindex!{T, N}(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) =  setblock!(block_arr, v, (Block(block).n)...)
+@inline Base.getindex(block_arr::AbstractBlockArray{T,N}, block::Vararg{Block{1}, N}) where {T,N}     =  getblock(block_arr, (Block(block).n)...)
+@inline Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N} =  setblock!(block_arr, v, (Block(block).n)...)

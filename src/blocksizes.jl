@@ -3,21 +3,19 @@
 ##############
 
 # Keeps track of the (cumulative) sizes of all the blocks in the `BlockArray`.
-immutable BlockSizes{N}
+struct BlockSizes{N}
     cumul_sizes::NTuple{N, Vector{Int}}
     # Takes a tuple of sizes, accumulates them and create a `BlockSizes`
 end
 
-function BlockSizes{N}(sizes::Vararg{Vector{Int}, N}) where {N}
+function BlockSizes(sizes::Vararg{Vector{Int}, N}) where {N}
     cumul_sizes = ntuple(k -> _cumul_vec(sizes[k]), Val{N})
     return BlockSizes(cumul_sizes)
 end
 
-@inline BlockSizes{N}(sizes::Vararg{Vector{Int}, N}) = BlockSizes{N}(sizes...)
-
 Base.:(==)(a::BlockSizes, b::BlockSizes) = a.cumul_sizes == b.cumul_sizes
 
-function _cumul_vec{T}(v::Vector{T})
+function _cumul_vec(v::Vector{T}) where {T}
     v_cumul = similar(v, length(v) + 1)
     z = one(T)
     v_cumul[1] = z
@@ -34,12 +32,12 @@ end
 @propagate_inbounds blocksize(block_sizes::BlockSizes, i, j) = block_sizes[i, j+1] - block_sizes[i, j]
 
 # ntuple with Val was slow here. @generated it is!
-@generated function blocksize{N}(block_sizes::BlockSizes{N}, i::NTuple{N, Int})
+@generated function blocksize(block_sizes::BlockSizes{N}, i::NTuple{N, Int}) where {N}
     exp = Expr(:tuple, [:(blocksize(block_sizes, $k, i[$k])) for k in 1:N]...)
     return exp
 end
 
-function Base.show{N}(io::IO, block_sizes::BlockSizes{N})
+function Base.show(io::IO, block_sizes::BlockSizes{N}) where {N}
     if N == 0
         print(io, "[]")
     else
@@ -70,7 +68,7 @@ end
     return block, i - cum_size
 end
 
-@generated function nblocks{N}(block_sizes::BlockSizes{N})
+@generated function nblocks(block_sizes::BlockSizes{N}) where {N}
     ex = Expr(:tuple, [:(nblocks(block_sizes, $i)) for i in 1:N]...)
     return quote
         @inbounds return $ex
@@ -81,7 +79,7 @@ end
 
 
 # ntuple is yet again slower
-@generated function Base.copy{N}(block_sizes::BlockSizes{N})
+@generated function Base.copy(block_sizes::BlockSizes{N}) where {N}
     exp = Expr(:tuple, [:(copy(block_sizes[$k])) for k in 1:N]...)
     return quote
         BlockSizes($exp)
@@ -89,7 +87,7 @@ end
 end
 
 # Computes the global range of an Array that corresponds to a given block_index
-@generated function globalrange{N}(block_sizes::BlockSizes{N}, block_index::NTuple{N, Int})
+@generated function globalrange(block_sizes::BlockSizes{N}, block_index::NTuple{N, Int}) where {N}
     indices_ex = Expr(:tuple, [:(block_sizes[$i, block_index[$i]]:block_sizes[$i, block_index[$i] + 1] - 1) for i = 1:N]...)
     return quote
         $Expr(:meta, :inline)

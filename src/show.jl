@@ -60,7 +60,7 @@ function Base.print_matrix_row(io::IO,
             else
                 print(row_buf, "─")
             end
-       end
+        end
 
         if k < length(A); print(io, sep); end
     end
