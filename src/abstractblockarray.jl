@@ -52,7 +52,7 @@ function nblocks(block_array::AbstractBlockArray, i::Vararg{Int, N}) where {N}
         throw(error("nblocks(A) not implemented"))
     end
     b = nblocks(block_array)
-    return ntuple(k-> b[i[k]], Val{N})
+    return ntuple(k-> b[i[k]], Val(N))
 end
 
 
@@ -101,7 +101,7 @@ end
 Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
 
 @inline function Block(blocks::NTuple{N, Block{1, T}}) where {N,T}
-    Block{N, T}(ntuple(i -> blocks[i].n[1], Val{N}))
+    Block{N, T}(ntuple(i -> blocks[i].n[1], Val(N)))
 end
 
 """
@@ -201,7 +201,7 @@ struct BlockBoundsError <: Exception
     i::Any
     BlockBoundsError() = new()
     BlockBoundsError(a::AbstractBlockArray) = new(a)
-    BlockBoundsError(a::AbstractBlockArray, i::ANY) = new(a,i)
+    BlockBoundsError(a::AbstractBlockArray, @nospecialize(i)) = new(a,i)
 end
 
 function Base.showerror(io::IO, ex::BlockBoundsError)

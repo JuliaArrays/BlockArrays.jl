@@ -49,17 +49,17 @@ julia> BlockArray(Matrix{Float64}, [1,3], [2,2])
  #undef  │  #undef  #undef  #undef  │
 ```
 """
-@inline function BlockArray{T, N, R <: AbstractArray{T,N}}(::Type{R}, block_sizes::Vararg{Vector{Int}, N})
+@inline function BlockArray(::Type{R}, block_sizes::Vararg{Vector{Int}, N}) where {T,N,R <: AbstractArray{T, N}}
     BlockArray(R, BlockSizes(block_sizes...))
 end
 
-function BlockArray{T, N, R <: AbstractArray{T,N}}(::Type{R}, block_sizes::BlockSizes{N})
+function BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where {T,N,R <: AbstractArray{T, N}}
     n_blocks = nblocks(block_sizes)
     blocks = Array{R, N}(n_blocks)
     BlockArray{T,N,R}(blocks, block_sizes)
 end
 
-function BlockArray{T, N}(arr::AbstractArray{T, N}, block_sizes::Vararg{Vector{Int}, N})
+function BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{Vector{Int}, N}) where {T,N}
     for i in 1:N
         if sum(block_sizes[i]) != size(arr, i)
             throw(DimensionMismatch("block size for dimension $i: $(block_sizes[i]) does not sum to the array size: $(size(arr, i))"))
@@ -68,7 +68,7 @@ function BlockArray{T, N}(arr::AbstractArray{T, N}, block_sizes::Vararg{Vector{I
     BlockArray(arr, BlockSizes(block_sizes...))
 end
 
-@generated function BlockArray{T, N}(arr::AbstractArray{T, N}, block_sizes::BlockSizes{N})
+@generated function BlockArray(arr::AbstractArray{T, N}, block_sizes::BlockSizes{N}) where {T,N}
     return quote
         block_arr = BlockArray(typeof(arr), block_sizes)
         @nloops $N i i->(1:nblocks(block_sizes, i)) begin
@@ -82,10 +82,10 @@ end
 end
 
 
-BlockArray{T, N, R <: AbstractArray{T,N}}(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) =
+BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N,R <: AbstractArray{T, N}} =
     BlockArray(R, Vector{Int}.(block_sizes)...)
 
-BlockArray{T, N}(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) =
+BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N} =
     BlockArray(arr, Vector{Int}.(block_sizes)...)
 
 ################################
@@ -93,14 +93,14 @@ BlockArray{T, N}(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{In
 ################################
 
 @inline nblocks(block_array::BlockArray) = nblocks(block_array.block_sizes)
-@inline blocksize{T, N}(block_array::BlockArray{T,N}, i::Vararg{Int, N}) = blocksize(block_array.block_sizes, i)
+@inline blocksize(block_array::BlockArray{T,N}, i::Vararg{Int, N}) where {T,N} = blocksize(block_array.block_sizes, i)
 
-@inline function getblock{T, N}(block_arr::BlockArray{T,N}, block::Vararg{Int, N})
+@inline function getblock(block_arr::BlockArray{T,N}, block::Vararg{Int, N}) where {T,N}
     @boundscheck blockcheckbounds(block_arr, block...)
     block_arr.blocks[block...]
 end
 
-@inline function Base.getindex{T, N}(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N})
+@inline function Base.getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N}
     @boundscheck checkbounds(block_arr.blocks, blockindex.I...)
     @inbounds block = block_arr.blocks[blockindex.I...]
     @boundscheck checkbounds(block, blockindex.α...)
@@ -113,24 +113,24 @@ end
 # AbstractArray Interface #
 ###########################
 
-@inline function Base.similar{T,N,T2}(block_array::BlockArray{T,N}, ::Type{T2})
+@inline function Base.similar(block_array::BlockArray{T,N}, ::Type{T2}) where {T,N,T2}
     BlockArray(similar(block_array.blocks, Array{T2, N}), copy(block_array.block_sizes))
 end
 
-@generated function Base.size{T,N}(arr::BlockArray{T,N})
+@generated function Base.size(arr::BlockArray{T,N}) where {T,N}
     exp = Expr(:tuple, [:(arr.block_sizes[$i][end] - 1) for i in 1:N]...)
     return quote
         @inbounds return $exp
     end
 end
 
-@inline function Base.getindex{T, N}(block_arr::BlockArray{T, N}, i::Vararg{Int, N})
+@inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr[global2blockindex(block_arr.block_sizes, i)]
     return v
 end
 
-@inline function Base.setindex!{T, N}(block_arr::BlockArray{T, N}, v, i::Vararg{Int, N})
+@inline function Base.setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Int, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds block_arr[global2blockindex(block_arr.block_sizes, i)] = v
     return block_arr
@@ -140,7 +140,7 @@ end
 # Indexing #
 ############
 
-function _check_setblock!{T,N}(block_arr::BlockArray{T, N}, v, block::NTuple{N, Int})
+function _check_setblock!(block_arr::BlockArray{T, N}, v, block::NTuple{N, Int}) where {T,N}
     for i in 1:N
         if size(v, i) != blocksize(block_arr.block_sizes, i, block[i])
             throw(DimensionMismatch(string("tried to assign $(size(v)) array to ", blocksize(block_arr, block...), " block")))
@@ -149,14 +149,14 @@ function _check_setblock!{T,N}(block_arr::BlockArray{T, N}, v, block::NTuple{N, 
 end
 
 
-@inline function setblock!{T, N}(block_arr::BlockArray{T, N}, v, block::Vararg{Int, N})
+@inline function setblock!(block_arr::BlockArray{T, N}, v, block::Vararg{Int, N}) where {T,N}
     @boundscheck blockcheckbounds(block_arr, block...)
     @boundscheck _check_setblock!(block_arr, v, block)
     @inbounds block_arr.blocks[block...] = v
     return block_arr
 end
 
-@propagate_inbounds function Base.setindex!{T,N}(block_array::BlockArray{T, N}, v, block_index::BlockIndex{N})
+@propagate_inbounds function Base.setindex!(block_array::BlockArray{T, N}, v, block_index::BlockIndex{N}) where {T,N}
     getblock(block_array, block_index.I...)[block_index.α...] = v
 end
 
@@ -164,7 +164,7 @@ end
 # Misc #
 ########
 
-@generated function Base.Array{T,N,R}(block_array::BlockArray{T, N, R})
+@generated function Base.Array(block_array::BlockArray{T, N, R}) where {T,N,R}
     # TODO: This will fail for empty block array
     return quote
         block_sizes = block_array.block_sizes
@@ -179,7 +179,7 @@ end
     end
 end
 
-@generated function Base.copy!{T, N, R <: AbstractArray}(block_array::BlockArray{T, N, R}, arr::R)
+@generated function Base.copy!(block_array::BlockArray{T, N, R}, arr::R) where {T,N,R <: AbstractArray}
     return quote
         block_sizes = block_array.block_sizes
 

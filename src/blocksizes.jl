@@ -9,7 +9,7 @@ struct BlockSizes{N}
 end
 
 function BlockSizes(sizes::Vararg{Vector{Int}, N}) where {N}
-    cumul_sizes = ntuple(k -> _cumul_vec(sizes[k]), Val{N})
+    cumul_sizes = ntuple(k -> _cumul_vec(sizes[k]), Val(N))
     return BlockSizes(cumul_sizes)
 end
 
