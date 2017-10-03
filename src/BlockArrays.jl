@@ -11,6 +11,7 @@ export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrM
 
 import Base: @propagate_inbounds, Array
 using Base.Cartesian
+using Compat
 
 include("abstractblockarray.jl")
 

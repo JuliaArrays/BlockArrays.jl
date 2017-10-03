@@ -10,9 +10,9 @@ function Base.print_matrix_row(io::IO,
 
     row_buf = IOBuffer()
 
-    row_sum = X.block_sizes[1][2:end] - 1
+    row_sum = X.block_sizes[1][2:end] .- 1
     if ndims(X) == 2
-        col_sum = (X.block_sizes[2][2:end]  - 1)[1:end-1]
+        col_sum = (X.block_sizes[2][2:end] .- 1)[1:end-1]
     end
 
     # Loop over row
@@ -60,7 +60,7 @@ function Base.print_matrix_row(io::IO,
             else
                 print(row_buf, "─")
             end
-       end
+        end
 
         if k < length(A); print(io, sep); end
     end

@@ -25,7 +25,7 @@ julia> a[BlockIndex((2,2), (2,3))]
 20
 ```
 """
-immutable BlockIndex{N}
+struct BlockIndex{N}
     I::NTuple{N, Int}
     α::NTuple{N, Int}
 end
@@ -34,7 +34,7 @@ end
 @inline BlockIndex(a::NTuple, b::Int) = BlockIndex(a, (b,))
 @inline BlockIndex(a::Int, b::NTuple) = BlockIndex((a,), b)
 
-@generated function BlockIndex{M, N}(I::NTuple{N, Int}, α::NTuple{M, Int})
+@generated function BlockIndex(I::NTuple{N, Int}, α::NTuple{M, Int}) where {M,N}
     @assert M < N
     α_ex = Expr(:tuple, [k <= M ? :(α[$k]) : :(1) for k = 1:N]...)
     return quote
@@ -49,7 +49,7 @@ end
 
 Converts from global indices `inds` to a `BlockIndex`.
 """
-@generated function global2blockindex{N}(block_sizes::BlockSizes{N}, i::NTuple{N, Int})
+@generated function global2blockindex(block_sizes::BlockSizes{N}, i::NTuple{N, Int}) where {N}
     block_index_ex = Expr(:tuple, [:(_find_block(block_sizes, $k, i[$k])) for k = 1:N]...)
     I_ex = Expr(:tuple, [:(block_index[$k][1]) for k = 1:N]...)
     α_ex = Expr(:tuple, [:(block_index[$k][2]) for k = 1:N]...)
@@ -67,7 +67,7 @@ end
 
 Converts from a block index to a tuple containing the global indices
 """
-@generated function blockindex2global{N}(block_sizes::BlockSizes{N}, block_index::BlockIndex{N})
+@generated function blockindex2global(block_sizes::BlockSizes{N}, block_index::BlockIndex{N}) where {N}
     ex = Expr(:tuple, [:(block_sizes[$k, block_index.I[$k]] + block_index.α[$k] - 1) for k = 1:N]...)
     return quote
         $Expr(:meta, :inline)
