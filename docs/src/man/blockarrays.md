@@ -37,7 +37,8 @@ Note that accessing an undefined block will throw an "access to undefined refere
 ## Setting and getting blocks and values
 
 A block can be set by `setblock!(block_array, v, i...)` where `v` is the array to set and `i` is the block index.
-An alternative syntax for this is `block_array[Block(i...)] = v`.
+An alternative syntax for this is `block_array[Block(i...)] = v` or
+`block_array[Block.(i)...]`.
 
 ```jldoctest
 julia> block_array = BlockArray(Matrix{Float64}, [1,2], [2,2])
@@ -72,6 +73,10 @@ A block can be retrieved with `getblock(block_array, i...)` or `block_array[Bloc
 julia> block_array[Block(1, 1)]
 1×2 Array{Float64,2}:
  1.0  2.0
+
+julia> block_array[Block(1), Block(1)]  # equivalent to above
+ 1×2 Array{Float64,2}:
+  1.0  2.0
 ```
 
 Similarly to `setblock!` this does not copy the returned array.
@@ -82,6 +87,25 @@ For setting and getting a single scalar element, the usual `setindex!` and `geti
 julia> block_array[1, 2]
 2.0
 ```
+
+## Views of blocks
+
+We can also view and modify views of blocks of `BlockArray` using the `view` syntax:
+```jldoctest
+julia> A = BlockArray(ones(6), 1:3);
+
+julia> view(A, Block(2))
+2-element SubArray{Float64,1,BlockArrays.BlockArray{Float64,1,Array{Float64,1}},Tuple{BlockArrays.BlockSlice},false}:
+ 1.0
+ 1.0
+
+julia> view(A, Block(2)) .= [3,4]; A[Block(2)]
+2-element Array{Float64,1}:
+ 3.0
+ 4.0
+```
+
+
 
 ## Converting between `BlockArray` and normal arrays
 

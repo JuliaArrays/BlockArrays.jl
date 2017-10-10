@@ -1,5 +1,5 @@
 """
-   BlockSlice(indices)
+    BlockSlice(indices)
 
 Represent an AbstractUnitRange of indices that attaches a block.
 
@@ -24,7 +24,11 @@ next(S::BlockSlice, s) = next(S.indices, s)
 done(S::BlockSlice, s) = done(S.indices, s)
 
 
+"""
+    unblock(block_sizes, I)
 
+Returns the indices associated with a block as a `BlockSlice`.
+"""
 function unblock(block_sizes::BlockSizes{N}, I::Tuple{Block{1,T},Vararg{Any}}) where {N, T}
     B = first(I)
     b = first(B.n)
