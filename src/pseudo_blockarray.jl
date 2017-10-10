@@ -48,11 +48,11 @@ const PseudoBlockVector{T, R} = PseudoBlockArray{T, 1, R}
 const PseudoBlockVecOrMat{T, R} = Union{PseudoBlockMatrix{T, R}, PseudoBlockVector{T, R}}
 
 # Auxiliary outer constructors
-@inline function PseudoBlockArray{T, N, R <: AbstractArray{T, N}}(blocks::R, block_sizes::BlockSizes{N})
+@inline function PseudoBlockArray(blocks::R, block_sizes::BlockSizes{N}) where {T,N,R <: AbstractArray{T, N}}
     return PseudoBlockArray{T, N, R}(blocks, block_sizes)
 end
 
-@inline function PseudoBlockArray{T, N, R <: AbstractArray{T, N}}(blocks::R, block_sizes::Vararg{Vector{Int}, N})
+@inline function PseudoBlockArray(blocks::R, block_sizes::Vararg{Vector{Int}, N}) where {T,N,R <: AbstractArray{T, N}}
     return PseudoBlockArray{T, N, R}(blocks, BlockSizes(block_sizes...))
 end
 
@@ -64,25 +64,25 @@ PseudoBlockArray{T, N, R <: AbstractArray{T, N}}(blocks::R, block_sizes::Vararg{
 # AbstractArray Interface #
 ###########################
 
-function Base.similar{T,N,T2}(block_array::PseudoBlockArray{T,N}, ::Type{T2})
+function Base.similar(block_array::PseudoBlockArray{T,N}, ::Type{T2}) where {T,N,T2}
     PseudoBlockArray(similar(block_array.blocks, T2), copy(block_array.block_sizes))
 end
 
-@generated function Base.size{T,N}(arr::PseudoBlockArray{T,N})
+@generated function Base.size(arr::PseudoBlockArray{T,N}) where {T,N}
     exp = Expr(:tuple, [:(arr.block_sizes[$i][end] - 1) for i in 1:N]...)
     return quote
         @inbounds return $exp
     end
 end
 
-@inline function Base.getindex{T, N}(block_arr::PseudoBlockArray{T, N}, i::Vararg{Int, N})
+@inline function Base.getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr.blocks[i...]
     return v
 end
 
 
-@inline function Base.setindex!{T, N}(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Int, N})
+@inline function Base.setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Int, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds block_arr.blocks[i...] = v
     return block_arr
@@ -94,26 +94,26 @@ end
 
 
 @inline nblocks(block_array::PseudoBlockArray) = nblocks(block_array.block_sizes)
-@inline blocksize{T, N}(block_array::PseudoBlockArray{T,N}, i::Vararg{Int, N}) = blocksize(block_array.block_sizes, i)
+@inline blocksize(block_array::PseudoBlockArray{T,N}, i::Vararg{Int, N}) where {T,N} = blocksize(block_array.block_sizes, i)
 
 
 ############
 # Indexing #
 ############
 
-@inline function Base.getindex{T, N}(block_arr::PseudoBlockArray{T,N}, blockindex::BlockIndex{N})
+@inline function Base.getindex(block_arr::PseudoBlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N}
     I = blockindex2global(block_arr.block_sizes, blockindex)
     @boundscheck checkbounds(block_arr.blocks, I...)
     @inbounds v = block_arr.blocks[I...]
     return v
 end
 
-@inline function getblock{T,N}(block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N})
+@inline function getblock(block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N}) where {T,N}
     range = globalrange(block_arr.block_sizes, block)
     return block_arr.blocks[range...]
 end
 
-function _check_getblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
+@inline function _check_getblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int}) where {T,N}
     for i in 1:N
         if size(x, i) != length(blockrange[i])
             throw(DimensionMismatch(string("tried to assign ", blocksize(block_arr, block...), " block to $(size(x)) array")))
@@ -122,7 +122,7 @@ function _check_getblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N},
 end
 
 
-@generated function getblock!{T,N}(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N})
+@generated function getblock!(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N}) where {T,N}
     return quote
         blockrange = globalrange(block_arr.block_sizes, block)
         @boundscheck _check_getblock!(blockrange, x, block_arr, block)
@@ -138,14 +138,14 @@ end
     end
 end
 
-@inline function Base.setindex!{T, N}(block_arr::PseudoBlockArray{T,N}, v, blockindex::BlockIndex{N})
+@inline function Base.setindex!(block_arr::PseudoBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N}
     I = blockindex2global(block_arr.block_sizes, blockindex)
     @boundscheck checkbounds(block_arr.blocks, I...)
     @inbounds block_arr.blocks[I...] = v
     return block_arr
 end
 
-function _check_setblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int})
+@inline function _check_setblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int}) where {T,N}
     blocksizes = blocksize(block_arr, block...)
     for i in 1:N
         if size(x, i) != blocksizes[i]
@@ -154,7 +154,7 @@ function _check_setblock!{T, N}(blockrange, x, block_arr::PseudoBlockArray{T,N},
     end
 end
 
-@generated function setblock!{T, N}(block_arr::PseudoBlockArray{T, N}, x, block::Vararg{Int, N})
+@generated function setblock!(block_arr::PseudoBlockArray{T, N}, x, block::Vararg{Int, N}) where {T,N}
     return quote
         blockrange = globalrange(block_arr.block_sizes, block)
         @boundscheck _check_setblock!(blockrange, x, block_arr, block)
@@ -178,8 +178,12 @@ function Base.Array(block_array::PseudoBlockArray)
     return block_array.blocks
 end
 
-function Base.copy!{T, N, R <: AbstractArray}(block_array::PseudoBlockArray{T, N, R}, arr::R)
+function Base.copy!(block_array::PseudoBlockArray{T, N, R}, arr::R) where {T,N,R <: AbstractArray}
     copy!(block_array.blocks, arr)
+end
+
+function Base.copy(block_array::PseudoBlockArray{T, N, R}) where {T,N,R <: AbstractArray}
+    copy(block_array.blocks)
 end
 
 function Base.fill!(block_array::PseudoBlockArray, v)

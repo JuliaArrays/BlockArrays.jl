@@ -14,6 +14,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
             getindex, show, start, next, done, @_inline_meta, _maybetail, tail
 
 using Base.Cartesian
+using Compat
 
 
 include("abstractblockarray.jl")
