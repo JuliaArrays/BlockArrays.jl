@@ -85,7 +85,15 @@ var documenterSearchIndex = {"docs": [
     "page": "BlockArrays",
     "title": "Setting and getting blocks and values",
     "category": "section",
-    "text": "A block can be set by setblock!(block_array, v, i...) where v is the array to set and i is the block index. An alternative syntax for this is block_array[Block(i...)] = v.julia> block_array = BlockArray(Matrix{Float64}, [1,2], [2,2])\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n #undef  #undef  │  #undef  #undef\n ----------------┼----------------\n #undef  #undef  │  #undef  #undef\n #undef  #undef  │  #undef  #undef\n\njulia> setblock!(block_array, rand(2,2), 2, 1)\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n #undef      #undef      │  #undef  #undef\n ------------------------┼----------------\n   0.590845    0.566237  │  #undef  #undef\n   0.766797    0.460085  │  #undef  #undef\n\njulia> block_array[Block(1, 1)] = [1 2];\n\njulia> block_array\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n 1.0       2.0       │  #undef  #undef\n --------------------┼----------------\n 0.590845  0.566237  │  #undef  #undef\n 0.766797  0.460085  │  #undef  #undefNote that this will \"take ownership\" of the passed in array, that is, no copy is made.A block can be retrieved with getblock(block_array, i...) or block_array[Block(i...)]:julia> block_array[Block(1, 1)]\n1×2 Array{Float64,2}:\n 1.0  2.0Similarly to setblock! this does not copy the returned array.For setting and getting a single scalar element, the usual setindex! and getindex are available.julia> block_array[1, 2]\n2.0"
+    "text": "A block can be set by setblock!(block_array, v, i...) where v is the array to set and i is the block index. An alternative syntax for this is block_array[Block(i...)] = v or block_array[Block.(i)...].julia> block_array = BlockArray(Matrix{Float64}, [1,2], [2,2])\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n #undef  #undef  │  #undef  #undef\n ----------------┼----------------\n #undef  #undef  │  #undef  #undef\n #undef  #undef  │  #undef  #undef\n\njulia> setblock!(block_array, rand(2,2), 2, 1)\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n #undef      #undef      │  #undef  #undef\n ------------------------┼----------------\n   0.590845    0.566237  │  #undef  #undef\n   0.766797    0.460085  │  #undef  #undef\n\njulia> block_array[Block(1, 1)] = [1 2];\n\njulia> block_array\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n 1.0       2.0       │  #undef  #undef\n --------------------┼----------------\n 0.590845  0.566237  │  #undef  #undef\n 0.766797  0.460085  │  #undef  #undefNote that this will \"take ownership\" of the passed in array, that is, no copy is made.A block can be retrieved with getblock(block_array, i...) or block_array[Block(i...)]:julia> block_array[Block(1, 1)]\n1×2 Array{Float64,2}:\n 1.0  2.0\n\njulia> block_array[Block(1), Block(1)]  # equivalent to above\n 1×2 Array{Float64,2}:\n  1.0  2.0Similarly to setblock! this does not copy the returned array.For setting and getting a single scalar element, the usual setindex! and getindex are available.julia> block_array[1, 2]\n2.0"
+},
+
+{
+    "location": "man/blockarrays.html#Views-of-blocks-1",
+    "page": "BlockArrays",
+    "title": "Views of blocks",
+    "category": "section",
+    "text": "We can also view and modify views of blocks of BlockArray using the view syntax:julia> A = BlockArray(ones(6), 1:3);\n\njulia> view(A, Block(2))\n2-element SubArray{Float64,1,BlockArrays.BlockArray{Float64,1,Array{Float64,1}},Tuple{BlockArrays.BlockSlice},false}:\n 1.0\n 1.0\n\njulia> view(A, Block(2)) .= [3,4]; A[Block(2)]\n2-element Array{Float64,1}:\n 3.0\n 4.0"
 },
 
 {
@@ -126,6 +134,14 @@ var documenterSearchIndex = {"docs": [
     "title": "Setting and getting blocks and values",
     "category": "section",
     "text": "Setting and getting blocks uses the same API as BlockArrays. The difference here is that setting a block will update the block in place and getting a block will extract a copy of the block and return it. For PseudoBlockArrays there is a mutating block getter called getblock! which updates a passed in array to avoid a copy:julia> A = zeros(2,2)\n2×2 Array{Float64,2}:\n 0.0  0.0\n 0.0  0.0\n\njulia> getblock!(A, pseudo, 2, 1);\n\njulia> A\n2×2 Array{Float64,2}:\n 0.766797  0.794026\n 0.566237  0.854147It is sometimes convenient to access an index in a certain block. We could of course write this as A[Block(I,J)][i,j] but the problem is that A[Block(I,J)] allocates its output so this type of indexing will be inefficient. Instead, it is possible to use the A[BlockIndex((I,J), (i,j))] indexing. Using the same block matrix A as above:julia> pseudo[BlockIndex((2,1), (2,2))]\n0.8541465903790502The underlying array is accessed with Array just like for BlockArray."
+},
+
+{
+    "location": "man/pseudoblockarrays.html#Views-of-blocks-1",
+    "page": "PseudoBlockArrays",
+    "title": "Views of blocks",
+    "category": "section",
+    "text": "We can also view and modify views of blocks of PseudoBlockArray using the view syntax:julia> A = PseudoBlockArray(ones(6), 1:3);\n\njulia> view(A, Block(2))\n2-element SubArray{Float64,1,BlockArrays.PseudoBlockArray{Float64,1,Array{Float64,1}},Tuple{BlockArrays.BlockSlice},false}:\n 1.0\n 1.0\n\njulia> view(A, Block(2)) .= [3,4]; A[Block(2)]\n2-element Array{Float64,1}:\n 3.0\n 4.0Note that, in memory, each block is in a BLAS-Level 3 compatible format, so that, in the future, algebra with blocks will be highly efficient."
 },
 
 {
@@ -337,11 +353,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "lib/internals.html#BlockArrays.BlockSlice",
+    "page": "Internal Documentation",
+    "title": "BlockArrays.BlockSlice",
+    "category": "Type",
+    "text": "BlockSlice(indices)\n\nRepresent an AbstractUnitRange of indices that attaches a block.\n\nUpon calling to_indices(), Blocks are converted to BlockSlice objects to represent the indices over which the Block spans.\n\nThis mimics the relationship between Colon and Base.Slice.\n\n\n\n"
+},
+
+{
+    "location": "lib/internals.html#BlockArrays.unblock",
+    "page": "Internal Documentation",
+    "title": "BlockArrays.unblock",
+    "category": "Function",
+    "text": "unblock(block_sizes, I)\n\nReturns the indices associated with a block as a BlockSlice.\n\n\n\n"
+},
+
+{
     "location": "lib/internals.html#Internals-1",
     "page": "Internal Documentation",
     "title": "Internals",
     "category": "section",
-    "text": "blockindex2global\nglobal2blockindex"
+    "text": "blockindex2global\nglobal2blockindex\nBlockSlice\nunblock"
 },
 
 ]}
