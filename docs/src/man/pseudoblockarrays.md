@@ -57,3 +57,23 @@ julia> pseudo[BlockIndex((2,1), (2,2))]
 ```
 
 The underlying array is accessed with `Array` just like for `BlockArray`.
+
+
+## Views of blocks
+
+We can also view and modify views of blocks of `PseudoBlockArray` using the `view` syntax:
+```jldoctest
+julia> A = PseudoBlockArray(ones(6), 1:3);
+
+julia> view(A, Block(2))
+2-element SubArray{Float64,1,BlockArrays.PseudoBlockArray{Float64,1,Array{Float64,1}},Tuple{BlockArrays.BlockSlice},false}:
+ 1.0
+ 1.0
+
+julia> view(A, Block(2)) .= [3,4]; A[Block(2)]
+2-element Array{Float64,1}:
+ 3.0
+ 4.0
+```
+Note that, in memory, each block is in a BLAS-Level 3 compatible format, so
+that, in the future, algebra with blocks will be highly efficient.

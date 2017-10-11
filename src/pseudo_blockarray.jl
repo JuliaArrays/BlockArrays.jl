@@ -56,6 +56,9 @@ end
     return PseudoBlockArray{T, N, R}(blocks, BlockSizes(block_sizes...))
 end
 
+PseudoBlockArray{T, N, R <: AbstractArray{T, N}}(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) =
+    PseudoBlockArray(blocks, Vector{Int}.(block_sizes)...)
+
 
 ###########################
 # AbstractArray Interface #
@@ -89,8 +92,10 @@ end
 # AbstractBlockArray Interface #
 ################################
 
+
 @inline nblocks(block_array::PseudoBlockArray) = nblocks(block_array.block_sizes)
 @inline blocksize(block_array::PseudoBlockArray{T,N}, i::Vararg{Int, N}) where {T,N} = blocksize(block_array.block_sizes, i)
+
 
 ############
 # Indexing #
@@ -109,18 +114,19 @@ end
 end
 
 @inline function _check_getblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int}) where {T,N}
-    blocksizes = blocksize(block_arr, block...)
     for i in 1:N
-        if size(x, i) != blocksizes[i]
+        if size(x, i) != length(blockrange[i])
             throw(DimensionMismatch(string("tried to assign ", blocksize(block_arr, block...), " block to $(size(x)) array")))
         end
     end
 end
 
+
 @generated function getblock!(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N}) where {T,N}
     return quote
         blockrange = globalrange(block_arr.block_sizes, block)
         @boundscheck _check_getblock!(blockrange, x, block_arr, block)
+
         arr = block_arr.blocks
         @nexprs $N d -> k_d = 1
         @inbounds begin
@@ -128,7 +134,6 @@ end
                 (@nref $N x k) = (@nref $N arr i)
             end
         end
-
         return x
     end
 end
