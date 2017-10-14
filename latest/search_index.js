@@ -353,6 +353,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "lib/internals.html#BlockArrays.BlockRange",
+    "page": "Internal Documentation",
+    "title": "BlockArrays.BlockRange",
+    "category": "Type",
+    "text": "BlockRange(startblock, stopblock)\n\nrepresents a cartesian range of blocks.\n\nThe relationship between Block and BlockRange mimicks the relationship between CartesianIndex and CartesianRange.\n\n\n\n"
+},
+
+{
     "location": "lib/internals.html#BlockArrays.BlockSlice",
     "page": "Internal Documentation",
     "title": "BlockArrays.BlockSlice",
@@ -365,7 +373,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Internal Documentation",
     "title": "BlockArrays.unblock",
     "category": "Function",
-    "text": "unblock(block_sizes, I)\n\nReturns the indices associated with a block as a BlockSlice.\n\n\n\n"
+    "text": "unblock(block_sizes, inds, I)\n\nReturns the indices associated with a block as a BlockSlice.\n\n\n\n"
 },
 
 {
@@ -373,7 +381,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Internal Documentation",
     "title": "Internals",
     "category": "section",
-    "text": "blockindex2global\nglobal2blockindex\nBlockSlice\nunblock"
+    "text": "blockindex2global\nglobal2blockindex\nBlockRange\nBlockSlice\nunblock"
 },
 
 ]}
