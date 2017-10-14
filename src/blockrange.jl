@@ -6,30 +6,69 @@ represents a cartesian range of blocks.
 The relationship between `Block` and `BlockRange` mimicks the relationship between
 `CartesianIndex` and `CartesianRange`.
 """
-struct BlockRange{I<:Block}
-    start::I
-    stop::I
+struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{Int}}}
+    indices::R
 end
 
 
-colon(start::Block{1}, stop::Block{1}) = BlockRange(start, stop)
+# The following is adapted from Julia v0.7 base/multidimensional.jl
+# definition of CartesianRange
+
+BlockRange(::Tuple{}) = BlockRange{0,typeof(())}(())
+BlockRange(inds::NTuple{N,AbstractUnitRange{Int}}) where {N} =
+    BlockRange{N,typeof(inds)}(inds)
+BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
+    BlockRange(inds)
+BlockRange(inds::NTuple{N,AbstractUnitRange{<:Integer}}) where {N} =
+    BlockRange(map(r->convert(AbstractUnitRange{Int}, r), inds))
+BlockRange(inds::Vararg{AbstractUnitRange{<:Integer},N}) where {N} =
+    BlockRange(inds)
+
+BlockRange(index::Block) = BlockRange(index.n)
+BlockRange(sz::NTuple{N,<:Integer}) where {N} = BlockRange(map(Base.OneTo, sz))
+BlockRange(inds::NTuple{N,Union{<:Integer,AbstractUnitRange{<:Integer}}}) where {N} =
+    BlockRange(map(i->first(i):last(i), inds))
+
+colon(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
 colon(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
 broadcast(::typeof(Block), range::UnitRange) = Block(first(range)):Block(last(range))
 
-eltype(::Type{BlockRange{I}}) where I = I
-eltype(::BlockRange{I}) where I = I
+eltype(R::BlockRange) = eltype(typeof(R))
+eltype(::Type{BlockRange{N}}) where {N} = Block{N,Int}
+eltype(::Type{BlockRange{N,R}}) where {N,R} = Block{N,Int}
+iteratorsize(::Type{<:BlockRange}) = Base.HasShape()
 
-# BlockRange behaves like CartesianRange
-for f in (:indices, :unsafe_indices, :indices1, :size, :length,
-          :unsafe_length, :start)
-    @eval $f(B::BlockRange) = $f(CartesianRange(CartesianIndex(B.start.n), CartesianIndex(B.stop.n)))
+@inline function start(iter::BlockRange)
+    iterfirst, iterlast = first(iter), last(iter)
+    if any(map(>, iterfirst.n, iterlast.n))
+        return iterlast+1
+    end
+    iterfirst
 end
-
-first(B::BlockRange) = B.start
-last(B::BlockRange) = B.stop
-
-function next(B::BlockRange, s)
-    a, b = next(CartesianRange(CartesianIndex(B.start.n), CartesianIndex(B.stop.n)), s)
-    Block(a.I), b
+@inline function next(iter::BlockRange, state)
+    state, Block(inc(state.n, first(iter).n, last(iter).n))
 end
-done(B::BlockRange, s) = done(CartesianRange(CartesianIndex(B.start.n), CartesianIndex(B.stop.n)), s)
+# increment & carry
+@inline inc(::Tuple{}, ::Tuple{}, ::Tuple{}) = ()
+@inline inc(state::Tuple{Int}, start::Tuple{Int}, stop::Tuple{Int}) = (state[1]+1,)
+@inline function inc(state, start, stop)
+    if state[1] < stop[1]
+        return (state[1]+1,tail(state)...)
+    end
+    newtail = inc(tail(state), tail(start), tail(stop))
+    (start[1], newtail...)
+end
+@inline done(iter::BlockRange, state) = state.n[end] > last(iter.indices[end])
+
+# 0-d cartesian ranges are special-cased to iterate once and only once
+start(iter::BlockRange{0}) = false
+next(iter::BlockRange{0}, state) = Block(), true
+done(iter::BlockRange{0}, state) = state
+
+size(iter::BlockRange) = map(dimlength, first(iter).n, last(iter).n)
+dimlength(start, stop) = stop-start+1
+
+length(iter::BlockRange) = prod(size(iter))
+
+first(iter::BlockRange) = Block(map(first, iter.indices))
+last(iter::BlockRange)  = Block(map(last, iter.indices))

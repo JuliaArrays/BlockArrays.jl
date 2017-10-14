@@ -12,7 +12,7 @@ export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrM
 import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
             unsafe_indices, indices1, first, last, size, length, unsafe_length,
             getindex, show, start, next, done, @_inline_meta, _maybetail, tail,
-            colon, broadcast, eltype
+            colon, broadcast, eltype, iteratorsize
 
 using Base.Cartesian
 using Compat

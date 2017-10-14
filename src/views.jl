@@ -38,22 +38,22 @@ function unblock(block_sizes::BlockSizes{N}, inds, I::Tuple{Block{1, T},Vararg{A
 
     range = block_sizes[J, b]:block_sizes[J, b + 1] - 1
 
-    BlockSlice(B,range)
+    BlockSlice(B, range)
 end
 
 
 
-function unblock(block_sizes::BlockSizes{N}, inds, I::Tuple{BlockRange{Block{1, T}},Vararg{Any}}) where {N, T}
+function unblock(block_sizes::BlockSizes{N}, inds, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {N, R}
     B = first(I)
-    b_start = first(B.start.n)
-    b_stop = first(B.stop.n)
+    b_start = first(first(B.indices))
+    b_stop = last(first(B.indices))
     # the size of inds tells us how many indices have been processed
     M = length(inds)
     J = N - M + 1
 
     range = block_sizes[J, b_start]:block_sizes[J, b_stop + 1] - 1
 
-    BlockSlice(B,range)
+    BlockSlice(B, range)
 end
 
 
@@ -69,12 +69,18 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
 @inline to_indices(A, inds, I::Tuple{Block, Vararg{Any}}) =
     to_indices(A, inds, (Block.(I[1].n)..., tail(I)...))
 
-
-
-@inline to_indices(A, inds, I::Tuple{BlockRange{Block{1, T}}, Vararg{Any}}) where T =
+@inline to_indices(A, inds, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where R =
     (unblock(A.block_sizes, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
 
 # splat out higher dimensional blocks
 # this mimics view of a CartesianIndex
 @inline to_indices(A, inds, I::Tuple{BlockRange, Vararg{Any}}) =
-    to_indices(A, inds, (BlockRange.(Block.(I[1].start.n),Block.(I[1].stop.n))..., tail(I)...))
+    to_indices(A, inds, (BlockRange.(tuple.(I[1].indices))..., tail(I)...))
+
+
+# In 0.7, we need to override to_indices to avoid calling linearindices
+@inline to_indices(A, I::Tuple{Block, Vararg{Any}}) =
+    to_indices(A, indices(A), I)
+
+@inline to_indices(A, I::Tuple{BlockRange, Vararg{Any}}) =
+    to_indices(A, indices(A), I)
