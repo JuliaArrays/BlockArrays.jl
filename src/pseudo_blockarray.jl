@@ -56,7 +56,7 @@ end
     return PseudoBlockArray{T, N, R}(blocks, BlockSizes(block_sizes...))
 end
 
-PseudoBlockArray{T, N, R <: AbstractArray{T, N}}(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) =
+PseudoBlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}} =
     PseudoBlockArray(blocks, Vector{Int}.(block_sizes)...)
 
 
