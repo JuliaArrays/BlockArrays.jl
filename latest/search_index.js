@@ -277,7 +277,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public Documentation",
     "title": "BlockArrays.BlockArray",
     "category": "Type",
-    "text": "BlockArray{T, N, R <: AbstractArray{T, N}} <: AbstractBlockArray{T, N}\n\nA BlockArray is an array where each block is stored contiguously. This means that insertions and retrieval of blocks can be very fast and non allocating since no copying of data is needed.\n\nIn the type definition, R defines the array type that each block has, for example `Matrix{Float64}.\n\n\n\n"
+    "text": "BlockArray{T, N, R <: AbstractArray{T, N}} <: AbstractBlockArray{T, N}\n\nA BlockArray is an array where each block is stored contiguously. This means that insertions and retrieval of blocks can be very fast and non allocating since no copying of data is needed.\n\nIn the type definition, R defines the array type that each block has, for example Matrix{Float64}.\n\n\n\n"
 },
 
 {
