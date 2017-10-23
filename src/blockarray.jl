@@ -11,7 +11,7 @@
 A `BlockArray` is an array where each block is stored contiguously. This means that insertions and retrieval of blocks
 can be very fast and non allocating since no copying of data is needed.
 
-In the type definition, `R` defines the array type that each block has, for example `Matrix{Float64}.
+In the type definition, `R` defines the array type that each block has, for example `Matrix{Float64}`.
 """
 struct BlockArray{T, N, R <: AbstractArray{T, N}} <: AbstractBlockArray{T, N}
     blocks::Array{R, N}
