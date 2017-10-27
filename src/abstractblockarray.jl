@@ -71,8 +71,8 @@ julia> blocksize(A, 2, 1, 3)
 (4, 1, 2)
 ```
 """
-function blocksize(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N}
-    throw(error("blocksize for ", typeof(A), "is not implemented"))
+function blocksize(A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N}
+    throw(error("blocksize for ", typeof(A), " is not implemented"))
 end
 
 """
@@ -132,8 +132,9 @@ julia> A[Block(1, 2)]
 ```
 """
 function getblock(A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N}
-    throw("getblock for ", typeof(A), "is not implemented")
+    throw(error("getblock for ", typeof(A), " is not implemented"))
 end
+
 
 
 """
@@ -158,7 +159,7 @@ julia> x
  1.0  1.0
 ```
 """
-getblock!(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N} = throw("getblock! for ", typeof(A), "is not implemented")
+getblock!(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N} = throw(error("getblock! for ", typeof(A), " is not implemented"))
 
 @inline getblock!(X, A::AbstractBlockArray{T,N}, block::Block{N}) where {T,N}             = getblock!(X, A, block.n...)
 @inline getblock!(X, A::AbstractBlockVector, block::Block{1})                       = getblock!(X, A, block.n[1])
@@ -184,7 +185,7 @@ julia> A
  3.0  4.0  │  0.0
 ```
 """
-setblock!(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N}) where {T,N} = throw("setblock! for ", typeof(A), "is not implemented")
+setblock!(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N}) where {T,N} = throw(error("setblock! for ", typeof(A), " is not implemented"))
 
 @inline setblock!(A::AbstractBlockArray{T, N}, v, block::Block{N}) where {T,N}      = setblock!(A, v, block.n...)
 @inline setblock!(A::AbstractBlockVector, v, block::Block{1})                       = setblock!(A, v, block.n[1])

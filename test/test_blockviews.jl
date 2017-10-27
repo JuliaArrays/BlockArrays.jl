@@ -8,6 +8,7 @@
     @test first(b) == 2
     @test last(b) == 3
     @test length(b) == 2
+    @test step(b) == 1
     @test Base.unsafe_length(b) == 2
     @test indices(b) == (Base.OneTo(2),)
     @test Base.indices1(b) == Base.OneTo(2)
