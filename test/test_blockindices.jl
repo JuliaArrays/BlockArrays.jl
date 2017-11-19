@@ -32,6 +32,8 @@ block_size = BlockSizes([1,2,3], [2, 3])
 @inferred blockindex2global(block_size, BlockIndex((3,2), (1,3))) == (4, 5)
 
 
+@test block_size == BlockSizes(1:3, 2:3)
+
 buf = IOBuffer()
 print(buf, block_size)
 @test String(take!(buf)) == "[1, 2, 3] × [2, 3]"

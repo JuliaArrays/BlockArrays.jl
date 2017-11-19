@@ -13,6 +13,9 @@ function BlockSizes(sizes::Vararg{Vector{Int}, N}) where {N}
     return BlockSizes(cumul_sizes)
 end
 
+BlockSizes(sizes::Vararg{AbstractVector{Int}, N}) where {N} =
+    BlockSizes(Vector{Int}.(sizes)...)
+
 Base.:(==)(a::BlockSizes, b::BlockSizes) = a.cumul_sizes == b.cumul_sizes
 
 function _cumul_vec(v::Vector{T}) where {T}
@@ -114,5 +117,3 @@ end
                    block_sizes[3, block_index[3]]:block_sizes[3, block_index[3] + 1] - 1)
     return v
 end
-
-
