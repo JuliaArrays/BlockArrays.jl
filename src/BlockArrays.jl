@@ -29,6 +29,6 @@ include("blockrange.jl")
 include("views.jl")
 include("convert.jl")
 include("show.jl")
-
+include("deprecate.jl")
 
 end # module

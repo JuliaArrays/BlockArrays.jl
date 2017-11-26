@@ -1,6 +1,42 @@
 
+import BlockArrays: _BlockArray
+
+@testset "block constructors" begin
+    ret = BlockArray{Float64}(1:3)
+    fill!(ret, 0)
+    @test Array(ret)  == zeros(6)
+
+    ret = BlockArray{Float64,1}(1:3)
+    fill!(ret, 0)
+    @test Array(ret)  == zeros(6)
+
+    ret = BlockArray{Float64,1,Vector{Float64}}(1:3)
+    fill!(ret, 0)
+    @test Array(ret)  == zeros(6)
+
+    ret = BlockArray{Float64}(1:3, 1:3)
+    fill!(ret, 0)
+    Matrix(ret) == zeros(6,6)
+
+    ret = PseudoBlockArray{Float64}(1:3)
+    fill!(ret, 0)
+    @test Array(ret)  == zeros(6)
+
+    ret = PseudoBlockArray{Float64,1}(1:3)
+    fill!(ret, 0)
+    @test Array(ret)  == zeros(6)
+
+    ret = PseudoBlockArray{Float64,1,Vector{Float64}}(1:3)
+    fill!(ret, 0)
+    @test Array(ret)  == zeros(6)
+
+    ret = PseudoBlockArray{Float64}(1:3, 1:3)
+    fill!(ret, 0)
+    Matrix(ret) == zeros(6,6)
+end
+
 @testset "block indexing" begin
-    BA_1 = BlockArray(Vector{Float64}, [1,2,3])
+    BA_1 = _BlockArray(Vector{Float64}, [1,2,3])
     a_1 = rand(2)
     BA_1[Block(2)] = a_1
     @test BA_1[BlockIndex(2, 1)] == a_1[1]
@@ -11,7 +47,7 @@
     @test_throws BlockBoundsError blockcheckbounds(BA_1, 4)
     @test_throws BlockBoundsError BA_1[Block(4)]
 
-    BA_2 = BlockArray(Matrix{Float64}, [1,2], [3,4])
+    BA_2 = _BlockArray(Matrix{Float64}, [1,2], [3,4])
     a_2 = rand(1,4)
     BA_2[Block(1,2)] = a_2
     @test BA_2[Block(1,2)] == a_2
@@ -164,7 +200,7 @@ replstrmime(x) = stringmime("text/plain", x)
     @test A[1,1] == 1
     @test A[Block(2,3)] == ones(2,3)
 
-    A = BlockArray(Matrix{Float64},1:3,1:3)
+    A = _BlockArray(Matrix{Float64},1:3,1:3)
     A[Block(2,3)] = ones(2,3)
     @test A[Block(2,3)] == ones(2,3)
 end

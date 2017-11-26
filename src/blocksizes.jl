@@ -40,6 +40,14 @@ end
     return exp
 end
 
+# Gives the total sizes
+@generated function Base.size(block_sizes::BlockSizes{N}) where {N}
+    exp = Expr(:tuple, [:(block_sizes[$i][end] - 1) for i in 1:N]...)
+    return quote
+        @inbounds return $exp
+    end
+end
+
 function Base.show(io::IO, block_sizes::BlockSizes{N}) where {N}
     if N == 0
         print(io, "[]")

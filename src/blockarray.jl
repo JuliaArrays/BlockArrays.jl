@@ -6,6 +6,12 @@
 ##############
 
 """
+_ BlockArray(blocks::AbstractArray, block_sizes)
+Creates a `BlockArray` with the specified blocks.
+"""
+function _BlockArray end
+
+"""
     BlockArray{T, N, R <: AbstractArray{T, N}} <: AbstractBlockArray{T, N}
 
 A `BlockArray` is an array where each block is stored contiguously. This means that insertions and retrieval of blocks
@@ -16,15 +22,14 @@ In the type definition, `R` defines the array type that each block has, for exam
 struct BlockArray{T, N, R <: AbstractArray{T, N}} <: AbstractBlockArray{T, N}
     blocks::Array{R, N}
     block_sizes::BlockSizes{N}
+    function _BlockArray(blocks::Array{R, N}, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
+        new{T, N, R}(blocks, block_sizes)
+    end
 end
 
 # Auxilary outer constructors
-function BlockArray(blocks::Array{R, N}, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
-    return BlockArray{T, N, R}(blocks, block_sizes)
-end
-
-function BlockArray(blocks::Array{R, N}, block_sizes::Vararg{Vector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
-    return BlockArray{T, N, R}(blocks, BlockSizes(block_sizes...))
+function _BlockArray(blocks::Array{R, N}, block_sizes::Vararg{Vector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+    return _BlockArray(blocks, BlockSizes(block_sizes...))
 end
 
 const BlockMatrix{T, R <: AbstractMatrix{T}} = BlockArray{T, 2, R}
@@ -49,14 +54,54 @@ julia> BlockArray(Matrix{Float64}, [1,3], [2,2])
  #undef  │  #undef  #undef  #undef  │
 ```
 """
-@inline function BlockArray(::Type{R}, block_sizes::Vararg{Vector{Int}, N}) where {T,N,R <: AbstractArray{T, N}}
-    BlockArray(R, BlockSizes(block_sizes...))
+@inline function _BlockArray(::Type{R}, block_sizes::Vararg{Vector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+    _BlockArray(R, BlockSizes(block_sizes...))
 end
 
-function BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where {T,N,R <: AbstractArray{T, N}}
+function _BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
     n_blocks = nblocks(block_sizes)
     blocks = Array{R, N}(n_blocks)
-    BlockArray{T,N,R}(blocks, block_sizes)
+    _BlockArray(blocks, block_sizes)
+end
+
+@generated function allocated_BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
+    return quote
+        block_arr = _BlockArray(R, block_sizes)
+        @nloops $N i i->(1:nblocks(block_sizes, i)) begin
+            block_index = @ntuple $N i
+            setblock!(block_arr, similar(R, blocksize(block_sizes, block_index)), block_index...)
+        end
+
+        return block_arr
+    end
+end
+
+
+allocated_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}} =
+    allocated_BlockArray(R, BlockSizes(block_sizes...))
+
+@inline function BlockArray{T}(block_sizes::BlockSizes{N}) where {T, N}
+    allocated_BlockArray(Array{T, N}, block_sizes)
+end
+
+@inline function BlockArray{T, N}(block_sizes::BlockSizes{N}) where {T, N}
+    allocated_BlockArray(Array{T, N}, block_sizes)
+end
+
+@inline function BlockArray{T, N, R}(block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
+    allocated_BlockArray(R, block_sizes)
+end
+
+@inline function BlockArray{T}(block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+    allocated_BlockArray(Array{T, N}, block_sizes...)
+end
+
+@inline function BlockArray{T, N}(block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+    allocated_BlockArray(Array{T, N}, block_sizes...)
+end
+
+@inline function BlockArray{T, N, R}(block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+    allocated_BlockArray(R, block_sizes...)
 end
 
 function BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{Vector{Int}, N}) where {T,N}
@@ -70,7 +115,7 @@ end
 
 @generated function BlockArray(arr::AbstractArray{T, N}, block_sizes::BlockSizes{N}) where {T,N}
     return quote
-        block_arr = BlockArray(typeof(arr), block_sizes)
+        block_arr = _BlockArray(typeof(arr), block_sizes)
         @nloops $N i i->(1:nblocks(block_sizes, i)) begin
             block_index = @ntuple $N i
             indices = globalrange(block_sizes, block_index)
@@ -82,8 +127,11 @@ end
 end
 
 
-BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N,R <: AbstractArray{T, N}} =
-    BlockArray(R, Vector{Int}.(block_sizes)...)
+_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N,R <: AbstractArray{T, N}} =
+    _BlockArray(R, Vector{Int}.(block_sizes)...)
+
+_BlockArray(blocks::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N} =
+    _BlockArray(blocks, Vector{Int}.(block_sizes)...)
 
 BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N} =
     BlockArray(arr, Vector{Int}.(block_sizes)...)
@@ -114,14 +162,11 @@ end
 ###########################
 
 @inline function Base.similar(block_array::BlockArray{T,N}, ::Type{T2}) where {T,N,T2}
-    BlockArray(similar(block_array.blocks, Array{T2, N}), copy(block_array.block_sizes))
+    _BlockArray(similar(block_array.blocks, Array{T2, N}), copy(block_array.block_sizes))
 end
 
-@generated function Base.size(arr::BlockArray{T,N}) where {T,N}
-    exp = Expr(:tuple, [:(arr.block_sizes[$i][end] - 1) for i in 1:N]...)
-    return quote
-        @inbounds return $exp
-    end
+@inline function Base.size(arr::BlockArray{T,N}) where {T,N}
+    size(arr.block_sizes)
 end
 
 @inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
