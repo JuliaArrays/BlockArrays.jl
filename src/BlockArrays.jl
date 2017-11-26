@@ -7,7 +7,7 @@ export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlo
 export Block, getblock, getblock!, setblock!, nblocks, blocksize, blockcheckbounds, BlockBoundsError, BlockIndex
 export BlockRange
 
-export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat
+export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, uninitialized_BlockArray
 export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat
 
 import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
