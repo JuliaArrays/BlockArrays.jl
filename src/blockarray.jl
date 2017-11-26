@@ -47,11 +47,15 @@ function _BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where {T, N, R <: Ab
     _BlockArray(blocks, block_sizes)
 end
 
+@inline function uninitialized_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+    _BlockArray(R, block_sizes)
+end
+
 """
 Constructs a `BlockArray` with uninitialized blocks from a block type `R` with sizes defind by `block_sizes`.
 
 ```jldoctest
-julia> uninitialized_BlockArray(Matrix{Float64}, [1,3], [2,2])
+julia> BlockArray(uninitialized, Matrix{Float64}, [1,3], [2,2])
 2×2-blocked 4×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  #undef  │  #undef  #undef  #undef  │
  --------┼--------------------------┼
@@ -61,10 +65,9 @@ julia> uninitialized_BlockArray(Matrix{Float64}, [1,3], [2,2])
  #undef  │  #undef  #undef  #undef  │
 ```
 """
-function uninitialized_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
-    _BlockArray(R, block_sizes)
+@inline function BlockArray(::Uninitialized, ::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+    uninitialized_BlockArray(R, block_sizes)
 end
-
 
 
 

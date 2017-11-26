@@ -23,11 +23,11 @@ We can also any other user defined array type that supports `similar`.
 
 ## Creating uninitialized `BlockArrays`.
 
-A `BlockArray` can be created with the blocks left uninitialized using the `uninitialized_BlockArray(block_type, block_sizes...)` function.
+A `BlockArray` can be created with the blocks left uninitialized using the `BlockArray(uninitialized, block_type, block_sizes...)` function.
 The `block_type` should be an array type, it could for example be `Matrix{Float64}`. The block sizes are each an `AbstractVector{Int}` which determines the size of the blocks in that dimension. We here create a `[1,2]×[3,2]` block matrix of `Float32`s:
 
 ```jldoctest
-julia> uninitialized_BlockArray(Matrix{Float32}, [1,2], [3,2])
+julia> BlockArray(uninitialized, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
  #undef  #undef  #undef  │  #undef  #undef
  ------------------------┼----------------
