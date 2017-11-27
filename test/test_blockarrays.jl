@@ -1,6 +1,7 @@
 
 import BlockArrays: _BlockArray
 
+
 @testset "block constructors" begin
     ret = BlockArray{Float64}(1:3)
     fill!(ret, 0)
@@ -13,6 +14,25 @@ import BlockArrays: _BlockArray
     ret = BlockArray{Float64,1,Vector{Float64}}(1:3)
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
+
+    ret = BlockArray{Float64}(BlockArrays.BlockSizes(1:3))
+    fill!(ret, 0)
+    @test Array(ret)  == zeros(6)
+
+    ret = BlockArray{Float64,1}(BlockArrays.BlockSizes(1:3))
+    fill!(ret, 0)
+    @test Array(ret)  == zeros(6)
+
+    ret = BlockArray{Float64,1,Vector{Float64}}(BlockArrays.BlockSizes(1:3))
+    fill!(ret, 0)
+    @test Array(ret)  == zeros(6)
+
+    ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], 1:3)
+    @test Array(ret)  == zeros(6)
+
+    ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], BlockArrays.BlockSizes(1:3))
+    @test Array(ret)  == zeros(6)
+
 
     ret = BlockArray{Float64}(1:3, 1:3)
     fill!(ret, 0)
@@ -33,6 +53,8 @@ import BlockArrays: _BlockArray
     ret = PseudoBlockArray{Float64}(1:3, 1:3)
     fill!(ret, 0)
     Matrix(ret) == zeros(6,6)
+
+    @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])
 end
 
 @testset "block indexing" begin

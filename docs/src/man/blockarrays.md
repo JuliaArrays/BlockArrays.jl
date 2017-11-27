@@ -38,13 +38,13 @@ julia> BlockArray(uninitialized, Matrix{Float32}, [1,2], [3,2])
 We can also use a `SparseVector` or any other user defined array type:
 
 ```jl
-julia> BlockArrays._BlockArray(SparseVector{Float64, Int}, [1,2])
+julia> BlockArray(uninitialized, SparseVector{Float64, Int}, [1,2])
 2-blocked 3-element BlockArrays.BlockArray{Float64,1,SparseVector{Float64,Int64}}:
  #undef
  ------
  #undef
  #undef
-julia> BlockArrays._BlockArray(SparseVector{Float64, Int}, [1,2])
+julia> BlockArray(uninitialized, SparseVector{Float64, Int}, [1,2])
 ```
 
 Note that accessing an undefined block will throw an "access to undefined reference"-error.
