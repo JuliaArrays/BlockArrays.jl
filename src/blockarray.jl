@@ -43,7 +43,7 @@ end
 
 function _BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
     n_blocks = nblocks(block_sizes)
-    blocks = Array{R, N}(n_blocks)
+    blocks = Array{R, N}(uninitialized, n_blocks)
     _BlockArray(blocks, block_sizes)
 end
 
