@@ -60,6 +60,32 @@ PseudoBlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {
     PseudoBlockArray(blocks, Vector{Int}.(block_sizes)...)
 
 
+
+@inline function PseudoBlockArray{T}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N}
+    PseudoBlockArray(similar(Array{T, N}, size(block_sizes)), block_sizes)
+end
+
+@inline function PseudoBlockArray{T, N}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N}
+    PseudoBlockArray{T}(uninitialized, block_sizes)
+end
+
+@inline function PseudoBlockArray{T, N, R}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
+    PseudoBlockArray(similar(R, size(block_sizes)), block_sizes)
+end
+
+@inline function PseudoBlockArray{T}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+    PseudoBlockArray{T}(uninitialized, BlockSizes(block_sizes...))
+end
+
+@inline function PseudoBlockArray{T, N}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+    PseudoBlockArray{T, N}(uninitialized, BlockSizes(block_sizes...))
+end
+
+@inline function PseudoBlockArray{T, N, R}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+    PseudoBlockArray{T, N, R}(uninitialized, BlockSizes(block_sizes...))
+end
+
+
 ###########################
 # AbstractArray Interface #
 ###########################
@@ -68,11 +94,8 @@ function Base.similar(block_array::PseudoBlockArray{T,N}, ::Type{T2}) where {T,N
     PseudoBlockArray(similar(block_array.blocks, T2), copy(block_array.block_sizes))
 end
 
-@generated function Base.size(arr::PseudoBlockArray{T,N}) where {T,N}
-    exp = Expr(:tuple, [:(arr.block_sizes[$i][end] - 1) for i in 1:N]...)
-    return quote
-        @inbounds return $exp
-    end
+@inline function Base.size(arr::PseudoBlockArray{T,N}) where {T,N}
+    size(arr.block_sizes)
 end
 
 @inline function Base.getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Int, N}) where {T,N}

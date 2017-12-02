@@ -30,6 +30,21 @@ julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])
 
 This "takes ownership" of the passed in array so no copy of the array is made.
 
+
+## Creating initialized `BlockArrays`
+
+A block array can be created with uninitialized entries using the `BlockArray{T}(uninitialized, block_sizes...)`
+function. The block_sizes are each an `AbstractVector{Int}` which determines the size of the blocks in that dimension. We here create a `[1,2]×[3,2]` block matrix of `Float32`s:
+```julia
+julia> PseudoBlockArray{Float32}(uninitialized, [1,2], [3,2])
+2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
+ 9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45
+ ───────────────────────────────────────┼──────────────────────────
+ 3.28434f-21  9.37645f-26  3.28436f-21  │  8.05301f-24  9.39077f-26
+ 1.4013f-45   1.4013f-45   1.4013f-45   │  1.4013f-45   1.4013f-45
+```
+We can also any other user defined array type that supports `similar`.
+
 ## Setting and getting blocks and values
 
 Setting and getting blocks uses the same API as `BlockArrays`. The difference here is that setting a block will update the block in place and getting a block
