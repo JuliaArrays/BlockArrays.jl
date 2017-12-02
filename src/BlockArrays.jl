@@ -1,6 +1,8 @@
 __precompile__()
 
 module BlockArrays
+using Base.Cartesian
+using Compat
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
@@ -10,13 +12,14 @@ export BlockRange
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat
 export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat
 
+export uninitialized_blocks, UninitializedBlocks, uninitialized, Uninitialized
+
 import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
             unsafe_indices, indices1, first, last, size, length, unsafe_length,
             getindex, show, start, next, done, @_inline_meta, _maybetail, tail,
             colon, broadcast, eltype, iteratorsize
 
-using Base.Cartesian
-using Compat
+
 
 
 include("abstractblockarray.jl")

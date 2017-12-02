@@ -7,12 +7,12 @@ end
 ```
 
 
-## Creating initialized `BlockArrays`
+## Creating uninitialized `BlockArrays`
 
 A block array can be created with initialized blocks using the `BlockArray{T}(block_sizes)`
 function. The block_sizes are each an `AbstractVector{Int}` which determines the size of the blocks in that dimension. We here create a `[1,2]×[3,2]` block matrix of `Float32`s:
 ```julia
-julia> BlockArray{Float32}([1,2], [3,2])
+julia> BlockArray{Float32}(uninitialized, [1,2], [3,2])
 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
  9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45
  ───────────────────────────────────────┼──────────────────────────
@@ -21,13 +21,13 @@ julia> BlockArray{Float32}([1,2], [3,2])
 ```
 We can also any other user defined array type that supports `similar`.
 
-## Creating uninitialized `BlockArrays`.
+## Creating `BlockArrays` with uninitialized blocks.
 
 A `BlockArray` can be created with the blocks left uninitialized using the `BlockArray(uninitialized, block_type, block_sizes...)` function.
 The `block_type` should be an array type, it could for example be `Matrix{Float64}`. The block sizes are each an `AbstractVector{Int}` which determines the size of the blocks in that dimension. We here create a `[1,2]×[3,2]` block matrix of `Float32`s:
 
 ```jldoctest
-julia> BlockArray(uninitialized, Matrix{Float32}, [1,2], [3,2])
+julia> BlockArray{Float32}(uninitialized_blocks, [1,2], [3,2])
 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
  #undef  #undef  #undef  │  #undef  #undef
  ------------------------┼----------------
@@ -35,16 +35,16 @@ julia> BlockArray(uninitialized, Matrix{Float32}, [1,2], [3,2])
  #undef  #undef  #undef  │  #undef  #undef
 ```
 
-We can also use a `SparseVector` or any other user defined array type:
+We can also use a `SparseVector` or any other user defined array type by
+specifying it as the second argument:
 
 ```jl
-julia> BlockArray(uninitialized, SparseVector{Float64, Int}, [1,2])
+julia> BlockArray(uninitialized_blocks, SparseVector{Float64, Int}, [1,2])
 2-blocked 3-element BlockArrays.BlockArray{Float64,1,SparseVector{Float64,Int64}}:
  #undef
  ------
  #undef
  #undef
-julia> BlockArray(uninitialized, SparseVector{Float64, Int}, [1,2])
 ```
 
 Note that accessing an undefined block will throw an "access to undefined reference"-error.
@@ -56,7 +56,7 @@ An alternative syntax for this is `block_array[Block(i...)] = v` or
 `block_array[Block.(i)...]`.
 
 ```jldoctest
-julia> block_array = BlockArrays._BlockArray(Matrix{Float64}, [1,2], [2,2])
+julia> block_array = BlockArray{Float64}(unitialized_blocks, [1,2], [2,2])
 2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  #undef  #undef  │  #undef  #undef
  ----------------┼----------------

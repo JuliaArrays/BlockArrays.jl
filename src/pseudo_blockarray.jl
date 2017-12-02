@@ -61,28 +61,28 @@ PseudoBlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {
 
 
 
-@inline function PseudoBlockArray{T}(block_sizes::BlockSizes{N}) where {T, N}
+@inline function PseudoBlockArray{T}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N}
     PseudoBlockArray(similar(Array{T, N}, size(block_sizes)), block_sizes)
 end
 
-@inline function PseudoBlockArray{T, N}(block_sizes::BlockSizes{N}) where {T, N}
-    PseudoBlockArray{T}(block_sizes)
+@inline function PseudoBlockArray{T, N}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N}
+    PseudoBlockArray{T}(uninitialized, block_sizes)
 end
 
-@inline function PseudoBlockArray{T, N, R}(block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
+@inline function PseudoBlockArray{T, N, R}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
     PseudoBlockArray(similar(R, size(block_sizes)), block_sizes)
 end
 
-@inline function PseudoBlockArray{T}(block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
-    PseudoBlockArray{T}(BlockSizes(block_sizes...))
+@inline function PseudoBlockArray{T}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+    PseudoBlockArray{T}(uninitialized, BlockSizes(block_sizes...))
 end
 
-@inline function PseudoBlockArray{T, N}(block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
-    PseudoBlockArray{T, N}(BlockSizes(block_sizes...))
+@inline function PseudoBlockArray{T, N}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+    PseudoBlockArray{T, N}(uninitialized, BlockSizes(block_sizes...))
 end
 
-@inline function PseudoBlockArray{T, N, R}(block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
-    PseudoBlockArray{T, N, R}(BlockSizes(block_sizes...))
+@inline function PseudoBlockArray{T, N, R}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+    PseudoBlockArray{T, N, R}(uninitialized, BlockSizes(block_sizes...))
 end
 
 

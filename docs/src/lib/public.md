@@ -43,6 +43,8 @@ blockcheckbounds
 
 ```@docs
 BlockArray
+uninitialized_blocks
+UninitializedBlocks
 ```
 
 
