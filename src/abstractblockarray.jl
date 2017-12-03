@@ -96,6 +96,7 @@ julia> A[Block(1, 1)]
 """
 struct Block{N, T}
     n::NTuple{N, T}
+    Block{N, T}(n::NTuple{N, T}) where {N, T} = new{N, T}(n)
 end
 
 
