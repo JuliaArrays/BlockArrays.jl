@@ -98,11 +98,45 @@ struct Block{N, T}
     n::NTuple{N, T}
 end
 
+
+Block{N, T}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
+Block{N}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
 Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
+Block{1}(n::Tuple{T}) where {T} = Block{1, T}(n)
+Block{N}(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
+Block(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
 
 @inline function Block(blocks::NTuple{N, Block{1, T}}) where {N,T}
     Block{N, T}(ntuple(i -> blocks[i].n[1], Val(N)))
 end
+
+
+# The following code is taken from CartesianIndex
+@inline (+)(index::Block{N}) where {N} = Block{N}(map(+, index.n))
+@inline (-)(index::Block{N}) where {N} = Block{N}(map(-, index.n))
+
+@inline (+)(index1::Block{N}, index2::Block{N}) where {N} =
+    Block{N}(map(+, index1.n, index2.n))
+@inline (-)(index1::Block{N}, index2::Block{N}) where {N} =
+    Block{N}(map(-, index1.n, index2.n))
+@inline min(index1::Block{N}, index2::Block{N}) where {N} =
+    Block{N}(map(min, index1.n, index2.n))
+@inline max(index1::Block{N}, index2::Block{N}) where {N} =
+    Block{N}(map(max, index1.n, index2.n))
+
+@inline (+)(i::Integer, index::Block) = index+i
+@inline (+)(index::Block{N}, i::Integer) where {N} = Block{N}(map(x->x+i, index.n))
+@inline (-)(index::Block{N}, i::Integer) where {N} = Block{N}(map(x->x-i, index.n))
+@inline (-)(i::Integer, index::Block{N}) where {N} = Block{N}(map(x->i-x, index.n))
+@inline (*)(a::Integer, index::Block{N}) where {N} = Block{N}(map(x->a*x, index.n))
+@inline (*)(index::Block, a::Integer) = *(a,index)
+
+# comparison
+@inline isless(I1::Block{N}, I2::Block{N}) where {N} = Base.IteratorsMD._isless(0, I1.n, I2.n)
+
+# conversions
+convert(::Type{T}, index::Block{1}) where {T<:Number} = convert(T, index.n[1])
+convert(::Type{T}, index::Block) where {T<:Tuple} = convert(T, index.n)
 
 """
     getblock(A, inds...)
