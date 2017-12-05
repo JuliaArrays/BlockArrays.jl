@@ -23,7 +23,9 @@ BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
 
 colon(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
 colon(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
+
 broadcast(::typeof(Block), range::UnitRange) = Block(first(range)):Block(last(range))
+broadcast(::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices)
 
 eltype(R::BlockRange) = eltype(typeof(R))
 eltype(::Type{BlockRange{N}}) where {N} = Block{N,Int}
