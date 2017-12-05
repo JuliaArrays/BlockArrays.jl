@@ -17,7 +17,7 @@ export uninitialized_blocks, UninitializedBlocks, uninitialized, Uninitialized
 import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
             unsafe_indices, indices1, first, last, size, length, unsafe_length,
             getindex, show, start, next, done, @_inline_meta, _maybetail, tail,
-            colon, broadcast, eltype, iteratorsize, convert
+            colon, broadcast, eltype, iteratorsize, convert, broadcast
 
 import Base: +, -, min, max, *, isless
 
