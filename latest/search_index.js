@@ -73,11 +73,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/blockarrays.html#Creating-uninitialized-BlockArrays.-1",
+    "location": "man/blockarrays.html#Creating-uninitialized-BlockArrays-1",
     "page": "BlockArrays",
-    "title": "Creating uninitialized BlockArrays.",
+    "title": "Creating uninitialized BlockArrays",
     "category": "section",
-    "text": "A BlockArray can be created with the blocks left uninitialized using the BlockArray(block_type, block_sizes...) function. The block_type should be an array type, it could for example be Matrix{Float64}. The block sizes are each a Vector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray(Matrix{Float32}, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n #undef  #undef  #undef  │  #undef  #undef\n ------------------------┼----------------\n #undef  #undef  #undef  │  #undef  #undef\n #undef  #undef  #undef  │  #undef  #undefWe can also use a SparseVector or any other user defined array type:julia> BlockArray(SparseVector{Float64, Int}, [1,2])\n2-blocked 3-element BlockArrays.BlockArray{Float64,1,SparseVector{Float64,Int64}}:\n #undef\n ------\n #undef\n #undef\njulia> BlockArray(SparseVector{Float64, Int}, [1,2])Note that accessing an undefined block will throw an \"access to undefined reference\"-error."
+    "text": "A block array can be created with initialized blocks using the BlockArray{T}(block_sizes) function. The block_sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(uninitialized, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n 9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45\n ───────────────────────────────────────┼──────────────────────────\n 3.28434f-21  9.37645f-26  3.28436f-21  │  8.05301f-24  9.39077f-26\n 1.4013f-45   1.4013f-45   1.4013f-45   │  1.4013f-45   1.4013f-45We can also any other user defined array type that supports similar."
+},
+
+{
+    "location": "man/blockarrays.html#Creating-BlockArrays-with-uninitialized-blocks.-1",
+    "page": "BlockArrays",
+    "title": "Creating BlockArrays with uninitialized blocks.",
+    "category": "section",
+    "text": "A BlockArray can be created with the blocks left uninitialized using the BlockArray(uninitialized, block_type, block_sizes...) function. The block_type should be an array type, it could for example be Matrix{Float64}. The block sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(uninitialized_blocks, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n #undef  #undef  #undef  │  #undef  #undef\n ------------------------┼----------------\n #undef  #undef  #undef  │  #undef  #undef\n #undef  #undef  #undef  │  #undef  #undefWe can also use a SparseVector or any other user defined array type by specifying it as the second argument:julia> BlockArray(uninitialized_blocks, SparseVector{Float64, Int}, [1,2])\n2-blocked 3-element BlockArrays.BlockArray{Float64,1,SparseVector{Float64,Int64}}:\n #undef\n ------\n #undef\n #undefNote that accessing an undefined block will throw an \"access to undefined reference\"-error."
 },
 
 {
@@ -85,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "BlockArrays",
     "title": "Setting and getting blocks and values",
     "category": "section",
-    "text": "A block can be set by setblock!(block_array, v, i...) where v is the array to set and i is the block index. An alternative syntax for this is block_array[Block(i...)] = v or block_array[Block.(i)...].julia> block_array = BlockArray(Matrix{Float64}, [1,2], [2,2])\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n #undef  #undef  │  #undef  #undef\n ----------------┼----------------\n #undef  #undef  │  #undef  #undef\n #undef  #undef  │  #undef  #undef\n\njulia> setblock!(block_array, rand(2,2), 2, 1)\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n #undef      #undef      │  #undef  #undef\n ------------------------┼----------------\n   0.590845    0.566237  │  #undef  #undef\n   0.766797    0.460085  │  #undef  #undef\n\njulia> block_array[Block(1, 1)] = [1 2];\n\njulia> block_array\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n 1.0       2.0       │  #undef  #undef\n --------------------┼----------------\n 0.590845  0.566237  │  #undef  #undef\n 0.766797  0.460085  │  #undef  #undefNote that this will \"take ownership\" of the passed in array, that is, no copy is made.A block can be retrieved with getblock(block_array, i...) or block_array[Block(i...)]:julia> block_array[Block(1, 1)]\n1×2 Array{Float64,2}:\n 1.0  2.0\n\njulia> block_array[Block(1), Block(1)]  # equivalent to above\n 1×2 Array{Float64,2}:\n  1.0  2.0Similarly to setblock! this does not copy the returned array.For setting and getting a single scalar element, the usual setindex! and getindex are available.julia> block_array[1, 2]\n2.0"
+    "text": "A block can be set by setblock!(block_array, v, i...) where v is the array to set and i is the block index. An alternative syntax for this is block_array[Block(i...)] = v or block_array[Block.(i)...].julia> block_array = BlockArray{Float64}(unitialized_blocks, [1,2], [2,2])\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n #undef  #undef  │  #undef  #undef\n ----------------┼----------------\n #undef  #undef  │  #undef  #undef\n #undef  #undef  │  #undef  #undef\n\njulia> setblock!(block_array, rand(2,2), 2, 1)\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n #undef      #undef      │  #undef  #undef\n ------------------------┼----------------\n   0.590845    0.566237  │  #undef  #undef\n   0.766797    0.460085  │  #undef  #undef\n\njulia> block_array[Block(1, 1)] = [1 2];\n\njulia> block_array\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n 1.0       2.0       │  #undef  #undef\n --------------------┼----------------\n 0.590845  0.566237  │  #undef  #undef\n 0.766797  0.460085  │  #undef  #undefNote that this will \"take ownership\" of the passed in array, that is, no copy is made.A block can be retrieved with getblock(block_array, i...) or block_array[Block(i...)]:julia> block_array[Block(1, 1)]\n1×2 Array{Float64,2}:\n 1.0  2.0\n\njulia> block_array[Block(1), Block(1)]  # equivalent to above\n 1×2 Array{Float64,2}:\n  1.0  2.0Similarly to setblock! this does not copy the returned array.For setting and getting a single scalar element, the usual setindex! and getindex are available.julia> block_array[1, 2]\n2.0"
 },
 
 {
@@ -101,7 +109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "BlockArrays",
     "title": "Converting between BlockArray and normal arrays",
     "category": "section",
-    "text": "An array can be repacked into a BlockArray withBlockArray(array, block_sizes...):julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])\n2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,SparseMatrixCSC{Float64,Int64}}:\n 0.0341601  0.374187  │  0.0118196  0.299058  0.0     \n ---------------------┼-------------------------------\n 0.0945445  0.931115  │  0.0460428  0.0       0.0     \n 0.314926   0.438939  │  0.496169   0.0       0.0     \n 0.12781    0.246862  │  0.732      0.449182  0.875096To get back the underlying array use Array:julia> Array(block_array_sparse))\n4×5 SparseMatrixCSC{Float64,Int64} with 15 stored entries:\n  [1, 1]  =  0.0341601\n  [2, 1]  =  0.0945445\n  [3, 1]  =  0.314926\n  [4, 1]  =  0.12781\n  ⋮\n  [3, 3]  =  0.496169\n  [4, 3]  =  0.732\n  [1, 4]  =  0.299058\n  [4, 4]  =  0.449182\n  [4, 5]  =  0.875096"
+    "text": "An array can be repacked into a BlockArray with BlockArray(array, block_sizes...):julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])\n2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,SparseMatrixCSC{Float64,Int64}}:\n 0.0341601  0.374187  │  0.0118196  0.299058  0.0     \n ---------------------┼-------------------------------\n 0.0945445  0.931115  │  0.0460428  0.0       0.0     \n 0.314926   0.438939  │  0.496169   0.0       0.0     \n 0.12781    0.246862  │  0.732      0.449182  0.875096To get back the underlying array use Array:julia> Array(block_array_sparse))\n4×5 SparseMatrixCSC{Float64,Int64} with 15 stored entries:\n  [1, 1]  =  0.0341601\n  [2, 1]  =  0.0945445\n  [3, 1]  =  0.314926\n  [4, 1]  =  0.12781\n  ⋮\n  [3, 3]  =  0.496169\n  [4, 3]  =  0.732\n  [1, 4]  =  0.299058\n  [4, 4]  =  0.449182\n  [4, 5]  =  0.875096"
 },
 
 {
@@ -126,6 +134,14 @@ var documenterSearchIndex = {"docs": [
     "title": "Creating PseudoBlockArrays",
     "category": "section",
     "text": "Creating a PseudoBlockArray works in the same way as a BlockArray.julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])\n2×2-blocked 3×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:\n 0.590845  0.460085  │  0.200586\n ────────────────────┼──────────\n 0.766797  0.794026  │  0.298614\n 0.566237  0.854147  │  0.246837This \"takes ownership\" of the passed in array so no copy of the array is made."
+},
+
+{
+    "location": "man/pseudoblockarrays.html#Creating-initialized-BlockArrays-1",
+    "page": "PseudoBlockArrays",
+    "title": "Creating initialized BlockArrays",
+    "category": "section",
+    "text": "A block array can be created with uninitialized entries using the BlockArray{T}(uninitialized, block_sizes...) function. The block_sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> PseudoBlockArray{Float32}(uninitialized, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n 9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45\n ───────────────────────────────────────┼──────────────────────────\n 3.28434f-21  9.37645f-26  3.28436f-21  │  8.05301f-24  9.39077f-26\n 1.4013f-45   1.4013f-45   1.4013f-45   │  1.4013f-45   1.4013f-45We can also any other user defined array type that supports similar."
 },
 
 {
@@ -281,11 +297,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "lib/public.html#BlockArrays.uninitialized_blocks",
+    "page": "Public Documentation",
+    "title": "BlockArrays.uninitialized_blocks",
+    "category": "Constant",
+    "text": "uninitialized_blocks\n\nAlias for UninitializedBlocks(), which constructs an instance of the singleton type UninitializedBlocks (@ref), used in block array initialization to indicate the array-constructor-caller would like an uninitialized block array.\n\nExamples ≡≡≡≡≡≡≡≡≡≡\n\njulia> BlockArray(uninitialized_blocks, Matrix{Float32}, [1,2], [3,2]) 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:  #undef  #undef  #undef  │  #undef  #undef  ––––––––––––┼––––––––  #undef  #undef  #undef  │  #undef  #undef  #undef  #undef  #undef  │  #undef  #undef\n\n\n\n"
+},
+
+{
+    "location": "lib/public.html#BlockArrays.UninitializedBlocks",
+    "page": "Public Documentation",
+    "title": "BlockArrays.UninitializedBlocks",
+    "category": "Type",
+    "text": "UninitializedBlocks\n\nSingleton type used in block array initialization, indicating the array-constructor-caller would like an uninitialized block array. See also uninitialized_blocks (@ref), an alias for UninitializedBlocks().\n\nExamples ≡≡≡≡≡≡≡≡≡≡\n\njulia> BlockArray(uninitialized_blocks, Matrix{Float32}, [1,2], [3,2]) 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:  #undef  #undef  #undef  │  #undef  #undef  ––––––––––––┼––––––––  #undef  #undef  #undef  │  #undef  #undef  #undef  #undef  #undef  │  #undef  #undef\n\n\n\n"
+},
+
+{
     "location": "lib/public.html#BlockArray-1",
     "page": "Public Documentation",
     "title": "BlockArray",
     "category": "section",
-    "text": "BlockArray"
+    "text": "BlockArray\nuninitialized_blocks\nUninitializedBlocks"
 },
 
 {
