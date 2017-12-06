@@ -9,6 +9,7 @@
     @test eltype(BlockRange{1}) == Block{1,Int}
     @test Block(1):Block(3) == BlockRange((1:3,))
     @test Block.(1:3) == BlockRange((1:3,))
+    @test Int.(BlockRange((1:3,))) == 1:3
 
     @test collect(Block(1):Block(2)) == Block.([1,2])
 
