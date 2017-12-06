@@ -9,7 +9,6 @@
     @test eltype(BlockRange{1}) == Block{1,Int}
     @test Block(1):Block(3) == BlockRange((1:3,))
     @test Block.(1:3) == BlockRange((1:3,))
-    @test Int.(BlockRange((1:3,))) == 1:3
 
     @test collect(Block(1):Block(2)) == Block.([1,2])
 
@@ -38,37 +37,35 @@
 
     B = BlockRange((1:2,1:2))
     @test collect(B) == [Block(1,1) Block(1,2); Block(2,1) Block(2,2)]
+
+    ## views of views
+    # here we want to ensure that the view collapses
+    A = BlockArray(collect(1:10), 1:4)
+    V = view(view(A, Block.(2:4)), Block(2))
+    @test parent(V) == A
+    @test parentindexes(V)[1] isa BlockArrays.BlockSlice
+    @test V == view(A, Block.(2:4))[Block(2)] == [4,5,6]
+
+    V = view(view(A, Block.(2:4)), Block.(1:2))
+    @test parent(V) == A
+    @test parentindexes(V)[1] isa BlockArrays.BlockSlice
+    @test V == view(A, Block.(2:4))[Block.(1:2)] == Vector(2:6)
+
+    A = BlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
+    V = view(view(A, Block.(2:3), Block.(1:3)), Block(2), Block(2))
+    @test parent(V) == A
+    @test all(ind -> ind isa BlockArrays.BlockSlice, parentindexes(V))
+    @test V == view(A, Block.(2:3), Block.(1:3))[Block(2,2)] ==  A[Block(3, 2)]
+
+
+    V = view(view(A, Block.(1:3), Block.(2:3)), Block.(1:2), Block(2))
+    @test parent(V) == A
+    @test all(ind -> ind isa BlockArrays.BlockSlice, parentindexes(V))
+    @test V ==  A[Block.(1:2), Block(3)]
+
+    V = view(view(A, Block.(1:3), Block.(2:3)), Block.(1:2), Block.(1:2))
+    @test parent(V) == A
+    @test all(ind -> ind isa BlockArrays.BlockSlice, parentindexes(V))
+    @test V ==  A[Block.(1:2), Block.(2:3)]
+
 end
-
-
-using BlockArrays
-    import BlockArrays: _cumul_sizes
-A = BlockArray(collect(1:6), 1:3)
-    V = view(A, Block.(1:2))
-    BlockArrays.to_indices(V, (Block(1),))
-A = V“
-    V = A
-    j = 1
-    sl = parentindexes(V)[j]
-
-    A = parent(V)
-    _cumul_sizes(A, j)
-
-sl.block.indices
-ret .- ret[1] .+ 1
-BlockArrays._cumul_sizes(A, 1)
-
-cie
-
-parent(A)
-inds, I = (indices(A),(Block.(1:2),))
-typeof(A)
-BlockArrays.unblock(A, inds, I)
-
-N = 1
-BlockArrays._unblock(BlockArrays._cumul_sizes(A, N - length(inds) + 1), I)
-BlockArrays._cumul_sizes(A, 1 - length(inds) + 1)
-
-
-typeof(A)
-parentindexes(V)

@@ -23,12 +23,6 @@ show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, 
 next(S::BlockSlice, s) = next(S.indices, s)
 done(S::BlockSlice, s) = done(S.indices, s)
 
-
-"""
-    unblock(block_sizes, inds, I)
-
-Returns the indices associated with a block as a `BlockSlice`.
-"""
 function _unblock(cum_sizes, I::Tuple{Block{1, T},Vararg{Any}}) where {T}
     B = first(I)
     b = first(B.n)
@@ -58,11 +52,15 @@ function _cumul_sizes(V::SubArray, j)
     sl = parentindexes(V)[j]
     @assert sl isa BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}
     A = parent(V)
-    ret = view(_cumul_sizes(A, j), sl.block.indices[1])
+    ret = view(_cumul_sizes(A, j), sl.block.indices[1][1]:(sl.block.indices[1][end]+1))
     ret .- ret[1] .+ 1
 end
 
+"""
+    unblock(block_sizes, inds, I)
 
+Returns the indices associated with a block as a `BlockSlice`.
+"""
 unblock(A::AbstractArray{T,N}, inds, I) where {T, N} =
     _unblock(_cumul_sizes(A, N - length(inds) + 1), I)
 
@@ -98,16 +96,14 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
 
 # BlockSlices map the blocks and the indices
 # this is loosely based on Slice reindex in subarray.jl
-
-import Base: @_propagate_inbounds_meta
 reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
     (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
                                             idxs[1].indices[subidxs[1].indices]),
                                     reindex(V, tail(idxs), tail(subidxs))...))
 
-reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-        subidxs::Tuple{BlockSlice{<:Block{1}}, Vararg{Any}}) =
-    (@_propagate_inbounds_meta; (BlockSlice(idxs[1].block.indices[1][Int(subidxs[1].block)]),
+reindex(V, idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(idxs[1].block.indices[1][Int(subidxs[1].block)],
                                             idxs[1].indices[subidxs[1].indices]),
                                     reindex(V, tail(idxs), tail(subidxs))...))
