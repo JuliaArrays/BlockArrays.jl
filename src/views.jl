@@ -29,32 +29,42 @@ done(S::BlockSlice, s) = done(S.indices, s)
 
 Returns the indices associated with a block as a `BlockSlice`.
 """
-function unblock(block_sizes::BlockSizes{N}, inds, I::Tuple{Block{1, T},Vararg{Any}}) where {N, T}
+function _unblock(cum_sizes, I::Tuple{Block{1, T},Vararg{Any}}) where {T}
     B = first(I)
     b = first(B.n)
-    # the size of inds tells us how many indices have been processed
-    M = length(inds)
-    J = N - M + 1
 
-    range = block_sizes[J, b]:block_sizes[J, b + 1] - 1
+    range = cum_sizes[b]:cum_sizes[b + 1] - 1
 
     BlockSlice(B, range)
 end
 
 
 
-function unblock(block_sizes::BlockSizes{N}, inds, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {N, R}
+function _unblock(cum_sizes, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {R}
     B = first(I)
     b_start = first(first(B.indices))
     b_stop = last(first(B.indices))
-    # the size of inds tells us how many indices have been processed
-    M = length(inds)
-    J = N - M + 1
 
-    range = block_sizes[J, b_start]:block_sizes[J, b_stop + 1] - 1
+    range = cum_sizes[b_start]:cum_sizes[b_stop + 1] - 1
 
     BlockSlice(B, range)
 end
+
+
+@inline _cumul_sizes(A::AbstractArray, j) = A.block_sizes[j]
+
+# For a SubArray, we need to shift the block indices appropriately
+function _cumul_sizes(V::SubArray, j)
+    sl = parentindexes(V)[j]
+    @assert sl isa BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}
+    A = parent(V)
+    ret = view(_cumul_sizes(A, j), sl.block.indices[1])
+    ret .- ret[1] .+ 1
+end
+
+
+unblock(A::AbstractArray{T,N}, inds, I) where {T, N} =
+    _unblock(_cumul_sizes(A, N - length(inds) + 1), I)
 
 
 
@@ -62,7 +72,7 @@ to_index(::Block) = throw(ArgumentError("Block must be converted by to_indices(.
 to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to_indices(...)"))
 
 @inline to_indices(A, inds, I::Tuple{Block{1}, Vararg{Any}}) =
-    (unblock(A.block_sizes, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
 
 # splat out higher dimensional blocks
 # this mimics view of a CartesianIndex
@@ -70,7 +80,7 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
     to_indices(A, inds, (Block.(I[1].n)..., tail(I)...))
 
 @inline to_indices(A, inds, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where R =
-    (unblock(A.block_sizes, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
 
 # splat out higher dimensional blocks
 # this mimics view of a CartesianIndex
@@ -84,3 +94,20 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
 
 @inline to_indices(A, I::Tuple{BlockRange, Vararg{Any}}) =
     to_indices(A, indices(A), I)
+
+
+# BlockSlices map the blocks and the indices
+# this is loosely based on Slice reindex in subarray.jl
+
+import Base: @_propagate_inbounds_meta
+reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
+                                            idxs[1].indices[subidxs[1].indices]),
+                                    reindex(V, tail(idxs), tail(subidxs))...))
+
+reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:Block{1}}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(idxs[1].block.indices[1][Int(subidxs[1].block)]),
+                                            idxs[1].indices[subidxs[1].indices]),
+                                    reindex(V, tail(idxs), tail(subidxs))...))
