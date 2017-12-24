@@ -13,6 +13,9 @@ struct BlockSlice{BB} <: AbstractUnitRange{Int}
     indices::UnitRange{Int}
 end
 
+Block(bs::BlockSlice{<:Block}) = bs.block
+
+
 for f in (:indices, :unsafe_indices, :indices1, :first, :last, :size, :length,
           :unsafe_length, :start)
     @eval $f(S::BlockSlice) = $f(S.indices)
@@ -107,3 +110,21 @@ reindex(V, idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{A
     (@_propagate_inbounds_meta; (BlockSlice(idxs[1].block.indices[1][Int(subidxs[1].block)],
                                             idxs[1].indices[subidxs[1].indices]),
                                     reindex(V, tail(idxs), tail(subidxs))...))
+
+
+
+
+#################
+# support for pointers
+#################
+
+const BlockOrRangeIndex = Union{RangeIndex, BlockSlice}
+
+function unsafe_convert(::Type{Ptr{T}},
+                        V::SubArray{T, N, BlockArray{T, N, AT}, NTuple{N, BlockSlice{Block{1,Int}}}}) where AT <: AbstractArray{T, N} where {T,N}
+    unsafe_convert(Ptr{T}, parent(V).blocks[Int.(Block.(parentindexes(V)))...])
+end
+
+unsafe_convert(::Type{Ptr{T}}, A::PseudoBlockArray) where T = unsafe_convert(Ptr{T}, A.blocks)
+unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,PseudoBlockArray{T,N,AT},<:Tuple{Vararg{BlockOrRangeIndex}}}) where {T,N,AT} =
+    unsafe_convert(Ptr{T}, V.parent) + (Base.first_index(V)-1)*sizeof(T)

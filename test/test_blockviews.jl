@@ -84,3 +84,26 @@ end
     @test view(A, 1, Block(2), 1) == A[1,2:3,1]
     @test view(A, 1, 2, Block(2)) == A[1,2,2:3]
 end
+
+@testset "block view pointers" begin
+    A = BlockArray(reshape(Vector{Float64}(1:(6^2)),6,6), 1:3, 1:3)
+
+    V = view(A, Block(1,2))
+    @test Base.unsafe_convert(Ptr{Float64}, V) == Base.unsafe_convert(Ptr{Float64}, A.blocks[1,2])
+    @test unsafe_load(pointer(V)) == V[1,1]
+
+
+    A = PseudoBlockArray(reshape(Vector{Float64}(1:(6^2)),6,6), 1:3, 1:3)
+
+    V = view(A, Block(1,2))
+    @test Base.unsafe_convert(Ptr{Float64}, V) == Base.unsafe_convert(Ptr{Float64}, view(A.blocks, 1:1, 2:3))
+    @test unsafe_load(pointer(V)) == V[1,1]
+
+    V = view(A, Block(2), 2:3)
+    @test Base.unsafe_convert(Ptr{Float64}, V) == Base.unsafe_convert(Ptr{Float64}, view(A.blocks, 2:3, 2:3))
+    @test unsafe_load(pointer(V)) == V[1,1]
+
+    V = view(A, 2:3, Block(2))
+    @test Base.unsafe_convert(Ptr{Float64}, V) == Base.unsafe_convert(Ptr{Float64}, view(A.blocks, 2:3, 2:3))
+    @test unsafe_load(pointer(V)) == V[1,1]
+end
