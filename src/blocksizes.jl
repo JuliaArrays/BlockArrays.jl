@@ -48,6 +48,14 @@ end
     end
 end
 
+@inline function Base.size(block_sizes::BlockSizes{1})
+    (block_sizes[1][end] - 1,)
+end
+
+@inline function Base.size(block_sizes::BlockSizes{2})
+    (block_sizes[1][end] - 1,block_sizes[2][end] - 1)
+end
+
 function Base.show(io::IO, block_sizes::BlockSizes{N}) where {N}
     if N == 0
         print(io, "[]")
