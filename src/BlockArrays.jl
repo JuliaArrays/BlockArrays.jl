@@ -3,6 +3,9 @@ __precompile__()
 module BlockArrays
 using Base.Cartesian
 using Compat
+if VERSION ≥ v"0.7.0-DEV.3465"
+    using LinearAlgebra
+end
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat

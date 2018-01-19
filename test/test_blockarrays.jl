@@ -1,4 +1,6 @@
-
+if VERSION ≥ v"0.7.0-DEV.3465"
+    using SparseArrays
+end
 import BlockArrays: _BlockArray
 
 
@@ -122,7 +124,7 @@ end
         end
         fill!(BA_1, 1.0)
         @test BA_1 == ones(size(BA_1))
-        ran = rand(size(BA_1))
+        ran = rand(size(BA_1)...)
         copy!(BA_1, ran)
         @test BA_1 == ran
 
@@ -153,7 +155,7 @@ end
         end
         fill!(BA_2, 1.0)
         @test BA_2 == ones(size(BA_2))
-        ran = rand(size(BA_2))
+        ran = rand(size(BA_2)...)
         copy!(BA_2, ran)
         @test BA_2 == ran
 
@@ -183,7 +185,7 @@ end
         end
         fill!(BA_3, 1.0)
         @test BA_3 == ones(size(BA_3))
-        ran = rand(size(BA_3))
+        ran = rand(size(BA_3)...)
         copy!(BA_3, ran)
         @test BA_3 == ran
     end
