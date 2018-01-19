@@ -14,6 +14,7 @@ export BlockRange
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat
 export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat
+export BlockTridiagMatrix
 
 export uninitialized_blocks, UninitializedBlocks, uninitialized, Uninitialized
 
@@ -33,6 +34,7 @@ include("abstractblockarray.jl")
 include("blocksizes.jl")
 include("blockindices.jl")
 include("blockarray.jl")
+include("blocktridiag.jl")
 include("pseudo_blockarray.jl")
 include("blockrange.jl")
 include("views.jl")
