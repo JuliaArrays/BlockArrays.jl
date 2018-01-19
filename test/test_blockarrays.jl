@@ -1,4 +1,6 @@
-
+if VERSION ≥ v"0.7.0-DEV.3465"
+    using SparseArrays
+end
 import BlockArrays: _BlockArray
 
 
@@ -122,7 +124,7 @@ end
         end
         fill!(BA_1, 1.0)
         @test BA_1 == ones(size(BA_1))
-        ran = rand(size(BA_1))
+        ran = rand(size(BA_1)...)
         copy!(BA_1, ran)
         @test BA_1 == ran
 
@@ -153,7 +155,7 @@ end
         end
         fill!(BA_2, 1.0)
         @test BA_2 == ones(size(BA_2))
-        ran = rand(size(BA_2))
+        ran = rand(size(BA_2)...)
         copy!(BA_2, ran)
         @test BA_2 == ran
 
@@ -183,7 +185,7 @@ end
         end
         fill!(BA_3, 1.0)
         @test BA_3 == ones(size(BA_3))
-        ran = rand(size(BA_3))
+        ran = rand(size(BA_3)...)
         copy!(BA_3, ran)
         @test BA_3 == ran
     end
@@ -253,4 +255,56 @@ end
     A = BlockArray(uninitialized_blocks, Matrix{Float64}, 1:3, 1:3)
     A[Block(2,3)] = ones(2,3)
     @test A[Block(2,3)] == ones(2,3)
+end
+
+@testset "Block arithmetic" begin
+    @test +(Block(1)) == Block(1)
+    @test -(Block(1)) == Block(-1)
+    @test Block(2) + Block(1) == Block(3)
+    @test Block(2) + 1 == Block(3)
+    @test 2 + Block(1) == Block(3)
+    @test Block(2) - Block(1) == Block(1)
+    @test Block(2) - 1 == Block(1)
+    @test 2 - Block(1) == Block(1)
+    @test 2*Block(1) == Block(2)
+    @test Block(1)*2 == Block(2)
+
+    @test isless(Block(1), Block(2))
+    @test !isless(Block(1), Block(1))
+    @test !isless(Block(2), Block(1))
+    @test Block(1) < Block(2)
+    @test Block(1) ≤ Block(1)
+    @test Block(2) > Block(1)
+    @test Block(1) ≥ Block(1)
+    @test min(Block(1), Block(2)) == Block(1)
+    @test max(Block(1), Block(2)) == Block(2)
+
+    @test +(Block(1,2)) == Block(1,2)
+    @test -(Block(1,2)) == Block(-1,-2)
+    @test Block(1,2) + Block(2,3) == Block(3,5)
+    @test Block(1,2) + 1 == Block(2,3)
+    @test 1 + Block(1,2) == Block(2,3)
+    @test Block(2,3) - Block(1,2) == Block(1,1)
+    @test Block(1,2) - 1 == Block(0,1)
+    @test 1 - Block(1,2) == Block(0,-1)
+    @test 2*Block(1,2) == Block(2,4)
+    @test Block(1,2)*2 == Block(2,4)
+
+    @test isless(Block(1,1), Block(2,2))
+    @test isless(Block(1,1), Block(2,1))
+    @test !isless(Block(1,1), Block(1,1))
+    @test !isless(Block(2,1), Block(1,1))
+    @test Block(1,1) < Block(2,1)
+    @test Block(1,1) ≤ Block(1,1)
+    @test Block(2,1) > Block(1,1)
+    @test Block(1,1) ≥ Block(1,1)
+    @test min(Block(1,2), Block(2,2)) == Block(1,2)
+    @test max(Block(1,2), Block(2,2)) == Block(2,2)
+
+    @test convert(Int, Block(2)) == 2
+    @test convert(Float64, Block(2)) == 2.0
+
+    @test_throws MethodError convert(Int, Block(2,1))
+    @test convert(Tuple{Int,Int}, Block(2,1)) == (2,1)
+    @test convert(Tuple{Float64,Int}, Block(2,1)) == (2.0,1)
 end

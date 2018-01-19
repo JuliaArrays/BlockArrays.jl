@@ -18,7 +18,7 @@ BlockSizes(sizes::Vararg{AbstractVector{Int}, N}) where {N} =
 
 Base.:(==)(a::BlockSizes, b::BlockSizes) = a.cumul_sizes == b.cumul_sizes
 
-function _cumul_vec(v::Vector{T}) where {T}
+function _cumul_vec(v::AbstractVector{T}) where {T}
     v_cumul = similar(v, length(v) + 1)
     z = one(T)
     v_cumul[1] = z
@@ -46,6 +46,14 @@ end
     return quote
         @inbounds return $exp
     end
+end
+
+@inline function Base.size(block_sizes::BlockSizes{1})
+    (block_sizes[1][end] - 1,)
+end
+
+@inline function Base.size(block_sizes::BlockSizes{2})
+    (block_sizes[1][end] - 1,block_sizes[2][end] - 1)
 end
 
 function Base.show(io::IO, block_sizes::BlockSizes{N}) where {N}

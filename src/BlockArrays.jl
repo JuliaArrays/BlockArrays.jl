@@ -3,6 +3,9 @@ __precompile__()
 module BlockArrays
 using Base.Cartesian
 using Compat
+if VERSION ≥ v"0.7.0-DEV.3465"
+    using LinearAlgebra
+end
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
@@ -16,9 +19,12 @@ export uninitialized_blocks, UninitializedBlocks, uninitialized, Uninitialized
 
 import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
             unsafe_indices, indices1, first, last, size, length, unsafe_length,
-            getindex, show, start, next, done, @_inline_meta, _maybetail, tail,
-            colon, broadcast, eltype, iteratorsize
+            unsafe_convert,
+            getindex, show, start, next, done,
+            colon, broadcast, eltype, iteratorsize, convert, broadcast,
+            @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex
 
+import Base: +, -, min, max, *, isless
 
 
 
