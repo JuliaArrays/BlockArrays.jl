@@ -21,12 +21,17 @@ import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
             unsafe_indices, indices1, first, last, size, length, unsafe_length,
             unsafe_convert,
             getindex, show, start, next, done,
-            colon, broadcast, eltype, iteratorsize, convert, broadcast,
-            @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex
+            broadcast, eltype, convert, broadcast,
+            @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
+            RangeIndex
 
 import Base: +, -, min, max, *, isless
 
-
+if VERSION < v"0.7.0-DEV.4043"
+    import Base: colon, iteratorsize
+else
+    import Base: (:), IteratorSize
+end
 
 include("abstractblockarray.jl")
 
