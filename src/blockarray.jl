@@ -277,14 +277,14 @@ end
     end
 end
 
-@generated function Base.copy!(block_array::BlockArray{T, N, R}, arr::R) where {T,N,R <: AbstractArray}
+@generated function copyto!(block_array::BlockArray{T, N, R}, arr::R) where {T,N,R <: AbstractArray}
     return quote
         block_sizes = block_array.block_sizes
 
         @nloops $N i i->(1:nblocks(block_sizes, i)) begin
             block_index = @ntuple $N i
             indices = globalrange(block_sizes, block_index)
-            copy!(getblock(block_array, block_index...), arr[indices...])
+            copyto!(getblock(block_array, block_index...), arr[indices...])
         end
 
         return block_array

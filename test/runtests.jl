@@ -1,5 +1,8 @@
 using BlockArrays, Compat, Compat.Test
 
+if VERSION < v"0.7-"
+    const parentindices = parentindexes
+end
 
 include("test_blockindices.jl")
 include("test_blockarrays.jl")

@@ -1,11 +1,3 @@
-doc"""
-    BlockRange(startblock, stopblock)
-
-represents a cartesian range of blocks.
-
-The relationship between `Block` and `BlockRange` mimicks the relationship between
-`CartesianIndex` and `CartesianRange`.
-"""
 struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{Int}}}
     indices::R
 end
@@ -15,14 +7,28 @@ end
 # definition of CartesianRange
 
 # deleted code that isn't used, such as 0-dimensional case
+"""
+    BlockRange(startblock, stopblock)
+
+represents a cartesian range of blocks.
+
+The relationship between `Block` and `BlockRange` mimicks the relationship between
+`CartesianIndex` and `CartesianRange`.
+"""
+BlockRange
 
 BlockRange(inds::NTuple{N,AbstractUnitRange{Int}}) where {N} =
     BlockRange{N,typeof(inds)}(inds)
 BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
     BlockRange(inds)
 
-colon(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
-colon(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
+if VERSION < v"0.7.0-DEV.4043"
+    colon(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
+    colon(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
+else
+    (:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
+    (:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
+end
 
 broadcast(::typeof(Block), range::UnitRange) = Block(first(range)):Block(last(range))
 broadcast(::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices)
@@ -30,7 +36,11 @@ broadcast(::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices
 eltype(R::BlockRange) = eltype(typeof(R))
 eltype(::Type{BlockRange{N}}) where {N} = Block{N,Int}
 eltype(::Type{BlockRange{N,R}}) where {N,R} = Block{N,Int}
-iteratorsize(::Type{<:BlockRange}) = Base.HasShape()
+if VERSION < v"0.7.0-DEV.4043"
+    iteratorsize(::Type{<:BlockRange}) = Base.HasShape()
+else
+    IteratorSize(::Type{<:BlockRange}) = Base.HasShape{1}()
+end
 
 @inline function start(iter::BlockRange)
     iterfirst, iterlast = first(iter), last(iter)

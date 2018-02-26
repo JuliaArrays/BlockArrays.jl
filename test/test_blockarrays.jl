@@ -1,5 +1,5 @@
 if VERSION ≥ v"0.7.0-DEV.3465"
-    using SparseArrays
+    using SparseArrays, Base64
 end
 import BlockArrays: _BlockArray
 
@@ -114,7 +114,7 @@ end
         BA_1[BlockIndex(3, 2)] = a_1[5]
         @test BA_1[Block(1)] == q
         if BlockType == PseudoBlockArray
-            q2 = zeros(q)
+            q2 = zero(q)
             getblock!(q2, BA_1, 1)
             @test q2 == q
             @test_throws DimensionMismatch getblock!(zeros(2), BA_1, 1)
@@ -125,7 +125,7 @@ end
         fill!(BA_1, 1.0)
         @test BA_1 == ones(size(BA_1))
         ran = rand(size(BA_1)...)
-        copy!(BA_1, ran)
+        Compat.copyto!(BA_1, ran)
         @test BA_1 == ran
 
         a_1_sparse = sprand(6, 0.9)
@@ -148,7 +148,7 @@ end
         @test_throws DimensionMismatch BA_2[Block(1,2)] = rand(1,5)
         @test BA_2[Block(1,2)] == q
         if BlockType == PseudoBlockArray
-            q2 = zeros(q)
+            q2 = zero(q)
             getblock!(q2, BA_2, 1, 2)
             @test q2 == q
             @test_throws DimensionMismatch getblock!(zeros(1,5), BA_2, 1, 2)
@@ -156,7 +156,7 @@ end
         fill!(BA_2, 1.0)
         @test BA_2 == ones(size(BA_2))
         ran = rand(size(BA_2)...)
-        copy!(BA_2, ran)
+        Compat.copyto!(BA_2, ran)
         @test BA_2 == ran
 
         a_2_sparse = sprand(3, 7, 0.9)
@@ -178,7 +178,7 @@ end
         BA_3[Block(1,2,2)] = q
         @test BA_3[Block(1,2,2)] == q
         if BlockType == PseudoBlockArray
-            q3 = zeros(q)
+            q3 = zero(q)
             getblock!(q3, BA_3, 1, 2, 2)
             @test q3 == q
             @test_throws DimensionMismatch getblock!(zeros(1,3,2), BA_3, 1, 2,2)
@@ -186,7 +186,7 @@ end
         fill!(BA_3, 1.0)
         @test BA_3 == ones(size(BA_3))
         ran = rand(size(BA_3)...)
-        copy!(BA_3, ran)
+        Compat.copyto!(BA_3, ran)
         @test BA_3 == ran
     end
 end

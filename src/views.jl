@@ -16,7 +16,7 @@ end
 Block(bs::BlockSlice{<:Block}) = bs.block
 
 
-for f in (:indices, :unsafe_indices, :indices1, :first, :last, :size, :length,
+for f in (:axes, :unsafe_indices, :indices1, :first, :last, :size, :length,
           :unsafe_length, :start)
     @eval $f(S::BlockSlice) = $f(S.indices)
 end
@@ -52,7 +52,7 @@ end
 
 # For a SubArray, we need to shift the block indices appropriately
 function _cumul_sizes(V::SubArray, j)
-    sl = parentindexes(V)[j]
+    sl = parentindices(V)[j]
     @assert sl isa BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}
     A = parent(V)
     ret = view(_cumul_sizes(A, j), sl.block.indices[1][1]:(sl.block.indices[1][end]+1))
@@ -91,10 +91,10 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
 
 # In 0.7, we need to override to_indices to avoid calling linearindices
 @inline to_indices(A, I::Tuple{Block, Vararg{Any}}) =
-    to_indices(A, indices(A), I)
+    to_indices(A, axes(A), I)
 
 @inline to_indices(A, I::Tuple{BlockRange, Vararg{Any}}) =
-    to_indices(A, indices(A), I)
+    to_indices(A, axes(A), I)
 
 
 # BlockSlices map the blocks and the indices
@@ -122,7 +122,7 @@ const BlockOrRangeIndex = Union{RangeIndex, BlockSlice}
 
 function unsafe_convert(::Type{Ptr{T}},
                         V::SubArray{T, N, BlockArray{T, N, AT}, NTuple{N, BlockSlice{Block{1,Int}}}}) where AT <: AbstractArray{T, N} where {T,N}
-    unsafe_convert(Ptr{T}, parent(V).blocks[Int.(Block.(parentindexes(V)))...])
+    unsafe_convert(Ptr{T}, parent(V).blocks[Int.(Block.(parentindices(V)))...])
 end
 
 unsafe_convert(::Type{Ptr{T}}, A::PseudoBlockArray) where T = unsafe_convert(Ptr{T}, A.blocks)

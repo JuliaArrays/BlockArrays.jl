@@ -139,6 +139,10 @@ end
 convert(::Type{T}, index::Block{1}) where {T<:Number} = convert(T, index.n[1])
 convert(::Type{T}, index::Block) where {T<:Tuple} = convert(T, index.n)
 
+Int(index::Block{1}) = Int(index.n[1])
+Integer(index::Block{1}) = index.n[1]
+Number(index::Block{1}) = index.n[1]
+
 """
     getblock(A, inds...)
 
