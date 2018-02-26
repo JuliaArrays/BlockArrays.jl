@@ -23,12 +23,15 @@ import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
             getindex, show, start, next, done,
             broadcast, eltype, convert, broadcast,
             @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
-            RangeIndex
+            RangeIndex, Int, Integer, Number
 
 import Base: +, -, min, max, *, isless
 
+import Compat: copyto!, axes
+
 if VERSION < v"0.7.0-DEV.4043"
     import Base: colon, iteratorsize
+    const parentindices = parentindexes
 else
     import Base: (:), IteratorSize
 end

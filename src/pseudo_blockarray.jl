@@ -201,8 +201,8 @@ function Base.Array(block_array::PseudoBlockArray)
     return block_array.blocks
 end
 
-function Base.copy!(block_array::PseudoBlockArray{T, N, R}, arr::R) where {T,N,R <: AbstractArray}
-    copy!(block_array.blocks, arr)
+function copyto!(block_array::PseudoBlockArray{T, N, R}, arr::R) where {T,N,R <: AbstractArray}
+    copyto!(block_array.blocks, arr)
 end
 
 function Base.copy(block_array::PseudoBlockArray{T, N, R}) where {T,N,R <: AbstractArray}

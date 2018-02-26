@@ -1,11 +1,3 @@
-@doc doc"""
-    BlockRange(startblock, stopblock)
-
-represents a cartesian range of blocks.
-
-The relationship between `Block` and `BlockRange` mimicks the relationship between
-`CartesianIndex` and `CartesianRange`.
-"""
 struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{Int}}}
     indices::R
 end
@@ -15,6 +7,15 @@ end
 # definition of CartesianRange
 
 # deleted code that isn't used, such as 0-dimensional case
+"""
+    BlockRange(startblock, stopblock)
+
+represents a cartesian range of blocks.
+
+The relationship between `Block` and `BlockRange` mimicks the relationship between
+`CartesianIndex` and `CartesianRange`.
+"""
+BlockRange
 
 BlockRange(inds::NTuple{N,AbstractUnitRange{Int}}) where {N} =
     BlockRange{N,typeof(inds)}(inds)
@@ -38,7 +39,7 @@ eltype(::Type{BlockRange{N,R}}) where {N,R} = Block{N,Int}
 if VERSION < v"0.7.0-DEV.4043"
     iteratorsize(::Type{<:BlockRange}) = Base.HasShape()
 else
-    IteratorSize(::Type{<:BlockRange}) = Base.HasShape()
+    IteratorSize(::Type{<:BlockRange}) = Base.HasShape{1}()
 end
 
 @inline function start(iter::BlockRange)
