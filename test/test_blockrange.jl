@@ -43,17 +43,19 @@
     A = BlockArray(collect(1:10), 1:4)
     V = view(view(A, Block.(2:4)), Block(2))
     @test parent(V) == A
-    @test parentindices(V)[1] isa BlockArrays.BlockSlice
+    @test parentindices(V)[1] isa BlockArrays.BlockSlice{Block{1,Int}}
     @test V == view(A, Block.(2:4))[Block(2)] == [4,5,6]
 
     V = view(view(A, Block.(2:4)), Block.(1:2))
     @test parent(V) == A
-    @test parentindices(V)[1] isa BlockArrays.BlockSlice
+    @test parentindices(V)[1] isa BlockArrays.BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}
     @test V == view(A, Block.(2:4))[Block.(1:2)] == Vector(2:6)
 
     A = BlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
     V = view(view(A, Block.(2:3), Block.(1:3)), Block(2), Block(2))
     @test parent(V) == A
+    @test parentindexes(V)[1] isa BlockArrays.BlockSlice{Block{1,Int}}
+    @test parentindexes(V)[1].block == Block(3)
     @test all(ind -> ind isa BlockArrays.BlockSlice, parentindices(V))
     @test V == view(A, Block.(2:3), Block.(1:3))[Block(2,2)] ==  A[Block(3, 2)]
 
