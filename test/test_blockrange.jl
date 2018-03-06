@@ -69,5 +69,25 @@
     @test parent(V) == A
     @test all(ind -> ind isa BlockArrays.BlockSlice, parentindices(V))
     @test V ==  A[Block.(1:2), Block.(2:3)]
+end
 
+
+@testset "block index range" begin
+	B = Block(2)
+	Bi = B[2:3]
+
+	@test Block(Bi) == B
+	@test collect(Bi) == [BlockIndex((2,), 2), BlockIndex((2,), 3)]
+
+	A = PseudoBlockArray(rand(4), [1,3])
+
+	@test BlockArrays._unblock(A.block_sizes.cumul_sizes[1], (Bi,)) ==
+			BlockArrays.unblock(A, indices(A), (Bi, )) == BlockArrays.BlockSlice(Bi, 3:4) ==
+			parentindices(view(A, Bi))[1] == BlockArrays.BlockSlice(Bi, 3:4)
+
+	@test A[Bi] == A[3:4]
+
+    A = PseudoBlockArray(rand(4,4), [1,3],[2,2])
+	@test A[Bi,Block(1)] == A[3:4,1:2]
+    @test A[Bi,Block(1)[2:2]] == A[3:4,2:2]
 end
