@@ -27,7 +27,7 @@ makedocs(
 # =======================================
 
 deploydocs(
-    repo = "github.com/KristofferC/BlockArrays.jl.git",
+    repo = "github.com/JuliaArrays/BlockArrays.jl.git",
     target = "build",
     julia = "nightly", # deploy from release bot
     deps = nothing,

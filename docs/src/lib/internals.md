@@ -22,6 +22,7 @@ Pages = ["internals.md"]
 blockindex2global
 global2blockindex
 BlockRange
+BlockIndexRange
 BlockSlice
 unblock
 ```
