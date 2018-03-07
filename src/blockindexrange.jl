@@ -54,12 +54,20 @@ Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
 
 
+if VERSION < v"0.7-"
+    function _unblock(cum_sizes, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where {R}
+        B = Block(first(I))
+        range = cum_sizes[Int(B)]-1 + first(I).indices[1]
 
-function _unblock(cum_sizes, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where {R}
-    B = Block(first(I))
-    range = cum_sizes[Int(B)]-1 + first(I).indices[1]
+        BlockSlice(I[1], range)
+    end
+else # only 0.7- and above support broadcasting with a Range returning a Range
+    function _unblock(cum_sizes, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where {R}
+        B = Block(first(I))
+        range = cum_sizes[Int(B)]-1 .+ first(I).indices[1]
 
-    BlockSlice(I[1], range)
+        BlockSlice(I[1], range)
+    end
 end
 
 
