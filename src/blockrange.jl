@@ -1,5 +1,6 @@
 struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{Int}}}
     indices::R
+    BlockRange{N,R}(inds::R) where {N,R} = new{N,R}(inds)
 end
 
 

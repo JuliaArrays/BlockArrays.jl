@@ -15,7 +15,7 @@ export BlockRange
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat
 export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat
 
-export uninitialized_blocks, UninitializedBlocks, uninitialized, Uninitialized
+export undef_blocks, undef
 
 import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
             unsafe_indices, indices1, first, last, size, length, unsafe_length,

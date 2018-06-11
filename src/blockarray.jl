@@ -3,46 +3,46 @@
 
 
 #######################
-# UninitializedBlocks #
+# UndefBlocksInitializer #
 #######################
 
 """
-    UninitializedBlocks
+    UndefBlocksInitializer
 
 Singleton type used in block array initialization, indicating the
 array-constructor-caller would like an uninitialized block array. See also
-uninitialized_blocks (@ref), an alias for UninitializedBlocks().
+undef_blocks (@ref), an alias for UndefBlocksInitializer().
 
 Examples
 ≡≡≡≡≡≡≡≡≡≡
 
-julia> BlockArray(uninitialized_blocks, Matrix{Float32}, [1,2], [3,2])
+julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
  #undef  #undef  #undef  │  #undef  #undef
  ------------------------┼----------------
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
 """
-struct UninitializedBlocks end
+struct UndefBlocksInitializer end
 
 """
-    uninitialized_blocks
+    undef_blocks
 
-Alias for UninitializedBlocks(), which constructs an instance of the singleton
-type UninitializedBlocks (@ref), used in block array initialization to indicate the
+Alias for UndefBlocksInitializer(), which constructs an instance of the singleton
+type UndefBlocksInitializer (@ref), used in block array initialization to indicate the
 array-constructor-caller would like an uninitialized block array.
 
 Examples
 ≡≡≡≡≡≡≡≡≡≡
 
-julia> BlockArray(uninitialized_blocks, Matrix{Float32}, [1,2], [3,2])
+julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
  #undef  #undef  #undef  │  #undef  #undef
  ------------------------┼----------------
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
 """
-const uninitialized_blocks = UninitializedBlocks()
+const undef_blocks = UndefBlocksInitializer()
 
 ##############
 # BlockArray #
@@ -86,11 +86,11 @@ end
 
 function _BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
     n_blocks = nblocks(block_sizes)
-    blocks = Array{R, N}(uninitialized, n_blocks)
+    blocks = Array{R, N}(undef, n_blocks)
     _BlockArray(blocks, block_sizes)
 end
 
-@inline function uninitialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+@inline function undef_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
     _BlockArray(R, block_sizes...)
 end
 
@@ -98,7 +98,7 @@ end
 Constructs a `BlockArray` with uninitialized blocks from a block type `R` with sizes defind by `block_sizes`.
 
 ```jldoctest
-julia> BlockArray(uninitialized_blocks, Matrix{Float64}, [1,3], [2,2])
+julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
 2×2-blocked 4×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  #undef  │  #undef  #undef  #undef  │
  --------┼--------------------------┼
@@ -108,20 +108,20 @@ julia> BlockArray(uninitialized_blocks, Matrix{Float64}, [1,3], [2,2])
  #undef  │  #undef  #undef  #undef  │
 ```
 """
-@inline function BlockArray(::UninitializedBlocks, ::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
-    uninitialized_blocks_BlockArray(R, block_sizes...)
+@inline function BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+    undef_blocks_BlockArray(R, block_sizes...)
 end
 
-@inline function BlockArray{T}(::UninitializedBlocks, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
-    BlockArray(uninitialized_blocks, Array{T,N}, block_sizes...)
+@inline function BlockArray{T}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+    BlockArray(undef_blocks, Array{T,N}, block_sizes...)
 end
 
-@inline function BlockArray{T,N}(::UninitializedBlocks, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
-    BlockArray(uninitialized_blocks, Array{T,N}, block_sizes...)
+@inline function BlockArray{T,N}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+    BlockArray(undef_blocks, Array{T,N}, block_sizes...)
 end
 
-@inline function BlockArray{T,N,R}(::UninitializedBlocks, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
-    BlockArray(uninitialized_blocks, R, block_sizes...)
+@inline function BlockArray{T,N,R}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+    BlockArray(undef_blocks, R, block_sizes...)
 end
 
 
@@ -143,27 +143,27 @@ function initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVe
     initialized_blocks_BlockArray(R, BlockSizes(block_sizes...))
 end
 
-@inline function BlockArray{T}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N}
+@inline function BlockArray{T}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N}
     initialized_blocks_BlockArray(Array{T, N}, block_sizes)
 end
 
-@inline function BlockArray{T, N}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N}
+@inline function BlockArray{T, N}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N}
     initialized_blocks_BlockArray(Array{T, N}, block_sizes)
 end
 
-@inline function BlockArray{T, N, R}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
+@inline function BlockArray{T, N, R}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
     initialized_blocks_BlockArray(R, block_sizes)
 end
 
-@inline function BlockArray{T}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+@inline function BlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
     initialized_blocks_BlockArray(Array{T, N}, block_sizes...)
 end
 
-@inline function BlockArray{T, N}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+@inline function BlockArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
     initialized_blocks_BlockArray(Array{T, N}, block_sizes...)
 end
 
-@inline function BlockArray{T, N, R}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+@inline function BlockArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
     initialized_blocks_BlockArray(R, block_sizes...)
 end
 

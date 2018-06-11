@@ -43,8 +43,8 @@ blockcheckbounds
 
 ```@docs
 BlockArray
-uninitialized_blocks
-UninitializedBlocks
+undef_blocks
+UndefBlocksInitializer
 ```
 
 

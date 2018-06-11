@@ -41,6 +41,8 @@ julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
 struct PseudoBlockArray{T, N, R <: AbstractArray{T, N}} <: AbstractBlockArray{T, N}
     blocks::R
     block_sizes::BlockSizes{N}
+    PseudoBlockArray{T, N, R}(blocks::R, block_sizes::BlockSizes{N}) where {T,N,R} =
+        new{T,N,R}(blocks, block_sizes)
 end
 
 const PseudoBlockMatrix{T, R} = PseudoBlockArray{T, 2, R}
@@ -61,28 +63,28 @@ PseudoBlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {
 
 
 
-@inline function PseudoBlockArray{T}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N}
+@inline function PseudoBlockArray{T}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N}
     PseudoBlockArray(similar(Array{T, N}, size(block_sizes)), block_sizes)
 end
 
-@inline function PseudoBlockArray{T, N}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N}
-    PseudoBlockArray{T}(uninitialized, block_sizes)
+@inline function PseudoBlockArray{T, N}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N}
+    PseudoBlockArray{T}(undef, block_sizes)
 end
 
-@inline function PseudoBlockArray{T, N, R}(::Uninitialized, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
+@inline function PseudoBlockArray{T, N, R}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
     PseudoBlockArray(similar(R, size(block_sizes)), block_sizes)
 end
 
-@inline function PseudoBlockArray{T}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
-    PseudoBlockArray{T}(uninitialized, BlockSizes(block_sizes...))
+@inline function PseudoBlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+    PseudoBlockArray{T}(undef, BlockSizes(block_sizes...))
 end
 
-@inline function PseudoBlockArray{T, N}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
-    PseudoBlockArray{T, N}(uninitialized, BlockSizes(block_sizes...))
+@inline function PseudoBlockArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+    PseudoBlockArray{T, N}(undef, BlockSizes(block_sizes...))
 end
 
-@inline function PseudoBlockArray{T, N, R}(::Uninitialized, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
-    PseudoBlockArray{T, N, R}(uninitialized, BlockSizes(block_sizes...))
+@inline function PseudoBlockArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+    PseudoBlockArray{T, N, R}(undef, BlockSizes(block_sizes...))
 end
 
 

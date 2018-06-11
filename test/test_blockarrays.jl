@@ -5,27 +5,27 @@ import BlockArrays: _BlockArray
 
 
 @testset "block constructors" begin
-    ret = BlockArray{Float64}(uninitialized, 1:3)
+    ret = BlockArray{Float64}(undef, 1:3)
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1}(uninitialized, 1:3)
+    ret = BlockArray{Float64,1}(undef, 1:3)
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1,Vector{Float64}}(uninitialized, 1:3)
+    ret = BlockArray{Float64,1,Vector{Float64}}(undef, 1:3)
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64}(uninitialized, BlockArrays.BlockSizes(1:3))
+    ret = BlockArray{Float64}(undef, BlockArrays.BlockSizes(1:3))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1}(uninitialized, BlockArrays.BlockSizes(1:3))
+    ret = BlockArray{Float64,1}(undef, BlockArrays.BlockSizes(1:3))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1,Vector{Float64}}(uninitialized, BlockArrays.BlockSizes(1:3))
+    ret = BlockArray{Float64,1,Vector{Float64}}(undef, BlockArrays.BlockSizes(1:3))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
@@ -35,44 +35,44 @@ import BlockArrays: _BlockArray
     ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], BlockArrays.BlockSizes(1:3))
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float32}(uninitialized_blocks, 1:3)
+    ret = BlockArray{Float32}(undef_blocks, 1:3)
     @test eltype(ret.blocks) == Vector{Float32}
     @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray{Float32,1}(uninitialized_blocks, 1:3)
+    ret = BlockArray{Float32,1}(undef_blocks, 1:3)
     @test eltype(ret.blocks) == Vector{Float32}
     @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray{Float32,1,Vector{Float32}}(uninitialized_blocks, 1:3)
+    ret = BlockArray{Float32,1,Vector{Float32}}(undef_blocks, 1:3)
     @test eltype(ret.blocks) == Vector{Float32}
     @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray{Float32}(uninitialized_blocks, 1:3, 1:3)
+    ret = BlockArray{Float32}(undef_blocks, 1:3, 1:3)
     @test eltype(ret.blocks) == Matrix{Float32}
     @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray(uninitialized_blocks, Vector{Float32}, 1:3)
+    ret = BlockArray(undef_blocks, Vector{Float32}, 1:3)
     @test eltype(ret) == Float32
     @test eltype(ret.blocks) == Vector{Float32}
     @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray{Float64}(uninitialized, 1:3, 1:3)
+    ret = BlockArray{Float64}(undef, 1:3, 1:3)
     fill!(ret, 0)
     Matrix(ret) == zeros(6,6)
 
-    ret = PseudoBlockArray{Float64}(uninitialized, 1:3)
+    ret = PseudoBlockArray{Float64}(undef, 1:3)
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = PseudoBlockArray{Float64,1}(uninitialized, 1:3)
+    ret = PseudoBlockArray{Float64,1}(undef, 1:3)
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = PseudoBlockArray{Float64,1,Vector{Float64}}(uninitialized, 1:3)
+    ret = PseudoBlockArray{Float64,1,Vector{Float64}}(undef, 1:3)
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = PseudoBlockArray{Float64}(uninitialized, 1:3, 1:3)
+    ret = PseudoBlockArray{Float64}(undef, 1:3, 1:3)
     fill!(ret, 0)
     Matrix(ret) == zeros(6,6)
 
@@ -80,7 +80,7 @@ import BlockArrays: _BlockArray
 end
 
 @testset "block indexing" begin
-    BA_1 = BlockArray(uninitialized_blocks, Vector{Float64}, [1,2,3])
+    BA_1 = BlockArray(undef_blocks, Vector{Float64}, [1,2,3])
     a_1 = rand(2)
     BA_1[Block(2)] = a_1
     @test BA_1[BlockIndex(2, 1)] == a_1[1]
@@ -91,7 +91,7 @@ end
     @test_throws BlockBoundsError blockcheckbounds(BA_1, 4)
     @test_throws BlockBoundsError BA_1[Block(4)]
 
-    BA_2 = BlockArray(uninitialized_blocks, Matrix{Float64}, [1,2], [3,4])
+    BA_2 = BlockArray(undef_blocks, Matrix{Float64}, [1,2], [3,4])
     a_2 = rand(1,4)
     BA_2[Block(1,2)] = a_2
     @test BA_2[Block(1,2)] == a_2
@@ -252,7 +252,7 @@ end
     @test A[1,1] == 1
     @test A[Block(2,3)] == ones(2,3)
 
-    A = BlockArray(uninitialized_blocks, Matrix{Float64}, 1:3, 1:3)
+    A = BlockArray(undef_blocks, Matrix{Float64}, 1:3, 1:3)
     A[Block(2,3)] = ones(2,3)
     @test A[Block(2,3)] == ones(2,3)
 end
