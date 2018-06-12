@@ -77,7 +77,7 @@ var documenterSearchIndex = {"docs": [
     "page": "BlockArrays",
     "title": "Creating uninitialized BlockArrays",
     "category": "section",
-    "text": "A block array can be created with initialized blocks using the BlockArray{T}(block_sizes) function. The block_sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(uninitialized, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n 9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45\n ───────────────────────────────────────┼──────────────────────────\n 3.28434f-21  9.37645f-26  3.28436f-21  │  8.05301f-24  9.39077f-26\n 1.4013f-45   1.4013f-45   1.4013f-45   │  1.4013f-45   1.4013f-45We can also any other user defined array type that supports similar."
+    "text": "A block array can be created with initialized blocks using the BlockArray{T}(block_sizes) function. The block_sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(undef, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n 9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45\n ───────────────────────────────────────┼──────────────────────────\n 3.28434f-21  9.37645f-26  3.28436f-21  │  8.05301f-24  9.39077f-26\n 1.4013f-45   1.4013f-45   1.4013f-45   │  1.4013f-45   1.4013f-45We can also any other user defined array type that supports similar."
 },
 
 {
@@ -85,7 +85,7 @@ var documenterSearchIndex = {"docs": [
     "page": "BlockArrays",
     "title": "Creating BlockArrays with uninitialized blocks.",
     "category": "section",
-    "text": "A BlockArray can be created with the blocks left uninitialized using the BlockArray(uninitialized, block_type, block_sizes...) function. The block_type should be an array type, it could for example be Matrix{Float64}. The block sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(uninitialized_blocks, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n #undef  #undef  #undef  │  #undef  #undef\n ------------------------┼----------------\n #undef  #undef  #undef  │  #undef  #undef\n #undef  #undef  #undef  │  #undef  #undefWe can also use a SparseVector or any other user defined array type by specifying it as the second argument:julia> BlockArray(uninitialized_blocks, SparseVector{Float64, Int}, [1,2])\n2-blocked 3-element BlockArrays.BlockArray{Float64,1,SparseVector{Float64,Int64}}:\n #undef\n ------\n #undef\n #undefNote that accessing an undefined block will throw an \"access to undefined reference\"-error."
+    "text": "A BlockArray can be created with the blocks left uninitialized using the BlockArray(undef, block_type, block_sizes...) function. The block_type should be an array type, it could for example be Matrix{Float64}. The block sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(undef_blocks, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n #undef  #undef  #undef  │  #undef  #undef\n ------------------------┼----------------\n #undef  #undef  #undef  │  #undef  #undef\n #undef  #undef  #undef  │  #undef  #undefWe can also use a SparseVector or any other user defined array type by specifying it as the second argument:julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])\n2-blocked 3-element BlockArrays.BlockArray{Float64,1,SparseVector{Float64,Int64}}:\n #undef\n ------\n #undef\n #undefNote that accessing an undefined block will throw an \"access to undefined reference\"-error."
 },
 
 {
@@ -141,7 +141,7 @@ var documenterSearchIndex = {"docs": [
     "page": "PseudoBlockArrays",
     "title": "Creating initialized BlockArrays",
     "category": "section",
-    "text": "A block array can be created with uninitialized entries using the BlockArray{T}(uninitialized, block_sizes...) function. The block_sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> PseudoBlockArray{Float32}(uninitialized, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n 9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45\n ───────────────────────────────────────┼──────────────────────────\n 3.28434f-21  9.37645f-26  3.28436f-21  │  8.05301f-24  9.39077f-26\n 1.4013f-45   1.4013f-45   1.4013f-45   │  1.4013f-45   1.4013f-45We can also any other user defined array type that supports similar."
+    "text": "A block array can be created with uninitialized entries using the BlockArray{T}(undef, block_sizes...) function. The block_sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> PseudoBlockArray{Float32}(undef, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n 9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45\n ───────────────────────────────────────┼──────────────────────────\n 3.28434f-21  9.37645f-26  3.28436f-21  │  8.05301f-24  9.39077f-26\n 1.4013f-45   1.4013f-45   1.4013f-45   │  1.4013f-45   1.4013f-45We can also any other user defined array type that supports similar."
 },
 
 {
@@ -297,19 +297,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArrays.uninitialized_blocks",
+    "location": "lib/public.html#BlockArrays.undef_blocks",
     "page": "Public Documentation",
-    "title": "BlockArrays.uninitialized_blocks",
+    "title": "BlockArrays.undef_blocks",
     "category": "constant",
-    "text": "uninitialized_blocks\n\nAlias for UninitializedBlocks(), which constructs an instance of the singleton type UninitializedBlocks (@ref), used in block array initialization to indicate the array-constructor-caller would like an uninitialized block array.\n\nExamples ≡≡≡≡≡≡≡≡≡≡\n\njulia> BlockArray(uninitialized_blocks, Matrix{Float32}, [1,2], [3,2]) 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:  #undef  #undef  #undef  │  #undef  #undef  ––––––––––––┼––––––––  #undef  #undef  #undef  │  #undef  #undef  #undef  #undef  #undef  │  #undef  #undef\n\n\n\n\n\n"
+    "text": "undef_blocks\n\nAlias for UndefBlocksInitializer(), which constructs an instance of the singleton type UndefBlocksInitializer (@ref), used in block array initialization to indicate the array-constructor-caller would like an uninitialized block array.\n\nExamples ≡≡≡≡≡≡≡≡≡≡\n\njulia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2]) 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:  #undef  #undef  #undef  │  #undef  #undef  ––––––––––––┼––––––––  #undef  #undef  #undef  │  #undef  #undef  #undef  #undef  #undef  │  #undef  #undef\n\n\n\n\n\n"
 },
 
 {
-    "location": "lib/public.html#BlockArrays.UninitializedBlocks",
+    "location": "lib/public.html#BlockArrays.UndefBlocksInitializer",
     "page": "Public Documentation",
-    "title": "BlockArrays.UninitializedBlocks",
+    "title": "BlockArrays.UndefBlocksInitializer",
     "category": "type",
-    "text": "UninitializedBlocks\n\nSingleton type used in block array initialization, indicating the array-constructor-caller would like an uninitialized block array. See also uninitialized_blocks (@ref), an alias for UninitializedBlocks().\n\nExamples ≡≡≡≡≡≡≡≡≡≡\n\njulia> BlockArray(uninitialized_blocks, Matrix{Float32}, [1,2], [3,2]) 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:  #undef  #undef  #undef  │  #undef  #undef  ––––––––––––┼––––––––  #undef  #undef  #undef  │  #undef  #undef  #undef  #undef  #undef  │  #undef  #undef\n\n\n\n\n\n"
+    "text": "UndefBlocksInitializer\n\nSingleton type used in block array initialization, indicating the array-constructor-caller would like an uninitialized block array. See also undef_blocks (@ref), an alias for UndefBlocksInitializer().\n\nExamples ≡≡≡≡≡≡≡≡≡≡\n\njulia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2]) 2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:  #undef  #undef  #undef  │  #undef  #undef  ––––––––––––┼––––––––  #undef  #undef  #undef  │  #undef  #undef  #undef  #undef  #undef  │  #undef  #undef\n\n\n\n\n\n"
 },
 
 {
@@ -317,7 +317,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public Documentation",
     "title": "BlockArray",
     "category": "section",
-    "text": "BlockArray\nuninitialized_blocks\nUninitializedBlocks"
+    "text": "BlockArray\nundef_blocks\nUndefBlocksInitializer"
 },
 
 {
