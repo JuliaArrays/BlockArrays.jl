@@ -214,3 +214,12 @@ end
 function Base.fill!(block_array::PseudoBlockArray, v)
     fill!(block_array.blocks, v)
 end
+
+
+###########################
+# Strided Array interface #
+###########################
+
+Base.strides(A::PseudoBlockArray) = strides(A.blocks)
+Base.stride(A::PseudoBlockArray, i::Int) = stride(A.blocks, i)
+Base.unsafe_convert(::Type{Ptr{T}}, A::PseudoBlockArray) where T = Base.unsafe_convert(Ptr{T}, A.blocks)

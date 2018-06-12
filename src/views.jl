@@ -125,6 +125,5 @@ function unsafe_convert(::Type{Ptr{T}},
     unsafe_convert(Ptr{T}, parent(V).blocks[Int.(Block.(parentindices(V)))...])
 end
 
-unsafe_convert(::Type{Ptr{T}}, A::PseudoBlockArray) where T = unsafe_convert(Ptr{T}, A.blocks)
 unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,PseudoBlockArray{T,N,AT},<:Tuple{Vararg{BlockOrRangeIndex}}}) where {T,N,AT} =
     unsafe_convert(Ptr{T}, V.parent) + (Base.first_index(V)-1)*sizeof(T)

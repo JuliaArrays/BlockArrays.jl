@@ -308,3 +308,14 @@ end
     @test convert(Tuple{Int,Int}, Block(2,1)) == (2,1)
     @test convert(Tuple{Float64,Int}, Block(2,1)) == (2.0,1)
 end
+
+@testset "Strided array interface" begin
+    A = PseudoBlockArray{Float64}(undef, 1:3, 1:3)
+    fill!(A, 1)
+    @test strides(A) == (1, size(A,1))
+    if VERSION ≥ v"0.7-"
+        x = randn(size(A,2))
+        y = similar(x)
+        @test BLAS.gemv!('N', 2.0, A, x, 0.0, y) == 2A*x
+    end
+end
