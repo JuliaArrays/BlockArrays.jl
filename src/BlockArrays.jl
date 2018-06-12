@@ -23,17 +23,17 @@ import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
             getindex, show, start, next, done,
             broadcast, eltype, convert, broadcast,
             @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
-            RangeIndex, Int, Integer, Number
-
-import Base: +, -, min, max, *, isless
+            RangeIndex, Int, Integer, Number,
+            +, -, min, max, *, isless, in
 
 import Compat: copyto!, axes
 
-if VERSION < v"0.7.0-DEV.4043"
+if VERSION < v"0.7-"
     import Base: colon, iteratorsize
     const parentindices = parentindexes
 else
-    import Base: (:), IteratorSize
+    import Base: (:), IteratorSize, iterate
+    import Base.Broadcast: broadcasted, DefaultArrayStyle
 end
 
 include("abstractblockarray.jl")

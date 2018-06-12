@@ -1,4 +1,4 @@
-struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{Int}}}
+struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractArray{Block{N,Int},N}
     indices::R
     BlockRange{N,R}(inds::R) where {N,R} = new{N,R}(inds)
 end
@@ -23,36 +23,46 @@ BlockRange(inds::NTuple{N,AbstractUnitRange{Int}}) where {N} =
 BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
     BlockRange(inds)
 
-if VERSION < v"0.7.0-DEV.4043"
+if VERSION < v"0.7-"
     colon(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
     colon(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
+    broadcast(::typeof(Block), range::UnitRange) = Block(first(range)):Block(last(range))
+    broadcast(::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices)
+    iteratorsize(::Type{<:BlockRange}) = Base.HasShape()
 else
     (:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
     (:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
+    Base.BroadcastStyle(::Type{<:BlockRange{1}}) = DefaultArrayStyle{1}()
+    broadcasted(::DefaultArrayStyle{1}, ::typeof(Block), r::UnitRange) = Block(first(r)):Block(last(r))
+    broadcasted(::DefaultArrayStyle{1}, ::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices)
 end
 
-broadcast(::typeof(Block), range::UnitRange) = Block(first(range)):Block(last(range))
-broadcast(::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices)
-
-eltype(R::BlockRange) = eltype(typeof(R))
-eltype(::Type{BlockRange{N}}) where {N} = Block{N,Int}
-eltype(::Type{BlockRange{N,R}}) where {N,R} = Block{N,Int}
-if VERSION < v"0.7.0-DEV.4043"
-    iteratorsize(::Type{<:BlockRange}) = Base.HasShape()
-else
-    IteratorSize(::Type{<:BlockRange}) = Base.HasShape{1}()
+# AbstractArray implementation
+axes(iter::BlockRange{N,R}) where {N,R} = map(Base.indices1, iter.indices)
+Base.IndexStyle(::Type{BlockRange{N,R}}) where {N,R} = IndexCartesian()
+@inline function Base.getindex(iter::BlockRange{N,<:NTuple{N,Base.OneTo}}, I::Vararg{Int, N}) where {N}
+    @boundscheck checkbounds(iter, I...)
+    Block(I)
+end
+@inline function Base.getindex(iter::BlockRange{N,R}, I::Vararg{Int, N}) where {N,R}
+    @boundscheck checkbounds(iter, I...)
+    Block(I .- first.(Base.indices1.(iter.indices)) .+ first.(iter.indices))
 end
 
-@inline function start(iter::BlockRange)
+
+@inline function iterate(iter::BlockRange)
     iterfirst, iterlast = first(iter), last(iter)
     if any(map(>, iterfirst.n, iterlast.n))
-        return iterlast+1
+        return nothing
     end
-    iterfirst
+    iterfirst, iterfirst
 end
-@inline function next(iter::BlockRange, state)
-    state, Block(inc(state.n, first(iter).n, last(iter).n))
+@inline function iterate(iter::BlockRange, state)
+    nextstate = Block(inc(state.n, first(iter).n, last(iter).n))
+    nextstate.n[end] > last(iter.indices[end]) && return nothing
+    nextstate, nextstate
 end
+
 # increment & carry
 @inline inc(::Tuple{}, ::Tuple{}, ::Tuple{}) = ()
 @inline inc(state::Tuple{Int}, start::Tuple{Int}, stop::Tuple{Int}) = (state[1]+1,)
@@ -63,7 +73,9 @@ end
     newtail = inc(tail(state), tail(start), tail(stop))
     (start[1], newtail...)
 end
-@inline done(iter::BlockRange, state) = state.n[end] > last(iter.indices[end])
+
+# 0-d cartesian ranges are special-cased to iterate once and only once
+iterate(iter::BlockRange{0}, done=false) = done ? nothing : (Block(), true)
 
 size(iter::BlockRange) = map(dimlength, first(iter).n, last(iter).n)
 dimlength(start, stop) = stop-start+1
@@ -72,3 +84,9 @@ length(iter::BlockRange) = prod(size(iter))
 
 first(iter::BlockRange) = Block(map(first, iter.indices))
 last(iter::BlockRange)  = Block(map(last, iter.indices))
+
+@inline function in(i::Block{N}, r::BlockRange{N}) where {N}
+    _in(true, i.n, first(r).n, last(r).n)
+end
+_in(b, ::Tuple{}, ::Tuple{}, ::Tuple{}) = b
+@inline _in(b, i, start, stop) = _in(b & (start[1] <= i[1] <= stop[1]), tail(i), tail(start), tail(stop))
