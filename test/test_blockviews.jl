@@ -107,3 +107,10 @@ end
     @test Base.unsafe_convert(Ptr{Float64}, V) == Base.unsafe_convert(Ptr{Float64}, view(A.blocks, 2:3, 2:3))
     @test unsafe_load(pointer(V)) == V[1,1]
 end
+
+
+@testset "block indx range of block range" begin
+     A = PseudoBlockArray(collect(1:6), 1:3)
+     V = view(A, Block.(2:3))
+     @test view(V, Block(2)[1:2]) == 4:5 
+end

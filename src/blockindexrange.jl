@@ -88,7 +88,7 @@ to_index(::BlockIndexRange) = throw(ArgumentError("BlockIndexRange must be conve
 
 reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
-    (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int.(subidxs[1].block.block)]),
+    (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
                                                             subidxs[1].block.indices),
                                             idxs[1].indices[subidxs[1].indices]),
                                     reindex(V, tail(idxs), tail(subidxs))...))
