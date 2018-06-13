@@ -112,5 +112,5 @@ end
 @testset "block indx range of block range" begin
      A = PseudoBlockArray(collect(1:6), 1:3)
      V = view(A, Block.(2:3))
-     @test view(V, Block(2)[1:2]) == 4:5 
+     @test view(V, Block(2)[1:2]) == [4,5] 
 end
