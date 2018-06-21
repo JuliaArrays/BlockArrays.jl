@@ -38,7 +38,7 @@ end
     @assert M < N
     α_ex = Expr(:tuple, [k <= M ? :(α[$k]) : :(1) for k = 1:N]...)
     return quote
-        $Expr(:meta, :inline)
+        $(Expr(:meta, :inline))
         @inbounds α2 = $α_ex
         BlockIndex(I, α2)
     end
@@ -54,7 +54,7 @@ Converts from global indices `inds` to a `BlockIndex`.
     I_ex = Expr(:tuple, [:(block_index[$k][1]) for k = 1:N]...)
     α_ex = Expr(:tuple, [:(block_index[$k][2]) for k = 1:N]...)
     return quote
-        $Expr(:meta, :inline)
+        $(Expr(:meta, :inline))
         @inbounds block_index = $block_index_ex
         @inbounds I = $I_ex
         @inbounds α = $α_ex
@@ -70,7 +70,7 @@ Converts from a block index to a tuple containing the global indices
 @generated function blockindex2global(block_sizes::BlockSizes{N}, block_index::BlockIndex{N}) where {N}
     ex = Expr(:tuple, [:(block_sizes[$k, block_index.I[$k]] + block_index.α[$k] - 1) for k = 1:N]...)
     return quote
-        $Expr(:meta, :inline)
+        $(Expr(:meta, :inline))
         @inbounds v = $ex
         return $ex
     end
