@@ -109,7 +109,7 @@ end
 @generated function globalrange(block_sizes::BlockSizes{N}, block_index::NTuple{N, Int}) where {N}
     indices_ex = Expr(:tuple, [:(block_sizes[$i, block_index[$i]]:block_sizes[$i, block_index[$i] + 1] - 1) for i = 1:N]...)
     return quote
-        $Expr(:meta, :inline)
+        $(Expr(:meta, :inline))
         @inbounds inds = $indices_ex
         return inds
     end
