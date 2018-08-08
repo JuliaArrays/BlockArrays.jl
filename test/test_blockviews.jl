@@ -11,7 +11,7 @@
     @test step(b) == 1
     @test Base.unsafe_length(b) == 2
     @test Compat.axes(b) == (Base.OneTo(2),)
-    @test Base.indices1(b) == Base.OneTo(2)
+    @test axes1(b) == Base.OneTo(2)
     @test Base.unsafe_indices(b) == (Base.OneTo(2),)
     @test size(b) == (2,)
     @test collect(b) == [2,3]
@@ -112,5 +112,5 @@ end
 @testset "block indx range of block range" begin
      A = PseudoBlockArray(collect(1:6), 1:3)
      V = view(A, Block.(2:3))
-     @test view(V, Block(2)[1:2]) == [4,5] 
+     @test view(V, Block(2)[1:2]) == [4,5]
 end

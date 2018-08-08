@@ -29,19 +29,32 @@ end
 first(iter::BlockIndexRange) = BlockIndex(iter.block.n, map(first, iter.indices))
 last(iter::BlockIndexRange)  = BlockIndex(iter.block.n, map(last, iter.indices))
 
-
-@inline function start(iter::BlockIndexRange)
-    iterfirst, iterlast = first(iter), last(iter)
-    if any(map(>, iterfirst.α, iterlast.α))
-        return BlockIndex(iterlast.I, iterlast.α .+ 1)
+if VERSION < v"0.7-"
+    @inline function start(iter::BlockIndexRange)
+        iterfirst, iterlast = first(iter), last(iter)
+        if any(map(>, iterfirst.α, iterlast.α))
+            return BlockIndex(iterlast.I, iterlast.α .+ 1)
+        end
+        iterfirst
     end
-    iterfirst
+    @inline function next(iter::BlockIndexRange, state)
+        state, BlockIndex(state.I, inc(state.α, first(iter).α, last(iter).α))
+    end
+    @inline done(iter::BlockIndexRange, state) = state.α[end] > last(iter.indices[end])
+else
+    @inline function iterate(iter::BlockIndexRange)
+        iterfirst, iterlast = first(iter), last(iter)
+        if any(map(>, iterfirst.α, iterlast.α))
+            return nothing
+        end
+        iterfirst, iterfirst
+    end
+    @inline function iterate(iter::BlockIndexRange, state)
+        nextstate = BlockIndex(state.I, inc(state.α, first(iter).α, last(iter).α))
+        nextstate.α[end] > last(iter.indices[end]) && return nothing
+        nextstate, nextstate
+    end
 end
-@inline function next(iter::BlockIndexRange, state)
-    state, BlockIndex(state.I, inc(state.α, first(iter).α, last(iter).α))
-end
-@inline done(iter::BlockIndexRange, state) = state.α[end] > last(iter.indices[end])
-
 size(iter::BlockIndexRange) = map(dimlength, first(iter).α, last(iter).α)
 length(iter::BlockIndexRange) = prod(size(iter))
 

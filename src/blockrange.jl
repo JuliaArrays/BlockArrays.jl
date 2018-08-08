@@ -38,7 +38,7 @@ else
 end
 
 # AbstractArray implementation
-axes(iter::BlockRange{N,R}) where {N,R} = map(Base.indices1, iter.indices)
+axes(iter::BlockRange{N,R}) where {N,R} = map(axes1, iter.indices)
 Base.IndexStyle(::Type{BlockRange{N,R}}) where {N,R} = IndexCartesian()
 @inline function Base.getindex(iter::BlockRange{N,<:NTuple{N,Base.OneTo}}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(iter, I...)
@@ -46,7 +46,7 @@ Base.IndexStyle(::Type{BlockRange{N,R}}) where {N,R} = IndexCartesian()
 end
 @inline function Base.getindex(iter::BlockRange{N,R}, I::Vararg{Int, N}) where {N,R}
     @boundscheck checkbounds(iter, I...)
-    Block(I .- first.(Base.indices1.(iter.indices)) .+ first.(iter.indices))
+    Block(I .- first.(axes1.(iter.indices)) .+ first.(iter.indices))
 end
 
 

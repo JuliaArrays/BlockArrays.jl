@@ -1,7 +1,10 @@
-using BlockArrays, Compat, Compat.Test
+using BlockArrays, Compat.LinearAlgebra, Compat, Compat.Test
 
 if VERSION < v"0.7-"
     const parentindices = parentindexes
+    const axes1 = Base.indices1
+else
+    import Base: axes1
 end
 
 include("test_blockindices.jl")

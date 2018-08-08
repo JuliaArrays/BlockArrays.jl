@@ -18,9 +18,9 @@ export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrM
 export undef_blocks, undef
 
 import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
-            unsafe_indices, indices1, first, last, size, length, unsafe_length,
+            unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
-            getindex, show, start, next, done,
+            getindex, show,
             broadcast, eltype, convert, broadcast,
             @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
             RangeIndex, Int, Integer, Number,
@@ -29,10 +29,11 @@ import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
 import Compat: copyto!, axes
 
 if VERSION < v"0.7-"
-    import Base: colon, iteratorsize
+    import Base: colon, iteratorsize, indices1, start, next, done
     const parentindices = parentindexes
+    const axes1 = indices1
 else
-    import Base: (:), IteratorSize, iterate
+    import Base: (:), IteratorSize, iterate, axes1
     import Base.Broadcast: broadcasted, DefaultArrayStyle
 end
 

@@ -16,7 +16,7 @@ end
 Block(bs::BlockSlice{<:Block}) = bs.block
 
 
-for f in (:axes, :unsafe_indices, :indices1, :first, :last, :size, :length,
+for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
           :unsafe_length, :start)
     @eval $f(S::BlockSlice) = $f(S.indices)
 end
