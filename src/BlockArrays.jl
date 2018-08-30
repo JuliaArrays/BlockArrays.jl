@@ -17,7 +17,7 @@ export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrM
 
 export undef_blocks, undef
 
-import Base: @propagate_inbounds, Array, to_indices, to_index, indices,
+import Base: @propagate_inbounds, Array, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
             getindex, show,
