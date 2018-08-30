@@ -324,11 +324,19 @@ end
 end
 
 @testset "lmul!/rmul!" begin
-    ret = PseudoBlockArray{Float64}(undef, 1:3)
-    fill!(ret, NaN)
-    lmul!(0.0, ret)
-    @test Array(ret) == zeros(6)
-    fill!(ret, NaN)
-    rmul!(ret, 0.0)
-    @test Array(ret) == zeros(6)
+    A = PseudoBlockArray{Float64}(undef, 1:3)
+    @test fill!(A, NaN) === A
+    @test lmul!(0.0, A) === A
+    @test Array(A) == zeros(6)
+    @test fill!(A, NaN) === A
+    @test rmul!(A, 0.0) === A
+    @test Array(A) == zeros(6)
+
+    A = BlockArray{Float64}(undef, 1:3)
+    @test fill!(A, NaN) === A
+    @test lmul!(0.0, A) === A
+    @test Array(A) == zeros(6)
+    @test fill!(A, NaN) === A
+    @test rmul!(A, 0.0) === A
+    @test Array(A) == zeros(6)
 end

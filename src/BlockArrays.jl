@@ -32,11 +32,12 @@ if VERSION < v"0.7-"
     import Base: colon, iteratorsize, indices1, start, next, done
     const parentindices = parentindexes
     const axes1 = indices1
-    const lmul! = scale!
-    const rmul! = scale!
+    const lmul! = Base.scale!
+    const rmul! = Base.scale!
 else
     import Base: (:), IteratorSize, iterate, axes1
     import Base.Broadcast: broadcasted, DefaultArrayStyle
+    import LinearAlgebra: lmul!, rmul!
 end
 
 include("abstractblockarray.jl")
