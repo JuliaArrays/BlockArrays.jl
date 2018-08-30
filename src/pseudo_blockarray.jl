@@ -215,6 +215,14 @@ function Base.fill!(block_array::PseudoBlockArray, v)
     fill!(block_array.blocks, v)
 end
 
+function LinearAlgebra.lmul!(α::Number, block_array::PseudoBlockArray)
+    lmul!(α, block_array.blocks)
+end
+
+function LinearAlgebra.rmul!(block_array::PseudoBlockArray, α::Number)
+    rmul!(block_array.blocks, α)
+end
+
 
 ###########################
 # Strided Array interface #

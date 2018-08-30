@@ -32,6 +32,8 @@ if VERSION < v"0.7-"
     import Base: colon, iteratorsize, indices1, start, next, done
     const parentindices = parentindexes
     const axes1 = indices1
+    const lmul! = scale!
+    const rmul! = scale!
 else
     import Base: (:), IteratorSize, iterate, axes1
     import Base.Broadcast: broadcasted, DefaultArrayStyle
