@@ -1,13 +1,18 @@
-# The AbstractBlockArray interface
+# The `AbstractBlockSizes` interface
 
-In order to follow the `AbstractBlockArray` the following methods should be implemented:
+In order to follow the `AbstractBlockSizes` the following methods should be implemented:
 
 
 | Methods to implement    | Brief description |
 | :---------------------- | :---------------- |
 | `nblocks(A)`            | Tuple of number of blocks in each dimension |
 | `nblocks(A, i)`         | Number of blocks in dimension `i` |
-| `blocksize(A, i...)`    | Size of the block at block index `i...` |
+| `blocksize(A, i)`    | Size of the block at block index `i` |
+
+# The `AbstractBlockArray` interface
+
+| Methods to implement    | Brief description |
+| `blocksizes(A)`         | Return a subtype of `AbstractBlockSizes` |
 | `getblock(A, i...)`     | `X[Block(i...)]`, blocked indexing  |
 | `setblock!(A, v, i...)` | `X[Block(i...)] = v`, blocked index assignment |
 | **Optional methods**    |                        |
@@ -36,4 +41,3 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArrays.BlockAr
 ```
 
 * Happy users who know how to use your new block array :)
-

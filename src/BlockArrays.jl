@@ -9,7 +9,7 @@ end
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
-export Block, getblock, getblock!, setblock!, nblocks, blocksize, blockcheckbounds, BlockBoundsError, BlockIndex
+export Block, getblock, getblock!, setblock!, nblocks, blocksize, blocksizes, blockcheckbounds, BlockBoundsError, BlockIndex
 export BlockRange
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat
@@ -49,7 +49,6 @@ include("pseudo_blockarray.jl")
 include("blockrange.jl")
 include("views.jl")
 include("blockindexrange.jl")
-include("convert.jl")
 include("show.jl")
 include("deprecate.jl")
 

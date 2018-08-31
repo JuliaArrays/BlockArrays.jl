@@ -2,8 +2,10 @@
 # BlockSizes #
 ##############
 
+abstract type AbstractBlockSizes{N} end
+
 # Keeps track of the (cumulative) sizes of all the blocks in the `BlockArray`.
-struct BlockSizes{N}
+struct BlockSizes{N} <: AbstractBlockSizes{N}
     cumul_sizes::NTuple{N, Vector{Int}}
     # Takes a tuple of sizes, accumulates them and create a `BlockSizes`
 end
@@ -96,6 +98,11 @@ end
 
 @inline @propagate_inbounds nblocks(block_sizes::BlockSizes, i::Int) = length(block_sizes[i]) - 1
 
+function nblocks(block_sizes::BlockSizes, i::Vararg{Int, N}) where {N}
+    b = nblocks(block_sizes)
+    return ntuple(k-> b[i[k]], Val(N))
+end
+
 
 # ntuple is yet again slower
 @generated function Base.copy(block_sizes::BlockSizes{N}) where {N}
@@ -133,3 +140,38 @@ end
                    block_sizes[3, block_index[3]]:block_sizes[3, block_index[3] + 1] - 1)
     return v
 end
+
+
+
+"""
+    blocksizes(A)
+
+returns a subtype of `AbstractBlockSizes` that contains information about the
+block sizes of `A`. Any subtype of AbstractBlockArrays must override this.
+"""
+blocksizes(A::AbstractBlockArray) = error("blocksizes for $(typeof(A)) is not implemented")
+
+@inline nblocks(block_array::AbstractArray) = nblocks(blocksizes(block_array))
+
+"""
+    blocksize(A, inds)
+
+Returns a tuple containing the size of the block at block index `inds`.
+
+```jldoctest
+julia> A = BlockArray(rand(5, 4, 6), [1, 4], [1, 2, 1], [1, 2, 2, 1]);
+
+julia> blocksize(A, (1, 3, 2))
+(1, 1, 2)
+
+julia> blocksize(A, (2, 1, 3))
+(4, 1, 2)
+```
+"""
+@inline blocksize(block_array::AbstractArray, i::Int...) =
+    blocksize(blocksizes(block_array), i...)
+
+@inline blocksize(block_array::AbstractArray{T,N}, i::NTuple{N, Int}) where {T, N} =
+    blocksize(blocksizes(block_array), i)
+
+@inline Base.size(arr::AbstractBlockArray) = size(blocksizes(arr))

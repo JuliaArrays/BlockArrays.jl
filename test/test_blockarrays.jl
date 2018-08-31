@@ -90,7 +90,8 @@ end
     @test BA_1[BlockIndex(2, 2)] == a_1[2]
     @test BA_1[Block(2)] == a_1
     @test BA_1[2] == a_1[1]
-    @test_throws DimensionMismatch BA_1[Block(3)] = rand(4)
+
+    @test_throws DimensionMismatch (BA_1[Block(3)] = rand(4))
     @test_throws BlockBoundsError blockcheckbounds(BA_1, 4)
     @test_throws BlockBoundsError BA_1[Block(4)]
 
@@ -248,7 +249,6 @@ if VERSION < v"0.7-"
 else
     @test replstrmime(BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "4×4 BlockArray{Int64,2,Array{Int64,2}}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
 end
-
 
 @testset "AbstractVector{Int} blocks" begin
     A = BlockArray(ones(6,6), 1:3, 1:3)

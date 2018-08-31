@@ -21,6 +21,6 @@ struct PartiallyImplementedBlockVector <: AbstractBlockArray{Float64,1} end
     try
         BlockArrays.blocksize(A, 2)
     catch err
-        @test err isa ErrorException && err.msg == "blocksize for PartiallyImplementedBlockVector is not implemented"
+        @test err isa ErrorException && err.msg == "blocksizes for PartiallyImplementedBlockVector is not implemented"
     end
 end

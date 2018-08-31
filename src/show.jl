@@ -11,9 +11,9 @@ if VERSION < v"0.7-"
 
         row_buf = IOBuffer()
 
-        row_sum = X.block_sizes[1][2:end] .- 1
+        row_sum = blocksizes(X)[1][2:end] .- 1
         if ndims(X) == 2
-            col_sum = (X.block_sizes[2][2:end] .- 1)[1:end-1]
+            col_sum = (blocksizes(X)[2][2:end] .- 1)[1:end-1]
         end
 
         # Loop over row
@@ -41,7 +41,7 @@ if VERSION < v"0.7-"
             cumul += 1
             if ndims(X) == 2
                 # Have accumulated enough for the block, should print a |
-                if block < length(X.block_sizes[2]) - 1 && cumul == blocksize(X, 2, block)[2]
+                if block < length(blocksizes(X)[2]) - 1 && cumul == blocksize(X, 2, block)[2]
                     block += 1
                     cumul = 0
                     print(io, "  │")
@@ -83,9 +83,9 @@ else
 
         row_buf = IOBuffer()
 
-        row_sum = X.block_sizes[1][2:end] .- 1
+        row_sum = blocksizes(X)[1][2:end] .- 1
         if ndims(X) == 2
-            col_sum = (X.block_sizes[2][2:end] .- 1)[1:end-1]
+            col_sum = (blocksizes(X)[2][2:end] .- 1)[1:end-1]
         end
 
         # Loop over row
@@ -113,7 +113,7 @@ else
             cumul += 1
             if ndims(X) == 2
                 # Have accumulated enough for the block, should print a |
-                if block < length(X.block_sizes[2]) - 1 && cumul == blocksize(X, 2, block)[2]
+                if block < length(blocksizes(X)[2]) - 1 && cumul == blocksize(X, (2, block))[2]
                     block += 1
                     cumul = 0
                     print(io, "  │")
