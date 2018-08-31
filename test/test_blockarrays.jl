@@ -1,5 +1,8 @@
 if VERSION ≥ v"0.7.0-DEV.3465"
     using SparseArrays, Base64
+else
+        const lmul! = scale!
+        const rmul! = scale!
 end
 import BlockArrays: _BlockArray
 
@@ -318,4 +321,22 @@ end
         y = similar(x)
         @test BLAS.gemv!('N', 2.0, A, x, 0.0, y) == 2A*x
     end
+end
+
+@testset "lmul!/rmul!" begin
+    A = PseudoBlockArray{Float64}(undef, 1:3)
+    @test fill!(A, NaN) === A
+    @test lmul!(0.0, A) === A
+    @test Array(A) == zeros(6)
+    @test fill!(A, NaN) === A
+    @test rmul!(A, 0.0) === A
+    @test Array(A) == zeros(6)
+
+    A = BlockArray{Float64}(undef, 1:3)
+    @test fill!(A, NaN) === A
+    @test lmul!(0.0, A) === A
+    @test Array(A) == zeros(6)
+    @test fill!(A, NaN) === A
+    @test rmul!(A, 0.0) === A
+    @test Array(A) == zeros(6)
 end

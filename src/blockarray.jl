@@ -295,4 +295,19 @@ function Base.fill!(block_array::BlockArray, v)
     for block in block_array.blocks
         fill!(block, v)
     end
+    block_array
+end
+
+function lmul!(α::Number, block_array::BlockArray)
+    for block in block_array.blocks
+        lmul!(α, block)
+    end
+    block_array
+end
+
+function rmul!(block_array::BlockArray, α::Number)
+    for block in block_array.blocks
+        rmul!(block, α)
+    end
+    block_array
 end

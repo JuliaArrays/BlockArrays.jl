@@ -213,6 +213,17 @@ end
 
 function Base.fill!(block_array::PseudoBlockArray, v)
     fill!(block_array.blocks, v)
+    block_array
+end
+
+function lmul!(α::Number, block_array::PseudoBlockArray)
+    lmul!(α, block_array.blocks)
+    block_array
+end
+
+function rmul!(block_array::PseudoBlockArray, α::Number)
+    rmul!(block_array.blocks, α)
+    block_array
 end
 
 
