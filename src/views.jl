@@ -48,7 +48,7 @@ function _unblock(cum_sizes, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {R}
 end
 
 
-@inline _cumul_sizes(A::AbstractArray, j) = blocksizes(A)[j]
+@inline _cumul_sizes(A::AbstractArray, j) = cumulsizes(A,j)
 
 # For a SubArray, we need to shift the block indices appropriately
 function _cumul_sizes(V::SubArray, j)

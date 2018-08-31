@@ -21,13 +21,13 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             broadcast, eltype, convert, broadcast,
             @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
             RangeIndex, Int, Integer, Number,
-            +, -, min, max, *, isless, in, copyto!, axes
+            +, -, min, max, *, isless, in, copyto!, axes, @deprecate
 
 
 
 import Base: (:), IteratorSize, iterate, axes1
 import Base.Broadcast: broadcasted, DefaultArrayStyle
-import LinearAlgebra: lmul!, rmul!
+import LinearAlgebra: lmul!, rmul!, AbstractTriangular
 
 
 include("abstractblockarray.jl")
@@ -40,6 +40,8 @@ include("blockrange.jl")
 include("views.jl")
 include("blockindexrange.jl")
 include("show.jl")
+include("blockarrayinterface.jl")
+
 include("deprecate.jl")
 
 end # module
