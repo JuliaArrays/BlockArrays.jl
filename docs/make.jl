@@ -8,7 +8,7 @@ makedocs(
     format = :html,
     sitename = "BlockArrays.jl",
     doctest = false,
-    strict = VERSION.minor == 6 && sizeof(Int) == 8, # only strict mode on 0.6 and Int64
+    strict = VERSION.major == 1 && sizeof(Int) == 8, # only strict mode on 1.0 and Int64
     pages = Any[
         "Home" => "index.md",
         "Manual" => [

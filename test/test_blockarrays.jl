@@ -1,9 +1,4 @@
-if VERSION ≥ v"0.7.0-DEV.3465"
-    using SparseArrays, Base64
-else
-        const lmul! = scale!
-        const rmul! = scale!
-end
+using SparseArrays, Base64
 import BlockArrays: _BlockArray
 
 
@@ -129,7 +124,7 @@ end
         fill!(BA_1, 1.0)
         @test BA_1 == ones(size(BA_1))
         ran = rand(size(BA_1)...)
-        Compat.copyto!(BA_1, ran)
+        copyto!(BA_1, ran)
         @test BA_1 == ran
 
         a_1_sparse = sprand(6, 0.9)
@@ -160,7 +155,7 @@ end
         fill!(BA_2, 1.0)
         @test BA_2 == ones(size(BA_2))
         ran = rand(size(BA_2)...)
-        Compat.copyto!(BA_2, ran)
+        copyto!(BA_2, ran)
         @test BA_2 == ran
 
         a_2_sparse = sprand(3, 7, 0.9)
@@ -190,7 +185,7 @@ end
         fill!(BA_3, 1.0)
         @test BA_3 == ones(size(BA_3))
         ran = rand(size(BA_3)...)
-        Compat.copyto!(BA_3, ran)
+        copyto!(BA_3, ran)
         @test BA_3 == ran
     end
 end
@@ -229,11 +224,7 @@ end
     A = BlockArray(rand(4, 5), [1,3], [2,3]);
     buf = IOBuffer()
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    if VERSION < v"0.7-"
-        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]"
-    else
-        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]"
-    end
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]"
 end
 
 if isdefined(Base, :flatten)
@@ -244,11 +235,7 @@ end
 
 
 replstrmime(x) = stringmime("text/plain", x)
-if VERSION < v"0.7-"
-    @test replstrmime(BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockArrays.BlockArray{Int64,2,Array{Int64,2}}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-else
-    @test replstrmime(BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "4×4 BlockArray{Int64,2,Array{Int64,2}}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-end
+@test replstrmime(BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "4×4 BlockArray{Int64,2,Array{Int64,2}}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
 
 @testset "AbstractVector{Int} blocks" begin
     A = BlockArray(ones(6,6), 1:3, 1:3)
@@ -316,11 +303,9 @@ end
     A = PseudoBlockArray{Float64}(undef, 1:3, 1:3)
     fill!(A, 1)
     @test strides(A) == (1, size(A,1))
-    if VERSION ≥ v"0.7-"
-        x = randn(size(A,2))
-        y = similar(x)
-        @test BLAS.gemv!('N', 2.0, A, x, 0.0, y) == 2A*x
-    end
+    x = randn(size(A,2))
+    y = similar(x)
+    @test BLAS.gemv!('N', 2.0, A, x, 0.0, y) == 2A*x
 end
 
 @testset "lmul!/rmul!" begin

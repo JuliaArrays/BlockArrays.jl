@@ -1,5 +1,3 @@
-import Compat: axes
-
 @testset "block range" begin
     # test backend code
     @test BlockRange((1:3),) == BlockRange{1,Tuple{UnitRange{Int}}}((1:3,))

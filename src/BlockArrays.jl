@@ -2,10 +2,7 @@ __precompile__()
 
 module BlockArrays
 using Base.Cartesian
-using Compat
-if VERSION ≥ v"0.7.0-DEV.3465"
-    using LinearAlgebra
-end
+using LinearAlgebra
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
@@ -24,21 +21,14 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             broadcast, eltype, convert, broadcast,
             @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
             RangeIndex, Int, Integer, Number,
-            +, -, min, max, *, isless, in
+            +, -, min, max, *, isless, in, copyto!, axes
 
-import Compat: copyto!, axes
 
-if VERSION < v"0.7-"
-    import Base: colon, iteratorsize, indices1, start, next, done
-    const parentindices = parentindexes
-    const axes1 = indices1
-    const lmul! = Base.scale!
-    const rmul! = Base.scale!
-else
-    import Base: (:), IteratorSize, iterate, axes1
-    import Base.Broadcast: broadcasted, DefaultArrayStyle
-    import LinearAlgebra: lmul!, rmul!
-end
+
+import Base: (:), IteratorSize, iterate, axes1
+import Base.Broadcast: broadcasted, DefaultArrayStyle
+import LinearAlgebra: lmul!, rmul!
+
 
 include("abstractblockarray.jl")
 
