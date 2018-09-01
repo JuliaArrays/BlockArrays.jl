@@ -5,6 +5,8 @@ In order to follow the `AbstractBlockSizes` the following methods should be impl
 
 | Methods to implement    | Brief description |
 | :---------------------- | :---------------- |
+| `cumulsizes(A)`      | A Tuple of abstract vectors storing the cumulative block sizes |
+| **Optional methods**    |       
 | `nblocks(A)`            | Tuple of number of blocks in each dimension |
 | `nblocks(A, i)`         | Number of blocks in dimension `i` |
 | `blocksize(A, i)`    | Size of the block at block index `i` |
