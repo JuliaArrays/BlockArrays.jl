@@ -13,9 +13,9 @@ In order to follow the `AbstractBlockSizes` the following methods should be impl
 
 | Methods to implement    | Brief description |
 | `blocksizes(A)`         | Return a subtype of `AbstractBlockSizes` |
+| **Optional methods**    |                        |
 | `getblock(A, i...)`     | `X[Block(i...)]`, blocked indexing  |
 | `setblock!(A, v, i...)` | `X[Block(i...)] = v`, blocked index assignment |
-| **Optional methods**    |                        |
 | `getblock!(x, A, i)`    | `X[i]`, blocked index assignment with in place storage in `x` |
 
 For a more thorough description of the methods see the public interface documentation.

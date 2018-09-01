@@ -2,8 +2,8 @@
 import Base.alignment
 
 # A bit of a mess but does the job...
-function Base.print_matrix_row(io::IO,
-        X::AbstractBlockVecOrMat, A::Vector,
+function _blockarray_print_matrix_row(io::IO,
+        X::AbstractVecOrMat, A::Vector,
         i::Integer, cols::AbstractVector, sep::AbstractString)
     cumul = 0
     block = 1
@@ -73,3 +73,9 @@ function Base.print_matrix_row(io::IO,
         end
     end
 end
+
+
+Base.print_matrix_row(io::IO,
+        X::AbstractBlockVecOrMat, A::Vector,
+        i::Integer, cols::AbstractVector, sep::AbstractString) =
+        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
