@@ -55,6 +55,12 @@ end
     @test view(A, 2, Block(1)) == [2,8,14]
     @test view(A, :, Block(1)) == A[:,1:3]
 
+    @test view(V, Block(1, 1)) ≡ V
+
+    @test_throws BoundsError view(V, Block(1,2))
+    @test_throws BoundsError view(V, Block(2,1))
+
+
     A = BlockArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)
     V = view(A, Block(2), Block(3), Block(1))
     @test size(V) == (2, 3, 1)
