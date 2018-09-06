@@ -20,41 +20,25 @@ getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where N = BlockInd
 eltype(R::BlockIndexRange) = eltype(typeof(R))
 eltype(::Type{BlockIndexRange{N}}) where {N} = BlockIndex{N}
 eltype(::Type{BlockIndexRange{N,R}}) where {N,R} = BlockIndex{N}
-if VERSION < v"0.7.0-DEV.4043"
-    iteratorsize(::Type{<:BlockIndexRange}) = Base.HasShape()
-else
-    IteratorSize(::Type{<:BlockIndexRange}) = Base.HasShape{1}()
-end
+IteratorSize(::Type{<:BlockIndexRange}) = Base.HasShape{1}()
+
 
 first(iter::BlockIndexRange) = BlockIndex(iter.block.n, map(first, iter.indices))
 last(iter::BlockIndexRange)  = BlockIndex(iter.block.n, map(last, iter.indices))
 
-if VERSION < v"0.7-"
-    @inline function start(iter::BlockIndexRange)
-        iterfirst, iterlast = first(iter), last(iter)
-        if any(map(>, iterfirst.α, iterlast.α))
-            return BlockIndex(iterlast.I, iterlast.α .+ 1)
-        end
-        iterfirst
+@inline function iterate(iter::BlockIndexRange)
+    iterfirst, iterlast = first(iter), last(iter)
+    if any(map(>, iterfirst.α, iterlast.α))
+        return nothing
     end
-    @inline function next(iter::BlockIndexRange, state)
-        state, BlockIndex(state.I, inc(state.α, first(iter).α, last(iter).α))
-    end
-    @inline done(iter::BlockIndexRange, state) = state.α[end] > last(iter.indices[end])
-else
-    @inline function iterate(iter::BlockIndexRange)
-        iterfirst, iterlast = first(iter), last(iter)
-        if any(map(>, iterfirst.α, iterlast.α))
-            return nothing
-        end
-        iterfirst, iterfirst
-    end
-    @inline function iterate(iter::BlockIndexRange, state)
-        nextstate = BlockIndex(state.I, inc(state.α, first(iter).α, last(iter).α))
-        nextstate.α[end] > last(iter.indices[end]) && return nothing
-        nextstate, nextstate
-    end
+    iterfirst, iterfirst
 end
+@inline function iterate(iter::BlockIndexRange, state)
+    nextstate = BlockIndex(state.I, inc(state.α, first(iter).α, last(iter).α))
+    nextstate.α[end] > last(iter.indices[end]) && return nothing
+    nextstate, nextstate
+end
+
 size(iter::BlockIndexRange) = map(dimlength, first(iter).α, last(iter).α)
 length(iter::BlockIndexRange) = prod(size(iter))
 
@@ -65,22 +49,11 @@ Block(bs::BlockIndexRange) = bs.block
 ### Views
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
+function _unblock(cum_sizes, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where {R}
+    B = Block(first(I))
+    range = cum_sizes[Int(B)]-1 .+ first(I).indices[1]
 
-
-if VERSION < v"0.7-"
-    function _unblock(cum_sizes, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where {R}
-        B = Block(first(I))
-        range = cum_sizes[Int(B)]-1 + first(I).indices[1]
-
-        BlockSlice(I[1], range)
-    end
-else # only 0.7- and above support broadcasting with a Range returning a Range
-    function _unblock(cum_sizes, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where {R}
-        B = Block(first(I))
-        range = cum_sizes[Int(B)]-1 .+ first(I).indices[1]
-
-        BlockSlice(I[1], range)
-    end
+    BlockSlice(I[1], range)
 end
 
 
@@ -105,6 +78,8 @@ reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
                                                             subidxs[1].block.indices),
                                             idxs[1].indices[subidxs[1].indices]),
                                     reindex(V, tail(idxs), tail(subidxs))...))
+
+
 
 
 # #################

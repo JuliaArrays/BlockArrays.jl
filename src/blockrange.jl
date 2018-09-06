@@ -23,19 +23,12 @@ BlockRange(inds::NTuple{N,AbstractUnitRange{Int}}) where {N} =
 BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
     BlockRange(inds)
 
-if VERSION < v"0.7-"
-    colon(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
-    colon(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
-    broadcast(::typeof(Block), range::UnitRange) = Block(first(range)):Block(last(range))
-    broadcast(::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices)
-    iteratorsize(::Type{<:BlockRange}) = Base.HasShape()
-else
-    (:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
-    (:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
-    Base.BroadcastStyle(::Type{<:BlockRange{1}}) = DefaultArrayStyle{1}()
-    broadcasted(::DefaultArrayStyle{1}, ::typeof(Block), r::UnitRange) = Block(first(r)):Block(last(r))
-    broadcasted(::DefaultArrayStyle{1}, ::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices)
-end
+(:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
+(:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
+Base.BroadcastStyle(::Type{<:BlockRange{1}}) = DefaultArrayStyle{1}()
+broadcasted(::DefaultArrayStyle{1}, ::typeof(Block), r::UnitRange) = Block(first(r)):Block(last(r))
+broadcasted(::DefaultArrayStyle{1}, ::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices)
+
 
 # AbstractArray implementation
 axes(iter::BlockRange{N,R}) where {N,R} = map(axes1, iter.indices)

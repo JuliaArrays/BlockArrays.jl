@@ -48,14 +48,20 @@ function _unblock(cum_sizes, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {R}
 end
 
 
-@inline _cumul_sizes(A::AbstractArray, j) = A.block_sizes[j]
+@inline _cumul_sizes(A::AbstractArray, j) = cumulsizes(A,j)
+
 
 # For a SubArray, we need to shift the block indices appropriately
-function _cumul_sizes(V::SubArray, j)
-    sl = parentindices(V)[j]
-    @assert sl isa BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}
-    A = parent(V)
-    ret = view(_cumul_sizes(A, j), sl.block.indices[1][1]:(sl.block.indices[1][end]+1))
+_cumul_sizes(V::SubArray, j) = _sub_cumul_sizes(_cumul_sizes(parent(V), j), parentindices(V)[j])
+
+function _sub_cumul_sizes(cs, sl::BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}})
+    ret = view(cs, sl.block.indices[1][1]:(sl.block.indices[1][end]+1))
+    ret .- ret[1] .+ 1
+end
+
+function _sub_cumul_sizes(cs, sl::BlockSlice{Block{1,Int}})
+    b = Int(sl.block)
+    ret = view(cs, b:(b+1))
     ret .- ret[1] .+ 1
 end
 
@@ -111,6 +117,11 @@ reindex(V, idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{A
                                             idxs[1].indices[subidxs[1].indices]),
                                     reindex(V, tail(idxs), tail(subidxs))...))
 
+function reindex(V, idxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}})
+    subidxs[1].block == Block(1) || throw(BoundsError(V, subidxs[1].block))
+    (idxs[1], reindex(V, tail(idxs), tail(subidxs))...)
+end
 
 
 

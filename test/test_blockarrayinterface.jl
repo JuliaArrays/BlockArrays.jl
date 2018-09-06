@@ -21,6 +21,21 @@ struct PartiallyImplementedBlockVector <: AbstractBlockArray{Float64,1} end
     try
         BlockArrays.blocksize(A, 2)
     catch err
-        @test err isa ErrorException && err.msg == "blocksize for PartiallyImplementedBlockVector is not implemented"
+        @test err isa ErrorException && err.msg == "blocksizes for PartiallyImplementedBlockVector is not implemented"
     end
+end
+
+@testset "Triangular/Symmetric/Hermitian block arrays" begin
+    A = PseudoBlockArray{ComplexF64}(undef, (1:4), (1:4))
+    A .= randn.() .+ randn.().*im
+
+    @test UpperTriangular(A)[Block(2,2)] == UpperTriangular(A[2:3,2:3])
+    @test UpperTriangular(A)[Block(2,3)] == A[2:3,4:6]
+    @test UpperTriangular(A)[Block(3,2)] == zeros(3,2)
+    @test Symmetric(A)[Block(2,2)] == Symmetric(A[2:3,2:3])
+    @test Symmetric(A)[Block(2,3)] == A[2:3,4:6]
+    @test Symmetric(A)[Block(3,2)] == transpose(A[2:3,4:6])
+    @test Hermitian(A)[Block(2,2)] == Hermitian(A[2:3,2:3])
+    @test Hermitian(A)[Block(2,3)] == A[2:3,4:6]
+    @test Hermitian(A)[Block(3,2)] == A[2:3,4:6]'
 end

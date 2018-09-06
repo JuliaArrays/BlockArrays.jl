@@ -32,6 +32,7 @@ Block
 BlockIndex
 nblocks
 blocksize
+blocksizes
 getblock
 getblock!
 setblock!

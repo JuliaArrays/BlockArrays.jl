@@ -45,35 +45,12 @@ julia> nblocks(A, 3, 2)
 (4, 3)
 ```
 """
-nblocks(block_array::AbstractBlockArray, i::Int) = nblocks(block_array)[i]
+nblocks(block_array::AbstractArray, i::Int) = nblocks(block_array)[i]
 
-function nblocks(block_array::AbstractBlockArray, i::Vararg{Int, N}) where {N}
-    if N == 0
-        throw(error("nblocks(A) not implemented"))
-    end
-    b = nblocks(block_array)
-    return ntuple(k-> b[i[k]], Val(N))
-end
+nblocks(block_array::AbstractArray, i::Vararg{Int, N}) where {N} =
+    nblocks(blocksizes(block_array), i...)
 
 
-"""
-    blocksize(A, inds...)
-
-Returns a tuple containing the size of the block at block index `inds...`.
-
-```jldoctest
-julia> A = BlockArray(rand(5, 4, 6), [1, 4], [1, 2, 1], [1, 2, 2, 1]);
-
-julia> blocksize(A, 1, 3, 2)
-(1, 1, 2)
-
-julia> blocksize(A, 2, 1, 3)
-(4, 1, 2)
-```
-"""
-function blocksize(A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N}
-    throw(error("blocksize for ", typeof(A), " is not implemented"))
-end
 
 """
     Block(inds...)

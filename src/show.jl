@@ -2,148 +2,80 @@
 import Base.alignment
 
 # A bit of a mess but does the job...
-if VERSION < v"0.7-"
-    function Base.print_matrix_row(io::IO,
-            X::AbstractBlockVecOrMat, A::Vector,
-            i::Integer, cols::AbstractVector, sep::AbstractString)
-        cumul = 0
-        block = 1
+function _blockarray_print_matrix_row(io::IO,
+        X::AbstractVecOrMat, A::Vector,
+        i::Integer, cols::AbstractVector, sep::AbstractString)
+    cumul = 0
+    block = 1
 
-        row_buf = IOBuffer()
+    row_buf = IOBuffer()
 
-        row_sum = X.block_sizes[1][2:end] .- 1
-        if ndims(X) == 2
-            col_sum = (X.block_sizes[2][2:end] .- 1)[1:end-1]
-        end
-
-        # Loop over row
-        for k = 1:length(A)
-            n_chars = 0
-            j = cols[k]
-
-            if isassigned(X,Int(i),Int(j)) # isassigned accepts only `Int` indices
-                x = X[i,j]
-                a = Base.alignment(io, x)
-                sx = sprint(0, show, x, env=io)
-            else
-                a = Base.undef_ref_alignment
-                sx = Base.undef_ref_str
-            end
-            l = repeat(" ",A[k][1]-a[1]) # pad on left and right as needed
-            r = repeat(" ", A[k][2]-a[2])
-            prettysx = Base.replace_in_print_matrix(X,i,j,sx)
-            # Print the element
-            print(io, l, prettysx, r)
-
-            # Jump forward
-            n_chars += length(l) + length(prettysx) + length(r) + 2
-
-            cumul += 1
-            if ndims(X) == 2
-                # Have accumulated enough for the block, should print a |
-                if block < length(X.block_sizes[2]) - 1 && cumul == blocksize(X, 2, block)[2]
-                    block += 1
-                    cumul = 0
-                    print(io, "  │")
-                    n_chars += 3
-                end
-            end
-
-
-            if k == 1
-                n_chars -= 2
-            end
-
-            if i in row_sum
-                print(row_buf, "─"^(n_chars-1))
-                if ndims(X) == 2 && k in col_sum
-                    print(row_buf, "┼")
-                else
-                    print(row_buf, "─")
-                end
-            end
-
-            if k < length(A); print(io, sep); end
-        end
-
-        if i < size(X, 1)
-            row_str = String(take!(row_buf))
-            if length(row_str) > 0
-                print(io, "\n ")
-                print(io, row_str)
-            end
-        end
+    row_sum = cumulsizes(X,1)[2:end] .- 1
+    if ndims(X) == 2
+        col_sum = (cumulsizes(X,2)[2:end] .- 1)[1:end-1]
     end
-else
-    function Base.print_matrix_row(io::IO,
-            X::AbstractBlockVecOrMat, A::Vector,
-            i::Integer, cols::AbstractVector, sep::AbstractString)
-        cumul = 0
-        block = 1
 
-        row_buf = IOBuffer()
+    # Loop over row
+    for k = 1:length(A)
+        n_chars = 0
+        j = cols[k]
 
-        row_sum = X.block_sizes[1][2:end] .- 1
+        if isassigned(X,Int(i),Int(j)) # isassigned accepts only `Int` indices
+            x = X[i,j]
+            a = Base.alignment(io, x)
+            sx = sprint(show, x; context=io, sizehint=0)
+        else
+            a = Base.undef_ref_alignment
+            sx = Base.undef_ref_str
+        end
+        l = repeat(" ",A[k][1]-a[1]) # pad on left and right as needed
+        r = repeat(" ", A[k][2]-a[2])
+        prettysx = Base.replace_in_print_matrix(X,i,j,sx)
+        # Print the element
+        print(io, l, prettysx, r)
+
+        # Jump forward
+        n_chars += length(l) + length(prettysx) + length(r) + 2
+
+        cumul += 1
         if ndims(X) == 2
-            col_sum = (X.block_sizes[2][2:end] .- 1)[1:end-1]
+            # Have accumulated enough for the block, should print a |
+            if block < length(cumulsizes(X,2)) - 1 && cumul == blocksize(X, (2, block))[2]
+                block += 1
+                cumul = 0
+                print(io, "  │")
+                n_chars += 3
+            end
         end
 
-        # Loop over row
-        for k = 1:length(A)
-            n_chars = 0
-            j = cols[k]
 
-            if isassigned(X,Int(i),Int(j)) # isassigned accepts only `Int` indices
-                x = X[i,j]
-                a = Base.alignment(io, x)
-                sx = sprint(show, x; context=io, sizehint=0)
+        if k == 1
+            n_chars -= 2
+        end
+
+        if i in row_sum
+            print(row_buf, "─"^(n_chars-1))
+            if ndims(X) == 2 && k in col_sum
+                print(row_buf, "┼")
             else
-                a = Base.undef_ref_alignment
-                sx = Base.undef_ref_str
+                print(row_buf, "─")
             end
-            l = repeat(" ",A[k][1]-a[1]) # pad on left and right as needed
-            r = repeat(" ", A[k][2]-a[2])
-            prettysx = Base.replace_in_print_matrix(X,i,j,sx)
-            # Print the element
-            print(io, l, prettysx, r)
-
-            # Jump forward
-            n_chars += length(l) + length(prettysx) + length(r) + 2
-
-            cumul += 1
-            if ndims(X) == 2
-                # Have accumulated enough for the block, should print a |
-                if block < length(X.block_sizes[2]) - 1 && cumul == blocksize(X, 2, block)[2]
-                    block += 1
-                    cumul = 0
-                    print(io, "  │")
-                    n_chars += 3
-                end
-            end
-
-
-            if k == 1
-                n_chars -= 2
-            end
-
-            if i in row_sum
-                print(row_buf, "─"^(n_chars-1))
-                if ndims(X) == 2 && k in col_sum
-                    print(row_buf, "┼")
-                else
-                    print(row_buf, "─")
-                end
-            end
-
-            if k < length(A); print(io, sep); end
         end
 
-        if i < size(X, 1)
-            row_str = String(take!(row_buf))
-            if length(row_str) > 0
-                print(io, "\n ")
-                print(io, row_str)
-            end
+        if k < length(A); print(io, sep); end
+    end
+
+    if i < size(X, 1)
+        row_str = String(take!(row_buf))
+        if length(row_str) > 0
+            print(io, "\n ")
+            print(io, row_str)
         end
     end
 end
+
+
+Base.print_matrix_row(io::IO,
+        X::AbstractBlockVecOrMat, A::Vector,
+        i::Integer, cols::AbstractVector, sep::AbstractString) =
+        _blockarray_print_matrix_row(io, X, A, i, cols, sep)

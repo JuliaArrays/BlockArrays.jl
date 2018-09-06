@@ -1,5 +1,3 @@
-import Compat: axes
-
 @testset "block range" begin
     # test backend code
     @test BlockRange((1:3),) == BlockRange{1,Tuple{UnitRange{Int}}}((1:3,))
@@ -83,7 +81,7 @@ end
 
 	A = PseudoBlockArray(rand(4), [1,3])
 
-	@test BlockArrays._unblock(A.block_sizes.cumul_sizes[1], (Bi,)) ==
+	@test BlockArrays._unblock(BlockArrays.blocksizes(A).cumul_sizes[1], (Bi,)) ==
 			BlockArrays.unblock(A, axes(A), (Bi, )) == BlockArrays.BlockSlice(Bi, 3:4) ==
 			parentindices(view(A, Bi))[1] == BlockArrays.BlockSlice(Bi, 3:4)
 

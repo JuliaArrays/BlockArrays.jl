@@ -189,12 +189,29 @@ end
     end
 end
 
+# Convert AbstractArrays that conform to block array interface
+convert(::Type{BlockArray{T,N,R}}, A::BlockArray{T,N,R}) where {T,N,R} = A
+convert(::Type{BlockArray{T,N}}, A::BlockArray{T,N}) where {T,N} = A
+convert(::Type{BlockArray{T}}, A::BlockArray{T}) where {T} = A
+convert(::Type{BlockArray}, A::BlockArray) = A
+
+BlockArray{T, N}(A::AbstractArray{T2, N}) where {T,T2,N} =
+    BlockArray(Array{T, N}(A), blocksizes(A))
+BlockArray{T1}(A::AbstractArray{T2, N}) where {T1,T2,N} = BlockArray{T1, N}(A)
+BlockArray(A::AbstractArray{T, N}) where {T,N} = BlockArray{T, N}(A)
+
+convert(::Type{BlockArray{T, N}}, A::AbstractArray{T2, N}) where {T,T2,N} =
+    BlockArray(convert(Array{T, N}, A), blocksizes(A))
+convert(::Type{BlockArray{T1}}, A::AbstractArray{T2, N}) where {T1,T2,N} =
+    convert(BlockArray{T1, N}, A)
+convert(::Type{BlockArray}, A::AbstractArray{T, N}) where {T,N} =
+    convert(BlockArray{T, N}, A)
+
+
 ################################
 # AbstractBlockArray Interface #
 ################################
-
-@inline nblocks(block_array::BlockArray) = nblocks(block_array.block_sizes)
-@inline blocksize(block_array::BlockArray{T,N}, i::Vararg{Int, N}) where {T,N} = blocksize(block_array.block_sizes, i)
+@inline blocksizes(block_array::BlockArray) = block_array.block_sizes
 
 @inline function getblock(block_arr::BlockArray{T,N}, block::Vararg{Int, N}) where {T,N}
     @boundscheck blockcheckbounds(block_arr, block...)
@@ -215,22 +232,18 @@ end
 ###########################
 
 @inline function Base.similar(block_array::BlockArray{T,N}, ::Type{T2}) where {T,N,T2}
-    _BlockArray(similar(block_array.blocks, Array{T2, N}), copy(block_array.block_sizes))
-end
-
-@inline function Base.size(arr::BlockArray{T,N}) where {T,N}
-    size(arr.block_sizes)
+    _BlockArray(similar(block_array.blocks, Array{T2, N}), copy(blocksizes(block_array)))
 end
 
 @inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
-    @inbounds v = block_arr[global2blockindex(block_arr.block_sizes, i)]
+    @inbounds v = block_arr[global2blockindex(blocksizes(block_arr), i)]
     return v
 end
 
 @inline function Base.setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Int, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
-    @inbounds block_arr[global2blockindex(block_arr.block_sizes, i)] = v
+    @inbounds block_arr[global2blockindex(blocksizes(block_arr), i)] = v
     return block_arr
 end
 
@@ -240,8 +253,8 @@ end
 
 function _check_setblock!(block_arr::BlockArray{T, N}, v, block::NTuple{N, Int}) where {T,N}
     for i in 1:N
-        if size(v, i) != blocksize(block_arr.block_sizes, i, block[i])
-            throw(DimensionMismatch(string("tried to assign $(size(v)) array to ", blocksize(block_arr, block...), " block")))
+        if size(v, i) != blocksize(block_arr, i, block[i])
+            throw(DimensionMismatch(string("tried to assign $(size(v)) array to ", blocksize(block_arr, block), " block")))
         end
     end
 end
@@ -265,7 +278,7 @@ end
 @generated function Base.Array(block_array::BlockArray{T, N, R}) where {T,N,R}
     # TODO: This will fail for empty block array
     return quote
-        block_sizes = block_array.block_sizes
+        block_sizes = blocksizes(block_array)
         arr = similar(block_array.blocks[1], size(block_array)...)
         @nloops $N i i->(1:nblocks(block_sizes, i)) begin
             block_index = @ntuple $N i
@@ -279,7 +292,7 @@ end
 
 @generated function copyto!(block_array::BlockArray{T, N, R}, arr::R) where {T,N,R <: AbstractArray}
     return quote
-        block_sizes = block_array.block_sizes
+        block_sizes = blocksizes(block_array)
 
         @nloops $N i i->(1:nblocks(block_sizes, i)) begin
             block_index = @ntuple $N i
