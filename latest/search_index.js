@@ -42,18 +42,26 @@ var documenterSearchIndex = {"docs": [
 
 {
     "location": "man/abstractblockarrayinterface.html#",
-    "page": "The AbstractBlockArray interface",
-    "title": "The AbstractBlockArray interface",
+    "page": "The AbstractBlockSizes interface",
+    "title": "The AbstractBlockSizes interface",
     "category": "page",
     "text": ""
 },
 
 {
+    "location": "man/abstractblockarrayinterface.html#The-AbstractBlockSizes-interface-1",
+    "page": "The AbstractBlockSizes interface",
+    "title": "The AbstractBlockSizes interface",
+    "category": "section",
+    "text": "In order to follow the AbstractBlockSizes the following methods should be implemented:Methods to implement Brief description\ncumulsizes(A) A Tuple of abstract vectors storing the cumulative block sizes\nOptional methods \nnblocks(A) Tuple of number of blocks in each dimension\nnblocks(A, i) Number of blocks in dimension i\nblocksize(A, i) Size of the block at block index i"
+},
+
+{
     "location": "man/abstractblockarrayinterface.html#The-AbstractBlockArray-interface-1",
-    "page": "The AbstractBlockArray interface",
+    "page": "The AbstractBlockSizes interface",
     "title": "The AbstractBlockArray interface",
     "category": "section",
-    "text": "In order to follow the AbstractBlockArray the following methods should be implemented:Methods to implement Brief description\nnblocks(A) Tuple of number of blocks in each dimension\nnblocks(A, i) Number of blocks in dimension i\nblocksize(A, i...) Size of the block at block index i...\ngetblock(A, i...) X[Block(i...)], blocked indexing\nsetblock!(A, v, i...) X[Block(i...)] = v, blocked index assignment\nOptional methods \ngetblock!(x, A, i) X[i], blocked index assignment with in place storage in xFor a more thorough description of the methods see the public interface documentation.With the methods above implemented the following are automatically provided:A pretty printing show function that uses unicode lines to split up the blocks:julia> A = BlockArray(rand(4, 5), [1,3], [2,3])\n2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n0.61179   0.965631  │  0.696476   0.392796  0.712462\n--------------------┼-------------------------------\n0.620099  0.364706  │  0.0311643  0.27895   0.73477\n0.215712  0.923602  │  0.279944   0.994497  0.383706\n0.569955  0.754047  │  0.0190392  0.548297  0.687052A bounds index checking function for indexing with blocks:julia> blockcheckbounds(A, 5, 3)\nERROR: BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,Array{Float64,2}} at block index [5,3]Happy users who know how to use your new block array :)"
+    "text": "| Methods to implement    | Brief description | | blocksizes(A)         | Return a subtype of AbstractBlockSizes | | Optional methods    |                        | | getblock(A, i...)     | X[Block(i...)], blocked indexing  | | setblock!(A, v, i...) | X[Block(i...)] = v, blocked index assignment | | getblock!(x, A, i)    | X[i], blocked index assignment with in place storage in x |For a more thorough description of the methods see the public interface documentation.With the methods above implemented the following are automatically provided:A pretty printing show function that uses unicode lines to split up the blocks:julia> A = BlockArray(rand(4, 5), [1,3], [2,3])\n2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n0.61179   0.965631  │  0.696476   0.392796  0.712462\n--------------------┼-------------------------------\n0.620099  0.364706  │  0.0311643  0.27895   0.73477\n0.215712  0.923602  │  0.279944   0.994497  0.383706\n0.569955  0.754047  │  0.0190392  0.548297  0.687052A bounds index checking function for indexing with blocks:julia> blockcheckbounds(A, 5, 3)\nERROR: BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,Array{Float64,2}} at block index [5,3]Happy users who know how to use your new block array :)"
 },
 
 {
@@ -237,7 +245,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Public Documentation",
     "title": "BlockArrays.blocksize",
     "category": "function",
-    "text": "blocksize(A, inds...)\n\nReturns a tuple containing the size of the block at block index inds....\n\njulia> A = BlockArray(rand(5, 4, 6), [1, 4], [1, 2, 1], [1, 2, 2, 1]);\n\njulia> blocksize(A, 1, 3, 2)\n(1, 1, 2)\n\njulia> blocksize(A, 2, 1, 3)\n(4, 1, 2)\n\n\n\n\n\n"
+    "text": "blocksize(A, inds)\n\nReturns a tuple containing the size of the block at block index inds.\n\njulia> A = BlockArray(rand(5, 4, 6), [1, 4], [1, 2, 1], [1, 2, 2, 1]);\n\njulia> blocksize(A, (1, 3, 2))\n(1, 1, 2)\n\njulia> blocksize(A, (2, 1, 3))\n(4, 1, 2)\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/public.html#BlockArrays.blocksizes",
+    "page": "Public Documentation",
+    "title": "BlockArrays.blocksizes",
+    "category": "function",
+    "text": "blocksizes(A)\n\nreturns a subtype of AbstractBlockSizes that contains information about the block sizes of A. Any subtype of AbstractBlockArrays must override this.\n\n\n\n\n\n"
 },
 
 {
@@ -285,7 +301,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public Documentation",
     "title": "AbstractBlockArray interface",
     "category": "section",
-    "text": "This sections defines the functions a subtype of AbstractBlockArray should define to be a part of the AbstractBlockArray interface. An AbstractBlockArray{T, N} is a subtype of AbstractArray{T,N} and should therefore also fulfill the AbstractArray interface.AbstractBlockArray\nBlockBoundsError\nBlock\nBlockIndex\nnblocks\nblocksize\ngetblock\ngetblock!\nsetblock!\nArray\nblockcheckbounds"
+    "text": "This sections defines the functions a subtype of AbstractBlockArray should define to be a part of the AbstractBlockArray interface. An AbstractBlockArray{T, N} is a subtype of AbstractArray{T,N} and should therefore also fulfill the AbstractArray interface.AbstractBlockArray\nBlockBoundsError\nBlock\nBlockIndex\nnblocks\nblocksize\nblocksizes\ngetblock\ngetblock!\nsetblock!\nArray\nblockcheckbounds"
 },
 
 {
