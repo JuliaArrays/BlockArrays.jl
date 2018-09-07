@@ -14,7 +14,7 @@
  #undef
  ------
  #undef
- #undef</code></pre><p>Note that accessing an undefined block will throw an &quot;access to undefined reference&quot;-error.</p><h2><a class="nav-anchor" id="Setting-and-getting-blocks-and-values-1" href="#Setting-and-getting-blocks-and-values-1">Setting and getting blocks and values</a></h2><p>A block can be set by <code>setblock!(block_array, v, i...)</code> where <code>v</code> is the array to set and <code>i</code> is the block index. An alternative syntax for this is <code>block_array[Block(i...)] = v</code> or <code>block_array[Block.(i)...]</code>.</p><pre><code class="language-julia-repl">julia&gt; block_array = BlockArray{Float64}(unitialized_blocks, [1,2], [2,2])
+ #undef</code></pre><p>Note that accessing an undefined block will throw an &quot;access to undefined reference&quot;-error.</p><h2><a class="nav-anchor" id="Setting-and-getting-blocks-and-values-1" href="#Setting-and-getting-blocks-and-values-1">Setting and getting blocks and values</a></h2><p>A block can be set by <code>setblock!(block_array, v, i...)</code> where <code>v</code> is the array to set and <code>i</code> is the block index. An alternative syntax for this is <code>block_array[Block(i...)] = v</code> or <code>block_array[Block.(i)...]</code>.</p><pre><code class="language-julia-repl">julia&gt; block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
 2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  #undef  #undef  │  #undef  #undef
  ----------------┼----------------
