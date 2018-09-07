@@ -40,7 +40,7 @@ function _blockarray_print_matrix_row(io::IO,
         cumul += 1
         if ndims(X) == 2
             # Have accumulated enough for the block, should print a |
-            if block < length(cumulsizes(X,2)) - 1 && cumul == blocksize(X, (2, block))[2]
+            if block < length(cumulsizes(X,2)) - 1 && cumul == blocksize(X, 2, block)[2]
                 block += 1
                 cumul = 0
                 print(io, "  │")
