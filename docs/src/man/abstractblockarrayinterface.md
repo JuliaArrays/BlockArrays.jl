@@ -14,8 +14,9 @@ In order to follow the `AbstractBlockSizes` the following methods should be impl
 # The `AbstractBlockArray` interface
 
 | Methods to implement    | Brief description |
+| :---------------------- | :---------------- |
 | `blocksizes(A)`         | Return a subtype of `AbstractBlockSizes` |
-| **Optional methods**    |                        |
+| **Optional methods**    |                       
 | `getblock(A, i...)`     | `X[Block(i...)]`, blocked indexing  |
 | `setblock!(A, v, i...)` | `X[Block(i...)] = v`, blocked index assignment |
 | `getblock!(x, A, i)`    | `X[i]`, blocked index assignment with in place storage in `x` |

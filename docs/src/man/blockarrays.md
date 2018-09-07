@@ -56,7 +56,7 @@ An alternative syntax for this is `block_array[Block(i...)] = v` or
 `block_array[Block.(i)...]`.
 
 ```jldoctest
-julia> block_array = BlockArray{Float64}(unitialized_blocks, [1,2], [2,2])
+julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
 2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  #undef  #undef  │  #undef  #undef
  ----------------┼----------------
