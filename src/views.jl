@@ -48,30 +48,30 @@ function _unblock(cum_sizes, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {R}
 end
 
 
-@inline _cumul_sizes(A::AbstractArray, j) = cumulsizes(A,j)
+_sub_cumul_sizes(cs, inds) = _sub_cumul_sizes(cs, inds[1], tail(inds))
+_sub_cumul_sizes(::Tuple{}, ::Tuple{}) = ()
 
-
-# For a SubArray, we need to shift the block indices appropriately
-_cumul_sizes(V::SubArray, j) = _sub_cumul_sizes(_cumul_sizes(parent(V), j), parentindices(V)[j])
-
-function _sub_cumul_sizes(cs, sl::BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}})
-    ret = view(cs, sl.block.indices[1][1]:(sl.block.indices[1][end]+1))
-    ret .- ret[1] .+ 1
+function _sub_cumul_sizes(cs, inds1::BlockSlice{Block{1,Int}}, inds)
+    B = Int(inds1.block)
+    ret = view(cs[1], B:B+1)
+    (ret .- ret[1] .+ 1, _sub_cumul_sizes(tail(cs), inds)...)
 end
 
-function _sub_cumul_sizes(cs, sl::BlockSlice{Block{1,Int}})
-    b = Int(sl.block)
-    ret = view(cs, b:(b+1))
-    ret .- ret[1] .+ 1
+function _sub_cumul_sizes(cs, inds1::BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, inds)
+    ret = view(cs[1], inds1.block.indices[1][1]:(inds1.block.indices[1][end]+1))
+    (ret .- ret[1] .+ 1, _sub_cumul_sizes(tail(cs), inds)...)
 end
+
+
+blocksizes(V::SubArray) = BlockSizes(_sub_cumul_sizes(cumulsizes(parent(V)), parentindices(V)))
+
 
 """
     unblock(block_sizes, inds, I)
 
 Returns the indices associated with a block as a `BlockSlice`.
 """
-unblock(A::AbstractArray{T,N}, inds, I) where {T, N} =
-    _unblock(_cumul_sizes(A, N - length(inds) + 1), I)
+unblock(A::AbstractArray{T,N}, inds, I) where {T, N} = _unblock(cumulsizes(A, N - length(inds) + 1), I)
 
 
 

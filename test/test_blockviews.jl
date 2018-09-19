@@ -1,6 +1,4 @@
 
-
-
 @testset "block slice" begin
     A = BlockArray(1:6,1:3)
     b = parentindices(view(A, Block(2)))[1] # A BlockSlice
@@ -119,4 +117,33 @@ end
      A = PseudoBlockArray(collect(1:6), 1:3)
      V = view(A, Block.(2:3))
      @test view(V, Block(2)[1:2]) == [4,5]
+end
+
+
+@testset "subarray implements block interface" begin
+    A = PseudoBlockArray(reshape(Vector{Float64}(1:(6^2)),6,6), 1:3, 1:3)
+
+    V = view(A, Block(2,3))
+    @test PseudoBlockArray(V) isa PseudoBlockArray
+    @test BlockArray(V) isa BlockArray
+    @test PseudoBlockArray(V) == BlockArray(V) == V
+    @test blocksizes(V) == BlockSizes([2],[3])
+
+    V = view(A, Block(2), Block.(2:3))
+    @test PseudoBlockArray(V) isa PseudoBlockArray
+    @test BlockArray(V) isa BlockArray
+    @test PseudoBlockArray(V) == BlockArray(V) == V
+    @test blocksizes(V) == BlockSizes([2],[2,3])
+
+    V = view(A, Block.(2:3), Block(3))
+    @test PseudoBlockArray(V) isa PseudoBlockArray
+    @test BlockArray(V) isa BlockArray
+    @test PseudoBlockArray(V) == BlockArray(V) == V
+    @test blocksizes(V) == BlockSizes([2,3],[3])
+
+    V = view(A, Block.(2:3), Block.(1:2))
+    @test PseudoBlockArray(V) isa PseudoBlockArray
+    @test BlockArray(V) isa BlockArray
+    @test PseudoBlockArray(V) == BlockArray(V) == V
+    @test blocksizes(V) == BlockSizes([2,3],[1,2])
 end
