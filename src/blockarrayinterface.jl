@@ -2,8 +2,9 @@
 blocksizes(A::AbstractTriangular) = blocksizes(parent(A))
 
 
-blocksizes(A::Symmetric) = blocksizes(parent(A))
-blocksizes(A::Hermitian) = blocksizes(parent(A))
+blocksizes(A::HermOrSym) = blocksizes(parent(A))
+blocksizes(A::AdjOrTrans{<:Any,<:AbstractMatrix}) = BlockSizes(reverse(cumulsizes(blocksizes(parent(A)))))
+blocksizes(A::AdjOrTrans{<:Any,<:AbstractVector}) = BlockSizes(([1,2],cumulsizes(blocksizes(parent(A)))[1]))
 
 Base.print_matrix_row(io::IO,
         X::Union{AbstractTriangular{<:Any,<:AbstractBlockMatrix},

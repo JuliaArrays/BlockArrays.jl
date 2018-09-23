@@ -39,3 +39,19 @@ end
     @test Hermitian(A)[Block(2,3)] == A[2:3,4:6]
     @test Hermitian(A)[Block(3,2)] == A[2:3,4:6]'
 end
+
+@testset "Adjoint/Transpose block arrays" begin
+    A = PseudoBlockArray{ComplexF64}(undef, (1:4), (2:5))
+    A .= randn.() .+ randn.().*im
+
+    @test blocksizes(A') == BlockArrays.BlockSizes(2:5, 1:4)
+    @test blocksizes(Transpose(A)) == BlockArrays.BlockSizes(2:5, 1:4)
+
+    @test A'[Block(2,2)] == A[Block(2,2)]' == A[2:3,3:5]'
+    @test transpose(A)[Block(2,2)] == transpose(A[2:3,3:5])
+    @test A'[Block(2,3)] == A[Block(3,2)]'
+    @test transpose(A)[Block(2,3)] == transpose(A[Block(3,2)])
+
+    @test BlockArray(A') == A'
+    @test BlockArray(transpose(A)) == transpose(A)
+end
