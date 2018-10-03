@@ -330,3 +330,23 @@ end
     @test rmul!(A, 0.0) === A
     @test Array(A) == zeros(6)
 end
+
+@testset "copy" begin
+    A = PseudoBlockArray(randn(6), 1:3)
+    B = copy(A)
+    @test typeof(A) == typeof(B)
+    @test blocksizes(A) == blocksizes(B)
+    @test A == B
+    B[1] = 2
+    @test B[1] == 2
+    @test A[1] ≠ 2
+
+    A = BlockArray(randn(6), 1:3)
+    B = copy(A)
+    @test typeof(A) == typeof(B)
+    @test blocksizes(A) == blocksizes(B)
+    @test A == B
+    B[1] = 2
+    @test B[1] == 2
+    @test A[1] ≠ 2
+end

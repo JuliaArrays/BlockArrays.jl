@@ -21,7 +21,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             broadcast, eltype, convert, broadcast,
             @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
             RangeIndex, Int, Integer, Number,
-            +, -, min, max, *, isless, in, copyto!, axes, @deprecate
+            +, -, min, max, *, isless, in, copy, copyto!, axes, @deprecate
 
 
 
