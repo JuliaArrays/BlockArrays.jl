@@ -79,6 +79,7 @@ end
 
 Block{N, T}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
 Block{N}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
+Block() = Block{0,Int}()
 Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
 Block{1}(n::Tuple{T}) where {T} = Block{1, T}(n)
 Block{N}(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)

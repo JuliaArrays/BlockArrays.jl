@@ -17,10 +17,8 @@ BlockStyle{M}(::Val{N}) where {N,M} = BlockStyle{N}()
 PseudoBlockStyle{M}(::Val{N}) where {N,M} = PseudoBlockStyle{N}()
 BroadcastStyle(::Type{<:BlockArray{<:Any,N}}) where N = BlockStyle{N}()
 BroadcastStyle(::Type{<:PseudoBlockArray{<:Any,N}}) where N = PseudoBlockStyle{N}()
-BroadcastStyle(::DefaultArrayStyle{N}, ::AbstractBlockStyle{M}) where {M,N} = DefaultArrayStyle(_max(Val(M),Val(N)))
-BroadcastStyle(::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = DefaultArrayStyle(_max(Val(M),Val(N)))
-BroadcastStyle(::DefaultArrayStyle{0}, a::AbstractBlockStyle{M}) where {M} = a
-BroadcastStyle(a::AbstractBlockStyle{N}, ::DefaultArrayStyle{0}) where {N} = a
+BroadcastStyle(::DefaultArrayStyle{N}, b::AbstractBlockStyle{M}) where {M,N} = typeof(b)(_max(Val(M),Val(N)))
+BroadcastStyle(a::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = typeof(a)(_max(Val(M),Val(N)))
 BroadcastStyle(::BlockStyle{M}, ::PseudoBlockStyle{N}) where {M,N} = BlockStyle(_max(Val(M),Val(N)))
 BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(_max(Val(M),Val(N)))
 
@@ -36,16 +34,17 @@ broadcast_cumulsizes(A::AbstractArray) = cumulsizes(blocksizes(A))
 broadcast_cumulsizes(A::Broadcasted) = cumulsizes(blocksizes(A))
 
 combine_cumulsizes(A) = A
-combine_cumulsizes(A, B, C...) = combine_cumulsizes(_bcs(A,B), C...)
+combine_cumulsizes(A, B, C...) = combine_cumulsizes(_cms(A,B), C...)
 
-_bcs(::Tuple{}, ::Tuple{}) = ()
-_bcs(::Tuple{}, newshape::Tuple) = (newshape[1], _bcs((), tail(newshape))...)
-_bcs(shape::Tuple, ::Tuple{}) = (shape[1], _bcs(tail(shape), ())...)
-_bcs(shape::Tuple, newshape::Tuple) = (sort!(union(shape[1], newshape[1])), _bcs(tail(shape), tail(newshape))...)
+_cms(::Tuple{}, ::Tuple{}) = ()
+_cms(::Tuple{}, newshape::Tuple) = (newshape[1], _cms((), tail(newshape))...)
+_cms(shape::Tuple, ::Tuple{}) = (shape[1], _cms(tail(shape), ())...)
+_cms(shape::Tuple, newshape::Tuple) = (sort!(union(shape[1], newshape[1])), _cms(tail(shape), tail(newshape))...)
 
 
 blocksizes(A::Broadcasted{<:AbstractArrayStyle{N}}) where N =
     BlockSizes(combine_cumulsizes(broadcast_cumulsizes.(A.args)...))
+
 
 copyto!(dest::AbstractArray, bc::Broadcasted{<:AbstractBlockStyle}) =
    copyto!(dest, Broadcasted{DefaultArrayStyle{2}}(bc.f, bc.args, bc.axes))

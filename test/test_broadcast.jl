@@ -62,12 +62,17 @@ using BlockArrays, Test
 
         C = randn(6)
 
-        @test A + C isa Vector{Float64}
-        @test C + A isa Vector{Float64}
-        @test B + C isa Vector{Float64}
-        @test C + B isa Vector{Float64}
-    end
+        A .+ C
 
+
+        @test A + C isa BlockVector{Float64}
+        @test C + A isa BlockVector{Float64}
+        @test B + C isa PseudoBlockVector{Float64}
+        @test C + B isa PseudoBlockVector{Float64}
+
+        blocksizes(A+C) == blocksizes(C+A) == blocksizes(A)
+        blocksizes(B+C) == blocksizes(C+B) == blocksizes(B)
+    end
 
     @testset "Mixed block sizes" begin
         A = BlockArray(randn(6), 1:3)
@@ -79,5 +84,4 @@ using BlockArrays, Test
 
         @test blocksizes(A+B) == BlockArrays.BlockSizes([1,1,1,1,2], 1:3)
     end
-
 end
