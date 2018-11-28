@@ -10,16 +10,19 @@ abstract type AbstractBlockStyle{N} <: AbstractArrayStyle{N} end
 struct BlockStyle{N} <: AbstractBlockStyle{N} end
 struct PseudoBlockStyle{N} <: AbstractBlockStyle{N} end
 
+
+BlockStyle(::Val{N}) where {N} = BlockStyle{N}()
+PseudoBlockStyle(::Val{N}) where {N} = PseudoBlockStyle{N}()
 BlockStyle{M}(::Val{N}) where {N,M} = BlockStyle{N}()
 PseudoBlockStyle{M}(::Val{N}) where {N,M} = PseudoBlockStyle{N}()
 BroadcastStyle(::Type{<:BlockArray{<:Any,N}}) where N = BlockStyle{N}()
 BroadcastStyle(::Type{<:PseudoBlockArray{<:Any,N}}) where N = PseudoBlockStyle{N}()
-BroadcastStyle(::DefaultArrayStyle{N}, ::AbstractBlockStyle{M}) where {M,N} = DefaultArrayStyle{_max(Val(M),Val(N))}()
-BroadcastStyle(::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = DefaultArrayStyle{_max(Val(M),Val(N))}()
+BroadcastStyle(::DefaultArrayStyle{N}, ::AbstractBlockStyle{M}) where {M,N} = DefaultArrayStyle(_max(Val(M),Val(N)))
+BroadcastStyle(::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = DefaultArrayStyle(_max(Val(M),Val(N)))
 BroadcastStyle(::DefaultArrayStyle{0}, a::AbstractBlockStyle{M}) where {M} = a
 BroadcastStyle(a::AbstractBlockStyle{N}, ::DefaultArrayStyle{0}) where {N} = a
-BroadcastStyle(::BlockStyle{M}, ::PseudoBlockStyle{N}) where {M,N} = BlockStyle{_max(Val(M),Val(N))}()
-BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle{_max(Val(M),Val(N))}()
+BroadcastStyle(::BlockStyle{M}, ::PseudoBlockStyle{N}) where {M,N} = BlockStyle(_max(Val(M),Val(N)))
+BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(_max(Val(M),Val(N)))
 
 
 ####
