@@ -30,6 +30,7 @@ using BlockArrays, Test
 
         @test BlockArrays.BroadcastStyle(typeof(A)) == BlockArrays.PseudoBlockStyle{1}()
 
+
         @test exp.(A) == exp.(Vector(A))
         @test blocksizes(A) == blocksizes(exp.(A))
 
@@ -37,16 +38,17 @@ using BlockArrays, Test
         @test blocksizes(A + A) == blocksizes(A .+ A) == blocksizes(A)
         @test blocksizes(A .+ 1) == blocksizes(A)
 
-        A = PseudoBlockArray(randn(6,6), 1:3,1:3)
+        B = PseudoBlockArray(randn(6,6), 1:3,1:3)
 
-        @test BlockArrays.BroadcastStyle(typeof(A)) == BlockArrays.PseudoBlockStyle{2}()
+        @test BlockArrays.BroadcastStyle(typeof(B)) == BlockArrays.PseudoBlockStyle{2}()
 
-        @test exp.(A) == exp.(Matrix(A))
-        @test blocksizes(A) == blocksizes(exp.(A))
+        @test exp.(B) == exp.(Matrix(B))
+        @test blocksizes(B) == blocksizes(exp.(B))
 
-
-        @test blocksizes(A + A) == blocksizes(A .+ A) == blocksizes(A)
-        @test blocksizes(A .+ 1) == blocksizes(A)
+        @test blocksizes(B + B) == blocksizes(B .+ B) == blocksizes(B)
+        @test blocksizes(B .+ 1) == blocksizes(B)
+        @test blocksizes(A .+ 1 .+ B) == blocksizes(B)
+        @test A .+ 1 .+ B == Vector(A) .+ 1 .+ B == Vector(A) .+ 1 .+ Matrix(B)
     end
 
     @testset "Mixed" begin

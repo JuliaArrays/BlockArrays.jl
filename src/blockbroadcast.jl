@@ -10,15 +10,16 @@ abstract type AbstractBlockStyle{N} <: AbstractArrayStyle{N} end
 struct BlockStyle{N} <: AbstractBlockStyle{N} end
 struct PseudoBlockStyle{N} <: AbstractBlockStyle{N} end
 
-BlockStyle{N}(::Val{N}) where N = BlockStyle{N}()
-PseudoBlockStyle{N}(::Val{N}) where N = PseudoBlockStyle{N}()
+BlockStyle{M}(::Val{N}) where {N,M} = BlockStyle{N}()
+PseudoBlockStyle{M}(::Val{N}) where {N,M} = PseudoBlockStyle{N}()
 BroadcastStyle(::Type{<:BlockArray{<:Any,N}}) where N = BlockStyle{N}()
 BroadcastStyle(::Type{<:PseudoBlockArray{<:Any,N}}) where N = PseudoBlockStyle{N}()
-BroadcastStyle(::DefaultArrayStyle{N}, ::AbstractBlockStyle{N}) where N = DefaultArrayStyle{N}()
-BroadcastStyle(::AbstractBlockStyle{N}, ::DefaultArrayStyle{N}) where N = DefaultArrayStyle{N}()
-BroadcastStyle(::BlockStyle{N}, ::PseudoBlockStyle{N}) where N = BlockStyle{N}()
-BroadcastStyle(::PseudoBlockStyle{N}, ::BlockStyle{N}) where N = BlockStyle{N}()
-
+BroadcastStyle(::DefaultArrayStyle{N}, ::AbstractBlockStyle{M}) where {M,N} = DefaultArrayStyle{_max(Val(M),Val(N))}()
+BroadcastStyle(::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = DefaultArrayStyle{_max(Val(M),Val(N))}()
+BroadcastStyle(::DefaultArrayStyle{0}, a::AbstractBlockStyle{M}) where {M} = a
+BroadcastStyle(a::AbstractBlockStyle{N}, ::DefaultArrayStyle{0}) where {N} = a
+BroadcastStyle(::BlockStyle{M}, ::PseudoBlockStyle{N}) where {M,N} = BlockStyle{_max(Val(M),Val(N))}()
+BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle{_max(Val(M),Val(N))}()
 
 
 ####
@@ -26,17 +27,22 @@ BroadcastStyle(::PseudoBlockStyle{N}, ::BlockStyle{N}) where N = BlockStyle{N}()
 ####
 
 
-union.(([1,2,3],[4,5,6]), ([1,2,3],[4,5,6]))
+# following code modified from julia/base/broadcast.jl
+broadcast_cumulsizes(::Number) = ()
+broadcast_cumulsizes(A::AbstractArray) = cumulsizes(blocksizes(A))
+broadcast_cumulsizes(A::Broadcasted) = cumulsizes(blocksizes(A))
 
-_broadcast_blocksizes(::Val{N}, ::AbstractArrayStyle{0}, _) where N =
-    BlockSizes(ntuple(_ -> Int[], N))
-_broadcast_blocksizes(::Val{N}, ::AbstractArrayStyle{N}, A) where N =
-    blocksizes(A)
-_broadcast_blocksizes(::Val{N}, A) where N =
-    _broadcast_blocksizes(Val{N}(), BroadcastStyle(typeof(A)), A)
+combine_cumulsizes(A) = A
+combine_cumulsizes(A, B, C...) = combine_cumulsizes(_bcs(A,B), C...)
+
+_bcs(::Tuple{}, ::Tuple{}) = ()
+_bcs(::Tuple{}, newshape::Tuple) = (newshape[1], _bcs((), tail(newshape))...)
+_bcs(shape::Tuple, ::Tuple{}) = (shape[1], _bcs(tail(shape), ())...)
+_bcs(shape::Tuple, newshape::Tuple) = (sort!(union(shape[1], newshape[1])), _bcs(tail(shape), tail(newshape))...)
+
 
 blocksizes(A::Broadcasted{<:AbstractArrayStyle{N}}) where N =
-    BlockSizes(sort!.(union.(cumulsizes.(_broadcast_blocksizes.(Val{N}(), A.args))...)))
+    BlockSizes(combine_cumulsizes(broadcast_cumulsizes.(A.args)...))
 
 copyto!(dest::AbstractArray, bc::Broadcasted{<:AbstractBlockStyle}) =
    copyto!(dest, Broadcasted{DefaultArrayStyle{2}}(bc.f, bc.args, bc.axes))

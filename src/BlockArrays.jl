@@ -27,7 +27,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
 
 
 import Base: (:), IteratorSize, iterate, axes1
-import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted
+import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, _max
 import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans
 
 
