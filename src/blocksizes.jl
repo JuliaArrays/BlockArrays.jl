@@ -8,7 +8,7 @@ abstract type AbstractBlockSizes{N} end
 struct BlockSizes{N} <: AbstractBlockSizes{N}
     cumul_sizes::NTuple{N, Vector{Int}}
     # Takes a tuple of sizes, accumulates them and create a `BlockSizes`
-    BlockSizes{0}() = new{0}()
+    BlockSizes{N}() where N = new{N}()
     BlockSizes{N}(cs::NTuple{N,Vector{Int}}) where N = new{N}(cs)
 end
 
