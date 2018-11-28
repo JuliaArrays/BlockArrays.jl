@@ -26,29 +26,72 @@ using BlockArrays, Test
     end
 
     @testset "PseudoBlockArray" begin
-        A = PseudoBlockArray(randn(6), 1:3)
+A = PseudoBlockArray(randn(6), 1:3)
+@test BlockArrays.BroadcastStyle(typeof(A)) == BlockArrays.PseudoBlockStyle{1}()
 
-        @test BlockArrays.BroadcastStyle(typeof(A)) == BlockArrays.PseudoBlockStyle{1}()
+@test exp.(A) == exp.(Vector(A))
+@test blocksizes(A) == blocksizes(exp.(A))
+
+@test A+A isa PseudoBlockArray
+@test blocksizes(A + A) == blocksizes(A .+ A) == blocksizes(A)
+@test blocksizes(A .+ 1) == blocksizes(A)
+
+B = PseudoBlockArray(randn(6,6), 1:3,1:3)
+
+@test BlockArrays.BroadcastStyle(typeof(B)) == BlockArrays.PseudoBlockStyle{2}()
+
+@test exp.(B) == exp.(Matrix(B))
+@test blocksizes(B) == blocksizes(exp.(B))
+
+@test blocksizes(B + B) == blocksizes(B .+ B) == blocksizes(B)
+@test blocksizes(B .+ 1) == blocksizes(B)
+@test blocksizes(broadcast(+,A,1,B))  == blocksizes(A .+ 1 .+ B) == blocksizes(B)
+@test broadcast(+,A,1,B) == A .+ 1 .+ B == Vector(A) .+ 1 .+ B == Vector(A) .+ 1 .+ Matrix(B)
+
+import Base.Broadcast: broadcasted, materialize
+import BlockArrays: broadcast_block, _broadcast_block
+broadcasted(+, broadcasted(+, Vector(A) , 1), B) |> materialize
+
+bc = broadcasted(+, broadcasted(+, Vector(A) , 1), B)
+
+bs = blocksizes(bc)
+dest = deepcopy(B)
+blocksizes(dest) ≠ bs
 
 
-        @test exp.(A) == exp.(Vector(A))
-        @test blocksizes(A) == blocksizes(exp.(A))
+if blocksizes(dest) ≠ bs
+    copyto!(PseudoBlockArray(dest, bs), bc)
+    return dest
+end
 
-        @test A+A isa PseudoBlockArray
-        @test blocksizes(A + A) == blocksizes(A .+ A) == blocksizes(A)
-        @test blocksizes(A .+ 1) == blocksizes(A)
+K = J = 1
+KJ = Block(K,J)
+argblocks = broadcast_block.(bc.args, Ref(KJ))
 
-        B = PseudoBlockArray(randn(6,6), 1:3,1:3)
+Block(_broadcast_block(axes(A), KJ.n))
 
-        @test BlockArrays.BroadcastStyle(typeof(B)) == BlockArrays.PseudoBlockStyle{2}()
+bc.args[1].args[1]
 
-        @test exp.(B) == exp.(Matrix(B))
-        @test blocksizes(B) == blocksizes(exp.(B))
+@which broadcast_block(bc.args[1].args[1], (KJ))
 
-        @test blocksizes(B + B) == blocksizes(B .+ B) == blocksizes(B)
-        @test blocksizes(B .+ 1) == blocksizes(B)
-        @test blocksizes(A .+ 1 .+ B) == blocksizes(B)
-        @test A .+ 1 .+ B == Vector(A) .+ 1 .+ B == Vector(A) .+ 1 .+ Matrix(B)
+A
+
+
+
+argblocks[1]
+
+B
+
+
+
+for K = 1:nblocks(bs,1), J = 1:nblocks(bs,2)
+    KJ = Block(K,J)
+    argblocks = broadcast_block.(bc.args, Ref(KJ))
+    broadcast!(bc.f, view(dest, KJ), argblocks...)
+end
+dest
+
+3
     end
 
     @testset "Mixed" begin
@@ -61,9 +104,6 @@ using BlockArrays, Test
         @test blocksizes(A + B) == blocksizes(A)
 
         C = randn(6)
-
-        A .+ C
-
 
         @test A + C isa BlockVector{Float64}
         @test C + A isa BlockVector{Float64}

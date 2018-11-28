@@ -42,12 +42,56 @@ _cms(shape::Tuple, ::Tuple{}) = (shape[1], _cms(tail(shape), ())...)
 _cms(shape::Tuple, newshape::Tuple) = (sort!(union(shape[1], newshape[1])), _cms(tail(shape), tail(newshape))...)
 
 
+_broadcast_block(::Tuple{}, ::Tuple{}) = ()
+_broadcast_block(::Tuple{}, ::Tuple) = ()
+_broadcast_block(shape::Tuple, ::Tuple{}) = throw(BoundsError("Not enough blocks"))
+_broadcast_block(shape::Tuple, blocks::Tuple) = (blocks[1], _broadcast_block(tail(shape), tail(blocks))...)
+
+broadcast_block(A, K::Block) = view(A, Block(_broadcast_block(axes(A), K.n)))
+broadcast_block(A::Number, K::Block) = A
+broadcast_block(A::BlockArray, K::Block) = A.blocks[_broadcast_block(size(A), K.n)...]
+broadcast_block(A::Broadcasted, K::Block) = broadcasted(A.f, broadcast_block.(A.args, Ref(K))...)
+
+
+
+
+
+
 blocksizes(A::Broadcasted{<:AbstractArrayStyle{N}}) where N =
     BlockSizes(combine_cumulsizes(broadcast_cumulsizes.(A.args)...))
 
 
-copyto!(dest::AbstractArray, bc::Broadcasted{<:AbstractBlockStyle}) =
-   copyto!(dest, Broadcasted{DefaultArrayStyle{2}}(bc.f, bc.args, bc.axes))
+function copyto!(dest::AbstractVector, bc::Broadcasted{<:AbstractBlockStyle})
+    bs = blocksizes(bc)
+    if blocksizes(dest) ≠ bs
+        copyto!(PseudoBlockArray(dest, bs), bc)
+        return dest
+    end
+
+    for K = Block.(1:nblocks(bs,1))
+        argblocks = broadcast_block.(bc.args, Ref(K))
+        broadcast!(bc.f, view(dest, K), argblocks...)
+    end
+    dest
+end
+
+function copyto!(dest::AbstractMatrix, bc::Broadcasted{<:AbstractBlockStyle})
+    bs = blocksizes(bc)
+    if blocksizes(dest) ≠ bs
+        copyto!(PseudoBlockArray(dest, bs), bc)
+        return dest
+    end
+
+    for K = 1:nblocks(bs,1), J = 1:nblocks(bs,2)
+        KJ = Block(K,J)
+        argblocks = broadcast_block.(bc.args, Ref(KJ))
+        broadcast!(bc.f, view(dest, KJ), argblocks...)
+    end
+    dest
+end
+
+copyto!(dest::AbstractArray{N}, bc::Broadcasted{<:AbstractBlockStyle}) where N =
+   copyto!(dest, Broadcasted{DefaultArrayStyle{N}}(bc.f, bc.args, bc.axes))
 
 similar(bc::Broadcasted{<:AbstractBlockStyle{N}}, ::Type{T}) where {T,N} =
     BlockArray{T,N}(undef, blocksizes(bc))
