@@ -310,7 +310,7 @@ end
     @test strides(A) == (1, size(A,1))
     x = randn(size(A,2))
     y = similar(x)
-    @test BLAS.gemv!('N', 2.0, A, x, 0.0, y) == 2A*x
+    @test BLAS.gemv!('N', 2.0, A, x, 0.0, y) ≈ 2A*x
 end
 
 @testset "lmul!/rmul!" begin
