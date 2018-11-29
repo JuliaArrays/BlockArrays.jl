@@ -33,7 +33,7 @@ end
 
     A = randn(5)
     @test blocksizes(A) == BlockArrays.BlockSizes([5])
-    A[Block(1)] == A
+    @test A[Block(1)] == A
     view(A,Block(1))[1] = 2
     @test A[1] == 2
     @test_throws BoundsError A[Block(2)]
