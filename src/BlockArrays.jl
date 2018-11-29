@@ -18,16 +18,18 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
             getindex, show,
-            broadcast, eltype, convert, broadcast,
+            broadcast, eltype, convert, similar,
             @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
             RangeIndex, Int, Integer, Number,
-            +, -, min, max, *, isless, in, copy, copyto!, axes, @deprecate
+            +, -, min, max, *, isless, in, copy, copyto!, axes, @deprecate,
+            BroadcastStyle
 
 
 
 import Base: (:), IteratorSize, iterate, axes1
-import Base.Broadcast: broadcasted, DefaultArrayStyle
-import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans
+import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted
+import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
+                        StructuredMatrixStyle
 
 
 include("abstractblockarray.jl")
@@ -41,6 +43,8 @@ include("views.jl")
 include("blockindexrange.jl")
 include("show.jl")
 include("blockarrayinterface.jl")
+include("blockbroadcast.jl")
+# include("linalg.jl")
 
 include("deprecate.jl")
 

@@ -1,4 +1,8 @@
 
+blocksizes(A) = BlockSizes(vcat.(size(A))...)
+getindex(a::Number, ::Block{0}) = a
+
+
 blocksizes(A::AbstractTriangular) = blocksizes(parent(A))
 
 

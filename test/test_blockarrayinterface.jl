@@ -1,3 +1,5 @@
+using BlockArrays
+
 struct PartiallyImplementedBlockVector <: AbstractBlockArray{Float64,1} end
 
 @testset "partially implemented block array" begin
@@ -23,6 +25,21 @@ struct PartiallyImplementedBlockVector <: AbstractBlockArray{Float64,1} end
     catch err
         @test err isa ErrorException && err.msg == "blocksizes for PartiallyImplementedBlockVector is not implemented"
     end
+end
+
+@testset "Array block interface" begin
+    @test blocksizes(1) == BlockArrays.BlockSizes{0}()
+    @test 1[Block()] == 1
+
+    A = randn(5)
+    @test blocksizes(A) == BlockArrays.BlockSizes([5])
+    @test A[Block(1)] == A
+    view(A,Block(1))[1] = 2
+    @test A[1] == 2
+    @test_throws BoundsError A[Block(2)]
+
+    A = randn(5,5)
+    @test A[Block(1,1)] == A
 end
 
 @testset "Triangular/Symmetric/Hermitian block arrays" begin
