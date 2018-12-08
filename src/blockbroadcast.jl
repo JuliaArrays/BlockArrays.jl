@@ -48,8 +48,8 @@ blocksizes(A::Broadcasted{<:AbstractArrayStyle{N}}) where N =
     BlockSizes(combine_cumulsizes(broadcast_cumulsizes.(A.args)...))
 
 
-copyto!(dest::AbstractArray, bc::Broadcasted{<:AbstractBlockStyle}) =
-   copyto!(dest, Broadcasted{DefaultArrayStyle{2}}(bc.f, bc.args, bc.axes))
+copyto!(dest::AbstractArray, bc::Broadcasted{<:AbstractBlockStyle{N}}) where N =
+   copyto!(dest, Broadcasted{DefaultArrayStyle{N}}(bc.f, bc.args, bc.axes))
 
 similar(bc::Broadcasted{<:AbstractBlockStyle{N}}, ::Type{T}) where {T,N} =
     BlockArray{T,N}(undef, blocksizes(bc))
