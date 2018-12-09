@@ -26,6 +26,11 @@ BlockSizes(sizes::Vararg{AbstractVector{Int}, N}) where {N} =
 
 Base.:(==)(a::BlockSizes, b::BlockSizes) = cumulsizes(a) == cumulsizes(b)
 
+Base.dataids(b::BlockSizes) = _splatmap(dataids, b.cumul_sizes)
+# _splatmap taken from Base:
+_splatmap(f, ::Tuple{}) = ()
+_splatmap(f, t::Tuple) = (f(t[1])..., _splatmap(f, tail(t))...)
+
 function _cumul_vec(v::AbstractVector{T}) where {T}
     v_cumul = similar(v, length(v) + 1)
     z = one(T)
