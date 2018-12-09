@@ -25,11 +25,6 @@ BroadcastStyle(::BlockStyle{M}, ::PseudoBlockStyle{N}) where {M,N} = BlockStyle(
 BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 
 
-####
-# Default to standard Array broadcast
-####
-
-
 # following code modified from julia/base/broadcast.jl
 broadcast_cumulsizes(::Number) = ()
 broadcast_cumulsizes(A::AbstractArray) = cumulsizes(blocksizes(A))
@@ -48,11 +43,78 @@ blocksizes(A::Broadcasted{<:AbstractArrayStyle{N}}) where N =
     BlockSizes(combine_cumulsizes(broadcast_cumulsizes.(A.args)...))
 
 
-copyto!(dest::AbstractArray, bc::Broadcasted{<:AbstractBlockStyle{N}}) where N =
-   copyto!(dest, Broadcasted{DefaultArrayStyle{N}}(bc.f, bc.args, bc.axes))
-
 similar(bc::Broadcasted{<:AbstractBlockStyle{N}}, ::Type{T}) where {T,N} =
     BlockArray{T,N}(undef, blocksizes(bc))
 
 similar(bc::Broadcasted{PseudoBlockStyle{N}}, ::Type{T}) where {T,N} =
     PseudoBlockArray{T,N}(undef, blocksizes(bc))
+
+
+subblocks(::Any, bs::BlockSizes, dim::Integer) =
+    (nothing for _ in 1:nblocks(bs, dim))
+
+function subblocks(arr::AbstractArray, bs::BlockSizes, dim::Integer)
+    if size(arr, dim) == 1
+        return (BlockIndexRange(Block(1), 1:1) for _ in 1:nblocks(bs, dim))
+    end
+    j = 1
+    next = 1
+    arrstops = cumulsizes(arr, dim)
+    return (
+        let n = blocksize(bs, dim, i)
+            start = next
+            next = start + n
+            j0 = j
+            if arrstops[j + 1] == next
+                j += 1
+            end
+            BlockIndexRange(Block(j0), (start:next - 1) .- (arrstops[j0] - 1))
+        end
+        for i in 1:nblocks(bs, dim))
+end
+
+@inline _bview(arg, ::Vararg) = arg
+@inline _bview(A::AbstractArray, I...) = view(A, I...)
+
+@generated function copyto!(
+        dest::AbstractArray,
+        bc::Broadcasted{<:AbstractBlockStyle{NDims}, <:Any, <:Any, Args},
+        ) where {NDims, Args <: Tuple}
+
+    NArgs = length(Args.parameters)
+
+    # `bvar(0, dim)` is a variable for BlockIndexRange of `dim`-th dimension
+    # of `dest` array.  `bvar(i, dim)` is a similar variable of `i`-th
+    # argument in `bc.args`.
+    bvar(i, dim) = Symbol("blockindexrange_", i, "_", dim)
+
+    function forloop(dim)
+        if dim > 0
+            quote
+                for ($(bvar(0, dim)), $(bvar.(1:NArgs, dim)...),) in zip(
+                        subblocks(dest, bs, $dim),
+                        subblocks.(bc.args, Ref(bs), Ref($dim))...)
+                    $(forloop(dim - 1))
+                end
+            end
+        else
+            bview(a, i) = :(_bview($a, $([bvar(i, d) for d in 1:NDims]...)))
+            destview = bview(:dest, 0)
+            argblocks = [bview(:(bc.args[$i]), i) for i in 1:NArgs]
+            quote
+                broadcast!(bc.f, $destview, $(argblocks...))
+            end
+        end
+    end
+
+    quote
+        bs = blocksizes(bc)
+        if blocksizes(dest) ≠ bs
+            copyto!(PseudoBlockArray(dest, bs), bc)
+            return dest
+        end
+
+        $(forloop(NDims))
+        return dest
+    end
+end
