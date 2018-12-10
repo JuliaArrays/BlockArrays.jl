@@ -276,6 +276,10 @@ end
     getblock(block_array, block_index.I...)[block_index.α...] = v
 end
 
+Base.dataids(arr::BlockArray) = (dataids(arr.blocks)..., dataids(arr.block_sizes)...)
+# This is not entirely valid.  In principle, we have to concatenate
+# all dataids of all blocks.  However, it makes `dataids` non-inferable.
+
 ########
 # Misc #
 ########
