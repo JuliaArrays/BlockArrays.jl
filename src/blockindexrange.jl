@@ -79,7 +79,46 @@ reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
                                             idxs[1].indices[subidxs[1].indices]),
                                     reindex(V, tail(idxs), tail(subidxs))...))
 
+# De-reference blocks before creating a view to avoid taking `global2blockindex`
+# path in `AbstractBlockStyle` broadcasting.
+@inline function Base.unsafe_view(
+        A::AbstractBlockArray{<:Any, N},
+        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+    @_propagate_inbounds_meta
+    B = A[map(x -> x.block.block, I)...]
+    return view(B, _splatmap(x -> x.block.indices, I)...)
+end
 
+@inline function Base.unsafe_view(
+        A::PseudoBlockArray{<:Any, N},
+        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+    @_propagate_inbounds_meta
+    return view(A.blocks, _pseudo_block_view_indices(A, I)...)
+end
+
+@inline function _pseudo_block_view_indices(A, I)
+    @_propagate_inbounds_meta
+    bs = blocksizes(A)
+    return ntuple(length(I)) do dim
+        x = I[dim]
+        (cumulsizes(bs, dim, x.block.block.n[1]) - 1) .+ x.block.indices[1]
+    end
+end
+
+@inline function Base.unsafe_view(
+        A::ReshapedArray{<:Any, N, <:AbstractBlockArray{<:Any, M}},
+        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N, M}
+    @_propagate_inbounds_meta
+    # Note: assuming that I[M+1:end] are verified to be singletons
+    return reshape(view(A.parent, I[1:M]...), Val(N))
+end
+
+@inline function Base.unsafe_view(
+        A::AbstractArray{<:Any, N},
+        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+    @_propagate_inbounds_meta
+    return view(A, _pseudo_block_view_indices(A, I)...)
+end
 
 
 # #################
