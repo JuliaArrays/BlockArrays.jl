@@ -118,3 +118,9 @@ end
         return dest
     end
 end
+
+@inline function Broadcast.instantiate(
+        bc::Broadcasted{Style}) where {Style <:AbstractBlockStyle}
+    bcf = Broadcast.flatten(Broadcasted{Nothing}(bc.f, bc.args, bc.axes))
+    return Broadcasted{Style}(bcf.f, bcf.args, bcf.axes)
+end
