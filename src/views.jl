@@ -71,8 +71,15 @@ blocksizes(V::SubArray) = BlockSizes(_sub_cumul_sizes(cumulsizes(parent(V)), par
 
 Returns the indices associated with a block as a `BlockSlice`.
 """
-unblock(A::AbstractArray{T,N}, inds, I) where {T, N} = _unblock(cumulsizes(A, N - length(inds) + 1), I)
-
+function unblock(A::AbstractArray{T,N}, inds, I) where {T, N}
+    if length(inds) == 0
+        # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
+        # similar to `ones(2)[1:1, 1:1]`.
+        _unblock(Base.OneTo(2), I)
+    else
+        _unblock(cumulsizes(A, N - length(inds) + 1), I)
+    end
+end
 
 
 to_index(::Block) = throw(ArgumentError("Block must be converted by to_indices(...)"))
