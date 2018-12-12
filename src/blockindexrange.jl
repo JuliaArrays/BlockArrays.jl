@@ -120,6 +120,14 @@ end
     return view(A, _pseudo_block_view_indices(A, I)...)
 end
 
+# Disambiguation
+@inline function Base.unsafe_view(
+        A::SubArray,
+        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+    @_propagate_inbounds_meta
+    return view(A, _pseudo_block_view_indices(A, I)...)
+end
+
 
 # #################
 # # support for pointers
