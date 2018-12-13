@@ -316,19 +316,23 @@ end
 @testset "lmul!/rmul!" begin
     A = PseudoBlockArray{Float64}(undef, 1:3)
     @test fill!(A, NaN) === A
+    @test all(isnan, lmul!(0.0, copy(A))) == all(isnan, lmul!(0.0, Array(A)))
+    @test lmul!(false, copy(A)) == lmul!(false, Array(A))
     @test lmul!(0.0, A) === A
-    @test Array(A) == zeros(6)
     @test fill!(A, NaN) === A
+    @test all(isnan, rmul!(copy(A), 0.0)) == all(isnan, rmul!(Array(A), 0.0))
+    @test rmul!(copy(A), false) == rmul!(Array(A), false)
     @test rmul!(A, 0.0) === A
-    @test Array(A) == zeros(6)
 
     A = BlockArray{Float64}(undef, 1:3)
     @test fill!(A, NaN) === A
+    @test all(isnan, lmul!(0.0, copy(A))) == all(isnan, lmul!(0.0, Array(A)))
+    @test lmul!(false, copy(A)) == lmul!(false, Array(A))
     @test lmul!(0.0, A) === A
-    @test Array(A) == zeros(6)
     @test fill!(A, NaN) === A
+    @test all(isnan, rmul!(copy(A), 0.0)) == all(isnan, rmul!(Array(A), 0.0))
+    @test rmul!(copy(A), false) == rmul!(Array(A), false)
     @test rmul!(A, 0.0) === A
-    @test Array(A) == zeros(6)
 end
 
 @testset "copy" begin
