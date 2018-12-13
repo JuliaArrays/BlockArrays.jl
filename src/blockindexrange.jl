@@ -82,7 +82,7 @@ reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
 # De-reference blocks before creating a view to avoid taking `global2blockindex`
 # path in `AbstractBlockStyle` broadcasting.
 @inline function Base.unsafe_view(
-        A::AbstractBlockArray{<:Any, N},
+        A::BlockArray{<:Any, N},
         I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
     @_propagate_inbounds_meta
     B = A[map(x -> x.block.block, I)...]
