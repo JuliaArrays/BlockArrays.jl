@@ -93,16 +93,7 @@ end
         A::PseudoBlockArray{<:Any, N},
         I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
     @_propagate_inbounds_meta
-    return view(A.blocks, _pseudo_block_view_indices(A, I)...)
-end
-
-@inline function _pseudo_block_view_indices(A, I)
-    @_propagate_inbounds_meta
-    bs = blocksizes(A)
-    return ntuple(length(I)) do dim
-        x = I[dim]
-        (cumulsizes(bs, dim, x.block.block.n[1]) - 1) .+ x.block.indices[1]
-    end
+    return view(A.blocks, map(x -> x.indices, I)...)
 end
 
 @inline function Base.unsafe_view(
@@ -117,7 +108,7 @@ end
         A::AbstractArray{<:Any, N},
         I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
     @_propagate_inbounds_meta
-    return view(A, _pseudo_block_view_indices(A, I)...)
+    return view(A, map(x -> x.indices, I)...)
 end
 
 # Disambiguation
@@ -125,7 +116,7 @@ end
         A::SubArray,
         I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
     @_propagate_inbounds_meta
-    return view(A, _pseudo_block_view_indices(A, I)...)
+    return view(A, map(x -> x.indices, I)...)
 end
 
 
