@@ -1,4 +1,5 @@
 using BlockArrays, Test
+using FillArrays
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
@@ -85,5 +86,17 @@ using BlockArrays, Test
         B = BlockArray(randn(6,6), fill(2,3), fill(3,2))
 
         @test blocksizes(A+B) == BlockArrays.BlockSizes([1,1,1,1,2], 1:3)
+    end
+
+    @testset "Fill" begin
+        n = 3
+        xblocks = [Fill(111.0, 4n), Fill(222.0, n)]
+        x = BlockArrays._BlockArray(xblocks, [4n, n])
+        y = Fill(333, size(x))
+        z = randn(size(x))
+        x2 = vcat(xblocks...)
+        y2 = copy(y)
+        z2 = copy(z)
+        @test (@. z = x + y + z; z) == (@. z2 = x2 + y2 + z2; z2)
     end
 end
