@@ -86,4 +86,16 @@ using BlockArrays, Test
 
         @test blocksizes(A+B) == BlockArrays.BlockSizes([1,1,1,1,2], 1:3)
     end
+
+    @testset "UnitRange" begin
+        n = 3
+        x = mortar([1:4n, 1:n])
+        @test eltype(x.blocks) <: UnitRange
+        y = 1:length(x)
+        z = randn(size(x))
+        x2 = vcat(x.blocks...)
+        y2 = copy(y)
+        z2 = copy(z)
+        @test (@. z = x + y + z; z) == (@. z2 = x2 + y2 + z2; z2)
+    end
 end

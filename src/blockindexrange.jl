@@ -104,6 +104,12 @@ end
     return reshape(view(A.parent, I[1:M]...), Val(N))
 end
 
+@inline function Base.unsafe_view(
+        A::Array{<:Any, N},
+        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+    @_propagate_inbounds_meta
+    return view(A, map(x -> x.indices, I)...)
+end
 
 # #################
 # # support for pointers
