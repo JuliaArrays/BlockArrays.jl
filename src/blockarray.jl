@@ -193,6 +193,89 @@ end
     end
 end
 
+"""
+    mortar(blocks::AbstractArray)
+    mortar(blocks::AbstractArray{R, N}, sizes_1, sizes_2, ..., sizes_N)
+    mortar(blocks::AbstractArray{R, N}, block_sizes::BlockSizes{N})
+
+Construct a `BlockArray` from `blocks`.  `block_sizes` is computed from
+`blocks` if it is not given.
+
+# Examples
+```jldoctest
+julia> blocks = permutedims(reshape([
+           1ones(1, 3), 2ones(1, 2),
+           3ones(2, 3), 4ones(2, 2),
+       ], (2, 2)))
+2×2 Array{Array{Float64,2},2}:
+ [1.0 1.0 1.0]               [2.0 2.0]
+ [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
+
+julia> mortar(blocks)
+3×5 BlockArray{Float64,2,Array{Float64,2}}:
+ 1.0  1.0  1.0  │  2.0  2.0
+ ───────────────┼──────────
+ 3.0  3.0  3.0  │  4.0  4.0
+ 3.0  3.0  3.0  │  4.0  4.0
+
+julia> ans == mortar(
+           (1ones(1, 3), 2ones(1, 2)),
+           (3ones(2, 3), 4ones(2, 2)),
+       )
+true
+```
+"""
+mortar(blocks::AbstractArray{R, N}, block_sizes::BlockSizes{N}) where {R, N} =
+    _BlockArray(convert(Array, blocks), block_sizes)
+
+mortar(blocks::AbstractArray{R, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {R, N} =
+    _BlockArray(convert(Array, blocks), block_sizes...)
+
+mortar(blocks::AbstractArray) = mortar(blocks, sizes_from_blocks(blocks)...)
+
+function sizes_from_blocks(blocks::AbstractArray{<:Any, N}) where N
+    if length(blocks) == 0
+        return zeros.(Int, size(blocks))
+    end
+    if !all(b -> ndims(b) == N, blocks)
+        error("All blocks must have ndims consistent with ndims = $N of `blocks` array.")
+    end
+    fullsizes = map!(size, Array{NTuple{N,Int}, N}(undef, size(blocks)), blocks)
+    block_sizes = ntuple(ndims(blocks)) do i
+        [s[i] for s in view(fullsizes, ntuple(j -> j == i ? (:) : 1, ndims(blocks))...)]
+    end
+    checksizes(fullsizes, block_sizes)
+    return block_sizes
+end
+
+getsizes(block_sizes, block_index) = getindex.(block_sizes, block_index)
+
+@generated function checksizes(fullsizes::Array{NTuple{N,Int}, N}, block_sizes::NTuple{N,Vector{Int}}) where N
+    quote
+        @nloops $N i fullsizes begin
+            block_index = @ntuple $N i
+            if fullsizes[block_index...] != getsizes(block_sizes, block_index)
+                error("size(blocks[", strip(repr(block_index), ['(', ')']),
+                      "]) (= ", fullsizes[block_index...],
+                      ") is incompatible with expected size: ",
+                      getsizes(block_sizes, block_index))
+            end
+        end
+        return fullsizes
+    end
+end
+
+"""
+    mortar((block_11, ..., block_1m), ... (block_n1, ..., block_nm))
+
+Construct a `BlockMatrix` with `n * m`  blocks.  Each `block_ij` must be an
+`AbstractMatrix`.
+"""
+mortar(rows::Vararg{NTuple{M, AbstractMatrix}}) where M =
+    mortar(permutedims(reshape(
+        foldl(append!, rows, init=eltype(eltype(rows))[]),
+        M, length(rows))))
+
 # Convert AbstractArrays that conform to block array interface
 convert(::Type{BlockArray{T,N,R}}, A::BlockArray{T,N,R}) where {T,N,R} = A
 convert(::Type{BlockArray{T,N}}, A::BlockArray{T,N}) where {T,N} = A
