@@ -61,9 +61,9 @@ a single element.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
-2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
+2×3 BlockArray{Float64,2,Array{Float64,2}}:
  1.0  1.0  │  1.0
- ----------┼-----
+ ──────────┼─────
  1.0  1.0  │  1.0
 
 julia> A[Block(1, 1)]
@@ -134,9 +134,9 @@ julia> v = Array(reshape(1:6, (2, 3)))
  2  4  6
 
 julia> A = BlockArray(v, [1,1], [2,1])
-2×2-blocked 2×3 BlockArrays.BlockArray{Int64,2,Array{Int64,2}}:
+2×3 BlockArray{Int64,2,Array{Int64,2}}:
  1  3  │  5
- ------┼---
+ ──────┼───
  2  4  │  6
 
 julia> getblock(A, 2, 1)
@@ -162,9 +162,9 @@ attempted assigned block is out of bounds.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = PseudoBlockArray(ones(2, 3), [1, 1], [2, 1])
-2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
  1.0  1.0  │  1.0
- ----------┼-----
+ ──────────┼─────
  1.0  1.0  │  1.0
 
 julia> x = zeros(1, 2);
@@ -196,9 +196,9 @@ julia> setblock!(A, [1 2], 1, 1);
 julia> A[Block(2, 1)] = [3 4];
 
 julia> A
-2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
  1.0  2.0  │  0.0
- ----------┼-----
+ ──────────┼─────
  3.0  4.0  │  0.0
 ```
 """
@@ -246,7 +246,7 @@ specialize this method if they need to provide custom block bounds checking beha
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]
 [...]
 ```
 """
@@ -279,9 +279,9 @@ Returns the array stored in `A` as a `Array`.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(2,3), [1,1], [2,1])
-2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
+2×3 BlockArray{Float64,2,Array{Float64,2}}:
  1.0  1.0  │  1.0
- ----------┼-----
+ ──────────┼─────
  1.0  1.0  │  1.0
 
 julia> Array(A)

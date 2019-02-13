@@ -23,20 +23,20 @@ julia> using BlockArrays, Random, SparseArrays
 julia> Random.seed!(12345);
 
 julia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
-2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
  0.562714  0.371605  │  0.381128
- --------------------┼----------
+ ────────────────────┼──────────
  0.849939  0.283365  │  0.365801
 
 julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
-3-blocked 6-element BlockArrays.PseudoBlockArray{Float64,1,SparseVector{Float64,Int64}}:
+6-element PseudoBlockArray{Float64,1,SparseVector{Float64,Int64}}:
  0.0
- 0.586598
+ 0.5865981007905481
  0.0
- ---------
- 0.0501668
+ ───────────────────
+ 0.05016684053503706
  0.0
- ---------
+ ───────────────────
  0.0
 ```
 """
