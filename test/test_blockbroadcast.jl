@@ -89,11 +89,11 @@ using BlockArrays, Test
 
     @testset "UnitRange" begin
         n = 3
-        xblocks = [1:4n, 1:n]
-        x = BlockArrays._BlockArray(xblocks, [4n, n])
+        x = mortar([1:4n, 1:n])
+        @test eltype(x.blocks) <: UnitRange
         y = 1:length(x)
         z = randn(size(x))
-        x2 = vcat(xblocks...)
+        x2 = vcat(x.blocks...)
         y2 = copy(y)
         z2 = copy(z)
         @test (@. z = x + y + z; z) == (@. z2 = x2 + y2 + z2; z2)
