@@ -7,5 +7,3 @@ include("test_blockrange.jl")
 include("test_blockarrayinterface.jl")
 
 include("test_blockbroadcast.jl")
-
-include("../docs/build.jl")
