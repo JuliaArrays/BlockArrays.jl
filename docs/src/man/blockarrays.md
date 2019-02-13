@@ -30,9 +30,9 @@ The `block_type` should be an array type, it could for example be `Matrix{Float6
 
 ```jldoctest
 julia> BlockArray{Float32}(undef_blocks, [1,2], [3,2])
-2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
+3×5 BlockArray{Float32,2,Array{Float32,2}}:
  #undef  #undef  #undef  │  #undef  #undef
- ------------------------┼----------------
+ ────────────────────────┼────────────────
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
 ```
@@ -59,25 +59,25 @@ An alternative syntax for this is `block_array[Block(i...)] = v` or
 
 ```jldoctest block_array
 julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
-2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
+3×4 BlockArray{Float64,2,Array{Float64,2}}:
  #undef  #undef  │  #undef  #undef
- ----------------┼----------------
+ ────────────────┼────────────────
  #undef  #undef  │  #undef  #undef
  #undef  #undef  │  #undef  #undef
 
 julia> setblock!(block_array, rand(2,2), 2, 1)
-2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
+3×4 BlockArray{Float64,2,Array{Float64,2}}:
  #undef      #undef      │  #undef  #undef
- ------------------------┼----------------
+ ────────────────────────┼────────────────
    0.590845    0.566237  │  #undef  #undef
    0.766797    0.460085  │  #undef  #undef
 
 julia> block_array[Block(1, 1)] = [1 2];
 
 julia> block_array
-2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
+3×4 BlockArray{Float64,2,Array{Float64,2}}:
  1.0       2.0       │  #undef  #undef
- --------------------┼----------------
+ ────────────────────┼────────────────
  0.590845  0.566237  │  #undef  #undef
  0.766797  0.460085  │  #undef  #undef
 ```
@@ -92,8 +92,8 @@ julia> block_array[Block(1, 1)]
  1.0  2.0
 
 julia> block_array[Block(1), Block(1)]  # equivalent to above
- 1×2 Array{Float64,2}:
-  1.0  2.0
+1×2 Array{Float64,2}:
+ 1.0  2.0
 ```
 
 Similarly to `setblock!` this does not copy the returned array.
@@ -112,7 +112,7 @@ We can also view and modify views of blocks of `BlockArray` using the `view` syn
 julia> A = BlockArray(ones(6), 1:3);
 
 julia> view(A, Block(2))
-2-element SubArray{Float64,1,BlockArrays.BlockArray{Float64,1,Array{Float64,1}},Tuple{BlockArrays.BlockSlice},false}:
+2-element view(::BlockArray{Float64,1,Array{Float64,1}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:
  1.0
  1.0
 

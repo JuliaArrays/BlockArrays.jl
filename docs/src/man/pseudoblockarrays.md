@@ -23,7 +23,7 @@ Creating a `PseudoBlockArray` works in the same way as a `BlockArray`.
 
 ```jldoctest A
 julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])
-2×2-blocked 3×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
+3×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
  0.590845  0.460085  │  0.200586
  ────────────────────┼──────────
  0.766797  0.794026  │  0.298614
@@ -83,7 +83,7 @@ We can also view and modify views of blocks of `PseudoBlockArray` using the `vie
 julia> A = PseudoBlockArray(ones(6), 1:3);
 
 julia> view(A, Block(2))
-2-element SubArray{Float64,1,BlockArrays.PseudoBlockArray{Float64,1,Array{Float64,1}},Tuple{BlockArrays.BlockSlice},false}:
+2-element view(::PseudoBlockArray{Float64,1,Array{Float64,1}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:
  1.0
  1.0
 
