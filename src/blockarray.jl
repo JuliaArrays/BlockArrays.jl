@@ -101,7 +101,7 @@ end
 """
 Constructs a `BlockArray` with uninitialized blocks from a block type `R` with sizes defind by `block_sizes`.
 
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
 2×2-blocked 4×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  #undef  │  #undef  #undef  #undef  │
@@ -202,7 +202,7 @@ Construct a `BlockArray` from `blocks`.  `block_sizes` is computed from
 `blocks` if it is not given.
 
 # Examples
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> blocks = permutedims(reshape([
            1ones(1, 3), 2ones(1, 2),
            3ones(2, 3), 4ones(2, 2),

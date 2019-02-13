@@ -18,7 +18,9 @@ to use a `PseudoBlockArray` to build up the Jacobian block by block and then pas
 a direct solver using `Array`.
 
 ```jldoctest
-julia> srand(12345);
+julia> using BlockArrays, Random, SparseArrays
+
+julia> Random.seed!(12345);
 
 julia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
 2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:

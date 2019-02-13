@@ -2,7 +2,9 @@
 
 ```@meta
 DocTestSetup = quote
-    srand(1234)
+    using BlockArrays
+    using Random
+    Random.seed!(1234)
 end
 ```
 
@@ -55,7 +57,7 @@ A block can be set by `setblock!(block_array, v, i...)` where `v` is the array t
 An alternative syntax for this is `block_array[Block(i...)] = v` or
 `block_array[Block.(i)...]`.
 
-```jldoctest
+```jldoctest block_array
 julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
 2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
  #undef  #undef  │  #undef  #undef
@@ -84,7 +86,7 @@ Note that this will "take ownership" of the passed in array, that is, no copy is
 
 A block can be retrieved with `getblock(block_array, i...)` or `block_array[Block(i...)]`:
 
-```jldoctest
+```jldoctest block_array
 julia> block_array[Block(1, 1)]
 1×2 Array{Float64,2}:
  1.0  2.0

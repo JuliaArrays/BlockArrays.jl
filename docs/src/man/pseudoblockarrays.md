@@ -2,7 +2,9 @@
 
 ```@meta
 DocTestSetup = quote
-    srand(1234)
+    using BlockArrays
+    using Random
+    Random.seed!(1234)
 end
 ```
 
