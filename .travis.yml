@@ -17,7 +17,7 @@ notifications:
 #  - julia -e 'Pkg.clone(pwd()); Pkg.test("BlockArrays"; coverage=true)'
 
 after_success:
-  - julia -e 'cd(Pkg.dir("BlockArrays")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
 
 jobs:
   include:
