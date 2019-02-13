@@ -5,7 +5,4 @@ include("build.jl")
 
 deploydocs(
     repo = "github.com/JuliaArrays/BlockArrays.jl.git",
-    target = "build",
-    deps = nothing,
-    make = nothing
 )
