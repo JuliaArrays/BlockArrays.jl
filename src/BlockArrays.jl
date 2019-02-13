@@ -9,7 +9,7 @@ export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlo
 export Block, getblock, getblock!, setblock!, nblocks, blocksize, blocksizes, blockcheckbounds, BlockBoundsError, BlockIndex
 export BlockRange
 
-export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, blocks2array, blocks2matrix
+export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
 export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat
 
 export undef_blocks, undef

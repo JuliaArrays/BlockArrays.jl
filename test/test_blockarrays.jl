@@ -89,14 +89,14 @@ end
     @testset for sizes in [(1:3,), (1:3, 1:3), (1:3, 1:3, 1:3)]
         dims = sum.(sizes)
         A = BlockArray(copy(reshape(1:prod(dims), dims)), sizes...)
-        @test blocks2array(A.blocks) == A
+        @test mortar(A.blocks) == A
     end
 
-    ret = blocks2array([spzeros(2), spzeros(3)])
+    ret = mortar([spzeros(2), spzeros(3)])
     @test eltype(ret.blocks) <: SparseVector
     @test blocksizes(ret) == BlockArrays.BlockSizes([2, 3])
 
-    ret = blocks2matrix(
+    ret = mortar(
         (spzeros(1, 3), spzeros(1, 4)),
         (spzeros(2, 3), spzeros(2, 4)),
         (spzeros(5, 3), spzeros(5, 4)),
@@ -106,13 +106,13 @@ end
     @test blocksizes(ret) == BlockArrays.BlockSizes([1, 2, 5], [3, 4])
 
     test_error_message("must have ndims consistent with ndims = 1") do
-        blocks2array([ones(2,2)])
+        mortar([ones(2,2)])
     end
     test_error_message("must have ndims consistent with ndims = 2") do
-        blocks2array(reshape([ones(2), ones(2, 2)], (1, 2)))
+        mortar(reshape([ones(2), ones(2, 2)], (1, 2)))
     end
     test_error_message("size(blocks[2, 2]) (= (111, 222)) is incompatible with expected size: (2, 4)") do
-        blocks2matrix(
+        mortar(
             (zeros(1, 3), zeros(1, 4)),
             (zeros(2, 3), zeros(111, 222)),
         )

@@ -194,9 +194,9 @@ end
 end
 
 """
-    blocks2array(blocks::AbstractArray)
-    blocks2array(blocks::AbstractArray{R, N}, sizes_1, sizes_2, ..., sizes_N)
-    blocks2array(blocks::AbstractArray{R, N}, block_sizes::BlockSizes{N})
+    mortar(blocks::AbstractArray)
+    mortar(blocks::AbstractArray{R, N}, sizes_1, sizes_2, ..., sizes_N)
+    mortar(blocks::AbstractArray{R, N}, block_sizes::BlockSizes{N})
 
 Construct a `BlockArray` from `blocks`.  `block_sizes` is computed from
 `blocks` if it is not given.
@@ -211,27 +211,27 @@ julia> blocks = permutedims(reshape([
  [1.0 1.0 1.0]               [2.0 2.0]
  [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
 
-julia> blocks2array(blocks)
+julia> mortar(blocks)
 3×5 BlockArray{Float64,2,Array{Float64,2}}:
  1.0  1.0  1.0  │  2.0  2.0
  ───────────────┼──────────
  3.0  3.0  3.0  │  4.0  4.0
  3.0  3.0  3.0  │  4.0  4.0
 
-julia> ans == blocks2matrix(
+julia> ans == mortar(
            (1ones(1, 3), 2ones(1, 2)),
            (3ones(2, 3), 4ones(2, 2)),
        )
 true
 ```
 """
-blocks2array(blocks::AbstractArray{R, N}, block_sizes::BlockSizes{N}) where {R, N} =
+mortar(blocks::AbstractArray{R, N}, block_sizes::BlockSizes{N}) where {R, N} =
     _BlockArray(convert(Array, blocks), block_sizes)
 
-blocks2array(blocks::AbstractArray{R, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {R, N} =
+mortar(blocks::AbstractArray{R, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {R, N} =
     _BlockArray(convert(Array, blocks), block_sizes...)
 
-blocks2array(blocks::AbstractArray) = blocks2array(blocks, sizes_from_blocks(blocks)...)
+mortar(blocks::AbstractArray) = mortar(blocks, sizes_from_blocks(blocks)...)
 
 function sizes_from_blocks(blocks::AbstractArray{<:Any, N}) where N
     if length(blocks) == 0
@@ -266,13 +266,13 @@ getsizes(block_sizes, block_index) = getindex.(block_sizes, block_index)
 end
 
 """
-    blocks2matrix((block_11, ..., block_1m), ... (block_n1, ..., block_nm))
+    mortar((block_11, ..., block_1m), ... (block_n1, ..., block_nm))
 
 Construct a `BlockMatrix` with `n * m`  blocks.  Each `block_ij` must be an
-`AbstractMatrix`.  See [`blocks2array`](@ref).
+`AbstractMatrix`.
 """
-blocks2matrix(rows::Vararg{NTuple{M, AbstractMatrix}}) where M =
-    blocks2array(permutedims(reshape(
+mortar(rows::Vararg{NTuple{M, AbstractMatrix}}) where M =
+    mortar(permutedims(reshape(
         foldl(append!, rows, init=eltype(eltype(rows))[]),
         M, length(rows))))
 
