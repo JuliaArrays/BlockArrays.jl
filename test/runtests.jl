@@ -8,4 +8,4 @@ include("test_blockarrayinterface.jl")
 
 include("test_blockbroadcast.jl")
 
-include("../docs/make.jl")
+include("../docs/build.jl")
