@@ -1,7 +1,7 @@
 var documenterSearchIndex = {"docs": [
 
 {
-    "location": "index.html#",
+    "location": "#",
     "page": "Home",
     "title": "Home",
     "category": "page",
@@ -9,7 +9,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#BlockArrays.jl-1",
+    "location": "#BlockArrays.jl-1",
     "page": "Home",
     "title": "BlockArrays.jl",
     "category": "section",
@@ -17,7 +17,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Manual-Outline-1",
+    "location": "#Manual-Outline-1",
     "page": "Home",
     "title": "Manual Outline",
     "category": "section",
@@ -25,7 +25,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Library-Outline-1",
+    "location": "#Library-Outline-1",
     "page": "Home",
     "title": "Library Outline",
     "category": "section",
@@ -33,7 +33,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#main-index-1",
+    "location": "#main-index-1",
     "page": "Home",
     "title": "Index",
     "category": "section",
@@ -41,7 +41,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/abstractblockarrayinterface.html#",
+    "location": "man/abstractblockarrayinterface/#",
     "page": "The AbstractBlockSizes interface",
     "title": "The AbstractBlockSizes interface",
     "category": "page",
@@ -49,7 +49,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/abstractblockarrayinterface.html#The-AbstractBlockSizes-interface-1",
+    "location": "man/abstractblockarrayinterface/#The-AbstractBlockSizes-interface-1",
     "page": "The AbstractBlockSizes interface",
     "title": "The AbstractBlockSizes interface",
     "category": "section",
@@ -57,7 +57,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/abstractblockarrayinterface.html#The-AbstractBlockArray-interface-1",
+    "location": "man/abstractblockarrayinterface/#The-AbstractBlockArray-interface-1",
     "page": "The AbstractBlockSizes interface",
     "title": "The AbstractBlockArray interface",
     "category": "section",
@@ -65,7 +65,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/blockarrays.html#",
+    "location": "man/blockarrays/#",
     "page": "BlockArrays",
     "title": "BlockArrays",
     "category": "page",
@@ -73,15 +73,15 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/blockarrays.html#BlockArrays-1",
+    "location": "man/blockarrays/#BlockArrays-1",
     "page": "BlockArrays",
     "title": "BlockArrays",
     "category": "section",
-    "text": "DocTestSetup = quote\n    srand(1234)\nend"
+    "text": "DocTestSetup = quote\n    using BlockArrays\n    using Random\n    Random.seed!(1234)\nend"
 },
 
 {
-    "location": "man/blockarrays.html#Creating-uninitialized-BlockArrays-1",
+    "location": "man/blockarrays/#Creating-uninitialized-BlockArrays-1",
     "page": "BlockArrays",
     "title": "Creating uninitialized BlockArrays",
     "category": "section",
@@ -89,31 +89,31 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/blockarrays.html#Creating-BlockArrays-with-uninitialized-blocks.-1",
+    "location": "man/blockarrays/#Creating-BlockArrays-with-uninitialized-blocks.-1",
     "page": "BlockArrays",
     "title": "Creating BlockArrays with uninitialized blocks.",
     "category": "section",
-    "text": "A BlockArray can be created with the blocks left uninitialized using the BlockArray(undef, block_type, block_sizes...) function. The block_type should be an array type, it could for example be Matrix{Float64}. The block sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(undef_blocks, [1,2], [3,2])\n2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:\n #undef  #undef  #undef  │  #undef  #undef\n ------------------------┼----------------\n #undef  #undef  #undef  │  #undef  #undef\n #undef  #undef  #undef  │  #undef  #undefWe can also use a SparseVector or any other user defined array type by specifying it as the second argument:julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])\n2-blocked 3-element BlockArrays.BlockArray{Float64,1,SparseVector{Float64,Int64}}:\n #undef\n ------\n #undef\n #undefNote that accessing an undefined block will throw an \"access to undefined reference\"-error."
+    "text": "A BlockArray can be created with the blocks left uninitialized using the BlockArray(undef, block_type, block_sizes...) function. The block_type should be an array type, it could for example be Matrix{Float64}. The block sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(undef_blocks, [1,2], [3,2])\n3×5 BlockArray{Float32,2,Array{Float32,2}}:\n #undef  #undef  #undef  │  #undef  #undef\n ────────────────────────┼────────────────\n #undef  #undef  #undef  │  #undef  #undef\n #undef  #undef  #undef  │  #undef  #undefWe can also use a SparseVector or any other user defined array type by specifying it as the second argument:julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])\n2-blocked 3-element BlockArrays.BlockArray{Float64,1,SparseVector{Float64,Int64}}:\n #undef\n ------\n #undef\n #undefNote that accessing an undefined block will throw an \"access to undefined reference\"-error."
 },
 
 {
-    "location": "man/blockarrays.html#Setting-and-getting-blocks-and-values-1",
+    "location": "man/blockarrays/#Setting-and-getting-blocks-and-values-1",
     "page": "BlockArrays",
     "title": "Setting and getting blocks and values",
     "category": "section",
-    "text": "A block can be set by setblock!(block_array, v, i...) where v is the array to set and i is the block index. An alternative syntax for this is block_array[Block(i...)] = v or block_array[Block.(i)...].julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n #undef  #undef  │  #undef  #undef\n ----------------┼----------------\n #undef  #undef  │  #undef  #undef\n #undef  #undef  │  #undef  #undef\n\njulia> setblock!(block_array, rand(2,2), 2, 1)\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n #undef      #undef      │  #undef  #undef\n ------------------------┼----------------\n   0.590845    0.566237  │  #undef  #undef\n   0.766797    0.460085  │  #undef  #undef\n\njulia> block_array[Block(1, 1)] = [1 2];\n\njulia> block_array\n2×2-blocked 3×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n 1.0       2.0       │  #undef  #undef\n --------------------┼----------------\n 0.590845  0.566237  │  #undef  #undef\n 0.766797  0.460085  │  #undef  #undefNote that this will \"take ownership\" of the passed in array, that is, no copy is made.A block can be retrieved with getblock(block_array, i...) or block_array[Block(i...)]:julia> block_array[Block(1, 1)]\n1×2 Array{Float64,2}:\n 1.0  2.0\n\njulia> block_array[Block(1), Block(1)]  # equivalent to above\n 1×2 Array{Float64,2}:\n  1.0  2.0Similarly to setblock! this does not copy the returned array.For setting and getting a single scalar element, the usual setindex! and getindex are available.julia> block_array[1, 2]\n2.0"
+    "text": "A block can be set by setblock!(block_array, v, i...) where v is the array to set and i is the block index. An alternative syntax for this is block_array[Block(i...)] = v or block_array[Block.(i)...].julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])\n3×4 BlockArray{Float64,2,Array{Float64,2}}:\n #undef  #undef  │  #undef  #undef\n ────────────────┼────────────────\n #undef  #undef  │  #undef  #undef\n #undef  #undef  │  #undef  #undef\n\njulia> setblock!(block_array, rand(2,2), 2, 1)\n3×4 BlockArray{Float64,2,Array{Float64,2}}:\n #undef      #undef      │  #undef  #undef\n ────────────────────────┼────────────────\n   0.590845    0.566237  │  #undef  #undef\n   0.766797    0.460085  │  #undef  #undef\n\njulia> block_array[Block(1, 1)] = [1 2];\n\njulia> block_array\n3×4 BlockArray{Float64,2,Array{Float64,2}}:\n 1.0       2.0       │  #undef  #undef\n ────────────────────┼────────────────\n 0.590845  0.566237  │  #undef  #undef\n 0.766797  0.460085  │  #undef  #undefNote that this will \"take ownership\" of the passed in array, that is, no copy is made.A block can be retrieved with getblock(block_array, i...) or block_array[Block(i...)]:julia> block_array[Block(1, 1)]\n1×2 Array{Float64,2}:\n 1.0  2.0\n\njulia> block_array[Block(1), Block(1)]  # equivalent to above\n1×2 Array{Float64,2}:\n 1.0  2.0Similarly to setblock! this does not copy the returned array.For setting and getting a single scalar element, the usual setindex! and getindex are available.julia> block_array[1, 2]\n2.0"
 },
 
 {
-    "location": "man/blockarrays.html#Views-of-blocks-1",
+    "location": "man/blockarrays/#Views-of-blocks-1",
     "page": "BlockArrays",
     "title": "Views of blocks",
     "category": "section",
-    "text": "We can also view and modify views of blocks of BlockArray using the view syntax:julia> A = BlockArray(ones(6), 1:3);\n\njulia> view(A, Block(2))\n2-element SubArray{Float64,1,BlockArrays.BlockArray{Float64,1,Array{Float64,1}},Tuple{BlockArrays.BlockSlice},false}:\n 1.0\n 1.0\n\njulia> view(A, Block(2)) .= [3,4]; A[Block(2)]\n2-element Array{Float64,1}:\n 3.0\n 4.0"
+    "text": "We can also view and modify views of blocks of BlockArray using the view syntax:julia> A = BlockArray(ones(6), 1:3);\n\njulia> view(A, Block(2))\n2-element view(::BlockArray{Float64,1,Array{Float64,1}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:\n 1.0\n 1.0\n\njulia> view(A, Block(2)) .= [3,4]; A[Block(2)]\n2-element Array{Float64,1}:\n 3.0\n 4.0"
 },
 
 {
-    "location": "man/blockarrays.html#Converting-between-BlockArray-and-normal-arrays-1",
+    "location": "man/blockarrays/#Converting-between-BlockArray-and-normal-arrays-1",
     "page": "BlockArrays",
     "title": "Converting between BlockArray and normal arrays",
     "category": "section",
@@ -121,7 +121,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/pseudoblockarrays.html#",
+    "location": "man/pseudoblockarrays/#",
     "page": "PseudoBlockArrays",
     "title": "PseudoBlockArrays",
     "category": "page",
@@ -129,23 +129,23 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/pseudoblockarrays.html#PseudoBlockArrays-1",
+    "location": "man/pseudoblockarrays/#PseudoBlockArrays-1",
     "page": "PseudoBlockArrays",
     "title": "PseudoBlockArrays",
     "category": "section",
-    "text": "DocTestSetup = quote\n    srand(1234)\nendA PseudoBlockArray is similar to a BlockArray except the full array is stored contiguously instead of block by block. This means that is not possible to insert and retrieve blocks without copying data. On the other hand, converting a `PseudoBlockArray to the \"full\" underlying array is instead instant since it can just return the wrapped array.When iteratively solving a set of equations with a gradient method the Jacobian typically has a block structure. It can be convenient to use a PseudoBlockArray to build up the Jacobian block by block and then pass the resulting matrix to a direct solver using full."
+    "text": "DocTestSetup = quote\n    using BlockArrays\n    using Random\n    Random.seed!(1234)\nendA PseudoBlockArray is similar to a BlockArray except the full array is stored contiguously instead of block by block. This means that is not possible to insert and retrieve blocks without copying data. On the other hand, converting a `PseudoBlockArray to the \"full\" underlying array is instead instant since it can just return the wrapped array.When iteratively solving a set of equations with a gradient method the Jacobian typically has a block structure. It can be convenient to use a PseudoBlockArray to build up the Jacobian block by block and then pass the resulting matrix to a direct solver using full."
 },
 
 {
-    "location": "man/pseudoblockarrays.html#Creating-PseudoBlockArrays-1",
+    "location": "man/pseudoblockarrays/#Creating-PseudoBlockArrays-1",
     "page": "PseudoBlockArrays",
     "title": "Creating PseudoBlockArrays",
     "category": "section",
-    "text": "Creating a PseudoBlockArray works in the same way as a BlockArray.julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])\n2×2-blocked 3×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:\n 0.590845  0.460085  │  0.200586\n ────────────────────┼──────────\n 0.766797  0.794026  │  0.298614\n 0.566237  0.854147  │  0.246837This \"takes ownership\" of the passed in array so no copy of the array is made."
+    "text": "Creating a PseudoBlockArray works in the same way as a BlockArray.julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])\n3×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:\n 0.590845  0.460085  │  0.200586\n ────────────────────┼──────────\n 0.766797  0.794026  │  0.298614\n 0.566237  0.854147  │  0.246837This \"takes ownership\" of the passed in array so no copy of the array is made."
 },
 
 {
-    "location": "man/pseudoblockarrays.html#Creating-initialized-BlockArrays-1",
+    "location": "man/pseudoblockarrays/#Creating-initialized-BlockArrays-1",
     "page": "PseudoBlockArrays",
     "title": "Creating initialized BlockArrays",
     "category": "section",
@@ -153,7 +153,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/pseudoblockarrays.html#Setting-and-getting-blocks-and-values-1",
+    "location": "man/pseudoblockarrays/#Setting-and-getting-blocks-and-values-1",
     "page": "PseudoBlockArrays",
     "title": "Setting and getting blocks and values",
     "category": "section",
@@ -161,15 +161,15 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "man/pseudoblockarrays.html#Views-of-blocks-1",
+    "location": "man/pseudoblockarrays/#Views-of-blocks-1",
     "page": "PseudoBlockArrays",
     "title": "Views of blocks",
     "category": "section",
-    "text": "We can also view and modify views of blocks of PseudoBlockArray using the view syntax:julia> A = PseudoBlockArray(ones(6), 1:3);\n\njulia> view(A, Block(2))\n2-element SubArray{Float64,1,BlockArrays.PseudoBlockArray{Float64,1,Array{Float64,1}},Tuple{BlockArrays.BlockSlice},false}:\n 1.0\n 1.0\n\njulia> view(A, Block(2)) .= [3,4]; A[Block(2)]\n2-element Array{Float64,1}:\n 3.0\n 4.0Note that, in memory, each block is in a BLAS-Level 3 compatible format, so that, in the future, algebra with blocks will be highly efficient."
+    "text": "We can also view and modify views of blocks of PseudoBlockArray using the view syntax:julia> A = PseudoBlockArray(ones(6), 1:3);\n\njulia> view(A, Block(2))\n2-element view(::PseudoBlockArray{Float64,1,Array{Float64,1}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:\n 1.0\n 1.0\n\njulia> view(A, Block(2)) .= [3,4]; A[Block(2)]\n2-element Array{Float64,1}:\n 3.0\n 4.0Note that, in memory, each block is in a BLAS-Level 3 compatible format, so that, in the future, algebra with blocks will be highly efficient."
 },
 
 {
-    "location": "lib/public.html#",
+    "location": "lib/public/#",
     "page": "Public Documentation",
     "title": "Public Documentation",
     "category": "page",
@@ -177,7 +177,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#Public-Documentation-1",
+    "location": "lib/public/#Public-Documentation-1",
     "page": "Public Documentation",
     "title": "Public Documentation",
     "category": "section",
@@ -185,7 +185,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#Contents-1",
+    "location": "lib/public/#Contents-1",
     "page": "Public Documentation",
     "title": "Contents",
     "category": "section",
@@ -193,7 +193,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#Index-1",
+    "location": "lib/public/#Index-1",
     "page": "Public Documentation",
     "title": "Index",
     "category": "section",
@@ -201,7 +201,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArrays.AbstractBlockArray",
+    "location": "lib/public/#BlockArrays.AbstractBlockArray",
     "page": "Public Documentation",
     "title": "BlockArrays.AbstractBlockArray",
     "category": "type",
@@ -209,7 +209,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArrays.BlockBoundsError",
+    "location": "lib/public/#BlockArrays.BlockBoundsError",
     "page": "Public Documentation",
     "title": "BlockArrays.BlockBoundsError",
     "category": "type",
@@ -217,23 +217,23 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArrays.Block",
+    "location": "lib/public/#BlockArrays.Block",
     "page": "Public Documentation",
     "title": "BlockArrays.Block",
     "category": "type",
-    "text": "Block(inds...)\n\nA Block is simply a wrapper around a set of indices or enums so that it can be used to dispatch on. By indexing a AbstractBlockArray with a Block the a block at that block index will be returned instead of a single element.\n\njulia> A = BlockArray(ones(2,3), [1, 1], [2, 1])\n2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n 1.0  1.0  │  1.0\n ----------┼-----\n 1.0  1.0  │  1.0\n\njulia> A[Block(1, 1)]\n1×2 Array{Float64,2}:\n 1.0  1.0\n\n\n\n\n\n"
+    "text": "Block(inds...)\n\nA Block is simply a wrapper around a set of indices or enums so that it can be used to dispatch on. By indexing a AbstractBlockArray with a Block the a block at that block index will be returned instead of a single element.\n\njulia> A = BlockArray(ones(2,3), [1, 1], [2, 1])\n2×3 BlockArray{Float64,2,Array{Float64,2}}:\n 1.0  1.0  │  1.0\n ──────────┼─────\n 1.0  1.0  │  1.0\n\njulia> A[Block(1, 1)]\n1×2 Array{Float64,2}:\n 1.0  1.0\n\n\n\n\n\n"
 },
 
 {
-    "location": "lib/public.html#BlockArrays.BlockIndex",
+    "location": "lib/public/#BlockArrays.BlockIndex",
     "page": "Public Documentation",
     "title": "BlockArrays.BlockIndex",
     "category": "type",
-    "text": "BlockIndex{N}\n\nA BlockIndex is an index which stores a global index in two parts: the block and the offset index into the block.\n\nIt can be used to index into BlockArrays in the following manner:\n\njulia> arr = Array(reshape(1:25, (5,5)));\n\njulia> a = PseudoBlockArray(arr, [3,2], [1,4])\n2×2-blocked 5×5 BlockArrays.PseudoBlockArray{Int64,2,Array{Int64,2}}:\n 1  │   6  11  16  21\n 2  │   7  12  17  22\n 3  │   8  13  18  23\n ───┼────────────────\n 4  │   9  14  19  24\n 5  │  10  15  20  25\n\njulia> a[BlockIndex((1,2), (1,2))]\n11\n\njulia> a[BlockIndex((2,2), (2,3))]\n20\n\n\n\n\n\n"
+    "text": "BlockIndex{N}\n\nA BlockIndex is an index which stores a global index in two parts: the block and the offset index into the block.\n\nIt can be used to index into BlockArrays in the following manner:\n\njulia> arr = Array(reshape(1:25, (5,5)));\n\njulia> a = PseudoBlockArray(arr, [3,2], [1,4])\n5×5 PseudoBlockArray{Int64,2,Array{Int64,2}}:\n 1  │   6  11  16  21\n 2  │   7  12  17  22\n 3  │   8  13  18  23\n ───┼────────────────\n 4  │   9  14  19  24\n 5  │  10  15  20  25\n\njulia> a[BlockIndex((1,2), (1,2))]\n11\n\njulia> a[BlockIndex((2,2), (2,3))]\n20\n\n\n\n\n\n"
 },
 
 {
-    "location": "lib/public.html#BlockArrays.nblocks",
+    "location": "lib/public/#BlockArrays.nblocks",
     "page": "Public Documentation",
     "title": "BlockArrays.nblocks",
     "category": "function",
@@ -241,7 +241,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArrays.blocksize",
+    "location": "lib/public/#BlockArrays.blocksize",
     "page": "Public Documentation",
     "title": "BlockArrays.blocksize",
     "category": "function",
@@ -249,7 +249,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArrays.blocksizes",
+    "location": "lib/public/#BlockArrays.blocksizes",
     "page": "Public Documentation",
     "title": "BlockArrays.blocksizes",
     "category": "function",
@@ -257,47 +257,47 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArrays.getblock",
+    "location": "lib/public/#BlockArrays.getblock",
     "page": "Public Documentation",
     "title": "BlockArrays.getblock",
     "category": "function",
-    "text": "getblock(A, inds...)\n\nReturns the block at blockindex inds.... An alternative syntax is A[Block(inds...)]. Throws aBlockBoundsError` if this block is out of bounds.\n\njulia> v = Array(reshape(1:6, (2, 3)))\n2×3 Array{Int64,2}:\n 1  3  5\n 2  4  6\n\njulia> A = BlockArray(v, [1,1], [2,1])\n2×2-blocked 2×3 BlockArrays.BlockArray{Int64,2,Array{Int64,2}}:\n 1  3  │  5\n ------┼---\n 2  4  │  6\n\njulia> getblock(A, 2, 1)\n1×2 Array{Int64,2}:\n 2  4\n\njulia> A[Block(1, 2)]\n1×1 Array{Int64,2}:\n 5\n\n\n\n\n\n"
+    "text": "getblock(A, inds...)\n\nReturns the block at blockindex inds.... An alternative syntax is A[Block(inds...)]. Throws aBlockBoundsError` if this block is out of bounds.\n\njulia> v = Array(reshape(1:6, (2, 3)))\n2×3 Array{Int64,2}:\n 1  3  5\n 2  4  6\n\njulia> A = BlockArray(v, [1,1], [2,1])\n2×3 BlockArray{Int64,2,Array{Int64,2}}:\n 1  3  │  5\n ──────┼───\n 2  4  │  6\n\njulia> getblock(A, 2, 1)\n1×2 Array{Int64,2}:\n 2  4\n\njulia> A[Block(1, 2)]\n1×1 Array{Int64,2}:\n 5\n\n\n\n\n\n"
 },
 
 {
-    "location": "lib/public.html#BlockArrays.getblock!",
+    "location": "lib/public/#BlockArrays.getblock!",
     "page": "Public Documentation",
     "title": "BlockArrays.getblock!",
     "category": "function",
-    "text": "getblock!(X, A, inds...)\n\nStores the block at blockindex inds in X and returns it. Throws a BlockBoundsError if the attempted assigned block is out of bounds.\n\njulia> A = PseudoBlockArray(ones(2, 3), [1, 1], [2, 1])\n2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:\n 1.0  1.0  │  1.0\n ----------┼-----\n 1.0  1.0  │  1.0\n\njulia> x = zeros(1, 2);\n\njulia> getblock!(x, A, 2, 1);\n\njulia> x\n1×2 Array{Float64,2}:\n 1.0  1.0\n\n\n\n\n\n"
+    "text": "getblock!(X, A, inds...)\n\nStores the block at blockindex inds in X and returns it. Throws a BlockBoundsError if the attempted assigned block is out of bounds.\n\njulia> A = PseudoBlockArray(ones(2, 3), [1, 1], [2, 1])\n2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:\n 1.0  1.0  │  1.0\n ──────────┼─────\n 1.0  1.0  │  1.0\n\njulia> x = zeros(1, 2);\n\njulia> getblock!(x, A, 2, 1);\n\njulia> x\n1×2 Array{Float64,2}:\n 1.0  1.0\n\n\n\n\n\n"
 },
 
 {
-    "location": "lib/public.html#BlockArrays.setblock!",
+    "location": "lib/public/#BlockArrays.setblock!",
     "page": "Public Documentation",
     "title": "BlockArrays.setblock!",
     "category": "function",
-    "text": "setblock!(A, v, inds...)\n\nStores the block v in the block at block index inds in A. An alternative syntax is A[Block(inds...)] = v. Throws a BlockBoundsError if this block is out of bounds.\n\njulia> A = PseudoBlockArray(zeros(2, 3), [1, 1], [2, 1]);\n\njulia> setblock!(A, [1 2], 1, 1);\n\njulia> A[Block(2, 1)] = [3 4];\n\njulia> A\n2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:\n 1.0  2.0  │  0.0\n ----------┼-----\n 3.0  4.0  │  0.0\n\n\n\n\n\n"
+    "text": "setblock!(A, v, inds...)\n\nStores the block v in the block at block index inds in A. An alternative syntax is A[Block(inds...)] = v. Throws a BlockBoundsError if this block is out of bounds.\n\njulia> A = PseudoBlockArray(zeros(2, 3), [1, 1], [2, 1]);\n\njulia> setblock!(A, [1 2], 1, 1);\n\njulia> A[Block(2, 1)] = [3 4];\n\njulia> A\n2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:\n 1.0  2.0  │  0.0\n ──────────┼─────\n 3.0  4.0  │  0.0\n\n\n\n\n\n"
 },
 
 {
-    "location": "lib/public.html#Core.Array",
+    "location": "lib/public/#Core.Array",
     "page": "Public Documentation",
     "title": "Core.Array",
     "category": "type",
-    "text": "Array(A::AbstractBlockArray)\n\nReturns the array stored in A as a Array.\n\njulia> A = BlockArray(ones(2,3), [1,1], [2,1])\n2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:\n 1.0  1.0  │  1.0\n ----------┼-----\n 1.0  1.0  │  1.0\n\njulia> Array(A)\n2×3 Array{Float64,2}:\n 1.0  1.0  1.0\n 1.0  1.0  1.0\n\n\n\n\n\n"
+    "text": "Array(A::AbstractBlockArray)\n\nReturns the array stored in A as a Array.\n\njulia> A = BlockArray(ones(2,3), [1,1], [2,1])\n2×3 BlockArray{Float64,2,Array{Float64,2}}:\n 1.0  1.0  │  1.0\n ──────────┼─────\n 1.0  1.0  │  1.0\n\njulia> Array(A)\n2×3 Array{Float64,2}:\n 1.0  1.0  1.0\n 1.0  1.0  1.0\n\n\n\n\n\n"
 },
 
 {
-    "location": "lib/public.html#BlockArrays.blockcheckbounds",
+    "location": "lib/public/#BlockArrays.blockcheckbounds",
     "page": "Public Documentation",
     "title": "BlockArrays.blockcheckbounds",
     "category": "function",
-    "text": "blockcheckbounds(A, inds...)\n\nThrow a BlockBoundsError if the specified block indexes are not in bounds for the given block array. Subtypes of AbstractBlockArray should specialize this method if they need to provide custom block bounds checking behaviors.\n\njulia> A = BlockArray(rand(2,3), [1,1], [2,1]);\n\njulia> blockcheckbounds(A, 3, 2)\nERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]\n[...]\n\n\n\n\n\n"
+    "text": "blockcheckbounds(A, inds...)\n\nThrow a BlockBoundsError if the specified block indexes are not in bounds for the given block array. Subtypes of AbstractBlockArray should specialize this method if they need to provide custom block bounds checking behaviors.\n\njulia> A = BlockArray(rand(2,3), [1,1], [2,1]);\n\njulia> blockcheckbounds(A, 3, 2)\nERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]\n[...]\n\n\n\n\n\n"
 },
 
 {
-    "location": "lib/public.html#AbstractBlockArray-interface-1",
+    "location": "lib/public/#AbstractBlockArray-interface-1",
     "page": "Public Documentation",
     "title": "AbstractBlockArray interface",
     "category": "section",
@@ -305,7 +305,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArrays.BlockArray",
+    "location": "lib/public/#BlockArrays.BlockArray",
     "page": "Public Documentation",
     "title": "BlockArrays.BlockArray",
     "category": "type",
@@ -313,7 +313,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArrays.undef_blocks",
+    "location": "lib/public/#BlockArrays.undef_blocks",
     "page": "Public Documentation",
     "title": "BlockArrays.undef_blocks",
     "category": "constant",
@@ -321,7 +321,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArrays.UndefBlocksInitializer",
+    "location": "lib/public/#BlockArrays.UndefBlocksInitializer",
     "page": "Public Documentation",
     "title": "BlockArrays.UndefBlocksInitializer",
     "category": "type",
@@ -329,23 +329,31 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public.html#BlockArray-1",
+    "location": "lib/public/#BlockArrays.mortar",
+    "page": "Public Documentation",
+    "title": "BlockArrays.mortar",
+    "category": "function",
+    "text": "mortar(blocks::AbstractArray)\nmortar(blocks::AbstractArray{R, N}, sizes_1, sizes_2, ..., sizes_N)\nmortar(blocks::AbstractArray{R, N}, block_sizes::BlockSizes{N})\n\nConstruct a BlockArray from blocks.  block_sizes is computed from blocks if it is not given.\n\nExamples\n\njulia> blocks = permutedims(reshape([\n           1ones(1, 3), 2ones(1, 2),\n           3ones(2, 3), 4ones(2, 2),\n       ], (2, 2)))\n2×2 Array{Array{Float64,2},2}:\n [1.0 1.0 1.0]               [2.0 2.0]\n [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]\n\njulia> mortar(blocks)\n3×5 BlockArray{Float64,2,Array{Float64,2}}:\n 1.0  1.0  1.0  │  2.0  2.0\n ───────────────┼──────────\n 3.0  3.0  3.0  │  4.0  4.0\n 3.0  3.0  3.0  │  4.0  4.0\n\njulia> ans == mortar(\n           (1ones(1, 3), 2ones(1, 2)),\n           (3ones(2, 3), 4ones(2, 2)),\n       )\ntrue\n\n\n\n\n\nmortar((block_11, ..., block_1m), ... (block_n1, ..., block_nm))\n\nConstruct a BlockMatrix with n * m  blocks.  Each block_ij must be an AbstractMatrix.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/public/#BlockArray-1",
     "page": "Public Documentation",
     "title": "BlockArray",
     "category": "section",
-    "text": "BlockArray\nundef_blocks\nUndefBlocksInitializer"
+    "text": "BlockArray\nundef_blocks\nUndefBlocksInitializer\nmortar"
 },
 
 {
-    "location": "lib/public.html#BlockArrays.PseudoBlockArray",
+    "location": "lib/public/#BlockArrays.PseudoBlockArray",
     "page": "Public Documentation",
     "title": "BlockArrays.PseudoBlockArray",
     "category": "type",
-    "text": "PseudoBlockArray{T, N, R} <: AbstractBlockArray{T, N}\n\nA PseudoBlockArray is similar to a BlockArray except the full array is stored contiguously instead of block by block. This means that is not possible to insert and retrieve blocks without copying data. On the other hand Array on a PseudoBlockArray is instead instant since it just returns the wrapped array.\n\nWhen iteratively solving a set of equations with a gradient method the Jacobian typically has a block structure. It can be convenient to use a PseudoBlockArray to build up the Jacobian block by block and then pass the resulting matrix to a direct solver using Array.\n\njulia> srand(12345);\n\njulia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])\n2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:\n 0.562714  0.371605  │  0.381128\n --------------------┼----------\n 0.849939  0.283365  │  0.365801\n\njulia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])\n3-blocked 6-element BlockArrays.PseudoBlockArray{Float64,1,SparseVector{Float64,Int64}}:\n 0.0\n 0.586598\n 0.0\n ---------\n 0.0501668\n 0.0\n ---------\n 0.0\n\n\n\n\n\n"
+    "text": "PseudoBlockArray{T, N, R} <: AbstractBlockArray{T, N}\n\nA PseudoBlockArray is similar to a BlockArray except the full array is stored contiguously instead of block by block. This means that is not possible to insert and retrieve blocks without copying data. On the other hand Array on a PseudoBlockArray is instead instant since it just returns the wrapped array.\n\nWhen iteratively solving a set of equations with a gradient method the Jacobian typically has a block structure. It can be convenient to use a PseudoBlockArray to build up the Jacobian block by block and then pass the resulting matrix to a direct solver using Array.\n\njulia> using BlockArrays, Random, SparseArrays\n\njulia> Random.seed!(12345);\n\njulia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])\n2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:\n 0.562714  0.371605  │  0.381128\n ────────────────────┼──────────\n 0.849939  0.283365  │  0.365801\n\njulia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])\n6-element PseudoBlockArray{Float64,1,SparseVector{Float64,Int64}}:\n 0.0\n 0.5865981007905481\n 0.0\n ───────────────────\n 0.05016684053503706\n 0.0\n ───────────────────\n 0.0\n\n\n\n\n\n"
 },
 
 {
-    "location": "lib/public.html#PseudoBlockArray-1",
+    "location": "lib/public/#PseudoBlockArray-1",
     "page": "Public Documentation",
     "title": "PseudoBlockArray",
     "category": "section",
@@ -353,7 +361,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#",
+    "location": "lib/internals/#",
     "page": "Internal Documentation",
     "title": "Internal Documentation",
     "category": "page",
@@ -361,7 +369,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#Internal-Documentation-1",
+    "location": "lib/internals/#Internal-Documentation-1",
     "page": "Internal Documentation",
     "title": "Internal Documentation",
     "category": "section",
@@ -369,7 +377,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#Contents-1",
+    "location": "lib/internals/#Contents-1",
     "page": "Internal Documentation",
     "title": "Contents",
     "category": "section",
@@ -377,7 +385,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#Index-1",
+    "location": "lib/internals/#Index-1",
     "page": "Internal Documentation",
     "title": "Index",
     "category": "section",
@@ -385,7 +393,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#BlockArrays.blockindex2global",
+    "location": "lib/internals/#BlockArrays.blockindex2global",
     "page": "Internal Documentation",
     "title": "BlockArrays.blockindex2global",
     "category": "function",
@@ -393,7 +401,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#BlockArrays.global2blockindex",
+    "location": "lib/internals/#BlockArrays.global2blockindex",
     "page": "Internal Documentation",
     "title": "BlockArrays.global2blockindex",
     "category": "function",
@@ -401,7 +409,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#BlockArrays.BlockRange",
+    "location": "lib/internals/#BlockArrays.BlockRange",
     "page": "Internal Documentation",
     "title": "BlockArrays.BlockRange",
     "category": "type",
@@ -409,7 +417,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#BlockArrays.BlockIndexRange",
+    "location": "lib/internals/#BlockArrays.BlockIndexRange",
     "page": "Internal Documentation",
     "title": "BlockArrays.BlockIndexRange",
     "category": "type",
@@ -417,7 +425,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#BlockArrays.BlockSlice",
+    "location": "lib/internals/#BlockArrays.BlockSlice",
     "page": "Internal Documentation",
     "title": "BlockArrays.BlockSlice",
     "category": "type",
@@ -425,7 +433,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#BlockArrays.unblock",
+    "location": "lib/internals/#BlockArrays.unblock",
     "page": "Internal Documentation",
     "title": "BlockArrays.unblock",
     "category": "function",
@@ -433,7 +441,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/internals.html#Internals-1",
+    "location": "lib/internals/#Internals-1",
     "page": "Internal Documentation",
     "title": "Internals",
     "category": "section",
