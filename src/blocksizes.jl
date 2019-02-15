@@ -172,7 +172,7 @@ blocksizes(A::AbstractBlockArray) = error("blocksizes for $(typeof(A)) is not im
 
 Returns a tuple containing the size of the block at block index `inds`.
 
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(rand(5, 4, 6), [1, 4], [1, 2, 1], [1, 2, 2, 1]);
 
 julia> blocksize(A, (1, 3, 2))

@@ -32,7 +32,7 @@ Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 Returns a tuple containing the number of blocks in a block array.  Optionally you can specify
 the dimension(s) you want the number of blocks for.
 
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> A =  BlockArray(rand(5,4,6), [1,4], [1,2,1], [1,2,2,1]);
 
 julia> nblocks(A)
@@ -59,11 +59,11 @@ A `Block` is simply a wrapper around a set of indices or enums so that it can be
 indexing a `AbstractBlockArray` with a `Block` the a block at that block index will be returned instead of
 a single element.
 
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
-2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
+2×3 BlockArray{Float64,2,Array{Float64,2}}:
  1.0  1.0  │  1.0
- ----------┼-----
+ ──────────┼─────
  1.0  1.0  │  1.0
 
 julia> A[Block(1, 1)]
@@ -127,16 +127,16 @@ Number(index::Block{1}) = index.n[1]
 Returns the block at blockindex `inds...`. An alternative syntax is `A[Block(inds...)].
 Throws a `BlockBoundsError` if this block is out of bounds.
 
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> v = Array(reshape(1:6, (2, 3)))
 2×3 Array{Int64,2}:
  1  3  5
  2  4  6
 
 julia> A = BlockArray(v, [1,1], [2,1])
-2×2-blocked 2×3 BlockArrays.BlockArray{Int64,2,Array{Int64,2}}:
+2×3 BlockArray{Int64,2,Array{Int64,2}}:
  1  3  │  5
- ------┼---
+ ──────┼───
  2  4  │  6
 
 julia> getblock(A, 2, 1)
@@ -160,11 +160,11 @@ end
 Stores the block at blockindex `inds` in `X` and returns it. Throws a `BlockBoundsError` if the
 attempted assigned block is out of bounds.
 
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> A = PseudoBlockArray(ones(2, 3), [1, 1], [2, 1])
-2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
  1.0  1.0  │  1.0
- ----------┼-----
+ ──────────┼─────
  1.0  1.0  │  1.0
 
 julia> x = zeros(1, 2);
@@ -188,7 +188,7 @@ getblock!(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N} = throw(e
 Stores the block `v` in the block at block index `inds` in `A`. An alternative syntax is `A[Block(inds...)] = v`.
 Throws a `BlockBoundsError` if this block is out of bounds.
 
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> A = PseudoBlockArray(zeros(2, 3), [1, 1], [2, 1]);
 
 julia> setblock!(A, [1 2], 1, 1);
@@ -196,9 +196,9 @@ julia> setblock!(A, [1 2], 1, 1);
 julia> A[Block(2, 1)] = [3 4];
 
 julia> A
-2×2-blocked 2×3 BlockArrays.PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
  1.0  2.0  │  0.0
- ----------┼-----
+ ──────────┼─────
  3.0  4.0  │  0.0
 ```
 """
@@ -242,11 +242,11 @@ Throw a `BlockBoundsError` if the specified block indexes are not in bounds for 
 Subtypes of `AbstractBlockArray` should
 specialize this method if they need to provide custom block bounds checking behaviors.
 
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]
 [...]
 ```
 """
@@ -277,11 +277,11 @@ end
 
 Returns the array stored in `A` as a `Array`.
 
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(2,3), [1,1], [2,1])
-2×2-blocked 2×3 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
+2×3 BlockArray{Float64,2,Array{Float64,2}}:
  1.0  1.0  │  1.0
- ----------┼-----
+ ──────────┼─────
  1.0  1.0  │  1.0
 
 julia> Array(A)

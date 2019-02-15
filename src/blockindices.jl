@@ -6,11 +6,11 @@ and the offset index into the block.
 
 It can be used to index into `BlockArrays` in the following manner:
 
-```jldoctest
+```jldoctest; setup = quote using BlockArrays end
 julia> arr = Array(reshape(1:25, (5,5)));
 
 julia> a = PseudoBlockArray(arr, [3,2], [1,4])
-2×2-blocked 5×5 BlockArrays.PseudoBlockArray{Int64,2,Array{Int64,2}}:
+5×5 PseudoBlockArray{Int64,2,Array{Int64,2}}:
  1  │   6  11  16  21
  2  │   7  12  17  22
  3  │   8  13  18  23
