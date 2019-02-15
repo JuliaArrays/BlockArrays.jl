@@ -49,6 +49,90 @@ similar(bc::Broadcasted{<:AbstractBlockStyle{N}}, ::Type{T}) where {T,N} =
 similar(bc::Broadcasted{PseudoBlockStyle{N}}, ::Type{T}) where {T,N} =
     PseudoBlockArray{T,N}(undef, blocksizes(bc))
 
+"""
+    SubBlockIterator(subcumulsize::Vector{Int}, cumulsize::Vector{Int})
+    SubBlockIterator(A::AbstractArray, bs::BlockSizes, dim::Integer)
+
+An iterator for iterating `BlockIndexRange` of the blocks specified by
+`cumulsize`.  The `Block` index part of `BlockIndexRange` is
+determined by `subcumulsize`.  That is to say, the `Block` index first
+specifies one of the block represented by `subcumulsize` and then the
+inner-block index range specifies the region within the block.  Each
+such block corresponds to a block specified by `cumulsize`.
+
+Note that the invariance `subcumulsize ⊂ cumulsize` must hold and must
+be ensured by the caller.
+
+# Examples
+```jldoctest
+julia> using BlockArrays
+       using BlockArrays: SubBlockIterator, BlockIndexRange, cumulsizes
+
+julia> A = BlockArray(1:6, 1:3);
+
+julia> subcumulsize = cumulsizes(A, 1);
+
+julia> @assert subcumulsize == [1, 2, 4, 7]
+
+julia> cumulsize = [1, 2, 4, 5, 7];
+
+julia> for idx in SubBlockIterator(subcumulsize, cumulsize)
+           B = @show view(A, idx)
+           @assert !(parent(B) isa BlockArray)
+
+           idx :: BlockIndexRange
+           idx.block :: Block{1}
+           idx.indices :: Tuple{UnitRange}
+       end
+view(A, idx) = [1]
+view(A, idx) = [2, 3]
+view(A, idx) = [4]
+view(A, idx) = [5, 6]
+
+julia> [idx.block.n[1] for idx in SubBlockIterator(subcumulsize, cumulsize)]
+4-element Array{Int64,1}:
+ 1
+ 2
+ 3
+ 3
+
+julia> [idx.indices[1] for idx in SubBlockIterator(subcumulsize, cumulsize)]
+4-element Array{UnitRange{Int64},1}:
+ 1:1
+ 1:2
+ 1:1
+ 2:3
+```
+"""
+struct SubBlockIterator
+    subcumulsize::Vector{Int}
+    cumulsize::Vector{Int}
+end
+
+Base.IteratorEltype(::Type{<:SubBlockIterator}) = Base.HasEltype()
+Base.eltype(::Type{<:SubBlockIterator}) = BlockIndexRange{1,Tuple{UnitRange{Int64}}}
+
+Base.IteratorSize(::Type{<:SubBlockIterator}) = Base.HasLength()
+Base.length(it::SubBlockIterator) = length(it.cumulsize) - 1
+
+SubBlockIterator(arr::AbstractArray, bs::BlockSizes, dim::Integer) =
+    SubBlockIterator(cumulsizes(arr, dim), cumulsizes(bs, dim))
+
+function Base.iterate(it::SubBlockIterator, state=nothing)
+    if state === nothing
+        i = 1
+        j = 1
+    else
+        i, j = state
+    end
+    length(it.cumulsize) == i && return nothing
+    idx = it.cumulsize[i]:it.cumulsize[i + 1] - 1
+    bir = BlockIndexRange(Block(j), idx .- (it.subcumulsize[j] - 1))
+    if it.subcumulsize[j + 1] == it.cumulsize[i + 1]
+        j += 1
+    end
+    return (bir, (i + 1, j))
+end
 
 subblocks(::Any, bs::BlockSizes, dim::Integer) =
     (nothing for _ in 1:nblocks(bs, dim))
@@ -57,20 +141,7 @@ function subblocks(arr::AbstractArray, bs::BlockSizes, dim::Integer)
     if size(arr, dim) == 1
         return (BlockIndexRange(Block(1), 1:1) for _ in 1:nblocks(bs, dim))
     end
-    j = 1
-    next = 1
-    arrstops = cumulsizes(arr, dim)
-    return (
-        let n = blocksize(bs, dim, i)
-            start = next
-            next = start + n
-            j0 = j
-            if arrstops[j + 1] == next
-                j += 1
-            end
-            BlockIndexRange(Block(j0), (start:next - 1) .- (arrstops[j0] - 1))
-        end
-        for i in 1:nblocks(bs, dim))
+    return SubBlockIterator(arr, bs, dim)
 end
 
 @inline _bview(arg, ::Vararg) = arg
