@@ -110,8 +110,32 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
     to_indices(A, axes(A), I)
 
 
+# The first argument for `reindex` is removed as of
+# https://github.com/JuliaLang/julia/pull/30789 in Julia `Base`.  So,
+# we define 2-arg `reindex` for Julia 1.2 and later.
+if VERSION >= v"1.2-"
+
 # BlockSlices map the blocks and the indices
 # this is loosely based on Slice reindex in subarray.jl
+reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
+                                            idxs[1].indices[subidxs[1].indices]),
+                                 reindex(tail(idxs), tail(subidxs))...))
+
+reindex(idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(Block(idxs[1].block.indices[1][Int(subidxs[1].block)]),
+                                            idxs[1].indices[subidxs[1].indices]),
+                                 reindex(tail(idxs), tail(subidxs))...))
+
+function reindex(idxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}})
+    (idxs[1], reindex(tail(idxs), tail(subidxs))...)
+end
+
+else  # if VERSION >= v"1.2-"
+
 reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
     (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
@@ -130,6 +154,7 @@ function reindex(V, idxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}},
     (idxs[1], reindex(V, tail(idxs), tail(subidxs))...)
 end
 
+end  # if VERSION >= v"1.2-"
 
 
 #################

@@ -72,12 +72,21 @@ to_index(::BlockIndexRange) = throw(ArgumentError("BlockIndexRange must be conve
 @inline to_indices(A, I::Tuple{BlockIndexRange, Vararg{Any}}) =
     to_indices(A, axes(A), I)
 
+if VERSION >= v"1.2-"  # See also `reindex` definitions in views.jl
+reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
+                                                            subidxs[1].block.indices),
+                                            idxs[1].indices[subidxs[1].indices]),
+                                 reindex(tail(idxs), tail(subidxs))...))
+else  # if VERSION >= v"1.2-"
 reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
     (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
                                                             subidxs[1].block.indices),
                                             idxs[1].indices[subidxs[1].indices]),
                                     reindex(V, tail(idxs), tail(subidxs))...))
+end  # if VERSION >= v"1.2-"
 
 # De-reference blocks before creating a view to avoid taking `global2blockindex`
 # path in `AbstractBlockStyle` broadcasting.
