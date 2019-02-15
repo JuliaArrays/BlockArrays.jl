@@ -25,4 +25,5 @@ BlockRange
 BlockIndexRange
 BlockSlice
 unblock
+SubBlockIterator
 ```
