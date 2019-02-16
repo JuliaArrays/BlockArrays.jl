@@ -47,6 +47,4 @@ include("blockarrayinterface.jl")
 include("blockbroadcast.jl")
 # include("linalg.jl")
 
-include("deprecate.jl")
-
 end # module
