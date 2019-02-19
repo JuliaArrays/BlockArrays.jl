@@ -164,7 +164,7 @@ end  # if VERSION >= v"1.2-"
 const BlockOrRangeIndex = Union{RangeIndex, BlockSlice}
 
 function unsafe_convert(::Type{Ptr{T}},
-                        V::SubArray{T, N, BlockArray{T, N, AT}, NTuple{N, BlockSlice{Block{1,Int}}}}) where AT <: AbstractArray{T, N} where {T,N}
+                        V::SubArray{T, N, BlockArray{T, N, AT}, NTuple{N, BlockSlice{Block{1,Int}}}}) where AT <: AbstractArray{<:AbstractArray{T,N},N} where {T,N}
     unsafe_convert(Ptr{T}, parent(V).blocks[Int.(Block.(parentindices(V)))...])
 end
 
