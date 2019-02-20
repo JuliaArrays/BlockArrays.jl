@@ -72,3 +72,9 @@ end
     @test BlockArray(A') == A'
     @test BlockArray(transpose(A)) == transpose(A)
 end
+
+@testset "BlockArray with other blocks" begin
+    A = mortar(Diagonal(fill([1 2],2)))
+    @test A isa BlockMatrix{Int,Diagonal{Matrix{Int}, Vector{Matrix{Int}}}}
+    @test A == [1 2 0 0; 0 0 1 2]
+end

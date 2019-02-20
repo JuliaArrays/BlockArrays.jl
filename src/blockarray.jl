@@ -226,10 +226,10 @@ true
 ```
 """
 mortar(blocks::AbstractArray{R, N}, block_sizes::BlockSizes{N}) where {R, N} =
-    _BlockArray(convert(Array, blocks), block_sizes)
+    _BlockArray(blocks, block_sizes)
 
 mortar(blocks::AbstractArray{R, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {R, N} =
-    _BlockArray(convert(Array, blocks), block_sizes...)
+    _BlockArray(blocks, block_sizes...)
 
 mortar(blocks::AbstractArray) = mortar(blocks, sizes_from_blocks(blocks)...)
 
