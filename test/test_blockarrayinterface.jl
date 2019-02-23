@@ -1,4 +1,4 @@
-using BlockArrays
+using BlockArrays, LinearAlgebra
 
 struct PartiallyImplementedBlockVector <: AbstractBlockArray{Float64,1} end
 
@@ -73,8 +73,12 @@ end
     @test BlockArray(transpose(A)) == transpose(A)
 end
 
-@testset "BlockArray with other blocks" begin
+@testset "Diagonal BlockArray" begin
     A = mortar(Diagonal(fill([1 2],2)))
     @test A isa BlockMatrix{Int,Diagonal{Matrix{Int}, Vector{Matrix{Int}}}}
+    @test A[Block(1,2)] == [0 0]
+    @test_throws BlockBoundsError A[Block(1,3)]
     @test A == [1 2 0 0; 0 0 1 2]
 end
+
+

@@ -308,7 +308,7 @@ end
 
 @inline function Base.getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N}
     @boundscheck checkbounds(block_arr.blocks, blockindex.I...)
-    @inbounds block = block_arr.blocks[blockindex.I...]
+    @inbounds block = getblock(block_arr, blockindex.I...)
     @boundscheck checkbounds(block, blockindex.α...)
     @inbounds v = block[blockindex.α...]
     return v
