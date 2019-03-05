@@ -5,24 +5,23 @@
 abstract type AbstractBlockSizes{N} end
 
 # Keeps track of the (cumulative) sizes of all the blocks in the `BlockArray`.
-struct BlockSizes{N} <: AbstractBlockSizes{N}
-    cumul_sizes::NTuple{N, Vector{Int}}
+struct BlockSizes{N,VT<:AbstractVector{Int}} <: AbstractBlockSizes{N}
+    cumul_sizes::NTuple{N,VT}
     # Takes a tuple of sizes, accumulates them and create a `BlockSizes`
-    BlockSizes{N}() where N = new{N}()
-    BlockSizes{N}(cs::NTuple{N,Vector{Int}}) where N = new{N}(cs)
+    BlockSizes{N,VT}() where {N,VT<:AbstractVector{Int}} = new{N,VT}()
+    BlockSizes{N,VT}(cs::NTuple{N,VT}) where {N,VT<:AbstractVector{Int}} = new{N,VT}(cs)
 end
 
+BlockSizes{N}(cs::NTuple{N,VT}) where {N,VT<:AbstractVector{Int}} = BlockSizes{N,VT}(cs)
+BlockSizes{N}() where N = BlockSizes{N,Vector{Int}}()
 BlockSizes() = BlockSizes{0}()
 
-BlockSizes(cs::NTuple{N,Vector{Int}}) where N = BlockSizes{N}(cs)
+BlockSizes(cs::NTuple{N,VT}) where {N,VT<:AbstractVector{Int}} = BlockSizes{N}(cs)
 
-function BlockSizes(sizes::Vararg{Vector{Int}, N}) where {N}
+function BlockSizes(sizes::Vararg{AbstractVector{Int}, N}) where {N}
     cumul_sizes = ntuple(k -> _cumul_vec(sizes[k]), Val(N))
     return BlockSizes(cumul_sizes)
 end
-
-BlockSizes(sizes::Vararg{AbstractVector{Int}, N}) where {N} =
-    BlockSizes(Vector{Int}.(sizes)...)
 
 Base.:(==)(a::BlockSizes, b::BlockSizes) = cumulsizes(a) == cumulsizes(b)
 

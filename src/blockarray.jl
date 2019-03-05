@@ -231,7 +231,7 @@ mortar(blocks::AbstractArray{R, N}, block_sizes::BlockSizes{N}) where {R, N} =
 mortar(blocks::AbstractArray{R, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {R, N} =
     _BlockArray(blocks, block_sizes...)
 
-mortar(blocks::AbstractArray) = mortar(blocks, sizes_from_blocks(blocks)...)
+mortar(blocks::AbstractArray) = mortar(blocks, sizes_from_blocks(blocks))
 
 function sizes_from_blocks(blocks::AbstractArray{<:Any, N}) where N
     if length(blocks) == 0
@@ -245,7 +245,7 @@ function sizes_from_blocks(blocks::AbstractArray{<:Any, N}) where N
         [s[i] for s in view(fullsizes, ntuple(j -> j == i ? (:) : 1, ndims(blocks))...)]
     end
     checksizes(fullsizes, block_sizes)
-    return block_sizes
+    return BlockSizes(block_sizes...)
 end
 
 getsizes(block_sizes, block_index) = getindex.(block_sizes, block_index)
