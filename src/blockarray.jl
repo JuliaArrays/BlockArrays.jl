@@ -62,12 +62,12 @@ can be very fast and non allocating since no copying of data is needed.
 
 In the type definition, `R` defines the array type that holds the blocks, for example `Matrix{Matrix{Float64}}`.
 """
-struct BlockArray{T, N, R <: AbstractArray{<:AbstractArray{T,N},N}} <: AbstractBlockArray{T, N}
+struct BlockArray{T, N, R <: AbstractArray{<:AbstractArray{T,N},N}, BS<:AbstractBlockSizes{N}} <: AbstractBlockArray{T, N}
     blocks::R
-    block_sizes::BlockSizes{N}
+    block_sizes::BS
 
-    global function _BlockArray(blocks::R, block_sizes::BlockSizes{N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
-        new{T, N, R}(blocks, block_sizes)
+    global function _BlockArray(blocks::R, block_sizes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:AbstractBlockSizes{N}}
+        new{T, N, R, BS}(blocks, block_sizes)
     end
 end
 
