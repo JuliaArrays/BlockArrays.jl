@@ -89,14 +89,11 @@ end
     return l
 end
 
+_find_block(bs::AbstractVector, i::Integer) = length(bs) > 10 ? last(searchsorted(bs, i)) : searchlinear(bs, i)
+
 @inline function _find_block(block_sizes::AbstractBlockSizes, dim::Int, i::Int)
     bs = cumulsizes(block_sizes, dim)
-    block = 0
-    if length(bs) > 10
-        block = last(searchsorted(bs, i))
-    else
-        block = searchlinear(bs, i)
-    end
+    block = _find_block(bs, i)
     @inbounds cum_size = cumulsizes(block_sizes, dim, block) - 1
     return block, i - cum_size
 end
