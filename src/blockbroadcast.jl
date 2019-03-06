@@ -79,7 +79,6 @@ julia> cumulsize = [1, 2, 4, 5, 7];
 julia> for idx in SubBlockIterator(subcumulsize, cumulsize)
            B = @show view(A, idx)
            @assert !(parent(B) isa BlockArray)
-
            idx :: BlockIndexRange
            idx.block :: Block{1}
            idx.indices :: Tuple{UnitRange}
