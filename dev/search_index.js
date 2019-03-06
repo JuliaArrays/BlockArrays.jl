@@ -441,11 +441,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "lib/internals/#BlockArrays.SubBlockIterator",
+    "page": "Internal Documentation",
+    "title": "BlockArrays.SubBlockIterator",
+    "category": "type",
+    "text": "SubBlockIterator(subcumulsize::Vector{Int}, cumulsize::Vector{Int})\nSubBlockIterator(A::AbstractArray, bs::BlockSizes, dim::Integer)\n\nAn iterator for iterating BlockIndexRange of the blocks specified by cumulsize.  The Block index part of BlockIndexRange is determined by subcumulsize.  That is to say, the Block index first specifies one of the block represented by subcumulsize and then the inner-block index range specifies the region within the block.  Each such block corresponds to a block specified by cumulsize.\n\nNote that the invariance subcumulsize ⊂ cumulsize must hold and must be ensured by the caller.\n\nExamples\n\njulia> using BlockArrays\n       using BlockArrays: SubBlockIterator, BlockIndexRange, cumulsizes\n\njulia> A = BlockArray(1:6, 1:3);\n\njulia> subcumulsize = cumulsizes(A, 1);\n\njulia> @assert subcumulsize == [1, 2, 4, 7]\n\njulia> cumulsize = [1, 2, 4, 5, 7];\n\njulia> for idx in SubBlockIterator(subcumulsize, cumulsize)\n           B = @show view(A, idx)\n           @assert !(parent(B) isa BlockArray)\n           idx :: BlockIndexRange\n           idx.block :: Block{1}\n           idx.indices :: Tuple{UnitRange}\n       end\nview(A, idx) = [1]\nview(A, idx) = [2, 3]\nview(A, idx) = [4]\nview(A, idx) = [5, 6]\n\njulia> [idx.block.n[1] for idx in SubBlockIterator(subcumulsize, cumulsize)]\n4-element Array{Int64,1}:\n 1\n 2\n 3\n 3\n\njulia> [idx.indices[1] for idx in SubBlockIterator(subcumulsize, cumulsize)]\n4-element Array{UnitRange{Int64},1}:\n 1:1\n 1:2\n 1:1\n 2:3\n\n\n\n\n\n"
+},
+
+{
     "location": "lib/internals/#Internals-1",
     "page": "Internal Documentation",
     "title": "Internals",
     "category": "section",
-    "text": "blockindex2global\nglobal2blockindex\nBlockRange\nBlockIndexRange\nBlockSlice\nunblock"
+    "text": "blockindex2global\nglobal2blockindex\nBlockRange\nBlockIndexRange\nBlockSlice\nunblock\nSubBlockIterator"
 },
 
 ]}
