@@ -225,7 +225,7 @@ julia> ans == mortar(
 true
 ```
 """
-mortar(blocks::AbstractArray{R, N}, block_sizes::BlockSizes{N}) where {R, N} =
+mortar(blocks::AbstractArray{R, N}, block_sizes::AbstractBlockSizes{N}) where {R, N} =
     _BlockArray(blocks, block_sizes)
 
 mortar(blocks::AbstractArray{R, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {R, N} =

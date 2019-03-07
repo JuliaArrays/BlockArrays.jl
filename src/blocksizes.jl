@@ -81,7 +81,7 @@ function Base.show(io::IO, block_sizes::AbstractBlockSizes{N}) where {N}
     end
 end
 
-@inline function searchlinear(vec::Vector, a)
+@inline function searchlinear(vec::AbstractVector, a)
     l = length(vec)
     @inbounds for i in 1:l
         vec[i] > a && return i - 1

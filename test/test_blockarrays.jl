@@ -1,5 +1,5 @@
 using SparseArrays, BlockArrays, Base64
-import BlockArrays: _BlockArray
+import BlockArrays: _BlockArray, BlockSizes
 
 function test_error_message(f, needle, expected = Exception)
     err = nothing
@@ -395,4 +395,13 @@ end
     B[1] = 2
     @test B[1] == 2
     @test A[1] ≠ 2
+end
+
+@testset "const block size" begin
+    N = 10
+    # In the future this will be automated via mortar(..., Fill(2,N))
+    A = mortar(fill([1,2], N), BlockSizes((1:2:2N+1,)))
+    B = PseudoBlockArray(vcat(fill([1,2], N)...), BlockSizes((1:2:2N+1,)))
+    @test A == vcat(A.blocks...) == B
+    @test A[Block(1)] == B[Block(1)] == [1,2]
 end

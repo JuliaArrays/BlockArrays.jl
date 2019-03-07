@@ -40,11 +40,11 @@ julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
  0.0
 ```
 """
-struct PseudoBlockArray{T, N, R <: AbstractArray{T, N}} <: AbstractBlockArray{T, N}
+struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:AbstractBlockSizes{N}} <: AbstractBlockArray{T, N}
     blocks::R
-    block_sizes::BlockSizes{N}
-    PseudoBlockArray{T, N, R}(blocks::R, block_sizes::BlockSizes{N}) where {T,N,R} =
-        new{T,N,R}(blocks, block_sizes)
+    block_sizes::BS
+    PseudoBlockArray{T,N,R,BS}(blocks::R, block_sizes::BS) where {T,N,R,BS<:AbstractBlockSizes{N}} =
+        new{T,N,R,BS}(blocks, block_sizes)
 end
 
 const PseudoBlockMatrix{T, R} = PseudoBlockArray{T, 2, R}
@@ -52,12 +52,12 @@ const PseudoBlockVector{T, R} = PseudoBlockArray{T, 1, R}
 const PseudoBlockVecOrMat{T, R} = Union{PseudoBlockMatrix{T, R}, PseudoBlockVector{T, R}}
 
 # Auxiliary outer constructors
-@inline function PseudoBlockArray(blocks::R, block_sizes::BlockSizes{N}) where {T,N,R <: AbstractArray{T, N}}
-    return PseudoBlockArray{T, N, R}(blocks, block_sizes)
+@inline function PseudoBlockArray(blocks::R, block_sizes::BS) where {T,N,R<:AbstractArray{T,N},BS<:AbstractBlockSizes{N}}
+    return PseudoBlockArray{T, N, R,BS}(blocks, block_sizes)
 end
 
 @inline function PseudoBlockArray(blocks::R, block_sizes::Vararg{Vector{Int}, N}) where {T,N,R <: AbstractArray{T, N}}
-    return PseudoBlockArray{T, N, R}(blocks, BlockSizes(block_sizes...))
+    return PseudoBlockArray(blocks, BlockSizes(block_sizes...))
 end
 
 PseudoBlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}} =
@@ -90,6 +90,7 @@ end
 end
 
 # Convert AbstractArrays that conform to block array interface
+convert(::Type{PseudoBlockArray{T,N,R,BS}}, A::PseudoBlockArray{T,N,R,BS}) where {T,N,R,BS} = A
 convert(::Type{PseudoBlockArray{T,N,R}}, A::PseudoBlockArray{T,N,R}) where {T,N,R} = A
 convert(::Type{PseudoBlockArray{T,N}}, A::PseudoBlockArray{T,N}) where {T,N} = A
 convert(::Type{PseudoBlockArray{T}}, A::PseudoBlockArray{T}) where {T} = A
