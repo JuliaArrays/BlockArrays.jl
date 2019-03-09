@@ -139,11 +139,11 @@ julia> v = Array(reshape(1:6, (2, 3)))
  1  3  5
  2  4  6
 
- julia> A = BlockArray(v, [1,1], [2,1])
- 2×2-blocked 2×3 BlockArray{Int64,2}:
-  1  3  │  5
-  ──────┼───
-  2  4  │  6 
+julia> A = BlockArray(v, [1,1], [2,1])
+2×2-blocked 2×3 BlockArray{Int64,2}:
+ 1  3  │  5
+ ──────┼───
+ 2  4  │  6
 
 julia> getblock(A, 2, 1)
 1×2 Array{Int64,2}:
@@ -252,7 +252,7 @@ specialize this method if they need to provide custom block bounds checking beha
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Array{Float64,2},2},BlockArrays.BlockSizes{2,Array{Int64,1}}} at block index [3,2]
 [...]
 ```
 """
