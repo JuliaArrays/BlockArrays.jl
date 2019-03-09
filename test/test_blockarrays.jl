@@ -59,7 +59,7 @@ end
     @test eltype(ret.blocks) == Matrix{Float32}
     @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray(undef_blocks, Vector{Vector{Float32}}, 1:3)
+    ret = BlockArray(undef_blocks, Vector{Float32}, 1:3)
     @test eltype(ret) == Float32
     @test eltype(ret.blocks) == Vector{Float32}
     @test_throws UndefRefError ret.blocks[1]
@@ -120,7 +120,7 @@ end
 end
 
 @testset "block indexing" begin
-    BA_1 = BlockArray(undef_blocks, Vector{Vector{Float64}}, [1,2,3])
+    BA_1 = BlockArray(undef_blocks, Vector{Float64}, [1,2,3])
     a_1 = rand(2)
     BA_1[Block(2)] = a_1
     @test BA_1[BlockIndex(2, 1)] == a_1[1]
@@ -132,7 +132,7 @@ end
     @test_throws BlockBoundsError blockcheckbounds(BA_1, 4)
     @test_throws BlockBoundsError BA_1[Block(4)]
 
-    BA_2 = BlockArray(undef_blocks, Matrix{Matrix{Float64}}, [1,2], [3,4])
+    BA_2 = BlockArray(undef_blocks, Matrix{Float64}, [1,2], [3,4])
     a_2 = rand(1,4)
     BA_2[Block(1,2)] = a_2
     @test BA_2[Block(1,2)] == a_2
@@ -289,7 +289,7 @@ end
     @test A[1,1] == 1
     @test A[Block(2,3)] == ones(2,3)
 
-    A = BlockArray(undef_blocks, Matrix{Matrix{Float64}}, 1:3, 1:3)
+    A = BlockArray(undef_blocks, Matrix{Float64}, 1:3, 1:3)
     A[Block(2,3)] = ones(2,3)
     @test A[Block(2,3)] == ones(2,3)
 end

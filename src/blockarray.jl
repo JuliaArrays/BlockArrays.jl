@@ -103,7 +103,7 @@ Constructs a `BlockArray` with uninitialized blocks from a block type `R` with s
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
-2×2-blocked 4×4 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 4×4 BlockArray{Float64,2}:
  #undef  │  #undef  #undef  #undef  │
  --------┼--------------------------┼
  #undef  │  #undef  #undef  #undef  │
@@ -112,20 +112,20 @@ julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
  #undef  │  #undef  #undef  #undef  │
 ```
 """
-@inline function BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
-    undef_blocks_BlockArray(R, block_sizes...)
+@inline function BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{T,N}}
+    undef_blocks_BlockArray(Array{R,N}, block_sizes...)
 end
 
 @inline function BlockArray{T}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
-    BlockArray(undef_blocks, Array{Array{T,N},N}, block_sizes...)
+    BlockArray(undef_blocks, Array{T,N}, block_sizes...)
 end
 
 @inline function BlockArray{T,N}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
-    BlockArray(undef_blocks, Array{Array{T,N},N}, block_sizes...)
+    BlockArray(undef_blocks, Array{T,N}, block_sizes...)
 end
 
 @inline function BlockArray{T,N,R}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
-    BlockArray(undef_blocks, R, block_sizes...)
+    undef_blocks_BlockArray(R, block_sizes...)
 end
 
 
