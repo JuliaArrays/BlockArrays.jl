@@ -28,7 +28,7 @@ With the methods above implemented the following are automatically provided:
 * A pretty printing `show` function that uses unicode lines to split up the blocks:
 ```
 julia> A = BlockArray(rand(4, 5), [1,3], [2,3])
-2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 4×5 BlockArray{Float64,2}:
 0.61179   0.965631  │  0.696476   0.392796  0.712462
 --------------------┼-------------------------------
 0.620099  0.364706  │  0.0311643  0.27895   0.73477

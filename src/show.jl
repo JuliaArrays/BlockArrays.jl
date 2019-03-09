@@ -88,3 +88,12 @@ function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},BlockSizes{N
     show(io, N)
     print(io, '}')
 end
+
+function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},BlockSizes{N,Vector{Int}}}) where {T,N}
+    Base.show_type_name(io, typeof(a).name)
+    print(io, '{')
+    show(io, T)
+    print(io, ',')
+    show(io, N)
+    print(io, '}')
+end

@@ -18,9 +18,9 @@ Examples
 ≡≡≡≡≡≡≡≡≡≡
 ```julia
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
-2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
+2×2-blocked 3×5 BlockArray{Float32,2}:
  #undef  #undef  #undef  │  #undef  #undef
- ------------------------┼----------------
+ ────────────────────────┼────────────────
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
  ```
@@ -39,7 +39,7 @@ Examples
 ≡≡≡≡≡≡≡≡≡≡
 ```julia
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
-2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
+2×2-blocked 3×5 BlockArray{Float32,2}:
  #undef  #undef  #undef  │  #undef  #undef
  ------------------------┼----------------
  #undef  #undef  #undef  │  #undef  #undef
@@ -55,7 +55,7 @@ const undef_blocks = UndefBlocksInitializer()
 function _BlockArray end
 
 """
-    BlockArray{T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} <: AbstractBlockArray{T, N}
+    BlockArray{T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:AbstractBlockSizes{N}} <: AbstractBlockArray{T, N}
 
 A `BlockArray` is an array where each block is stored contiguously. This means that insertions and retrieval of blocks
 can be very fast and non allocating since no copying of data is needed.
@@ -211,8 +211,8 @@ julia> blocks = permutedims(reshape([
  [1.0 1.0 1.0]               [2.0 2.0]
  [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
 
-julia> mortar(blocks)
-3×5 BlockArray{Float64,2,Array{Float64,2}}:
+ julia> mortar(blocks)
+ 2×2-blocked 3×5 BlockArray{Float64,2}:
  1.0  1.0  1.0  │  2.0  2.0
  ───────────────┼──────────
  3.0  3.0  3.0  │  4.0  4.0
