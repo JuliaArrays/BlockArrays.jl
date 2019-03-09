@@ -65,8 +65,9 @@ be ensured by the caller.
 
 # Examples
 ```jldoctest
-julia> using BlockArrays
-       using BlockArrays: SubBlockIterator, BlockIndexRange, cumulsizes
+julia> using BlockArrays 
+
+julia> import BlockArrays: SubBlockIterator, BlockIndexRange, cumulsizes
 
 julia> A = BlockArray(1:6, 1:3);
 
