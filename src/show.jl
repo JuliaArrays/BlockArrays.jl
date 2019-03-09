@@ -79,3 +79,12 @@ Base.print_matrix_row(io::IO,
         X::AbstractBlockVecOrMat, A::Vector,
         i::Integer, cols::AbstractVector, sep::AbstractString) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
+
+function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},BlockSizes{2,Vector{Int}}}) where {T,N}
+    Base.show_type_name(io, typeof(a).name)
+    print(io, '{')
+    show(io, T)
+    print(io, ',')
+    show(io, N)
+    print(io, '}')
+end

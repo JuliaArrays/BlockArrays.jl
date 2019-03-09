@@ -23,6 +23,12 @@ const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVect
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
 Base.summary(a::AbstractBlockArray) = string(block2string(nblocks(a), size(a)), " ", typeof(a))
+_show_typeof(io, a) = show(io, typeof(a))
+function Base.summary(io::IO, a::AbstractBlockArray) 
+    print(io, block2string(nblocks(a), size(a)))
+    print(io, ' ')
+    _show_typeof(io, a)
+end
 Base.similar(block_array::AbstractBlockArray{T}) where {T} = similar(block_array, T)
 Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 

@@ -278,10 +278,10 @@ end
 
 replstrmime(x) = stringmime("text/plain", x)
 @testset "replstring" begin
-    @test replstrmime(BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "4×4 BlockArray{Int64,2,Array{Array{Int64,2},2},BlockSizes{2,Array{Int64,1}}}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+    @test replstrmime(BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockArray{Int64,2}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
     design = zeros(Int16,6,9);
     A = BlockArray(design,[6],[4,5])
-    @test replstrmime(A) == "6×9 BlockArray{Int16,2,Array{Array{Int16,2},2},BlockSizes{2,Array{Int64,1}}}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+    @test replstrmime(A) == "1×2-blocked 6×9 BlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
 end
 
 @testset "AbstractVector{Int} blocks" begin
