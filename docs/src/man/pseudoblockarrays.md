@@ -23,7 +23,7 @@ Creating a `PseudoBlockArray` works in the same way as a `BlockArray`.
 
 ```jldoctest A
 julia> pseudo = PseudoBlockArray(rand(3,3), [1,2], [2,1])
-3×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 3×3 PseudoBlockArray{Float64,2}:
  0.590845  0.460085  │  0.200586
  ────────────────────┼──────────
  0.766797  0.794026  │  0.298614
@@ -39,11 +39,11 @@ A block array can be created with uninitialized entries using the `BlockArray{T}
 function. The block_sizes are each an `AbstractVector{Int}` which determines the size of the blocks in that dimension. We here create a `[1,2]×[3,2]` block matrix of `Float32`s:
 ```julia
 julia> PseudoBlockArray{Float32}(undef, [1,2], [3,2])
-2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
- 9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45
+2×2-blocked 3×5 PseudoBlockArray{Float32,2}:
+ 1.02295e-43  0.0          1.09301e-43  │  0.0          1.17709e-43
  ───────────────────────────────────────┼──────────────────────────
- 3.28434f-21  9.37645f-26  3.28436f-21  │  8.05301f-24  9.39077f-26
- 1.4013f-45   1.4013f-45   1.4013f-45   │  1.4013f-45   1.4013f-45
+ 0.0          1.06499e-43  0.0          │  1.14906e-43  0.0        
+ 1.05097e-43  0.0          1.13505e-43  │  0.0          1.1911e-43 
 ```
 We can also any other user defined array type that supports `similar`.
 
@@ -83,7 +83,7 @@ We can also view and modify views of blocks of `PseudoBlockArray` using the `vie
 julia> A = PseudoBlockArray(ones(6), 1:3);
 
 julia> view(A, Block(2))
-2-element view(::PseudoBlockArray{Float64,1,Array{Float64,1}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:
+2-element view(::PseudoBlockArray{Float64,1,Array{Float64,1},BlockArrays.BlockSizes{1,Array{Int64,1}}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:
  1.0
  1.0
 

@@ -23,6 +23,12 @@ const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVect
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
 Base.summary(a::AbstractBlockArray) = string(block2string(nblocks(a), size(a)), " ", typeof(a))
+_show_typeof(io, a) = show(io, typeof(a))
+function Base.summary(io::IO, a::AbstractBlockArray) 
+    print(io, block2string(nblocks(a), size(a)))
+    print(io, ' ')
+    _show_typeof(io, a)
+end
 Base.similar(block_array::AbstractBlockArray{T}) where {T} = similar(block_array, T)
 Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 
@@ -61,7 +67,7 @@ a single element.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
-2×3 BlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 2×3 BlockArray{Float64,2}:
  1.0  1.0  │  1.0
  ──────────┼─────
  1.0  1.0  │  1.0
@@ -134,7 +140,7 @@ julia> v = Array(reshape(1:6, (2, 3)))
  2  4  6
 
 julia> A = BlockArray(v, [1,1], [2,1])
-2×3 BlockArray{Int64,2,Array{Int64,2}}:
+2×2-blocked 2×3 BlockArray{Int64,2}:
  1  3  │  5
  ──────┼───
  2  4  │  6
@@ -162,7 +168,7 @@ attempted assigned block is out of bounds.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = PseudoBlockArray(ones(2, 3), [1, 1], [2, 1])
-2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 2×3 PseudoBlockArray{Float64,2}:
  1.0  1.0  │  1.0
  ──────────┼─────
  1.0  1.0  │  1.0
@@ -196,7 +202,7 @@ julia> setblock!(A, [1 2], 1, 1);
 julia> A[Block(2, 1)] = [3 4];
 
 julia> A
-2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 2×3 PseudoBlockArray{Float64,2}:
  1.0  2.0  │  0.0
  ──────────┼─────
  3.0  4.0  │  0.0
@@ -246,7 +252,7 @@ specialize this method if they need to provide custom block bounds checking beha
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Array{Float64,2},2},BlockArrays.BlockSizes{2,Array{Int64,1}}} at block index [3,2]
 [...]
 ```
 """
@@ -279,7 +285,7 @@ Returns the array stored in `A` as a `Array`.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(2,3), [1,1], [2,1])
-2×3 BlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 2×3 BlockArray{Float64,2}:
  1.0  1.0  │  1.0
  ──────────┼─────
  1.0  1.0  │  1.0

@@ -127,23 +127,23 @@ end
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockSizes([2],[3])
+    @test blocksizes(V) == BlockArrays.BlockSizes([2],[3])
 
     V = view(A, Block(2), Block.(2:3))
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockSizes([2],[2,3])
+    @test blocksizes(V) == BlockArrays.BlockSizes([2],[2,3])
 
     V = view(A, Block.(2:3), Block(3))
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockSizes([2,3],[3])
+    @test blocksizes(V) == BlockArrays.BlockSizes([2,3],[3])
 
     V = view(A, Block.(2:3), Block.(1:2))
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockSizes([2,3],[1,2])
+    @test blocksizes(V) == BlockArrays.BlockSizes([2,3],[1,2])
 end

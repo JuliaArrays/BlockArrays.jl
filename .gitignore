@@ -5,3 +5,4 @@ docs/build/
 docs/site/
 *.jld
 benchmark/*.md
+src/.DS_Store

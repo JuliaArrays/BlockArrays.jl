@@ -1,4 +1,4 @@
-using SparseArrays, Base64
+using SparseArrays, BlockArrays, Base64
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
@@ -21,7 +21,7 @@ end
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1,Vector{Float64}}(undef, 1:3)
+    ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, 1:3)
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
@@ -33,7 +33,7 @@ end
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1,Vector{Float64}}(undef, BlockArrays.BlockSizes(1:3))
+    ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, BlockArrays.BlockSizes(1:3))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
@@ -51,7 +51,7 @@ end
     @test eltype(ret.blocks) == Vector{Float32}
     @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray{Float32,1,Vector{Float32}}(undef_blocks, 1:3)
+    ret = BlockArray{Float32,1,Vector{Vector{Float32}}}(undef_blocks, 1:3)
     @test eltype(ret.blocks) == Vector{Float32}
     @test_throws UndefRefError ret.blocks[1]
 
@@ -66,7 +66,7 @@ end
 
     ret = BlockArray{Float64}(undef, 1:3, 1:3)
     fill!(ret, 0)
-    Matrix(ret) == zeros(6,6)
+    @test Matrix(ret) == zeros(6,6)
 
     ret = PseudoBlockArray{Float64}(undef, 1:3)
     fill!(ret, 0)
@@ -100,7 +100,7 @@ end
         (spzeros(1, 3), spzeros(1, 4)),
         (spzeros(2, 3), spzeros(2, 4)),
         (spzeros(5, 3), spzeros(5, 4)),
-    )
+     )
     @test Array(ret) == zeros(8, 7)
     @test eltype(ret.blocks) <: SparseMatrixCSC
     @test blocksizes(ret) == BlockArrays.BlockSizes([1, 2, 5], [3, 4])
@@ -121,6 +121,8 @@ end
 
 @testset "block indexing" begin
     BA_1 = BlockArray(undef_blocks, Vector{Float64}, [1,2,3])
+    @test Base.IndexStyle(typeof(BA_1)) == IndexCartesian()
+
     a_1 = rand(2)
     BA_1[Block(2)] = a_1
     @test BA_1[BlockIndex(2, 1)] == a_1[1]
@@ -266,22 +268,22 @@ end
     A = BlockArray(rand(4, 5), [1,3], [2,3]);
     buf = IOBuffer()
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]"
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},BlockArrays.BlockSizes{2,Array{Int64,1}}} at block index [3,2]"
+
+    A = PseudoBlockArray(rand(4, 5), [1,3], [2,3]);
+    Base.showerror(buf, BlockBoundsError(A, (3,2)))
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},BlockArrays.BlockSizes{2,Array{Int64,1}}} at block index [3,2]"
 end
 
-if isdefined(Base, :flatten)
-    flat = Base.flatten
-else
-    flat = Base.Iterators.flatten
-end
 
-
-replstrmime(x) = stringmime("text/plain", x)
 @testset "replstring" begin
-    @test replstrmime(BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "4×4 BlockArray{Int64,2,Array{Int64,2}}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+    @test stringmime("text/plain",BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockArray{Int64,2}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+    @test stringmime("text/plain",PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 PseudoBlockArray{Int64,2}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
     design = zeros(Int16,6,9);
     A = BlockArray(design,[6],[4,5])
-    @test replstrmime(A) == "6×9 BlockArray{Int16,2,Array{Int16,2}}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+    @test stringmime("text/plain",A) == "1×2-blocked 6×9 BlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+    A = PseudoBlockArray(design,[6],[4,5])
+    @test stringmime("text/plain",A) == "1×2-blocked 6×9 PseudoBlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
 end
 
 @testset "AbstractVector{Int} blocks" begin
@@ -395,4 +397,13 @@ end
     B[1] = 2
     @test B[1] == 2
     @test A[1] ≠ 2
+end
+
+@testset "const block size" begin
+    N = 10
+    # In the future this will be automated via mortar(..., Fill(2,N))
+    A = mortar(fill([1,2], N), BlockArrays.BlockSizes((1:2:2N+1,)))
+    B = PseudoBlockArray(vcat(fill([1,2], N)...), BlockArrays.BlockSizes((1:2:2N+1,)))
+    @test A == vcat(A.blocks...) == B
+    @test A[Block(1)] == B[Block(1)] == [1,2]
 end

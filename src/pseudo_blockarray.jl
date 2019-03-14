@@ -23,28 +23,28 @@ julia> using BlockArrays, Random, SparseArrays
 julia> Random.seed!(12345);
 
 julia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
-2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 2×3 PseudoBlockArray{Float64,2}:
  0.562714  0.371605  │  0.381128
  ────────────────────┼──────────
  0.849939  0.283365  │  0.365801
 
 julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
-6-element PseudoBlockArray{Float64,1,SparseVector{Float64,Int64}}:
- 0.0
- 0.5865981007905481
- 0.0
+3-blocked 6-element PseudoBlockArray{Float64,1,SparseVector{Float64,Int64},BlockArrays.BlockSizes{1,Array{Int64,1}}}:
+ 0.0                
+ 0.5865981007905481 
+ 0.0                
  ───────────────────
  0.05016684053503706
- 0.0
+ 0.0                
  ───────────────────
- 0.0
+ 0.0       
 ```
 """
-struct PseudoBlockArray{T, N, R <: AbstractArray{T, N}} <: AbstractBlockArray{T, N}
+struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:AbstractBlockSizes{N}} <: AbstractBlockArray{T, N}
     blocks::R
-    block_sizes::BlockSizes{N}
-    PseudoBlockArray{T, N, R}(blocks::R, block_sizes::BlockSizes{N}) where {T,N,R} =
-        new{T,N,R}(blocks, block_sizes)
+    block_sizes::BS
+    PseudoBlockArray{T,N,R,BS}(blocks::R, block_sizes::BS) where {T,N,R,BS<:AbstractBlockSizes{N}} =
+        new{T,N,R,BS}(blocks, block_sizes)
 end
 
 const PseudoBlockMatrix{T, R} = PseudoBlockArray{T, 2, R}
@@ -52,12 +52,12 @@ const PseudoBlockVector{T, R} = PseudoBlockArray{T, 1, R}
 const PseudoBlockVecOrMat{T, R} = Union{PseudoBlockMatrix{T, R}, PseudoBlockVector{T, R}}
 
 # Auxiliary outer constructors
-@inline function PseudoBlockArray(blocks::R, block_sizes::BlockSizes{N}) where {T,N,R <: AbstractArray{T, N}}
-    return PseudoBlockArray{T, N, R}(blocks, block_sizes)
+@inline function PseudoBlockArray(blocks::R, block_sizes::BS) where {T,N,R<:AbstractArray{T,N},BS<:AbstractBlockSizes{N}}
+    return PseudoBlockArray{T, N, R,BS}(blocks, block_sizes)
 end
 
 @inline function PseudoBlockArray(blocks::R, block_sizes::Vararg{Vector{Int}, N}) where {T,N,R <: AbstractArray{T, N}}
-    return PseudoBlockArray{T, N, R}(blocks, BlockSizes(block_sizes...))
+    return PseudoBlockArray(blocks, BlockSizes(block_sizes...))
 end
 
 PseudoBlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}} =
@@ -90,6 +90,7 @@ end
 end
 
 # Convert AbstractArrays that conform to block array interface
+convert(::Type{PseudoBlockArray{T,N,R,BS}}, A::PseudoBlockArray{T,N,R,BS}) where {T,N,R,BS} = A
 convert(::Type{PseudoBlockArray{T,N,R}}, A::PseudoBlockArray{T,N,R}) where {T,N,R} = A
 convert(::Type{PseudoBlockArray{T,N}}, A::PseudoBlockArray{T,N}) where {T,N} = A
 convert(::Type{PseudoBlockArray{T}}, A::PseudoBlockArray{T}) where {T} = A
