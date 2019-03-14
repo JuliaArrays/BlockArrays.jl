@@ -1,28 +1,28 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>BlockArrays · BlockArrays.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>BlockArrays.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../">Home</a></li><li><span class="toctext">Manual</span><ul><li><a class="toctext" href="../abstractblockarrayinterface/">The <code>AbstractBlockSizes</code> interface</a></li><li class="current"><a class="toctext" href>BlockArrays</a><ul class="internal"><li><a class="toctext" href="#Creating-uninitialized-BlockArrays-1">Creating uninitialized <code>BlockArrays</code></a></li><li><a class="toctext" href="#Creating-BlockArrays-with-uninitialized-blocks.-1">Creating <code>BlockArrays</code> with uninitialized blocks.</a></li><li><a class="toctext" href="#Setting-and-getting-blocks-and-values-1">Setting and getting blocks and values</a></li><li><a class="toctext" href="#Views-of-blocks-1">Views of blocks</a></li><li><a class="toctext" href="#Converting-between-BlockArray-and-normal-arrays-1">Converting between <code>BlockArray</code> and normal arrays</a></li></ul></li><li><a class="toctext" href="../pseudoblockarrays/">PseudoBlockArrays</a></li></ul></li><li><span class="toctext">API</span><ul><li><a class="toctext" href="../../lib/public/">Public Documentation</a></li><li><a class="toctext" href="../../lib/internals/">Internal Documentation</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li>Manual</li><li><a href>BlockArrays</a></li></ul><a class="edit-page" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/master/docs/src/man/blockarrays.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>BlockArrays</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="BlockArrays-1" href="#BlockArrays-1">BlockArrays</a></h1><h2><a class="nav-anchor" id="Creating-uninitialized-BlockArrays-1" href="#Creating-uninitialized-BlockArrays-1">Creating uninitialized <code>BlockArrays</code></a></h2><p>A block array can be created with initialized blocks using the <code>BlockArray{T}(block_sizes)</code> function. The block_sizes are each an <code>AbstractVector{Int}</code> which determines the size of the blocks in that dimension. We here create a <code>[1,2]×[3,2]</code> block matrix of <code>Float32</code>s:</p><pre><code class="language-julia">julia&gt; BlockArray{Float32}(undef, [1,2], [3,2])
-2×2-blocked 3×5 BlockArrays.BlockArray{Float32,2,Array{Float32,2}}:
+2×2-blocked 3×5 BlockArray{Float32,2}:
  9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45
  ───────────────────────────────────────┼──────────────────────────
  3.28434f-21  9.37645f-26  3.28436f-21  │  8.05301f-24  9.39077f-26
  1.4013f-45   1.4013f-45   1.4013f-45   │  1.4013f-45   1.4013f-45</code></pre><p>We can also any other user defined array type that supports <code>similar</code>.</p><h2><a class="nav-anchor" id="Creating-BlockArrays-with-uninitialized-blocks.-1" href="#Creating-BlockArrays-with-uninitialized-blocks.-1">Creating <code>BlockArrays</code> with uninitialized blocks.</a></h2><p>A <code>BlockArray</code> can be created with the blocks left uninitialized using the <code>BlockArray(undef, block_type, block_sizes...)</code> function. The <code>block_type</code> should be an array type, it could for example be <code>Matrix{Float64}</code>. The block sizes are each an <code>AbstractVector{Int}</code> which determines the size of the blocks in that dimension. We here create a <code>[1,2]×[3,2]</code> block matrix of <code>Float32</code>s:</p><pre><code class="language-julia-repl">julia&gt; BlockArray{Float32}(undef_blocks, [1,2], [3,2])
-3×5 BlockArray{Float32,2,Array{Float32,2}}:
+2×2-blocked 3×5 BlockArray{Float32,2}:
  #undef  #undef  #undef  │  #undef  #undef
  ────────────────────────┼────────────────
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef</code></pre><p>We can also use a <code>SparseVector</code> or any other user defined array type by specifying it as the second argument:</p><pre><code class="language-jl">julia&gt; BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])
-2-blocked 3-element BlockArrays.BlockArray{Float64,1,SparseVector{Float64,Int64}}:
+2-blocked 3-element BlockArray{Float64,1,Array{SparseVector{Float64,Int64},1},BlockArrays.BlockSizes{1,Array{Int64,1}}}:
  #undef
  ------
  #undef
  #undef</code></pre><p>Note that accessing an undefined block will throw an &quot;access to undefined reference&quot;-error.</p><h2><a class="nav-anchor" id="Setting-and-getting-blocks-and-values-1" href="#Setting-and-getting-blocks-and-values-1">Setting and getting blocks and values</a></h2><p>A block can be set by <code>setblock!(block_array, v, i...)</code> where <code>v</code> is the array to set and <code>i</code> is the block index. An alternative syntax for this is <code>block_array[Block(i...)] = v</code> or <code>block_array[Block.(i)...]</code>.</p><pre><code class="language-julia-repl">julia&gt; block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
-3×4 BlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 3×4 BlockArray{Float64,2}:
  #undef  #undef  │  #undef  #undef
  ────────────────┼────────────────
  #undef  #undef  │  #undef  #undef
  #undef  #undef  │  #undef  #undef
 
 julia&gt; setblock!(block_array, rand(2,2), 2, 1)
-3×4 BlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 3×4 BlockArray{Float64,2}:
  #undef      #undef      │  #undef  #undef
  ────────────────────────┼────────────────
    0.590845    0.566237  │  #undef  #undef
@@ -31,7 +31,7 @@ julia&gt; setblock!(block_array, rand(2,2), 2, 1)
 julia&gt; block_array[Block(1, 1)] = [1 2];
 
 julia&gt; block_array
-3×4 BlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 3×4 BlockArray{Float64,2}:
  1.0       2.0       │  #undef  #undef
  ────────────────────┼────────────────
  0.590845  0.566237  │  #undef  #undef
@@ -45,7 +45,7 @@ julia&gt; block_array[Block(1), Block(1)]  # equivalent to above
 2.0</code></pre><h2><a class="nav-anchor" id="Views-of-blocks-1" href="#Views-of-blocks-1">Views of blocks</a></h2><p>We can also view and modify views of blocks of <code>BlockArray</code> using the <code>view</code> syntax:</p><pre><code class="language-julia-repl">julia&gt; A = BlockArray(ones(6), 1:3);
 
 julia&gt; view(A, Block(2))
-2-element view(::BlockArray{Float64,1,Array{Float64,1}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:
+2-element view(::BlockArray{Float64,1,Array{Array{Float64,1},1},BlockArrays.BlockSizes{1,Array{Int64,1}}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:
  1.0
  1.0
 
@@ -53,20 +53,23 @@ julia&gt; view(A, Block(2)) .= [3,4]; A[Block(2)]
 2-element Array{Float64,1}:
  3.0
  4.0</code></pre><h2><a class="nav-anchor" id="Converting-between-BlockArray-and-normal-arrays-1" href="#Converting-between-BlockArray-and-normal-arrays-1">Converting between <code>BlockArray</code> and normal arrays</a></h2><p>An array can be repacked into a <code>BlockArray</code> with <code>BlockArray(array, block_sizes...)</code>:</p><pre><code class="language-jl">julia&gt; block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
-2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,SparseMatrixCSC{Float64,Int64}}:
+2×2-blocked 4×5 BlockArray{Float64,2,Array{SparseMatrixCSC{Float64,Int64},2},BlockArrays.BlockSizes{2,Array{Int64,1}}}:
  0.0341601  0.374187  │  0.0118196  0.299058  0.0     
  ---------------------┼-------------------------------
  0.0945445  0.931115  │  0.0460428  0.0       0.0     
  0.314926   0.438939  │  0.496169   0.0       0.0     
- 0.12781    0.246862  │  0.732      0.449182  0.875096</code></pre><p>To get back the underlying array use <code>Array</code>:</p><pre><code class="language-jl">julia&gt; Array(block_array_sparse))
-4×5 SparseMatrixCSC{Float64,Int64} with 15 stored entries:
-  [1, 1]  =  0.0341601
-  [2, 1]  =  0.0945445
-  [3, 1]  =  0.314926
-  [4, 1]  =  0.12781
-  ⋮
-  [3, 3]  =  0.496169
-  [4, 3]  =  0.732
-  [1, 4]  =  0.299058
-  [4, 4]  =  0.449182
-  [4, 5]  =  0.875096</code></pre><footer><hr/><a class="previous" href="../abstractblockarrayinterface/"><span class="direction">Previous</span><span class="title">The <code>AbstractBlockSizes</code> interface</span></a><a class="next" href="../pseudoblockarrays/"><span class="direction">Next</span><span class="title">PseudoBlockArrays</span></a></footer></article></body></html>
+ 0.12781    0.246862  │  0.732      0.449182  0.875096</code></pre><p>To get back the underlying array use <code>Array</code>:</p><pre><code class="language-jl">julia&gt; Array(block_array_sparse)
+4×5 SparseMatrixCSC{Float64,Int64} with 13 stored entries:
+  [1, 1]  =  0.30006
+  [2, 1]  =  0.451742
+  [3, 1]  =  0.243174
+  [4, 1]  =  0.156468
+  [1, 2]  =  0.94057
+  [3, 2]  =  0.544175
+  [4, 2]  =  0.598345
+  [3, 3]  =  0.737486
+  [4, 3]  =  0.929512
+  [1, 4]  =  0.539601
+  [3, 4]  =  0.757658
+  [4, 4]  =  0.44709
+  [2, 5]  =  0.514679</code></pre><footer><hr/><a class="previous" href="../abstractblockarrayinterface/"><span class="direction">Previous</span><span class="title">The <code>AbstractBlockSizes</code> interface</span></a><a class="next" href="../pseudoblockarrays/"><span class="direction">Next</span><span class="title">PseudoBlockArrays</span></a></footer></article></body></html>
