@@ -121,6 +121,8 @@ end
 
 @testset "block indexing" begin
     BA_1 = BlockArray(undef_blocks, Vector{Float64}, [1,2,3])
+    @test Base.IndexStyle(typeof(BA_1)) == IndexCartesian()
+
     a_1 = rand(2)
     BA_1[Block(2)] = a_1
     @test BA_1[BlockIndex(2, 1)] == a_1[1]
@@ -273,15 +275,15 @@ end
     @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},BlockArrays.BlockSizes{2,Array{Int64,1}}} at block index [3,2]"
 end
 
-replstrmime(x) = stringmime("text/plain", x)
+
 @testset "replstring" begin
-    @test replstrmime(BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockArray{Int64,2}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-    @test replstrmime(PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 PseudoBlockArray{Int64,2}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+    @test stringmime("text/plain",BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockArray{Int64,2}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+    @test stringmime("text/plain",PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 PseudoBlockArray{Int64,2}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
     design = zeros(Int16,6,9);
     A = BlockArray(design,[6],[4,5])
-    @test replstrmime(A) == "1×2-blocked 6×9 BlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+    @test stringmime("text/plain",A) == "1×2-blocked 6×9 BlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
     A = PseudoBlockArray(design,[6],[4,5])
-    @test replstrmime(A) == "1×2-blocked 6×9 PseudoBlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+    @test stringmime("text/plain",A) == "1×2-blocked 6×9 PseudoBlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
 end
 
 @testset "AbstractVector{Int} blocks" begin

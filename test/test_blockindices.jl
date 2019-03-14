@@ -1,5 +1,10 @@
 import BlockArrays: BlockIndex, globalrange, nblocks, global2blockindex, blockindex2global
 
+@testset "Blocks" begin
+    @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
+    @test Block((Block(3), Block(4))) === Block(3,4)
+end
+
 #=
 [1,1  1,2] | [1,3  1,4  1,5]
 --------------------------
@@ -11,9 +16,9 @@ import BlockArrays: BlockIndex, globalrange, nblocks, global2blockindex, blockin
 [6,1  6,2] | [6,3  6,4  6,5]
 =#
 
-block_size = BlockArrays.BlockSizes([1,2,3], [2, 3])
-
 @testset "BlockSizes / BlockIndices" begin
+    block_size = BlockArrays.BlockSizes([1,2,3], [2, 3])
+
     @test nblocks(block_size) == (3,2)
     @test nblocks(block_size, 1) == 3
     @test nblocks(block_size, 2) == 2
