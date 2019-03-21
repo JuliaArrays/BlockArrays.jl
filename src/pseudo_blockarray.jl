@@ -47,9 +47,9 @@ struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:AbstractBlockSizes{N}} 
         new{T,N,R,BS}(blocks, block_sizes)
 end
 
-const PseudoBlockMatrix{T, R} = PseudoBlockArray{T, 2, R}
-const PseudoBlockVector{T, R} = PseudoBlockArray{T, 1, R}
-const PseudoBlockVecOrMat{T, R} = Union{PseudoBlockMatrix{T, R}, PseudoBlockVector{T, R}}
+const PseudoBlockMatrix{T} = PseudoBlockArray{T, 2}
+const PseudoBlockVector{T} = PseudoBlockArray{T, 1}
+const PseudoBlockVecOrMat{T} = Union{PseudoBlockMatrix{T}, PseudoBlockVector{T}}
 
 # Auxiliary outer constructors
 @inline function PseudoBlockArray(blocks::R, block_sizes::BS) where {T,N,R<:AbstractArray{T,N},BS<:AbstractBlockSizes{N}}
