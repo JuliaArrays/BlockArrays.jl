@@ -75,7 +75,7 @@ julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])
 
 !!! warning
 
-    Note that accessing an undefined block will throw an "access to undefined reference"-error!  If you create an array with undefined blocks, you _have_ to initialize it block-wise (see [Setting and getting blocks and values](@ref)); whole-array functions like `fill!` will not work:
+    Note that accessing an undefined block will throw an "access to undefined reference"-error!  If you create an array with undefined blocks, you _have_ to [initialize it block-wise](@ref setting_and_getting)); whole-array functions like `fill!` will not work:
     
     ```julia
     julia> fill!(BlockArray{Float32}(undef_blocks, [1,2], [3,2]), 0)
@@ -84,7 +84,7 @@ julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])
     ```
     
     
-## Setting and getting blocks and values
+## [Setting and getting blocks and values](@id setting_and_getting)
 
 A block can be set by `setblock!(block_array, v, i...)` where `v` is the array to set and `i` is the block index.
 An alternative syntax for this is `block_array[Block(i...)] = v` or
