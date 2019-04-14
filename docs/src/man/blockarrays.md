@@ -33,7 +33,8 @@ julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
 
 ## Creating uninitialized `BlockArray`s
 
-A block array can be created with uninitialized values (but initialized blocks) using the `BlockArray{T}(block_sizes)` function. The `block_sizes` are each an `AbstractVector{Int}` which determines the size of the blocks in that dimension. We here create a block matrix of `Float32`s:
+A block array can be created with uninitialized values (but initialized blocks) using the
+`BlockArray{T}(undef, block_sizes)` function. The `block_sizes` are each an `AbstractVector{Int}` which determines the size of the blocks in that dimension. We here create a block matrix of `Float32`s:
 
 ```julia
 julia> BlockArray{Float32}(undef, [1,2,1], [1,1,1])
