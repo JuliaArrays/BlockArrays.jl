@@ -13,7 +13,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "BlockArrays.jl",
     "category": "section",
-    "text": "Block arrays in Julia(Image: Build Status) (Image: codecov)A block array is a partition of an array into blocks or subarrays, see wikipedia for a more extensive description. This package has two purposes. Firstly, it defines an interface for an AbstractBlockArray block arrays that can be shared among types representing different types of block arrays. The advantage to this is that it provides a consistent API for block arrays.Secondly, it also implements two different type of block arrays that follow the AbstractBlockArray interface. The type BlockArray stores each block contiguously while the type PseudoBlockArray stores the full matrix contiguously. This means that BlockArray supports fast non copying extraction and insertion of blocks while PseudoBlockArray supports fast access to the full matrix to use in in for example a linear solver."
+    "text": "Block arrays in Julia(Image: Build Status) (Image: codecov)A block array is a partition of an array into multiple blocks or subarrays, see wikipedia for a more extensive description. This package has two purposes. Firstly, it defines an interface for an AbstractBlockArray block arrays that can be shared among types representing different types of block arrays. The advantage to this is that it provides a consistent API for block arrays.Secondly, it also implements two concrete types of block arrays that follow the AbstractBlockArray interface.  The type BlockArray stores each single block contiguously, by wrapping an AbstractArray{<:AbstractArray{T,N},N} to concatenate all blocks – the complete array is thus not stored contiguously.  Conversely, a PseudoBlockArray stores the full matrix contiguously (by wrapping only one AbstractArray{T, N}) and only superimposes a block structure.  This means that BlockArray supports fast non copying extraction and insertion of blocks, while PseudoBlockArray supports fast access to the full matrix to use in, for example, a linear solver."
+},
+
+{
+    "location": "#Terminology-1",
+    "page": "Home",
+    "title": "Terminology",
+    "category": "section",
+    "text": "We talk about an “a×b-blocked m×n block array”, if we have m times n values arranged in a times b blocks, like in the following example:2×3-blocked 4×4 BlockArray{Float64,2}:\n 0.56609   │  0.95429   │  0.0688403  0.980771 \n 0.203829  │  0.138667  │  0.0200418  0.0515364\n ──────────┼────────────┼──────────────────────\n 0.963832  │  0.391176  │  0.925799   0.148993 \n 0.18693   │  0.838529  │  0.801236   0.793251The dimension of arrays works the same as with standard Julia arrays; for example the following is a 2 times 2 block vector:2-blocked 4-element BlockArray{Float64,1}:\n 0.35609231970760424\n 0.7732179994849591 \n ───────────────────\n 0.8455294223894625 \n 0.04250653797187476A block array layout is specified its block sizes – a tuple of AbstractArray{Int}.  The length of the tuple is equal to the dimension, the length of each block size array is the number of blocks in the corresponding dimension, and the sum of each block size is the scalar size in that dimension.  For example, BlockArray{Int}(undef, [2,2,2], [2,2,2], [2,2,2]) will produce a blocked cube (an AbstractArray{Int, 3}, i.e., 3 dimensions), consisting of 27 2×2×2 blocks (3 in each dimension) and 216 values (6 in each dimension)."
 },
 
 {
@@ -81,11 +89,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "man/blockarrays/#Creating-BlockArrays-from-an-array-1",
+    "page": "BlockArrays",
+    "title": "Creating BlockArrays from an array",
+    "category": "section",
+    "text": "An AbstractArray can be repacked into a BlockArray with BlockArray(array, block_sizes...).  The block sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension (so the sum of block_sizes in every dimension must match the size of array in that dimension).julia> BlockArray(rand(4, 4), [2,2], [1,1,2])\n2×3-blocked 4×4 BlockArray{Float64,2}:\n 0.70393   │  0.568703  │  0.0137366  0.953038\n 0.24957   │  0.145924  │  0.884324   0.134155\n ──────────┼────────────┼─────────────────────\n 0.408133  │  0.707723  │  0.467458   0.326718\n 0.844314  │  0.794279  │  0.0421491  0.683791\n\njulia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])\n2×2-blocked 4×5 BlockArray{Float64,2,Array{SparseMatrixCSC{Float64,Int64},2},BlockArrays.BlockSizes{2,Array{Int64,1}}}:\n 0.0341601  0.374187  │  0.0118196  0.299058  0.0     \n ---------------------┼-------------------------------\n 0.0945445  0.931115  │  0.0460428  0.0       0.0     \n 0.314926   0.438939  │  0.496169   0.0       0.0     \n 0.12781    0.246862  │  0.732      0.449182  0.875096"
+},
+
+{
     "location": "man/blockarrays/#Creating-uninitialized-BlockArrays-1",
     "page": "BlockArrays",
     "title": "Creating uninitialized BlockArrays",
     "category": "section",
-    "text": "A block array can be created with initialized blocks using the BlockArray{T}(block_sizes) function. The block_sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(undef, [1,2], [3,2])\n2×2-blocked 3×5 BlockArray{Float32,2}:\n 9.39116f-26  1.4013f-45   3.34245f-21  │  9.39064f-26  1.4013f-45\n ───────────────────────────────────────┼──────────────────────────\n 3.28434f-21  9.37645f-26  3.28436f-21  │  8.05301f-24  9.39077f-26\n 1.4013f-45   1.4013f-45   1.4013f-45   │  1.4013f-45   1.4013f-45We can also any other user defined array type that supports similar."
+    "text": "A block array can be created with uninitialized values (but initialized blocks) using the BlockArray{T}(undef, block_sizes) function. The block_sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a block matrix of Float32s:julia> BlockArray{Float32}(undef, [1,2,1], [1,1,1])\n3×3-blocked 4×3 BlockArray{Float32,2}:\n -2.15145e-35  │   1.4013e-45   │  -1.77199e-35\n ──────────────┼────────────────┼──────────────\n  1.4013e-45   │  -1.77199e-35  │  -1.72473e-34\n  1.4013e-45   │   4.57202e-41  │   4.57202e-41\n ──────────────┼────────────────┼──────────────\n  0.0          │  -1.36568e-33  │  -1.72473e-34We can also any other user defined array type that supports similar."
 },
 
 {
@@ -93,11 +109,11 @@ var documenterSearchIndex = {"docs": [
     "page": "BlockArrays",
     "title": "Creating BlockArrays with uninitialized blocks.",
     "category": "section",
-    "text": "A BlockArray can be created with the blocks left uninitialized using the BlockArray(undef, block_type, block_sizes...) function. The block_type should be an array type, it could for example be Matrix{Float64}. The block sizes are each an AbstractVector{Int} which determines the size of the blocks in that dimension. We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(undef_blocks, [1,2], [3,2])\n2×2-blocked 3×5 BlockArray{Float32,2}:\n #undef  #undef  #undef  │  #undef  #undef\n ────────────────────────┼────────────────\n #undef  #undef  #undef  │  #undef  #undef\n #undef  #undef  #undef  │  #undef  #undefWe can also use a SparseVector or any other user defined array type by specifying it as the second argument:julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])\n2-blocked 3-element BlockArray{Float64,1,Array{SparseVector{Float64,Int64},1},BlockArrays.BlockSizes{1,Array{Int64,1}}}:\n #undef\n ------\n #undef\n #undefNote that accessing an undefined block will throw an \"access to undefined reference\"-error."
+    "text": "A BlockArray can be created with the blocks left uninitialized using the BlockArray(undef_blocks[, block_type], block_sizes...) function.  We here create a [1,2]×[3,2] block matrix of Float32s:julia> BlockArray{Float32}(undef_blocks, [1,2], [3,2])\n2×2-blocked 3×5 BlockArray{Float32,2}:\n #undef  #undef  #undef  │  #undef  #undef\n ────────────────────────┼────────────────\n #undef  #undef  #undef  │  #undef  #undef\n #undef  #undef  #undef  │  #undef  #undefThe block_type should be an array type.  It specifies the internal block type, which defaults to an Array of the according dimension.  We can also use a SparseVector or any other user defined array type:julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])\n2-blocked 3-element BlockArray{Float64,1,Array{SparseVector{Float64,Int64},1},BlockArrays.BlockSizes{1,Array{Int64,1}}}:\n #undef\n ------\n #undef\n #undefwarning: Warning\nNote that accessing an undefined block will throw an \"access to undefined reference\"-error!  If you create an array with undefined blocks, you have to initialize it block-wise); whole-array functions like fill! will not work:julia> fill!(BlockArray{Float32}(undef_blocks, [1,2], [3,2]), 0)\nERROR: UndefRefError: access to undefined reference\n…"
 },
 
 {
-    "location": "man/blockarrays/#Setting-and-getting-blocks-and-values-1",
+    "location": "man/blockarrays/#setting_and_getting-1",
     "page": "BlockArrays",
     "title": "Setting and getting blocks and values",
     "category": "section",
