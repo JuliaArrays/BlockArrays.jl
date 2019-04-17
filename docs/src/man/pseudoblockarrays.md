@@ -83,7 +83,7 @@ We can also view and modify views of blocks of `PseudoBlockArray` using the `vie
 julia> A = PseudoBlockArray(ones(6), 1:3);
 
 julia> view(A, Block(2))
-2-element view(::PseudoBlockArray{Float64,1,Array{Float64,1},BlockArrays.BlockSizes{1,Array{Int64,1}}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:
+2-element view(::PseudoBlockArray{Float64,1,Array{Float64,1},BlockArrays.BlockSizes{1,Tuple{Array{Int64,1}}}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:
  1.0
  1.0
 

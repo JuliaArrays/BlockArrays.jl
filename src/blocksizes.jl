@@ -12,7 +12,7 @@ struct BlockSizes{N,VT<:NTuple{N,AbstractVector{Int}}} <: AbstractBlockSizes{N}
     BlockSizes{N,VT}(cs::VT) where {N,VT<:NTuple{N,AbstractVector{Int}}} = new{N,VT}(cs)
 end
 
-const DefaultBlockSizes{N} = BlockSizes{N,NTuple{N,Vector{N}}}
+const DefaultBlockSizes{N} = BlockSizes{N,NTuple{N,Vector{Int}}}
 
 BlockSizes{N}(cs::VT) where {N,VT<:NTuple{N,AbstractVector{Int}}} = BlockSizes{N,VT}(cs)
 BlockSizes{N}() where N = BlockSizes{N,NTuple{N,Vector{Int}}}()
