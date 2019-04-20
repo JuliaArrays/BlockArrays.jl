@@ -1,0 +1,16 @@
+name = "BlockArrays"
+uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
+
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[compat]
+julia = "0.7, 1"
+
+[extras]
+Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[targets]
+test = ["Base64", "Test", "SparseArrays"]
