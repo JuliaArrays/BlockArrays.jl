@@ -49,7 +49,7 @@ end
     cumulsizes(block_sizes, i, j+1) - cumulsizes(block_sizes, i, j)
 
 # ntuple with Val was slow here. @generated it is!
-@generated function blocksize(block_sizes::AbstractBlockSizes{N}, i::NTuple{N, Int}) where {N}
+@generated function blocksize(block_sizes::AbstractBlockSizes{N}, i::NTuple{N, Integer}) where {N}
     exp = Expr(:tuple, [:(blocksize(block_sizes, $k, i[$k])) for k in 1:N]...)
     return exp
 end
@@ -91,7 +91,7 @@ end
 
 _find_block(bs::AbstractVector, i::Integer) = length(bs) > 10 ? last(searchsorted(bs, i)) : searchlinear(bs, i)
 
-@inline function _find_block(block_sizes::AbstractBlockSizes, dim::Int, i::Int)
+@inline function _find_block(block_sizes::AbstractBlockSizes, dim::Integer, i::Integer)
     bs = cumulsizes(block_sizes, dim)
     block = _find_block(bs, i)
     @inbounds cum_size = cumulsizes(block_sizes, dim, block) - 1
@@ -105,10 +105,10 @@ end
     end
 end
 
-@inline @propagate_inbounds nblocks(block_sizes::AbstractBlockSizes, i::Int) =
+@inline @propagate_inbounds nblocks(block_sizes::AbstractBlockSizes, i::Integer) =
     length(cumulsizes(block_sizes,i)) - 1
 
-function nblocks(block_sizes::AbstractBlockSizes, i::Vararg{Int, N}) where {N}
+function nblocks(block_sizes::AbstractBlockSizes, i::Vararg{Integer, N}) where {N}
     b = nblocks(block_sizes)
     return ntuple(k-> b[i[k]], Val(N))
 end
@@ -123,7 +123,7 @@ end
 end
 
 # Computes the global range of an Array that corresponds to a given block_index
-@generated function globalrange(block_sizes::AbstractBlockSizes{N}, block_index::NTuple{N, Int}) where {N}
+@generated function globalrange(block_sizes::AbstractBlockSizes{N}, block_index::NTuple{N, Integer}) where {N}
     indices_ex = Expr(:tuple, [:(cumulsizes(block_sizes, $i, block_index[$i]):cumulsizes(block_sizes, $i, block_index[$i] + 1) - 1) for i = 1:N]...)
     return quote
         $(Expr(:meta, :inline))
@@ -133,24 +133,23 @@ end
 end
 
 # I hate having these function definitions but the generated function above sometimes(!) generates bad code and starts to allocate
-@inline function globalrange(block_sizes::AbstractBlockSizes{1}, block_index::NTuple{1, Int})
+@inline function globalrange(block_sizes::AbstractBlockSizes{1}, block_index::NTuple{1, Integer})
     @inbounds v = (cumulsizes(block_sizes, 1, block_index[1]):cumulsizes(block_sizes, 1, block_index[1] + 1) - 1,)
     return v
 end
 
-@inline function globalrange(block_sizes::AbstractBlockSizes{2}, block_index::NTuple{2, Int})
+@inline function globalrange(block_sizes::AbstractBlockSizes{2}, block_index::NTuple{2, Integer})
     @inbounds v = (cumulsizes(block_sizes, 1, block_index[1]):cumulsizes(block_sizes, 1, block_index[1] + 1) - 1,
                    cumulsizes(block_sizes, 2, block_index[2]):cumulsizes(block_sizes, 2, block_index[2] + 1) - 1)
     return v
 end
 
-@inline function globalrange(block_sizes::AbstractBlockSizes{3}, block_index::NTuple{3, Int})
+@inline function globalrange(block_sizes::AbstractBlockSizes{3}, block_index::NTuple{3, Integer})
     @inbounds v = (cumulsizes(block_sizes, 1, block_index[1]):cumulsizes(block_sizes, 1, block_index[1] + 1) - 1,
                    cumulsizes(block_sizes, 2, block_index[2]):cumulsizes(block_sizes, 2, block_index[2] + 1) - 1,
                    cumulsizes(block_sizes, 3, block_index[3]):cumulsizes(block_sizes, 3, block_index[3] + 1) - 1)
     return v
 end
-
 
 
 """
@@ -178,10 +177,10 @@ julia> blocksize(A, (2, 1, 3))
 (4, 1, 2)
 ```
 """
-@inline blocksize(block_array::AbstractArray, i::Int...) =
+@inline blocksize(block_array::AbstractArray, i::Integer...) =
     blocksize(blocksizes(block_array), i...)
 
-@inline blocksize(block_array::AbstractArray{T,N}, i::NTuple{N, Int}) where {T, N} =
+@inline blocksize(block_array::AbstractArray{T,N}, i::NTuple{N, Integer}) where {T, N} =
     blocksize(blocksizes(block_array), i)
 
 @inline Base.size(arr::AbstractBlockArray) = size(blocksizes(arr))

@@ -129,7 +129,6 @@ end
 end
 
 
-
 @generated function initialized_blocks_BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where R<:AbstractArray{V,N} where {T,N,V<:AbstractArray{T,N}}
     return quote
         block_arr = _BlockArray(R, block_sizes)
@@ -208,7 +207,7 @@ julia> blocks = permutedims(reshape([
                   3ones(2, 3), 4ones(2, 2),
               ], (2, 2)))
 2×2 Array{Array{Float64,2},2}:
- [1.0 1.0 1.0]               [2.0 2.0]         
+ [1.0 1.0 1.0]               [2.0 2.0]
  [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
 
 julia> mortar(blocks)
@@ -303,7 +302,7 @@ copy(A::BlockArray) = _BlockArray(copy.(A.blocks), copy(A.block_sizes))
 ################################
 @inline blocksizes(block_array::BlockArray) = block_array.block_sizes
 
-@inline function getblock(block_arr::BlockArray{T,N}, block::Vararg{Int, N}) where {T,N}
+@inline function getblock(block_arr::BlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
     @boundscheck blockcheckbounds(block_arr, block...)
     block_arr.blocks[block...]
 end
@@ -325,13 +324,13 @@ end
     _BlockArray(similar(block_array.blocks, Array{T2, N}), copy(blocksizes(block_array)))
 end
 
-@inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
+@inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr[global2blockindex(blocksizes(block_arr), i)]
     return v
 end
 
-@inline function Base.setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Int, N}) where {T,N}
+@inline function Base.setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds block_arr[global2blockindex(blocksizes(block_arr), i)] = v
     return block_arr
@@ -341,7 +340,7 @@ end
 # Indexing #
 ############
 
-function _check_setblock!(block_arr::BlockArray{T, N}, v, block::NTuple{N, Int}) where {T,N}
+function _check_setblock!(block_arr::BlockArray{T, N}, v, block::NTuple{N, Integer}) where {T,N}
     for i in 1:N
         if size(v, i) != blocksize(block_arr, i, block[i])
             throw(DimensionMismatch(string("tried to assign $(size(v)) array to ", blocksize(block_arr, block), " block")))
@@ -350,7 +349,7 @@ function _check_setblock!(block_arr::BlockArray{T, N}, v, block::NTuple{N, Int})
 end
 
 
-@inline function setblock!(block_arr::BlockArray{T, N}, v, block::Vararg{Int, N}) where {T,N}
+@inline function setblock!(block_arr::BlockArray{T, N}, v, block::Vararg{Integer, N}) where {T,N}
     @boundscheck blockcheckbounds(block_arr, block...)
     @boundscheck _check_setblock!(block_arr, v, block)
     @inbounds block_arr.blocks[block...] = v

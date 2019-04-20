@@ -33,11 +33,11 @@ broadcasted(::DefaultArrayStyle{1}, ::typeof(Int), block_range::BlockRange{1}) =
 # AbstractArray implementation
 axes(iter::BlockRange{N,R}) where {N,R} = map(axes1, iter.indices)
 Base.IndexStyle(::Type{BlockRange{N,R}}) where {N,R} = IndexCartesian()
-@inline function Base.getindex(iter::BlockRange{N,<:NTuple{N,Base.OneTo}}, I::Vararg{Int, N}) where {N}
+@inline function Base.getindex(iter::BlockRange{N,<:NTuple{N,Base.OneTo}}, I::Vararg{Integer, N}) where {N}
     @boundscheck checkbounds(iter, I...)
     Block(I)
 end
-@inline function Base.getindex(iter::BlockRange{N,R}, I::Vararg{Int, N}) where {N,R}
+@inline function Base.getindex(iter::BlockRange{N,R}, I::Vararg{Integer, N}) where {N,R}
     @boundscheck checkbounds(iter, I...)
     Block(I .- first.(axes1.(iter.indices)) .+ first.(iter.indices))
 end
@@ -58,7 +58,7 @@ end
 
 # increment & carry
 @inline inc(::Tuple{}, ::Tuple{}, ::Tuple{}) = ()
-@inline inc(state::Tuple{Int}, start::Tuple{Int}, stop::Tuple{Int}) = (state[1]+1,)
+@inline inc(state::Tuple{Integer}, start::Tuple{Integer}, stop::Tuple{Integer}) = (state[1]+1,)
 @inline function inc(state, start, stop)
     if state[1] < stop[1]
         return (state[1]+1,tail(state)...)
