@@ -21,7 +21,7 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
     @eval $f(S::BlockSlice) = $f(S.indices)
 end
 
-getindex(S::BlockSlice, i::Int) = getindex(S.indices, i)
+getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
 next(S::BlockSlice, s) = next(S.indices, s)
 done(S::BlockSlice, s) = done(S.indices, s)
@@ -34,7 +34,6 @@ function _unblock(cum_sizes, I::Tuple{Block{1, T},Vararg{Any}}) where {T}
 
     BlockSlice(B, range)
 end
-
 
 
 function _unblock(cum_sizes, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {R}

@@ -31,13 +31,13 @@ julia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
 julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
 3-blocked 6-element PseudoBlockArray{Float64,1,SparseVector{Float64,Int64},BlockArrays.BlockSizes{1,Tuple{Array{Int64,1}}}}:
  0.0                
- 0.5865981007905481 
+ 0.5865981007905481
  0.0                
  ───────────────────
  0.05016684053503706
- 0.0                
+ 0.0
  ───────────────────
- 0.0       
+ 0.0
 ```
 """
 struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:AbstractBlockSizes{N}} <: AbstractBlockArray{T, N}
@@ -62,7 +62,6 @@ end
 
 PseudoBlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}} =
     PseudoBlockArray(blocks, Vector{Int}.(block_sizes)...)
-
 
 
 @inline function PseudoBlockArray{T}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N}
@@ -118,14 +117,14 @@ function Base.similar(block_array::PseudoBlockArray{T,N}, ::Type{T2}) where {T,N
     PseudoBlockArray(similar(block_array.blocks, T2), copy(blocksizes(block_array)))
 end
 
-@inline function Base.getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
+@inline function Base.getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr.blocks[i...]
     return v
 end
 
 
-@inline function Base.setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Int, N}) where {T,N}
+@inline function Base.setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds block_arr.blocks[i...] = v
     return block_arr
@@ -147,12 +146,12 @@ end
     return v
 end
 
-@inline function getblock(block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N}) where {T,N}
+@inline function getblock(block_arr::PseudoBlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
     range = globalrange(blocksizes(block_arr), block)
     return block_arr.blocks[range...]
 end
 
-@inline function _check_getblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int}) where {T,N}
+@inline function _check_getblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Integer}) where {T,N}
     for i in 1:N
         if size(x, i) != length(blockrange[i])
             throw(DimensionMismatch(string("tried to assign ", blocksize(block_arr, block), " block to $(size(x)) array")))
@@ -161,7 +160,7 @@ end
 end
 
 
-@generated function getblock!(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Int, N}) where {T,N}
+@generated function getblock!(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
     return quote
         blockrange = globalrange(blocksizes(block_arr), block)
         @boundscheck _check_getblock!(blockrange, x, block_arr, block)
@@ -184,7 +183,7 @@ end
     return block_arr
 end
 
-@inline function _check_setblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Int}) where {T,N}
+@inline function _check_setblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Integer}) where {T,N}
     blocksizes = blocksize(block_arr, block)
     for i in 1:N
         if size(x, i) != blocksizes[i]
@@ -193,7 +192,7 @@ end
     end
 end
 
-@generated function setblock!(block_arr::PseudoBlockArray{T, N}, x, block::Vararg{Int, N}) where {T,N}
+@generated function setblock!(block_arr::PseudoBlockArray{T, N}, x, block::Vararg{Integer, N}) where {T,N}
     return quote
         blockrange = globalrange(blocksizes(block_arr), block)
         @boundscheck _check_setblock!(blockrange, x, block_arr, block)
@@ -206,7 +205,6 @@ end
         end
     end
 end
-
 
 
 ########
@@ -246,5 +244,5 @@ end
 ###########################
 
 Base.strides(A::PseudoBlockArray) = strides(A.blocks)
-Base.stride(A::PseudoBlockArray, i::Int) = stride(A.blocks, i)
+Base.stride(A::PseudoBlockArray, i::Integer) = stride(A.blocks, i)
 Base.unsafe_convert(::Type{Ptr{T}}, A::PseudoBlockArray) where T = Base.unsafe_convert(Ptr{T}, A.blocks)

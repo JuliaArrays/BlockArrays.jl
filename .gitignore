@@ -6,3 +6,4 @@ docs/site/
 *.jld
 benchmark/*.md
 src/.DS_Store
+/Manifest.toml
