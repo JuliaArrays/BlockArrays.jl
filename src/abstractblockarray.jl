@@ -24,7 +24,7 @@ const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVect
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
 Base.summary(a::AbstractBlockArray) = string(block2string(nblocks(a), size(a)), " ", typeof(a))
 _show_typeof(io, a) = show(io, typeof(a))
-function Base.summary(io::IO, a::AbstractBlockArray) 
+function Base.summary(io::IO, a::AbstractBlockArray)
     print(io, block2string(nblocks(a), size(a)))
     print(io, ' ')
     _show_typeof(io, a)
@@ -51,11 +51,10 @@ julia> nblocks(A, 3, 2)
 (4, 3)
 ```
 """
-nblocks(block_array::AbstractArray, i::Int) = nblocks(block_array)[i]
+nblocks(block_array::AbstractArray, i::Integer) = nblocks(block_array)[i]
 
-nblocks(block_array::AbstractArray, i::Vararg{Int, N}) where {N} =
+nblocks(block_array::AbstractArray, i::Vararg{Integer, N}) where {N} =
     nblocks(blocksizes(block_array), i...)
-
 
 
 """
@@ -154,10 +153,9 @@ julia> A[Block(1, 2)]
  5
 ```
 """
-function getblock(A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N}
+function getblock(A::AbstractBlockArray{T,N}, ::Vararg{Integer, N}) where {T,N}
     throw(error("getblock for ", typeof(A), " is not implemented"))
 end
-
 
 
 """
@@ -182,7 +180,7 @@ julia> x
  1.0  1.0
 ```
 """
-getblock!(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N} = throw(error("getblock! for ", typeof(A), " is not implemented"))
+getblock!(X, A::AbstractBlockArray{T,N}, ::Vararg{Integer, N}) where {T,N} = throw(error("getblock! for ", typeof(A), " is not implemented"))
 
 @inline getblock!(X, A::AbstractBlockArray{T,N}, block::Block{N}) where {T,N}             = getblock!(X, A, block.n...)
 @inline getblock!(X, A::AbstractBlockVector, block::Block{1})                       = getblock!(X, A, block.n[1])
@@ -208,7 +206,7 @@ julia> A
  3.0  4.0  │  0.0
 ```
 """
-setblock!(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N}) where {T,N} = throw(error("setblock! for ", typeof(A), " is not implemented"))
+setblock!(A::AbstractBlockArray{T,N}, v, ::Vararg{Integer, N}) where {T,N} = throw(error("setblock! for ", typeof(A), " is not implemented"))
 
 @inline setblock!(A::AbstractBlockArray{T, N}, v, block::Block{N}) where {T,N}      = setblock!(A, v, block.n...)
 @inline setblock!(A::AbstractBlockVector, v, block::Block{1})                       = setblock!(A, v, block.n[1])
@@ -256,7 +254,7 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,
 [...]
 ```
 """
-@inline function blockcheckbounds(A::AbstractBlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
+@inline function blockcheckbounds(A::AbstractBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     if blockcheckbounds(Bool, A, i...)
         return
     else
@@ -264,7 +262,7 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,
     end
 end
 
-@inline function blockcheckbounds(::Type{Bool}, A::AbstractBlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
+@inline function blockcheckbounds(::Type{Bool}, A::AbstractBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     n = nblocks(A)
     k = 0
     for idx in 1:N # using enumerate here will allocate
