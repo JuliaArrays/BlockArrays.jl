@@ -84,4 +84,10 @@ end
     @test A == [1 2 0 0; 0 0 1 2]
 end
 
+@testset "non-standard BlockSizes" begin
+    A = BlockArray([1 2; 3 4], BlockArrays.BlockSizes((1:3, 1:3)))
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},BlockArrays.BlockSizes{2,NTuple{2,UnitRange{Int}}}}
+    A = BlockArray([1 2; 3 4], BlockArrays.BlockSizes((1:3, [1,2,3])))
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},BlockArrays.BlockSizes{2,Tuple{UnitRange{Int},Vector{Int}}}}
+end
 
