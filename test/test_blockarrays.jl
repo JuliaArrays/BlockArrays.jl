@@ -268,11 +268,11 @@ end
     A = BlockArray(rand(4, 5), [1,3], [2,3]);
     buf = IOBuffer()
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},BlockArrays.BlockSizes{2,Array{Int64,1}}} at block index [3,2]"
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},BlockArrays.BlockSizes{2,Tuple{Array{Int64,1},Array{Int64,1}}}} at block index [3,2]"
 
     A = PseudoBlockArray(rand(4, 5), [1,3], [2,3]);
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},BlockArrays.BlockSizes{2,Array{Int64,1}}} at block index [3,2]"
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},BlockArrays.BlockSizes{2,Tuple{Array{Int64,1},Array{Int64,1}}}} at block index [3,2]"
 end
 
 

@@ -67,7 +67,7 @@ The `block_type` should be an array type.  It specifies the internal block type,
 
 ```julia
 julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])
-2-blocked 3-element BlockArray{Float64,1,Array{SparseVector{Float64,Int64},1},BlockArrays.BlockSizes{1,Array{Int64,1}}}:
+2-blocked 3-element BlockArray{Float64,1,Array{SparseVector{Float64,Int64},1},BlockArrays.BlockSizes{1,Tuple{Array{Int64,1}}}}:
  #undef
  ------
  #undef
@@ -146,7 +146,7 @@ We can also view and modify views of blocks of `BlockArray` using the `view` syn
 julia> A = BlockArray(ones(6), 1:3);
 
 julia> view(A, Block(2))
-2-element view(::BlockArray{Float64,1,Array{Array{Float64,1},1},BlockArrays.BlockSizes{1,Array{Int64,1}}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:
+2-element view(::BlockArray{Float64,1,Array{Array{Float64,1},1},BlockArrays.BlockSizes{1,Tuple{Array{Int64,1}}}}, BlockSlice(Block{1,Int64}((2,)),2:3)) with eltype Float64:
  1.0
  1.0
 
@@ -164,7 +164,7 @@ An array can be repacked into a `BlockArray` with `BlockArray(array, block_sizes
 
 ```jl
 julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
-2×2-blocked 4×5 BlockArray{Float64,2,Array{SparseMatrixCSC{Float64,Int64},2},BlockArrays.BlockSizes{2,Array{Int64,1}}}:
+2×2-blocked 4×5 BlockArray{Float64,2,Array{SparseMatrixCSC{Float64,Int64},2},BlockArrays.BlockSizes{2,Tuple{Array{Int64,1}}}}:
  0.0341601  0.374187  │  0.0118196  0.299058  0.0     
  ---------------------┼-------------------------------
  0.0945445  0.931115  │  0.0460428  0.0       0.0     
