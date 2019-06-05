@@ -275,27 +275,6 @@ end
     return true
 end
 
-
-"""
-    Array(A::AbstractBlockArray)
-
-Returns the array stored in `A` as a `Array`.
-
-```jldoctest; setup = quote using BlockArrays end
-julia> A = BlockArray(ones(2,3), [1,1], [2,1])
-2×2-blocked 2×3 BlockArray{Float64,2}:
- 1.0  1.0  │  1.0
- ──────────┼─────
- 1.0  1.0  │  1.0
-
-julia> Array(A)
-2×3 Array{Float64,2}:
- 1.0  1.0  1.0
- 1.0  1.0  1.0
-```
-"""
-function Base.Array(A::AbstractBlockArray) end
-
 # Convert to @generated...
 @propagate_inbounds Base.getindex( block_arr::AbstractBlockArray{T, N}, block::Block{N}) where {T,N}       =  getblock(block_arr, block.n...)
 @propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T, N}, v, block::Block{N}) where {T,N}    =  setblock!(block_arr, v, block.n...)
