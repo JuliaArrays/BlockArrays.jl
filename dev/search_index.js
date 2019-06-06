@@ -297,14 +297,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "lib/public/#Core.Array",
-    "page": "Public Documentation",
-    "title": "Core.Array",
-    "category": "type",
-    "text": "Array(A::AbstractBlockArray)\n\nReturns the array stored in A as a Array.\n\njulia> A = BlockArray(ones(2,3), [1,1], [2,1])\n2×2-blocked 2×3 BlockArray{Float64,2}:\n 1.0  1.0  │  1.0\n ──────────┼─────\n 1.0  1.0  │  1.0\n\njulia> Array(A)\n2×3 Array{Float64,2}:\n 1.0  1.0  1.0\n 1.0  1.0  1.0\n\n\n\n\n\n"
-},
-
-{
     "location": "lib/public/#BlockArrays.blockcheckbounds",
     "page": "Public Documentation",
     "title": "BlockArrays.blockcheckbounds",
@@ -317,7 +309,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public Documentation",
     "title": "AbstractBlockArray interface",
     "category": "section",
-    "text": "This sections defines the functions a subtype of AbstractBlockArray should define to be a part of the AbstractBlockArray interface. An AbstractBlockArray{T, N} is a subtype of AbstractArray{T,N} and should therefore also fulfill the AbstractArray interface.AbstractBlockArray\nBlockBoundsError\nBlock\nBlockIndex\nnblocks\nblocksize\nblocksizes\ngetblock\ngetblock!\nsetblock!\nArray\nblockcheckbounds"
+    "text": "This sections defines the functions a subtype of AbstractBlockArray should define to be a part of the AbstractBlockArray interface. An AbstractBlockArray{T, N} is a subtype of AbstractArray{T,N} and should therefore also fulfill the AbstractArray interface.AbstractBlockArray\nBlockBoundsError\nBlock\nBlockIndex\nnblocks\nblocksize\nblocksizes\ngetblock\ngetblock!\nsetblock!\nblockcheckbounds"
 },
 
 {
