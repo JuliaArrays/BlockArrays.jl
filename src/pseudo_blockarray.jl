@@ -52,41 +52,38 @@ const PseudoBlockVector{T} = PseudoBlockArray{T, 1}
 const PseudoBlockVecOrMat{T} = Union{PseudoBlockMatrix{T}, PseudoBlockVector{T}}
 
 # Auxiliary outer constructors
-@inline function PseudoBlockArray(blocks::R, block_sizes::BS) where {T,N,R<:AbstractArray{T,N},BS<:AbstractBlockSizes{N}}
-    return PseudoBlockArray{T, N, R,BS}(blocks, block_sizes)
-end
+@inline PseudoBlockArray(blocks::R, block_sizes::BS) where {T,N,R<:AbstractArray{T,N},BS<:AbstractBlockSizes{N}} =
+    PseudoBlockArray{T, N, R,BS}(blocks, block_sizes)
 
-@inline function PseudoBlockArray(blocks::R, block_sizes::Vararg{Vector{Int}, N}) where {T,N,R <: AbstractArray{T, N}}
-    return PseudoBlockArray(blocks, BlockSizes(block_sizes...))
-end
+@inline PseudoBlockArray(blocks::AbstractArray{T, N}, block_sizes::Vararg{Vector{Int}, N}) where {T, N} =
+    PseudoBlockArray(blocks, BlockSizes(block_sizes...))
 
-PseudoBlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}} =
+PseudoBlockArray(blocks::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
     PseudoBlockArray(blocks, Vector{Int}.(block_sizes)...)
 
-
-@inline function PseudoBlockArray{T}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N}
+@inline PseudoBlockArray{T}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N} =
     PseudoBlockArray(similar(Array{T, N}, size(block_sizes)), block_sizes)
-end
 
-@inline function PseudoBlockArray{T, N}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N}
+@inline PseudoBlockArray{T, N}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N} =
     PseudoBlockArray{T}(undef, block_sizes)
-end
 
-@inline function PseudoBlockArray{T, N, R}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}}
+@inline PseudoBlockArray{T, N, R}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N, R <: AbstractArray{T, N}} =
     PseudoBlockArray(similar(R, size(block_sizes)), block_sizes)
-end
 
-@inline function PseudoBlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+@inline PseudoBlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
     PseudoBlockArray{T}(undef, BlockSizes(block_sizes...))
-end
 
-@inline function PseudoBlockArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+@inline PseudoBlockArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
     PseudoBlockArray{T, N}(undef, BlockSizes(block_sizes...))
-end
 
-@inline function PseudoBlockArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}}
+@inline PseudoBlockArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}} =
     PseudoBlockArray{T, N, R}(undef, BlockSizes(block_sizes...))
-end
+
+
+PseudoBlockVector(blocks::AbstractVector, block_sizes::AbstractBlockSizes{1}) = PseudoBlockArray(blocks, block_sizes)
+PseudoBlockVector(blocks::AbstractVector, block_sizes::AbstractVector{Int}) = PseudoBlockArray(blocks, block_sizes)
+PseudoBlockMatrix(blocks::AbstractMatrix, block_sizes::AbstractBlockSizes{2}) = PseudoBlockArray(blocks, block_sizes)
+PseudoBlockMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{Int},2}) = PseudoBlockArray(blocks, block_sizes...)
 
 # Convert AbstractArrays that conform to block array interface
 convert(::Type{PseudoBlockArray{T,N,R,BS}}, A::PseudoBlockArray{T,N,R,BS}) where {T,N,R,BS} = A

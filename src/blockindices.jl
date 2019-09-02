@@ -31,8 +31,11 @@ struct BlockIndex{N}
 end
 
 @inline BlockIndex(a::Int, b::Int) = BlockIndex((a,), (b,))
-@inline BlockIndex(a::NTuple, b::Int) = BlockIndex(a, (b,))
-@inline BlockIndex(a::Int, b::NTuple) = BlockIndex((a,), b)
+@inline BlockIndex(a::Tuple, b::Int) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Int, b::Tuple) = BlockIndex((a,), b)
+
+@inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
+@inline BlockIndex(a::Block, b::Int) = BlockIndex(a, (b,))
 
 @generated function BlockIndex(I::NTuple{N, Int}, α::NTuple{M, Int}) where {M,N}
     @assert M < N
