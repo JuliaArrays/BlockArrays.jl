@@ -300,7 +300,7 @@ copy(A::BlockArray) = _BlockArray(copy.(A.blocks), copy(A.block_sizes))
 end
 
 @inline function Base.getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N}
-    @boundscheck checkbounds(block_arr.blocks, blockindex.I...)
+    @boundscheck blockcheckbounds(block_arr, Block(blockindex.I))
     @inbounds block = getblock(block_arr, blockindex.I...)
     @boundscheck checkbounds(block, blockindex.α...)
     @inbounds v = block[blockindex.α...]

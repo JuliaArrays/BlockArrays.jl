@@ -1,4 +1,4 @@
-import BlockArrays: BlockIndex, globalrange, nblocks, global2blockindex, blockindex2global
+import BlockArrays: BlockIndex, BlockIndexRange, globalrange, nblocks, global2blockindex, blockindex2global
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -55,4 +55,20 @@ end
 
     @test BlockArrays.searchlinear([1,2,3], 5) == 3
     @test Base.dataids(block_size) == Base.dataids(block_size)
+
+    @test Block(1)[1] == BlockIndex((1,),(1,))
+    @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
+    @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1))
+    @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
+
+    A = BlockVector([1,2,3],[1,2])
+    @test A[Block(2)[2]] == 3
+    @test A[Block(2)[1:2]] == [2,3]
+    @test A[getindex.(Block.(1:2), 1)] == [1,2]
+    
+    @test_throws BlockBoundsError A[Block(3)]
+    @test_throws BlockBoundsError A[Block(3)[1]]
+    @test_throws BoundsError A[Block(3)[1:1]] # this is likely an error
+    @test_throws BoundsError A[Block(2)[3]]
+    @test_throws BoundsError A[Block(2)[3:3]]
 end

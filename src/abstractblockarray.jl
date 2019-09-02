@@ -254,7 +254,7 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,
 [...]
 ```
 """
-@inline function blockcheckbounds(A::AbstractBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
+@inline function blockcheckbounds(A::AbstractArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     if blockcheckbounds(Bool, A, i...)
         return
     else
@@ -262,7 +262,7 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,
     end
 end
 
-@inline function blockcheckbounds(::Type{Bool}, A::AbstractBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
+@inline function blockcheckbounds(::Type{Bool}, A::AbstractArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     n = nblocks(A)
     k = 0
     for idx in 1:N # using enumerate here will allocate
@@ -274,6 +274,8 @@ end
     end
     return true
 end
+
+blockcheckbounds(A::AbstractArray{T, N}, i::Block{N}) where {T,N} = blockcheckbounds(A, i.n...)
 
 # Convert to @generated...
 @propagate_inbounds Base.getindex( block_arr::AbstractBlockArray{T, N}, block::Block{N}) where {T,N}       =  getblock(block_arr, block.n...)
