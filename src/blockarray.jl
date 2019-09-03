@@ -84,9 +84,8 @@ const BlockVecOrMat{T, R} = Union{BlockMatrix{T, R}, BlockVector{T, R}}
 # Constructors #
 ################
 
-@inline function _BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
+@inline _BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     _BlockArray(R, BlockSizes(block_sizes...))
-end
 
 function _BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
     n_blocks = nblocks(block_sizes)
@@ -94,9 +93,8 @@ function _BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where {T, N, R<:Abst
     _BlockArray(blocks, block_sizes)
 end
 
-@inline function undef_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
+@inline undef_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     _BlockArray(R, block_sizes...)
-end
 
 """
 Constructs a `BlockArray` with uninitialized blocks from a block type `R` with sizes defind by `block_sizes`.
@@ -112,21 +110,17 @@ julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
  #undef  │  #undef  #undef  #undef  │
 ```
 """
-@inline function BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{T,N}}
+@inline BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{T,N}} =
     undef_blocks_BlockArray(Array{R,N}, block_sizes...)
-end
 
-@inline function BlockArray{T}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+@inline BlockArray{T}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
     BlockArray(undef_blocks, Array{T,N}, block_sizes...)
-end
 
-@inline function BlockArray{T,N}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+@inline BlockArray{T,N}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
     BlockArray(undef_blocks, Array{T,N}, block_sizes...)
-end
 
-@inline function BlockArray{T,N,R}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
+@inline BlockArray{T,N,R}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     undef_blocks_BlockArray(R, block_sizes...)
-end
 
 
 @generated function initialized_blocks_BlockArray(::Type{R}, block_sizes::BlockSizes{N}) where R<:AbstractArray{V,N} where {T,N,V<:AbstractArray{T,N}}
@@ -142,33 +136,26 @@ end
 end
 
 
-function initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
+initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     initialized_blocks_BlockArray(R, BlockSizes(block_sizes...))
-end
 
-@inline function BlockArray{T}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N}
+@inline BlockArray{T}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, block_sizes)
-end
 
-@inline function BlockArray{T, N}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N}
+@inline BlockArray{T, N}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, block_sizes)
-end
 
-@inline function BlockArray{T, N, R}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
+@inline BlockArray{T, N, R}(::UndefInitializer, block_sizes::BlockSizes{N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     initialized_blocks_BlockArray(R, block_sizes)
-end
 
-@inline function BlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+@inline BlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, block_sizes...)
-end
 
-@inline function BlockArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N}
+@inline BlockArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, block_sizes...)
-end
 
-@inline function BlockArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
+@inline BlockArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     initialized_blocks_BlockArray(R, block_sizes...)
-end
 
 function BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N}
     for i in 1:N
@@ -191,6 +178,11 @@ end
         return block_arr
     end
 end
+
+BlockVector(blocks::AbstractVector, block_sizes::AbstractBlockSizes{1}) = BlockArray(blocks, block_sizes)
+BlockVector(blocks::AbstractVector, block_sizes::AbstractVector{Int}) = BlockArray(blocks, block_sizes)
+BlockMatrix(blocks::AbstractMatrix, block_sizes::AbstractBlockSizes{2}) = BlockArray(blocks, block_sizes)
+BlockMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{Int},2}) = BlockArray(blocks, block_sizes...)
 
 """
     mortar(blocks::AbstractArray)
@@ -308,7 +300,7 @@ copy(A::BlockArray) = _BlockArray(copy.(A.blocks), copy(A.block_sizes))
 end
 
 @inline function Base.getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N}
-    @boundscheck checkbounds(block_arr.blocks, blockindex.I...)
+    @boundscheck blockcheckbounds(block_arr, Block(blockindex.I))
     @inbounds block = getblock(block_arr, blockindex.I...)
     @boundscheck checkbounds(block, blockindex.α...)
     @inbounds v = block[blockindex.α...]

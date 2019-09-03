@@ -117,6 +117,42 @@ end
             (zeros(2, 3), zeros(111, 222)),
         )
     end
+
+    a_data = [1,2,3]
+    a = BlockVector(a_data,[1,2])
+    a[1] = 2
+    @test a == [2,2,3]
+    @test a_data == [1,2,3]
+    a = BlockVector(a_data,BlockArrays.BlockSizes([1,2]))
+    a[1] = 2
+    @test a == [2,2,3]
+    @test a_data == [1,2,3]
+    a = PseudoBlockVector(a_data,[1,2])
+    a[1] = 2
+    @test a == [2,2,3]
+    @test a_data == [2,2,3]
+    a = PseudoBlockVector(a_data,BlockArrays.BlockSizes([1,2]))
+    a[1] = 3
+    @test a == [3,2,3]
+    @test a_data == [3,2,3]
+
+    a_data = [1 2; 3 4]
+    a = BlockMatrix(a_data,[1,1],[2])
+    a[1] = 2
+    @test a == [2 2; 3 4]
+    @test a_data == [1 2; 3 4]
+    a = BlockMatrix(a_data,BlockArrays.BlockSizes([1,1],[2]))
+    a[1] = 2
+    @test a == [2 2; 3 4]
+    @test a_data == [1 2; 3 4]
+    a = PseudoBlockMatrix(a_data,[1,1],[2])
+    a[1] = 2
+    @test a == [2 2; 3 4]
+    @test a_data == [2 2; 3 4]
+    a = PseudoBlockMatrix(a_data,BlockArrays.BlockSizes([1,1],[2]))
+    a[1] = 3
+    @test a == [3 2; 3 4]
+    @test a_data == [3 2; 3 4]
 end
 
 @testset "block indexing" begin

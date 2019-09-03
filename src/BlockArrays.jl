@@ -22,7 +22,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
             RangeIndex, Int, Integer, Number,
             +, -, min, max, *, isless, in, copy, copyto!, axes, @deprecate,
-            BroadcastStyle
+            BroadcastStyle, checkbounds, throw_boundserror
 using Base: ReshapedArray, dataids
 
 
@@ -47,6 +47,5 @@ include("blockarrayinterface.jl")
 include("blockbroadcast.jl")
 # include("linalg.jl")
 
-include("deprecate.jl")
 
 end # module
