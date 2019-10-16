@@ -443,3 +443,21 @@ end
     @test A == vcat(A.blocks...) == B
     @test A[Block(1)] == B[Block(1)] == [1,2]
 end
+
+@testset "mixed blocks #92" begin
+    A = BlockArray{Any}(undef_blocks, [1,2], [3,2])
+    A.blocks[1,1] = fill(1.0,1,3)
+    A.blocks[1,2] = fill(2,1,2)
+    A.blocks[2,1] = fill(3//3,2,3)
+    A.blocks[2,2] = fill(4.0f0,2,2)
+    @test A[1,1] == 1.0
+    @test A[2,1] == 1//1
+
+    B = Matrix{Matrix}(undef,2,2)
+    B[1,1] = fill(1.0,1,3)
+    B[1,2] = fill(2,1,2)
+    B[2,1] = fill(3//3,2,3)
+    B[2,2] = fill(4.0f0,2,2)
+    @test mortar(B) == A
+    @test mortar(B)[1,1] == 1.0
+end

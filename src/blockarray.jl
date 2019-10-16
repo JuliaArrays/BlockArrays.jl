@@ -76,6 +76,10 @@ function _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) whe
     return _BlockArray(blocks, BlockSizes(block_sizes...))
 end
 
+function _BlockArray(blocks::R, block_sizes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}, BS<:AbstractBlockSizes{N}}
+    _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_sizes)
+end
+
 const BlockMatrix{T, R <: AbstractMatrix{<:AbstractMatrix{T}}} = BlockArray{T, 2, R}
 const BlockVector{T, R <: AbstractVector{<:AbstractVector{T}}} = BlockArray{T, 1, R}
 const BlockVecOrMat{T, R} = Union{BlockMatrix{T, R}, BlockVector{T, R}}
