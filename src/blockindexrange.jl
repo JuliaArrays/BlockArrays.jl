@@ -15,6 +15,7 @@ BlockIndexRange(block::Block{N}, inds::NTuple{N,AbstractUnitRange{Int}}) where {
 BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
     BlockIndexRange(block,inds)
 
+getindex(B::Block{N}, inds::Vararg{Int,N}) where N = BlockIndex(B,inds)
 getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where N = BlockIndexRange(B,inds)
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))

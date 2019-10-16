@@ -21,7 +21,7 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
     @eval $f(S::BlockSlice) = $f(S.indices)
 end
 
-getindex(S::BlockSlice, i::Int) = getindex(S.indices, i)
+getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
 next(S::BlockSlice, s) = next(S.indices, s)
 done(S::BlockSlice, s) = done(S.indices, s)
@@ -34,7 +34,6 @@ function _unblock(cum_sizes, I::Tuple{Block{1, T},Vararg{Any}}) where {T}
 
     BlockSlice(B, range)
 end
-
 
 
 function _unblock(cum_sizes, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {R}
@@ -164,7 +163,7 @@ end  # if VERSION >= v"1.2-"
 const BlockOrRangeIndex = Union{RangeIndex, BlockSlice}
 
 function unsafe_convert(::Type{Ptr{T}},
-                        V::SubArray{T, N, BlockArray{T, N, AT}, NTuple{N, BlockSlice{Block{1,Int}}}}) where AT <: AbstractArray{T, N} where {T,N}
+                        V::SubArray{T, N, BlockArray{T,N,AT,BS}, NTuple{N, BlockSlice{Block{1,Int}}}}) where {AT <: AbstractArray{<:AbstractArray{T,N},N}, BS <: AbstractBlockSizes{N}} where {T,N}
     unsafe_convert(Ptr{T}, parent(V).blocks[Int.(Block.(parentindices(V)))...])
 end
 

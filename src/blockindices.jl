@@ -10,7 +10,7 @@ It can be used to index into `BlockArrays` in the following manner:
 julia> arr = Array(reshape(1:25, (5,5)));
 
 julia> a = PseudoBlockArray(arr, [3,2], [1,4])
-5×5 PseudoBlockArray{Int64,2,Array{Int64,2}}:
+2×2-blocked 5×5 PseudoBlockArray{Int64,2}:
  1  │   6  11  16  21
  2  │   7  12  17  22
  3  │   8  13  18  23
@@ -31,8 +31,11 @@ struct BlockIndex{N}
 end
 
 @inline BlockIndex(a::Int, b::Int) = BlockIndex((a,), (b,))
-@inline BlockIndex(a::NTuple, b::Int) = BlockIndex(a, (b,))
-@inline BlockIndex(a::Int, b::NTuple) = BlockIndex((a,), b)
+@inline BlockIndex(a::Tuple, b::Int) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Int, b::Tuple) = BlockIndex((a,), b)
+
+@inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
+@inline BlockIndex(a::Block, b::Int) = BlockIndex(a, (b,))
 
 @generated function BlockIndex(I::NTuple{N, Int}, α::NTuple{M, Int}) where {M,N}
     @assert M < N
@@ -94,3 +97,18 @@ end
                   cumulsizes(block_sizes, 3, block_index.I[3]) + block_index.α[3] - 1)
     return v
 end
+
+
+##
+# checkindex
+##
+
+@inline checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::Block{N}) where N = blockcheckbounds(Bool, A, I.n...)
+@inline function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndex{N}) where N
+    checkbounds(Bool, A, Block(I.I)) || return false
+    @inbounds block = getblock(A, I.I...)
+    checkbounds(Bool, block, I.α...)
+end
+
+checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N = 
+    all(checkbounds.(Bool, Ref(A), I))

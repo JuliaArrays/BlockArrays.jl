@@ -23,6 +23,12 @@ const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVect
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
 Base.summary(a::AbstractBlockArray) = string(block2string(nblocks(a), size(a)), " ", typeof(a))
+_show_typeof(io, a) = show(io, typeof(a))
+function Base.summary(io::IO, a::AbstractBlockArray)
+    print(io, block2string(nblocks(a), size(a)))
+    print(io, ' ')
+    _show_typeof(io, a)
+end
 Base.similar(block_array::AbstractBlockArray{T}) where {T} = similar(block_array, T)
 Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 
@@ -45,11 +51,10 @@ julia> nblocks(A, 3, 2)
 (4, 3)
 ```
 """
-nblocks(block_array::AbstractArray, i::Int) = nblocks(block_array)[i]
+nblocks(block_array::AbstractArray, i::Integer) = nblocks(block_array)[i]
 
-nblocks(block_array::AbstractArray, i::Vararg{Int, N}) where {N} =
+nblocks(block_array::AbstractArray, i::Vararg{Integer, N}) where {N} =
     nblocks(blocksizes(block_array), i...)
-
 
 
 """
@@ -61,7 +66,7 @@ a single element.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
-2×3 BlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 2×3 BlockArray{Float64,2}:
  1.0  1.0  │  1.0
  ──────────┼─────
  1.0  1.0  │  1.0
@@ -134,7 +139,7 @@ julia> v = Array(reshape(1:6, (2, 3)))
  2  4  6
 
 julia> A = BlockArray(v, [1,1], [2,1])
-2×3 BlockArray{Int64,2,Array{Int64,2}}:
+2×2-blocked 2×3 BlockArray{Int64,2}:
  1  3  │  5
  ──────┼───
  2  4  │  6
@@ -148,10 +153,9 @@ julia> A[Block(1, 2)]
  5
 ```
 """
-function getblock(A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N}
+function getblock(A::AbstractBlockArray{T,N}, ::Vararg{Integer, N}) where {T,N}
     throw(error("getblock for ", typeof(A), " is not implemented"))
 end
-
 
 
 """
@@ -162,7 +166,7 @@ attempted assigned block is out of bounds.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = PseudoBlockArray(ones(2, 3), [1, 1], [2, 1])
-2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 2×3 PseudoBlockArray{Float64,2}:
  1.0  1.0  │  1.0
  ──────────┼─────
  1.0  1.0  │  1.0
@@ -176,7 +180,7 @@ julia> x
  1.0  1.0
 ```
 """
-getblock!(X, A::AbstractBlockArray{T,N}, ::Vararg{Int, N}) where {T,N} = throw(error("getblock! for ", typeof(A), " is not implemented"))
+getblock!(X, A::AbstractBlockArray{T,N}, ::Vararg{Integer, N}) where {T,N} = throw(error("getblock! for ", typeof(A), " is not implemented"))
 
 @inline getblock!(X, A::AbstractBlockArray{T,N}, block::Block{N}) where {T,N}             = getblock!(X, A, block.n...)
 @inline getblock!(X, A::AbstractBlockVector, block::Block{1})                       = getblock!(X, A, block.n[1])
@@ -196,13 +200,13 @@ julia> setblock!(A, [1 2], 1, 1);
 julia> A[Block(2, 1)] = [3 4];
 
 julia> A
-2×3 PseudoBlockArray{Float64,2,Array{Float64,2}}:
+2×2-blocked 2×3 PseudoBlockArray{Float64,2}:
  1.0  2.0  │  0.0
  ──────────┼─────
  3.0  4.0  │  0.0
 ```
 """
-setblock!(A::AbstractBlockArray{T,N}, v, ::Vararg{Int, N}) where {T,N} = throw(error("setblock! for ", typeof(A), " is not implemented"))
+setblock!(A::AbstractBlockArray{T,N}, v, ::Vararg{Integer, N}) where {T,N} = throw(error("setblock! for ", typeof(A), " is not implemented"))
 
 @inline setblock!(A::AbstractBlockArray{T, N}, v, block::Block{N}) where {T,N}      = setblock!(A, v, block.n...)
 @inline setblock!(A::AbstractBlockVector, v, block::Block{1})                       = setblock!(A, v, block.n[1])
@@ -246,11 +250,11 @@ specialize this method if they need to provide custom block bounds checking beha
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Float64,2}} at block index [3,2]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Array{Float64,2},2},BlockArrays.BlockSizes{2,Tuple{Array{Int64,1},Array{Int64,1}}}} at block index [3,2]
 [...]
 ```
 """
-@inline function blockcheckbounds(A::AbstractBlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
+@inline function blockcheckbounds(A::AbstractArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     if blockcheckbounds(Bool, A, i...)
         return
     else
@@ -258,7 +262,7 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,
     end
 end
 
-@inline function blockcheckbounds(::Type{Bool}, A::AbstractBlockArray{T, N}, i::Vararg{Int, N}) where {T,N}
+@inline function blockcheckbounds(::Type{Bool}, A::AbstractArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     n = nblocks(A)
     k = 0
     for idx in 1:N # using enumerate here will allocate
@@ -271,26 +275,7 @@ end
     return true
 end
 
-
-"""
-    Array(A::AbstractBlockArray)
-
-Returns the array stored in `A` as a `Array`.
-
-```jldoctest; setup = quote using BlockArrays end
-julia> A = BlockArray(ones(2,3), [1,1], [2,1])
-2×3 BlockArray{Float64,2,Array{Float64,2}}:
- 1.0  1.0  │  1.0
- ──────────┼─────
- 1.0  1.0  │  1.0
-
-julia> Array(A)
-2×3 Array{Float64,2}:
- 1.0  1.0  1.0
- 1.0  1.0  1.0
-```
-"""
-function Base.Array(A::AbstractBlockArray) end
+blockcheckbounds(A::AbstractArray{T, N}, i::Block{N}) where {T,N} = blockcheckbounds(A, i.n...)
 
 # Convert to @generated...
 @propagate_inbounds Base.getindex( block_arr::AbstractBlockArray{T, N}, block::Block{N}) where {T,N}       =  getblock(block_arr, block.n...)

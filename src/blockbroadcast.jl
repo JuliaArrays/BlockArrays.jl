@@ -65,8 +65,9 @@ be ensured by the caller.
 
 # Examples
 ```jldoctest
-julia> using BlockArrays
-       using BlockArrays: SubBlockIterator, BlockIndexRange, cumulsizes
+julia> using BlockArrays 
+
+julia> import BlockArrays: SubBlockIterator, BlockIndexRange, cumulsizes
 
 julia> A = BlockArray(1:6, 1:3);
 
@@ -79,7 +80,6 @@ julia> cumulsize = [1, 2, 4, 5, 7];
 julia> for idx in SubBlockIterator(subcumulsize, cumulsize)
            B = @show view(A, idx)
            @assert !(parent(B) isa BlockArray)
-
            idx :: BlockIndexRange
            idx.block :: Block{1}
            idx.indices :: Tuple{UnitRange}
