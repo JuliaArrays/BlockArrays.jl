@@ -72,3 +72,11 @@ end
     @test_throws BoundsError A[Block(2)[3]]
     @test_throws BoundsError A[Block(2)[3:3]]
 end
+
+@testset "sortedin" begin
+    v = [1,3,4]
+    @test BlockArrays.sortedin(1,v)
+    @test !BlockArrays.sortedin(2,v)
+    @test !BlockArrays.sortedin(0,v)
+    @test !BlockArrays.sortedin(5,v)
+end
