@@ -2,6 +2,23 @@
 import Base.alignment
 
 # A bit of a mess but does the job...
+
+"""
+sortedin(p, sc)
+
+returns true if `p` is in `sc`, assuming that `sc` is monotonically increasing.
+"""
+function sortedin(x, itr)
+    for y in itr
+        if y == x
+            return true
+        elseif y > x
+            return false
+        end
+    end
+    return false
+end
+
 function _blockarray_print_matrix_row(io::IO,
         X::AbstractVecOrMat, A::Vector,
         i::Integer, cols::AbstractVector, sep::AbstractString)
@@ -53,7 +70,7 @@ function _blockarray_print_matrix_row(io::IO,
             n_chars -= 2
         end
 
-        if i in row_sum
+        if sortedin(i, row_sum)
             print(row_buf, "─"^(n_chars-1))
             if ndims(X) == 2 && k in col_sum
                 print(row_buf, "┼")
