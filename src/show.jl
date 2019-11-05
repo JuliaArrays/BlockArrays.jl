@@ -3,11 +3,8 @@ import Base.alignment
 
 # A bit of a mess but does the job...
 
-"""
-sortedin(p, sc)
-
-returns true if `p` is in `sc`, assuming that `sc` is monotonically increasing.
-"""
+# sortedin(p, sc)
+# returns true if `p` is in `sc`, assuming that `sc` is monotonically increasing.
 function sortedin(x, itr)
     for y in itr
         if y == x
