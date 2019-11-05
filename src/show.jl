@@ -69,7 +69,7 @@ function _blockarray_print_matrix_row(io::IO,
 
         if sortedin(i, row_sum)
             print(row_buf, "─"^(n_chars-1))
-            if ndims(X) == 2 && k in col_sum
+            if ndims(X) == 2 && sortedin(k,col_sum)
                 print(row_buf, "┼")
             else
                 print(row_buf, "─")
