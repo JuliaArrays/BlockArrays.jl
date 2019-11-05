@@ -199,14 +199,14 @@ end
 
 for op in (:+, :-, :*, )
     @eval Broadcast.broadcasted(::BlockStyle{N}, ::typeof($op), A::BlockArray{<:Number,N}) where N =
-            _BlockArray(map(a -> broadcast($op, a), A.blocks), blocksizes(A))        
+            _BlockArray(broadcast(a -> broadcast($op, a), A.blocks), blocksizes(A))        
 end
 
 for op in (:+, :-, :*, :/, :\)
     @eval begin
         Broadcast.broadcasted(::BlockStyle{N}, ::typeof($op), x::Number, A::BlockArray{<:Number,N}) where N =
-            _BlockArray(map(a -> broadcast($op, x, a), A.blocks), blocksizes(A))
+            _BlockArray(broadcast((x,a) -> broadcast($op, x, a), x, A.blocks), blocksizes(A))
         Broadcast.broadcasted(::BlockStyle{N}, ::typeof($op), A::BlockArray{<:Number,N}, x::Number) where N =
-            _BlockArray(map(a -> broadcast($op, a, x), A.blocks), blocksizes(A))            
+            _BlockArray(broadcast((a,x) -> broadcast($op, a, x), A.blocks,x), blocksizes(A))            
     end
 end
