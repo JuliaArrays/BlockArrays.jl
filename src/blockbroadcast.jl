@@ -197,16 +197,22 @@ end
 end
 
 
-for op in (:+, :-, :*, )
-    @eval Broadcast.broadcasted(::BlockStyle{N}, ::typeof($op), A::BlockArray{<:Number,N}) where N =
-            _BlockArray(broadcast(a -> broadcast($op, a), A.blocks), blocksizes(A))        
+for op in (:+, :-, :*)
+    @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N}}}) where N 
+        (A,) = bc.args
+        _BlockArray(broadcast(a -> broadcast($op, a), A.blocks), blocksizes(A))        
+    end
 end
 
 for op in (:+, :-, :*, :/, :\)
     @eval begin
-        Broadcast.broadcasted(::BlockStyle{N}, ::typeof($op), x::Number, A::BlockArray{<:Number,N}) where N =
+        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:Number,<:BlockArray{<:Number,N}}}) where N
+            x,A = bc.args
             _BlockArray(broadcast((x,a) -> broadcast($op, x, a), x, A.blocks), blocksizes(A))
-        Broadcast.broadcasted(::BlockStyle{N}, ::typeof($op), A::BlockArray{<:Number,N}, x::Number) where N =
+        end
+        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N},<:Number}}) where N 
+            A,x = bc.args
             _BlockArray(broadcast((a,x) -> broadcast($op, a, x), A.blocks,x), blocksizes(A))            
+        end
     end
 end
