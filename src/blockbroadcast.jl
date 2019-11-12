@@ -195,3 +195,24 @@ end
     bcf = Broadcast.flatten(Broadcasted{Nothing}(bc.f, bc.args, bc.axes))
     return Broadcasted{Style}(bcf.f, bcf.args, bcf.axes)
 end
+
+
+for op in (:+, :-, :*)
+    @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N}}}) where N 
+        (A,) = bc.args
+        _BlockArray(broadcast(a -> broadcast($op, a), A.blocks), blocksizes(A))        
+    end
+end
+
+for op in (:+, :-, :*, :/, :\)
+    @eval begin
+        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:Number,<:BlockArray{<:Number,N}}}) where N
+            x,A = bc.args
+            _BlockArray(broadcast((x,a) -> broadcast($op, x, a), x, A.blocks), blocksizes(A))
+        end
+        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N},<:Number}}) where N 
+            A,x = bc.args
+            _BlockArray(broadcast((a,x) -> broadcast($op, a, x), A.blocks,x), blocksizes(A))            
+        end
+    end
+end

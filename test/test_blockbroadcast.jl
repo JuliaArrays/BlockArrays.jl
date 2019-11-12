@@ -98,4 +98,16 @@ using BlockArrays, Test
         z2 = copy(z)
         @test (@. z = x + y + z; z) == (@. z2 = x2 + y2 + z2; z2)
     end
+
+    @testset "Special broadcast" begin
+        v = mortar([1:3,4:7])
+        @test broadcast(+, v) isa BlockVector{Int,Vector{UnitRange{Int}}}
+        @test broadcast(+, v) == v
+        @test broadcast(-, v) isa BlockVector{Int,Vector{StepRange{Int,Int}}}
+        @test broadcast(-, v) == -v == -Vector(v)
+        @test broadcast(+, v, 1) isa BlockVector{Int,Vector{UnitRange{Int}}}
+        @test broadcast(+, v, 1) == Vector(v).+1
+        @test broadcast(*, 2, v) isa BlockVector{Int,Vector{StepRange{Int,Int}}}
+        @test broadcast(*, 2, v) == 2Vector(v)
+    end
 end
