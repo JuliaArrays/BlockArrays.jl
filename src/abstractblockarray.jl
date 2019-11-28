@@ -222,8 +222,8 @@ struct BlockBoundsError <: Exception
     a::Any
     i::Any
     BlockBoundsError() = new()
-    BlockBoundsError(a::AbstractBlockArray) = new(a)
-    BlockBoundsError(a::AbstractBlockArray, @nospecialize(i)) = new(a,i)
+    BlockBoundsError(a::AbstractArray) = new(a)
+    BlockBoundsError(a::AbstractArray, @nospecialize(i)) = new(a,i)
 end
 
 function Base.showerror(io::IO, ex::BlockBoundsError)
