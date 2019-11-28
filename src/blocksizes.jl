@@ -83,15 +83,7 @@ function Base.show(io::IO, block_sizes::AbstractBlockSizes{N}) where {N}
     end
 end
 
-@inline function searchlinear(vec::AbstractVector, a)
-    l = length(vec)
-    @inbounds for i in 1:l
-        vec[i] > a && return i - 1
-    end
-    return l
-end
-
-_find_block(bs::AbstractVector, i::Integer) = length(bs) > 10 ? last(searchsorted(bs, i)) : searchlinear(bs, i)
+_find_block(bs::AbstractVector, i::Integer) = searchsortedlast(bs, i)
 
 @inline function _find_block(block_sizes::AbstractBlockSizes, dim::Integer, i::Integer)
     bs = cumulsizes(block_sizes, dim)

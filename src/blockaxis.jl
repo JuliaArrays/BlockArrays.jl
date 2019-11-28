@@ -50,6 +50,11 @@ function getindex(b::BlockAxis, K::Block)
     return s+b.block_cumsum[k-1]:s+b.block_cumsum[k]-1
 end
 
+function findblock(b::BlockAxis, k::Integer)
+    @boundscheck k in b.axis || throw(BoundsError(b,k))
+    Block(searchsortedfirst(b.block_cumsum, k))
+end
+
 K = Block(-1)
 K
 
@@ -63,14 +68,27 @@ b = BlockAxis([1,2,3])
 @test_throws BlockBoundsError b[Block(0)]
 @test_throws BlockBoundsError b[Block(4)]
 
+@test @inferred(findblock(b,1)) == Block(1)
+@test findblock.(Ref(b),1:6) == Block.([1,2,2,3,3,3])
+@test_throws BoundsError findblock(b,0)
+@test_throws BoundsError findblock(b,7)
+
 using OffsetArrays
 o = OffsetArray([2,2,3],-1:1)
+searchsorted(o,1)
 b = BlockAxis(o)
 @test b[Block(-1)] == 1:2
 @test b[Block(0)] == 3:4
 @test b[Block(1)] == 5:7
 @test_throws BlockBoundsError b[Block(-2)]
 @test_throws BlockBoundsError b[Block(2)]
+
+
+
+@test @inferred(findblock(b,1)) == Block(1)
+@test findblock.(Ref(b),1:6) == Block.([1,2,2,3,3,3])
+@test_throws BoundsError findblock(b,0)
+@test_throws BoundsError findblock(b,7)
 
 import Base: IdentityUnitRange
 
@@ -90,3 +108,12 @@ b = BlockAxis(o,IdentityUnitRange(-3:3))
 @test_throws BlockBoundsError b[Block(2)]
 
 @test_throws ArgumentError BlockAxis(o,IdentityUnitRange(-4:3))
+
+
+using FillArrays
+
+b = BlockAxis(Fill(3,1_000_000))
+@test b isa BlockAxis{StepRange{Int,Int},Base.OneTo{Int},Base.OneTo{Int}}
+@test b[Block(100_000)] == 299998:300000
+@test searchsortedfirst(b.block_cumsum, 1) == 1
+searchsortedfirst.(Ref(b.block_cumsum), 299997:300001) 
