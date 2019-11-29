@@ -22,15 +22,18 @@ const AbstractBlockVector{T} = AbstractBlockArray{T, 1}
 const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
-Base.summary(a::AbstractBlockArray) = string(block2string(nblocks(a), size(a)), " ", typeof(a))
+Base.summary(a::AbstractBlockArray) = string(block2string(blocksize(a), size(a)), " ", typeof(a))
 _show_typeof(io, a) = show(io, typeof(a))
 function Base.summary(io::IO, a::AbstractBlockArray)
-    print(io, block2string(nblocks(a), size(a)))
+    print(io, block2string(blocksize(a), size(a)))
     print(io, ' ')
     _show_typeof(io, a)
 end
 Base.similar(block_array::AbstractBlockArray{T}) where {T} = similar(block_array, T)
 Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
+
+# need to overload axes to return BlockAxis
+@inline size(block_array::AbstractBlockArray) = map(length, axes(block_array))
 
 """
     getblock(A, inds...)
@@ -169,14 +172,12 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,
 end
 
 @inline function blockcheckbounds(::Type{Bool}, A::AbstractArray{T, N}, i::Vararg{Integer, N}) where {T,N}
-    n = nblocks(A)
+    n = blockaxes(A)
     k = 0
     for idx in 1:N # using enumerate here will allocate
         k += 1
         @inbounds _i = i[idx]
-        if _i <= 0 || _i > n[k]
-            return false
-        end
+        _i in n[k] || return false
     end
     return true
 end

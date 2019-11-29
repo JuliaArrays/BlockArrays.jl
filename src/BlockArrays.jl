@@ -12,7 +12,7 @@ export BlockRange
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
 export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat
 
-export undef_blocks, undef, findblock
+export undef_blocks, undef, findblock, findblockindex
 
 import Base: @propagate_inbounds, Array, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
@@ -36,7 +36,7 @@ import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
 include("blockindices.jl")                        
 include("abstractblockarray.jl")
 include("blockaxis.jl")
-# include("blockarray.jl")
+include("blockarray.jl")
 # include("pseudo_blockarray.jl")
 # include("blockrange.jl")
 # include("views.jl")

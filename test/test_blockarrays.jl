@@ -25,22 +25,22 @@ end
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64}(undef, BlockArrays.BlockSizes(1:3))
+    ret = BlockArray{Float64}(undef, (BlockArrays.BlockAxis(1:3),))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1}(undef, BlockArrays.BlockSizes(1:3))
+    ret = BlockArray{Float64,1}(undef, (BlockArrays.BlockAxis(1:3),))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, BlockArrays.BlockSizes(1:3))
+    ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, (BlockArrays.BlockAxis(1:3),))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
     ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], 1:3)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], BlockArrays.BlockSizes(1:3))
+    ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (BlockArrays.BlockAxis(1:3),))
     @test Array(ret)  == zeros(6)
 
     ret = BlockArray{Float32}(undef_blocks, 1:3)
