@@ -73,9 +73,9 @@ b = BlockAxis([1,2,3])
 @test_throws BoundsError findblock(b,0)
 @test_throws BoundsError findblock(b,7)
 
-using OffsetArrays
+using OffsetArrays, Debugger
 o = OffsetArray([2,2,3],-1:1)
-searchsorted(o,1)
+@enter searchsortedfirst(o,1)
 b = BlockAxis(o)
 @test b[Block(-1)] == 1:2
 @test b[Block(0)] == 3:4
