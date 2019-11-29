@@ -1,4 +1,73 @@
 """
+    Block(inds...)
+
+A `Block` is simply a wrapper around a set of indices or enums so that it can be used to dispatch on. By
+indexing a `AbstractBlockArray` with a `Block` the a block at that block index will be returned instead of
+a single element.
+
+```jldoctest; setup = quote using BlockArrays end
+julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
+2×2-blocked 2×3 BlockArray{Float64,2}:
+ 1.0  1.0  │  1.0
+ ──────────┼─────
+ 1.0  1.0  │  1.0
+
+julia> A[Block(1, 1)]
+1×2 Array{Float64,2}:
+ 1.0  1.0
+```
+"""
+struct Block{N, T}
+    n::NTuple{N, T}
+    Block{N, T}(n::NTuple{N, T}) where {N, T} = new{N, T}(n)
+end
+
+
+Block{N, T}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
+Block{N}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
+Block() = Block{0,Int}()
+Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
+Block{1}(n::Tuple{T}) where {T} = Block{1, T}(n)
+Block{N}(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
+Block(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
+
+@inline function Block(blocks::NTuple{N, Block{1, T}}) where {N,T}
+    Block{N, T}(ntuple(i -> blocks[i].n[1], Val(N)))
+end
+
+
+# The following code is taken from CartesianIndex
+@inline (+)(index::Block{N}) where {N} = Block{N}(map(+, index.n))
+@inline (-)(index::Block{N}) where {N} = Block{N}(map(-, index.n))
+
+@inline (+)(index1::Block{N}, index2::Block{N}) where {N} =
+    Block{N}(map(+, index1.n, index2.n))
+@inline (-)(index1::Block{N}, index2::Block{N}) where {N} =
+    Block{N}(map(-, index1.n, index2.n))
+@inline min(index1::Block{N}, index2::Block{N}) where {N} =
+    Block{N}(map(min, index1.n, index2.n))
+@inline max(index1::Block{N}, index2::Block{N}) where {N} =
+    Block{N}(map(max, index1.n, index2.n))
+
+@inline (+)(i::Integer, index::Block) = index+i
+@inline (+)(index::Block{N}, i::Integer) where {N} = Block{N}(map(x->x+i, index.n))
+@inline (-)(index::Block{N}, i::Integer) where {N} = Block{N}(map(x->x-i, index.n))
+@inline (-)(i::Integer, index::Block{N}) where {N} = Block{N}(map(x->i-x, index.n))
+@inline (*)(a::Integer, index::Block{N}) where {N} = Block{N}(map(x->a*x, index.n))
+@inline (*)(index::Block, a::Integer) = *(a,index)
+
+# comparison
+@inline isless(I1::Block{N}, I2::Block{N}) where {N} = Base.IteratorsMD._isless(0, I1.n, I2.n)
+
+# conversions
+convert(::Type{T}, index::Block{1}) where {T<:Number} = convert(T, index.n[1])
+convert(::Type{T}, index::Block) where {T<:Tuple} = convert(T, index.n)
+
+Int(index::Block{1}) = Int(index.n[1])
+Integer(index::Block{1}) = index.n[1]
+Number(index::Block{1}) = index.n[1]
+
+"""
     BlockIndex{N}
 
 A `BlockIndex` is an index which stores a global index in two parts: the block
@@ -47,58 +116,6 @@ end
     end
 end
 
-"""
-    global2blockindex{N}(block_sizes::BlockSizes{N}, inds...) -> BlockIndex{N}
-
-Converts from global indices `inds` to a `BlockIndex`.
-"""
-@generated function global2blockindex(block_sizes::AbstractBlockSizes{N}, i::NTuple{N, Int}) where {N}
-    block_index_ex = Expr(:tuple, [:(_find_block(block_sizes, $k, i[$k])) for k = 1:N]...)
-    I_ex = Expr(:tuple, [:(block_index[$k][1]) for k = 1:N]...)
-    α_ex = Expr(:tuple, [:(block_index[$k][2]) for k = 1:N]...)
-    return quote
-        $(Expr(:meta, :inline))
-        @inbounds block_index = $block_index_ex
-        @inbounds I = $I_ex
-        @inbounds α = $α_ex
-        return BlockIndex(I, α)
-    end
-end
-
-"""
-    blockindex2global{N}(block_sizes::BlockSizes{N}, block_index::BlockIndex{N}) -> inds
-
-Converts from a block index to a tuple containing the global indices
-"""
-@generated function blockindex2global(block_sizes::AbstractBlockSizes{N}, block_index::BlockIndex{N}) where {N}
-    ex = Expr(:tuple, [:(cumulsizes(block_sizes, $k, block_index.I[$k]) + block_index.α[$k] - 1) for k = 1:N]...)
-    return quote
-        $(Expr(:meta, :inline))
-        @inbounds v = $ex
-        return $ex
-    end
-end
-
-# I hate having these function definitions but the generated function above sometimes(!) generates bad code and starts to allocate
-@inline function blockindex2global(block_sizes::AbstractBlockSizes{1}, block_index::BlockIndex{1})
-    @inbounds v =(cumulsizes(block_sizes, 1, block_index.I[1]) + block_index.α[1] - 1,)
-    return v
-end
-
-@inline function blockindex2global(block_sizes::AbstractBlockSizes{2}, block_index::BlockIndex{2})
-    @inbounds v =(cumulsizes(block_sizes, 1, block_index.I[1]) + block_index.α[1] - 1,
-                  cumulsizes(block_sizes, 2, block_index.I[2]) + block_index.α[2] - 1)
-    return v
-end
-
-@inline function blockindex2global(block_sizes::AbstractBlockSizes{3}, block_index::BlockIndex{3})
-    @inbounds v =(cumulsizes(block_sizes, 1, block_index.I[1]) + block_index.α[1] - 1,
-                  cumulsizes(block_sizes, 2, block_index.I[2]) + block_index.α[2] - 1,
-                  cumulsizes(block_sizes, 3, block_index.I[3]) + block_index.α[3] - 1)
-    return v
-end
-
-
 ##
 # checkindex
 ##
@@ -112,3 +129,92 @@ end
 
 checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N = 
     all(checkbounds.(Bool, Ref(A), I))
+
+struct BlockIndexRange{N,R<:NTuple{N,AbstractUnitRange{Int}}}
+    block::Block{N,Int}
+    indices::R
+end
+
+"""
+    BlockIndexRange(block, startind:stopind)
+
+represents a cartesian range inside a block.
+"""
+BlockIndexRange
+
+BlockIndexRange(block::Block{N}, inds::NTuple{N,AbstractUnitRange{Int}}) where {N} =
+    BlockIndexRange{N,typeof(inds)}(inds)
+BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
+    BlockIndexRange(block,inds)
+
+getindex(B::Block{N}, inds::Vararg{Int,N}) where N = BlockIndex(B,inds)
+getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where N = BlockIndexRange(B,inds)
+
+eltype(R::BlockIndexRange) = eltype(typeof(R))
+eltype(::Type{BlockIndexRange{N}}) where {N} = BlockIndex{N}
+eltype(::Type{BlockIndexRange{N,R}}) where {N,R} = BlockIndex{N}
+IteratorSize(::Type{<:BlockIndexRange}) = Base.HasShape{1}()
+
+
+first(iter::BlockIndexRange) = BlockIndex(iter.block.n, map(first, iter.indices))
+last(iter::BlockIndexRange)  = BlockIndex(iter.block.n, map(last, iter.indices))
+
+@inline function iterate(iter::BlockIndexRange)
+    iterfirst, iterlast = first(iter), last(iter)
+    if any(map(>, iterfirst.α, iterlast.α))
+        return nothing
+    end
+    iterfirst, iterfirst
+end
+@inline function iterate(iter::BlockIndexRange, state)
+    nextstate = BlockIndex(state.I, inc(state.α, first(iter).α, last(iter).α))
+    nextstate.α[end] > last(iter.indices[end]) && return nothing
+    nextstate, nextstate
+end
+
+size(iter::BlockIndexRange) = map(dimlength, first(iter).α, last(iter).α)
+length(iter::BlockIndexRange) = prod(size(iter))
+
+
+Block(bs::BlockIndexRange) = bs.block
+
+
+# #################
+# # support for pointers
+# #################
+#
+# function unsafe_convert(::Type{Ptr{T}},
+#                         V::SubArray{T, N, BlockArray{T, N, AT}, NTuple{N, BlockSlice{Block{1,Int}}}}) where AT <: AbstractArray{T, N} where {T,N}
+#     unsafe_convert(Ptr{T}, parent(V).blocks[Int.(Block.(parentindices(V)))...])
+# end
+
+
+"""
+    BlockSlice(indices)
+
+Represent an AbstractUnitRange of indices that attaches a block.
+
+Upon calling `to_indices()`, Blocks are converted to BlockSlice objects to represent
+the indices over which the Block spans.
+
+This mimics the relationship between `Colon` and `Base.Slice`.
+"""
+struct BlockSlice{BB} <: AbstractUnitRange{Int}
+    block::BB
+    indices::UnitRange{Int}
+end
+
+Block(bs::BlockSlice{<:Block}) = bs.block
+
+
+for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
+          :unsafe_length, :start)
+    @eval $f(S::BlockSlice) = $f(S.indices)
+end
+
+getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
+show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
+next(S::BlockSlice, s) = next(S.indices, s)
+done(S::BlockSlice, s) = done(S.indices, s)
+
+Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)

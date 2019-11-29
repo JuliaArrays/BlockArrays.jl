@@ -46,7 +46,12 @@ function getindex(b::BlockAxis, K::Block)
     return s+b.block_cumsum[k-1]:s+b.block_cumsum[k]-1
 end
 
+getindex(b::BlockAxis, K::BlockIndex{1}) = b[Block(K.I[1])][K.α[1]]
+getindex(b::BlockAxis, K::BlockIndexRange{1}) = b[K.block][K.indices[1]]
+
 function findblock(b::BlockAxis, k::Integer)
     @boundscheck k in b.axis || throw(BoundsError(b,k))
     Block(searchsortedfirst(b.block_cumsum, k-first(b.axis)+1))
 end
+
+Base.dataids(b::BlockAxis) = Base.dataids(b.block_cumsum)

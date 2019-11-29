@@ -6,7 +6,7 @@ using LinearAlgebra
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
-export Block, getblock, getblock!, setblock!, nblocks, blocksize, blocksizes, blockcheckbounds, BlockBoundsError, BlockIndex
+export Block, getblock, getblock!, setblock!, blockaxes, blocksize, blockcheckbounds, BlockBoundsError, BlockIndex
 export BlockRange
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
@@ -33,9 +33,9 @@ import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
                         StructuredMatrixStyle
 
 
+include("blockindices.jl")                        
 include("abstractblockarray.jl")
 include("blockaxis.jl")
-include("blockindices.jl")
 # include("blockarray.jl")
 # include("pseudo_blockarray.jl")
 # include("blockrange.jl")
