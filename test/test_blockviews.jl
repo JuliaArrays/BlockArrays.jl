@@ -1,3 +1,4 @@
+using BlockArrays, Test
 
 @testset "block slice" begin
     A = BlockArray(1:6,1:3)

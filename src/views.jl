@@ -70,26 +70,6 @@ end
     return view(A, map(x -> x.indices, I)...)
 end
 
-function _unblock(cum_sizes, I::Tuple{Block{1, T},Vararg{Any}}) where {T}
-    B = first(I)
-    b = first(B.n)
-
-    range = cum_sizes[b]:cum_sizes[b + 1] - 1
-
-    BlockSlice(B, range)
-end
-
-
-function _unblock(cum_sizes, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {R}
-    B = first(I)
-    b_start = first(first(B.indices))
-    b_stop = last(first(B.indices))
-
-    range = cum_sizes[b_start]:cum_sizes[b_stop + 1] - 1
-
-    BlockSlice(B, range)
-end
-
 
 """
     unblock(block_sizes, inds, I)
@@ -97,12 +77,13 @@ end
 Returns the indices associated with a block as a `BlockSlice`.
 """
 function unblock(A::AbstractArray{T,N}, inds, I) where {T, N}
+    B = first(I)
     if length(inds) == 0
         # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
         # similar to `ones(2)[1:1, 1:1]`.
-        _unblock(Base.OneTo(2), I)
+        BlockSlice(B,Base.OneTo(1))
     else
-        _unblock(cumulsizes(A, N - length(inds) + 1), I)
+        BlockSlice(B,inds[1][B])
     end
 end
 
