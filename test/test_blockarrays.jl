@@ -82,7 +82,7 @@ end
 
     ret = PseudoBlockArray{Float64}(undef, 1:3, 1:3)
     fill!(ret, 0)
-    Matrix(ret) == zeros(6,6)
+    @test Matrix(ret) == zeros(6,6)
 
     @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])
 

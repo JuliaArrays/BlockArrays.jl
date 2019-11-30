@@ -172,7 +172,7 @@ end
         block_arr = _BlockArray(Array{typeof(arr),N}, baxes)
         @nloops $N i i->blockaxes(baxes[i],1) begin
             block_index = @ntuple $N i
-            indices = baxes[Block(block_index)]
+            indices = getindex.(baxes,Block.(block_index))
             setblock!(block_arr, arr[indices...], block_index...)
         end
 
