@@ -277,12 +277,12 @@ convert(::Type{BlockArray{T}}, A::BlockArray{T}) where {T} = A
 convert(::Type{BlockArray}, A::BlockArray) = A
 
 BlockArray{T, N}(A::AbstractArray{T2, N}) where {T,T2,N} =
-    BlockArray(Array{T, N}(A), blockaxes(A))
+    BlockArray(Array{T, N}(A), axes(A))
 BlockArray{T1}(A::AbstractArray{T2, N}) where {T1,T2,N} = BlockArray{T1, N}(A)
 BlockArray(A::AbstractArray{T, N}) where {T,N} = BlockArray{T, N}(A)
 
 convert(::Type{BlockArray{T, N}}, A::AbstractArray{T2, N}) where {T,T2,N} =
-    BlockArray(convert(Array{T, N}, A), blockaxes(A))
+    BlockArray(convert(Array{T, N}, A), axes(A))
 convert(::Type{BlockArray{T1}}, A::AbstractArray{T2, N}) where {T1,T2,N} =
     convert(BlockArray{T1, N}, A)
 convert(::Type{BlockArray}, A::AbstractArray{T, N}) where {T,N} =
@@ -301,7 +301,7 @@ copy(A::BlockArray) = _BlockArray(copy.(A.blocks), copy(A.block_sizes))
     block_arr.blocks[block...]
 end
 
-@inline function Base.getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N}
+@inline function _blockindex_getindex(block_arr, blockindex)
     @boundscheck blockcheckbounds(block_arr, Block(blockindex.I))
     @inbounds block = getblock(block_arr, blockindex.I...)
     @boundscheck checkbounds(block, blockindex.α...)
@@ -309,13 +309,20 @@ end
     return v
 end
 
+@inline Base.getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
+    _blockindex_getindex(block_arr, blockindex)
+@inline Base.getindex(block_arr::BlockVector{T}, blockindex::BlockIndex{1}) where {T} =
+    _blockindex_getindex(block_arr, blockindex)
+@inline Base.getindex(block_arr::BlockArray{T,N}, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
+    block_arr[BlockIndex(blockindex)]
+
 
 ###########################
 # AbstractArray Interface #
 ###########################
 
 @inline function Base.similar(block_array::BlockArray{T,N}, ::Type{T2}) where {T,N,T2}
-    _BlockArray(similar(block_array.blocks, Array{T2, N}), copy(blockaxes(block_array)))
+    _BlockArray(similar(block_array.blocks, Array{T2, N}), axes(block_array))
 end
 
 @inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
@@ -326,7 +333,7 @@ end
 
 @inline function Base.setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
-    @inbounds block_arr[global2blockindex(blockaxes(block_arr), i)] = v
+    @inbounds block_arr[findblockindex.(axes(block_arr), i)...] = v
     return block_arr
 end
 
@@ -351,11 +358,14 @@ end
     return block_arr
 end
 
-@propagate_inbounds function Base.setindex!(block_array::BlockArray{T, N}, v, block_index::BlockIndex{N}) where {T,N}
-    getblock(block_array, block_index.I...)[block_index.α...] = v
-end
+@inline @propagate_inbounds Base.setindex!(block_arr::BlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N} =
+    getblock(block_arr, blockindex.I...)[blockindex.α...] = v
+@inline @propagate_inbounds Base.setindex!(block_arr::BlockVector{T}, v, blockindex::BlockIndex{1}) where {T} =
+    getblock(block_arr, blockindex.I...)[blockindex.α...] = v
+@inline @propagate_inbounds Base.setindex!(block_arr::BlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
+    block_arr[BlockIndex(blockindex)] = v
 
-Base.dataids(arr::BlockArray) = (dataids(arr.blocks)..., dataids(arr.block_sizes)...)
+Base.dataids(arr::BlockArray) = (dataids(arr.blocks)..., dataids(arr.axes)...)
 # This is not entirely valid.  In principle, we have to concatenate
 # all dataids of all blocks.  However, it makes `dataids` non-inferable.
 

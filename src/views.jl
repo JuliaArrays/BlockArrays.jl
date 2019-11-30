@@ -23,19 +23,19 @@ to_index(::BlockIndexRange) = throw(ArgumentError("BlockIndexRange must be conve
     to_indices(A, axes(A), I)
 
 if VERSION >= v"1.2-"  # See also `reindex` definitions in views.jl
-reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-        subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
-    (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
-                                                            subidxs[1].block.indices),
-                                            idxs[1].indices[subidxs[1].indices]),
-                                 reindex(tail(idxs), tail(subidxs))...))
+    reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+            subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
+        (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
+                                                                subidxs[1].block.indices),
+                                                idxs[1].indices[subidxs[1].indices]),
+                                    reindex(tail(idxs), tail(subidxs))...))
 else  # if VERSION >= v"1.2-"
-reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-        subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
-    (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
-                                                            subidxs[1].block.indices),
-                                            idxs[1].indices[subidxs[1].indices]),
-                                    reindex(V, tail(idxs), tail(subidxs))...))
+    reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+            subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
+        (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
+                                                                subidxs[1].block.indices),
+                                                idxs[1].indices[subidxs[1].indices]),
+                                        reindex(V, tail(idxs), tail(subidxs))...))
 end  # if VERSION >= v"1.2-"
 
 # De-reference blocks before creating a view to avoid taking `global2blockindex`
@@ -91,24 +91,6 @@ function _unblock(cum_sizes, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {R}
 end
 
 
-_sub_cumul_sizes(cs, inds) = _sub_cumul_sizes(cs, inds[1], tail(inds))
-_sub_cumul_sizes(::Tuple{}, ::Tuple{}) = ()
-
-function _sub_cumul_sizes(cs, inds1::BlockSlice{Block{1,Int}}, inds)
-    B = Int(inds1.block)
-    ret = view(cs[1], B:B+1)
-    (ret .- ret[1] .+ 1, _sub_cumul_sizes(tail(cs), inds)...)
-end
-
-function _sub_cumul_sizes(cs, inds1::BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, inds)
-    ret = view(cs[1], inds1.block.indices[1][1]:(inds1.block.indices[1][end]+1))
-    (ret .- ret[1] .+ 1, _sub_cumul_sizes(tail(cs), inds)...)
-end
-
-
-blocksizes(V::SubArray) = BlockSizes(_sub_cumul_sizes(cumulsizes(parent(V)), parentindices(V)))
-
-
 """
     unblock(block_sizes, inds, I)
 
@@ -126,6 +108,7 @@ end
 
 
 to_index(::Block) = throw(ArgumentError("Block must be converted by to_indices(...)"))
+to_index(::BlockIndex) = throw(ArgumentError("BlockIndex must be converted by to_indices(...)"))
 to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to_indices(...)"))
 
 @inline to_indices(A, inds, I::Tuple{Block{1}, Vararg{Any}}) =
@@ -207,7 +190,7 @@ end  # if VERSION >= v"1.2-"
 const BlockOrRangeIndex = Union{RangeIndex, BlockSlice}
 
 function unsafe_convert(::Type{Ptr{T}},
-                        V::SubArray{T, N, BlockArray{T,N,AT,BS}, NTuple{N, BlockSlice{Block{1,Int}}}}) where {AT <: AbstractArray{<:AbstractArray{T,N},N}, BS <: AbstractBlockSizes{N}} where {T,N}
+                        V::SubArray{T, N, BlockArray{T,N,AT,BS}, NTuple{N, BlockSlice{Block{1,Int}}}}) where {AT <: AbstractArray{<:AbstractArray{T,N},N}, BS <: NTuple{N,AbstractBlockAxis}} where {T,N}
     unsafe_convert(Ptr{T}, parent(V).blocks[Int.(Block.(parentindices(V)))...])
 end
 

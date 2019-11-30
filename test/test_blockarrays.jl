@@ -1,4 +1,4 @@
-using SparseArrays, BlockArrays, Base64
+using SparseArrays, BlockArrays, Base64, LinearAlgebra, Test
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
@@ -94,7 +94,7 @@ end
 
     ret = mortar([spzeros(2), spzeros(3)])
     @test eltype(ret.blocks) <: SparseVector
-    @test blocksizes(ret) == BlockArrays.BlockSizes([2, 3])
+    @test axes(ret) == (BlockArrays.BlockAxis([2, 3]),)
 
     ret = mortar(
         (spzeros(1, 3), spzeros(1, 4)),
@@ -103,7 +103,7 @@ end
      )
     @test Array(ret) == zeros(8, 7)
     @test eltype(ret.blocks) <: SparseMatrixCSC
-    @test blocksizes(ret) == BlockArrays.BlockSizes([1, 2, 5], [3, 4])
+    @test axes(ret) == BlockArrays.BlockAxis.(([1, 2, 5], [3, 4]))
 
     test_error_message("must have ndims consistent with ndims = 1") do
         mortar([ones(2,2)])
@@ -123,7 +123,7 @@ end
     a[1] = 2
     @test a == [2,2,3]
     @test a_data == [1,2,3]
-    a = BlockVector(a_data,BlockArrays.BlockSizes([1,2]))
+    a = BlockVector(a_data,(BlockArrays.BlockAxis([1,2]),))
     a[1] = 2
     @test a == [2,2,3]
     @test a_data == [1,2,3]
@@ -131,7 +131,7 @@ end
     a[1] = 2
     @test a == [2,2,3]
     @test a_data == [2,2,3]
-    a = PseudoBlockVector(a_data,BlockArrays.BlockSizes([1,2]))
+    a = PseudoBlockVector(a_data,(BlockArrays.BlockAxis([1,2]),))
     a[1] = 3
     @test a == [3,2,3]
     @test a_data == [3,2,3]
@@ -141,7 +141,7 @@ end
     a[1] = 2
     @test a == [2 2; 3 4]
     @test a_data == [1 2; 3 4]
-    a = BlockMatrix(a_data,BlockArrays.BlockSizes([1,1],[2]))
+    a = BlockMatrix(a_data,BlockArrays.BlockAxis.(([1,1],[2])))
     a[1] = 2
     @test a == [2 2; 3 4]
     @test a_data == [1 2; 3 4]
@@ -149,7 +149,7 @@ end
     a[1] = 2
     @test a == [2 2; 3 4]
     @test a_data == [2 2; 3 4]
-    a = PseudoBlockMatrix(a_data,BlockArrays.BlockSizes([1,1],[2]))
+    a = PseudoBlockMatrix(a_data, BlockArrays.BlockAxis.(([1,1],[2])))
     a[1] = 3
     @test a == [3 2; 3 4]
     @test a_data == [3 2; 3 4]
@@ -185,8 +185,8 @@ end
         a_1 = rand(6)
         BA_1 = BlockType(a_1, [1,2,3])
         @test Array(BA_1) == a_1
-        @test nblocks(BA_1) == (3,)
-        @test nblocks(BA_1,1) == 3
+        @test blocksize(BA_1) == (3,)
+        @test blocksize(BA_1,1) == 3
         @test eltype(similar(BA_1, Float32)) == Float32
         q = rand(1)
         BA_1[Block(1)] = q
@@ -217,9 +217,8 @@ end
         a_2 = rand(3, 7)
         BA_2 = BlockType(a_2, [1,2], [3,4])
         @test Array(BA_2) == a_2
-        @test nblocks(BA_2) == (2,2)
-        @test nblocks(BA_2, 1) == 2
-        @test nblocks(BA_2, 2, 1) == (2, 2)
+        @test blocksize(BA_2) == (2,2)
+        @test blocksize(BA_2, 1) == 2
         BA_2[BlockIndex((2,1), (2,2))] = a_2[3,2]
         @test eltype(similar(BA_2, Float32)) == Float32
         q = rand(1,4)
@@ -247,10 +246,9 @@ end
         a_3 = rand(3, 7,4)
         BA_3 = BlockType(a_3, [1,2], [3,4], [1,2,1])
         @test Array(BA_3) == a_3
-        @test nblocks(BA_3) == (2,2,3)
-        @test nblocks(BA_3, 1) == 2
-        @test nblocks(BA_3, 3, 1) == (3, 2)
-        @test nblocks(BA_3, 3) == 3
+        @test blocksize(BA_3) == (2,2,3)
+        @test blocksize(BA_3, 1) == 2
+        @test blocksize(BA_3, 3) == 3
         BA_3[BlockIndex((1,1,1), (1,1,1))] = a_3[1,1,1]
         @test eltype(similar(BA_3, Float32)) == Float32
         q = rand(1,4,2)

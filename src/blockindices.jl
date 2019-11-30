@@ -116,6 +116,11 @@ end
     end
 end
 
+block(b::BlockIndex{1}) = b.I[1]
+blockindex(b::BlockIndex{1}) = b.α[1]
+
+BlockIndex(indcs::NTuple{N,BlockIndex{1}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
+
 ##
 # checkindex
 ##

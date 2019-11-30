@@ -6,6 +6,8 @@ struct BlockAxis{CS,BS,AX} <: AbstractBlockAxis
     axis::AX
 end
 
+const DefaultBlockAxis = BlockAxis{Vector{Int},Base.OneTo{Int},Base.OneTo{Int}}
+
 BlockAxis(::AbstractBlockAxis) = throw(ArgumentError("Forbidden due to ambiguity"))
 
 function BlockAxis(blocks::AbstractVector{Int}) 

@@ -111,7 +111,7 @@ copy(A::PseudoBlockArray) = PseudoBlockArray(copy(A.blocks), copy(A.block_sizes)
 ###########################
 
 function Base.similar(block_array::PseudoBlockArray{T,N}, ::Type{T2}) where {T,N,T2}
-    PseudoBlockArray(similar(block_array.blocks, T2), copy(axes(block_array)))
+    PseudoBlockArray(similar(block_array.blocks, T2), axes(block_array))
 end
 
 @inline function Base.getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
@@ -144,7 +144,7 @@ end
 end
 
 @inline function getblock(block_arr::PseudoBlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
-    range = getindex.(axes(block_arr), block)
+    range = getindex.(axes(block_arr), Block.(block))
     return block_arr.blocks[range...]
 end
 
