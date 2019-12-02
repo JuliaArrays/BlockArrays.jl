@@ -184,7 +184,7 @@ end
     for idx in 1:N # using enumerate here will allocate
         k += 1
         @inbounds _i = i[idx]
-        _i in n[k] || return false
+        Block(_i) in n[k] || return false
     end
     return true
 end

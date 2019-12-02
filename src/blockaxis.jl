@@ -45,8 +45,8 @@ Base.convert(::Type{BlockAxis}, axis::Base.IdentityUnitRange) = convert(BlockAxi
 
 Return the tuple of valid block indices for array `A`.
 """
-blockaxes(b::BlockAxis) = (b.block_axis,)
-blockaxes(b::AbstractArray{<:Any,N}) where N = blockaxes.(axes(b)::NTuple{N,AbstractBlockAxis}, 1)
+blockaxes(b::BlockAxis) = (Block.(b.block_axis),)
+blockaxes(b::AbstractArray{<:Any,N}) where N = blockaxes.(axes(b), 1)
 
 """
     blockaxes(A, d)
@@ -71,9 +71,9 @@ end
 function getindex(b::BlockAxis, K::Block{1})
     k = Int(K)
     bax = blockaxes(b,1)
-    @boundscheck k in bax || throw(BlockBoundsError(b, k))
+    @boundscheck K in bax || throw(BlockBoundsError(b, k))
     s = first(b.axis)
-    k == first(bax) && return s:s+first(b.block_cumsum)-1
+    K == first(bax) && return s:s+first(b.block_cumsum)-1
     return s+b.block_cumsum[k-1]:s+b.block_cumsum[k]-1
 end
 
@@ -100,7 +100,7 @@ function getindex(b::AbstractUnitRange{Int}, K::Block{1})
     b
 end
 
-blockaxes(b::AbstractUnitRange{Int}) = (Base.OneTo(1),)
+blockaxes(b::AbstractUnitRange{Int}) = (Block.(Base.OneTo(1)),)
 
 function findblock(b::AbstractUnitRange{Int}, k::Integer)
     @boundscheck k in axes(b,1) || throw(BoundsError(b,k))

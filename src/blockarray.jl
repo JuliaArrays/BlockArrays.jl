@@ -129,7 +129,7 @@ julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
         block_arr = _BlockArray(R, baxes)
         @nloops $N i i->blockaxes(baxes[i],1) begin
             block_index = @ntuple $N i
-            setblock!(block_arr, similar(V, length.(getindex.(baxes, Block.(block_index)))), block_index...)
+            block_arr[block_index...] = similar(V, length.(getindex.(baxes, block_index)))
         end
 
         return block_arr
@@ -172,8 +172,8 @@ end
         block_arr = _BlockArray(Array{typeof(arr),N}, baxes)
         @nloops $N i i->blockaxes(baxes[i],1) begin
             block_index = @ntuple $N i
-            indices = getindex.(baxes,Block.(block_index))
-            setblock!(block_arr, arr[indices...], block_index...)
+            indices = getindex.(baxes,block_index)
+            block_arr[block_index...] = arr[indices...]
         end
 
         return block_arr
@@ -388,8 +388,8 @@ Base.dataids(arr::BlockArray) = (dataids(arr.blocks)..., dataids(arr.axes)...)
         arr = similar(block_array.blocks[1], size(block_array)...)
         @nloops $N i i->blockaxes(block_array,i) begin
             block_index = @ntuple $N i
-            indices = getindex.(axes(block_array), Block.(block_index))
-            arr[indices...] = getblock(block_array, block_index...)
+            indices = getindex.(axes(block_array), block_index)
+            arr[indices...] = block_array[block_index...]
         end
 
         return arr

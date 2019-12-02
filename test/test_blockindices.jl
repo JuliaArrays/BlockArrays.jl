@@ -130,7 +130,7 @@ end
 
     @testset "OneTo interface" begin
         b = Base.OneTo(5)
-        @test blockaxes(b) == (Base.OneTo(1),)
+        @test blockaxes(b) == (Block.(1:1),)
         @test blocksize(b) == (1,)
         @test b[Block(1)] == b
         @test b[Block(1)[2]] == 2
