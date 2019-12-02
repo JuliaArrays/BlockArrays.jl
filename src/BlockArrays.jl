@@ -41,7 +41,7 @@ include("pseudo_blockarray.jl")
 include("views.jl")
 include("show.jl")
 include("blockarrayinterface.jl")
-# include("blockbroadcast.jl")
+include("blockbroadcast.jl")
 # include("linalg.jl")
 
 
