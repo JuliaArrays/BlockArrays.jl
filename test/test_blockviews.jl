@@ -49,6 +49,7 @@ end
 
     # test mixed blocks and other indices
     @test view(A, Block(2), 2) == [8,9]
+    @test similar(A, (Base.OneTo(5), axes(A,2))) isa BlockArray{Int}
     @test view(A, Block(2), :) == A[2:3,:]
 
     @test view(A, 2, Block(1)) == [2,8,14]
@@ -56,8 +57,8 @@ end
 
     @test view(V, Block(1, 1)) ≡ V
 
-    @test_throws BoundsError view(V, Block(1,2))
-    @test_throws BoundsError view(V, Block(2,1))
+    @test_throws BlockBoundsError view(V, Block(1,2))
+    @test_throws BlockBoundsError view(V, Block(2,1))
 
 
     A = BlockArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)

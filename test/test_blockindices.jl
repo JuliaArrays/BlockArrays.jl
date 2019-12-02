@@ -51,6 +51,7 @@ end
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(1_000_001)]
     end
+
     @testset "findblock" begin
         b = BlockAxis([1,2,3])
         @test @inferred(findblock(b,1)) == Block(1)
@@ -104,8 +105,16 @@ end
         @test_throws BoundsError findblockindex(b,0)
         @test_throws BoundsError findblockindex(b,3_000_001)            
     end
+
     @testset "BlockIndex indexing" begin
        b = BlockAxis([1,2,3]) 
+       @test b[Block(3)[2]] == b[Block(3)][2] == 5
+       @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
+    end
+
+    @testset "BlockRange indexing" begin
+       b = BlockAxis([1,2,3]) 
+       b[Block.(1:2)]
        @test b[Block(3)[2]] == b[Block(3)][2] == 5
        @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
     end
@@ -118,6 +127,20 @@ end
         o = OffsetArray([2,2,3],-1:1)
         @test_throws ArgumentError BlockAxis(o,Base.IdentityUnitRange(-4:3))
     end
+
+    @testset "OneTo interface" begin
+        b = Base.OneTo(5)
+        @test blockaxes(b) == (Base.OneTo(1),)
+        @test blocksize(b) == (1,)
+        @test b[Block(1)] == b
+        @test b[Block(1)[2]] == 2
+        @test b[Block(1)[2:3]] == 2:3
+        @test_throws BlockBoundsError b[Block(0)]
+        @test_throws BlockBoundsError b[Block(2)]
+        @test findblock(b,1) == Block(1)
+        @test_throws BoundsError findblock(b,0)
+        @test_throws BoundsError findblock(b,6)
+    end    
 end
 
 #=

@@ -321,9 +321,18 @@ end
 # AbstractArray Interface #
 ###########################
 
-@inline function Base.similar(block_array::BlockArray{T,N}, ::Type{T2}) where {T,N,T2}
-    _BlockArray(similar(block_array.blocks, Array{T2, N}), axes(block_array))
-end
+
+
+
+@inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},Vararg{AbstractUnitRange{Int}}}) where T =
+    BlockArray{T}(undef, convert.(AbstractBlockAxis, axes))
+
+const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange, Colon}
+# avoid ambiguities    
+@inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{OffsetAxis,Vararg{OffsetAxis}}) where T =
+    BlockArray{T}(undef, convert.(AbstractBlockAxis, axes))
+@inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{Base.OneTo{Int},Vararg{Base.OneTo{Int}}}) where T =
+    BlockArray{T}(undef, convert.(AbstractBlockAxis, axes))    
 
 @inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)

@@ -29,7 +29,12 @@ function Base.summary(io::IO, a::AbstractBlockArray)
     print(io, ' ')
     _show_typeof(io, a)
 end
-Base.similar(block_array::AbstractBlockArray{T}) where {T} = similar(block_array, T)
+
+# avoid to_shape which complicates axes
+Base.similar(a::AbstractBlockArray{T}) where {T}                             = similar(a, T)
+Base.similar(a::AbstractBlockArray, ::Type{T}) where {T}                     = similar(a, T, axes(a))
+Base.similar(a::AbstractBlockArray{T}, dims::Tuple) where {T}                = similar(a, T, dims)
+
 Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 
 # need to overload axes to return BlockAxis
@@ -134,6 +139,8 @@ struct BlockBoundsError <: Exception
     BlockBoundsError(a::AbstractArray) = new(a)
     BlockBoundsError(a::AbstractArray, @nospecialize(i)) = new(a,i)
 end
+
+BlockBoundsError(a::AbstractArray, I::Block) = BlockBoundsError(a, I.n)
 
 function Base.showerror(io::IO, ex::BlockBoundsError)
     print(io, "BlockBoundsError")

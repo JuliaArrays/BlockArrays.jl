@@ -34,11 +34,10 @@ import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
 
 
 include("blockindices.jl")                        
-include("abstractblockarray.jl")
 include("blockaxis.jl")
+include("abstractblockarray.jl")
 include("blockarray.jl")
 include("pseudo_blockarray.jl")
-include("blockrange.jl")
 include("views.jl")
 include("show.jl")
 include("blockarrayinterface.jl")
