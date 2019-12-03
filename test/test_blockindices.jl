@@ -166,9 +166,10 @@ end
 
     @testset "BlockRange indexing" begin
        b = BlockArrays.BlockAxis([1,2,3]) 
-       b[Block.(1:2)]
-       @test b[Block(3)[2]] == b[Block(3)][2] == 5
-       @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
+       @test b[Block.(1:2)] == BlockArrays.BlockAxis([1,2]) 
+       @test b[Block.(1:3)] == b
+       @test_throws BlockBoundsError b[Block.(0:2)]
+       @test_throws BlockBoundsError b[Block.(1:4)]
     end
 
     @testset "misc" begin

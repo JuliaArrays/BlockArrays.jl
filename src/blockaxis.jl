@@ -71,17 +71,23 @@ end
 function getindex(b::BlockAxis, K::Block{1})
     k = Int(K)
     bax = blockaxes(b,1)
+    cs = _block_cumsum(b)
     @boundscheck K in bax || throw(BlockBoundsError(b, k))
     s = first(b.axis)
-    K == first(bax) && return s:s+first(b.block_cumsum)-1
-    return s+b.block_cumsum[k-1]:s+b.block_cumsum[k]-1
+    K == first(bax) && return s:s+first(cs)-1
+    return s+cs[k-1]:s+cs[k]-1
 end
 
 function getindex(b::BlockAxis, KR::BlockRange{1})
-    K = first(KR)
-    J = last(KR)
-    # @boundscheck K in blockaxes(b,1) || throw(
-    # b.block_cumsum[
+    K,J = first(KR),last(KR)
+    k,j = Int(K),Int(J)
+    @boundscheck K in blockaxes(b,1) || throw(BlockBoundsError(b,K))
+    @boundscheck J in blockaxes(b,1) || throw(BlockBoundsError(b,J))
+    cs = _block_cumsum(b)
+    bax = blockaxes(b,1)
+    s = first(b.axis)
+    K == first(bax) && return _cumsum2BlockAxis(cs[1:j], s:s+cs[j]-1)
+    _cumsum2BlockAxis(cs[k:j].-(cs[k-1]+1), s+cs[k-1]:s+cs[j]-1)
 end
 
 function findblock(b::BlockAxis, k::Integer)
