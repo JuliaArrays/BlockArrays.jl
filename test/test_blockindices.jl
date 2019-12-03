@@ -174,6 +174,7 @@ end
 
     @testset "misc" begin
         b = BlockArrays.BlockAxis([1,2,3])
+        @test axes(b) == Base.unsafe_indices(b) == (b,)
         @test Base.dataids(b) == Base.dataids(b.block_cumsum)
         @test_throws ArgumentError BlockArrays.BlockAxis(b)
 

@@ -204,12 +204,10 @@ the indices over which the Block spans.
 
 This mimics the relationship between `Colon` and `Base.Slice`.
 """
-struct BlockSlice{BB} <: AbstractUnitRange{Int}
+struct BlockSlice{BB,INDS<:AbstractUnitRange{Int}} <: AbstractUnitRange{Int}
     block::BB
-    indices::UnitRange{Int}
+    indices::INDS
 end
-
-BlockSlice(block, indices) = BlockSlice(block, convert(UnitRange{Int}, indices))
 
 Block(bs::BlockSlice{<:Block}) = bs.block
 

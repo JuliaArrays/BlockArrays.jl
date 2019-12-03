@@ -63,6 +63,8 @@ blocksize(A) = map(length, blockaxes(A))
 blocksize(A,i) = length(blockaxes(A,i))
 blocklength(t) = (@_inline_meta; prod(blocksize(t)))
 
+axes(b::AbstractBlockAxis) = (b,)
+unsafe_indices(b::AbstractBlockAxis) = (b,)
 
 for op in (:first, :last, :step)
     @eval $op(b::BlockAxis) = $op(b.axis)
@@ -87,7 +89,7 @@ function getindex(b::BlockAxis, KR::BlockRange{1})
     bax = blockaxes(b,1)
     s = first(b.axis)
     K == first(bax) && return _cumsum2BlockAxis(cs[1:j], s:s+cs[j]-1)
-    _cumsum2BlockAxis(cs[k:j].-(cs[k-1]+1), s+cs[k-1]:s+cs[j]-1)
+    _cumsum2BlockAxis(cs[k:j].-cs[k-1], s+cs[k-1]:s+cs[j]-1)
 end
 
 function findblock(b::BlockAxis, k::Integer)

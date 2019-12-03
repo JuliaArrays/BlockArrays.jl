@@ -119,11 +119,10 @@ end
     A = PseudoBlockArray(collect(1:6), 1:3)
     V = view(A, Block.(1:2))
     @test V == 1:3
-    @test axes(V) isa BlockArrays.BlockAxis
+    @test axes(V,1) isa BlockArrays.BlockAxis
     @test view(V, Block(2)[1:2]) == [2,3]
     V = view(A, Block.(2:3))
-    @test view(V, Block(2)[1:2]) == [4,5]
-    
+    @test view(V, Block(2)[1:2]) == [4,5] 
 end
 
 
