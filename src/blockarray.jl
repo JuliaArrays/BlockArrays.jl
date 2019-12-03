@@ -74,8 +74,11 @@ end
 _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     _BlockArray(blocks, map(BlockAxis, block_sizes))
 
+# support non-concrete eltypes in blocks    
 _BlockArray(blocks::R, block_axes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}, BS<:NTuple{N,AbstractBlockAxis}} =
     _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_axes)
+_BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}} =
+    _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_sizes...)    
 
 const BlockMatrix{T, R <: AbstractMatrix{<:AbstractMatrix{T}}} = BlockArray{T, 2, R}
 const BlockVector{T, R <: AbstractVector{<:AbstractVector{T}}} = BlockArray{T, 1, R}
@@ -288,7 +291,7 @@ convert(::Type{BlockArray{T1}}, A::AbstractArray{T2, N}) where {T1,T2,N} =
 convert(::Type{BlockArray}, A::AbstractArray{T, N}) where {T,N} =
     convert(BlockArray{T, N}, A)
 
-copy(A::BlockArray) = _BlockArray(copy.(A.blocks), copy(A.block_sizes))
+copy(A::BlockArray) = _BlockArray(copy.(A.blocks), A.axes)
 
 ################################
 # AbstractBlockArray Interface #

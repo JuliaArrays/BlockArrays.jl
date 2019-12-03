@@ -1,4 +1,4 @@
-using SparseArrays, BlockArrays, Base64, LinearAlgebra, Test
+using SparseArrays, BlockArrays, Base64, FillArrays, LinearAlgebra, Test
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
@@ -365,7 +365,7 @@ end
     A = PseudoBlockArray(randn(6), 1:3)
     B = copy(A)
     @test typeof(A) == typeof(B)
-    @test blocksizes(A) == blocksizes(B)
+    @test axes(A) === axes(B)
     @test A == B
     B[1] = 2
     @test B[1] == 2
@@ -374,7 +374,7 @@ end
     A = BlockArray(randn(6), 1:3)
     B = copy(A)
     @test typeof(A) == typeof(B)
-    @test blocksizes(A) == blocksizes(B)
+    @test axes(A) === axes(B)
     @test A == B
     B[1] = 2
     @test B[1] == 2
@@ -383,9 +383,8 @@ end
 
 @testset "const block size" begin
     N = 10
-    # In the future this will be automated via mortar(..., Fill(2,N))
-    A = mortar(fill([1,2], N), BlockArrays.BlockSizes((1:2:2N+1,)))
-    B = PseudoBlockArray(vcat(fill([1,2], N)...), BlockArrays.BlockSizes((1:2:2N+1,)))
+    A = mortar(fill([1,2], N), Fill(2,N))
+    B = PseudoBlockArray(vcat(fill([1,2], N)...),  Fill(2,N))
     @test A == vcat(A.blocks...) == B
     @test A[Block(1)] == B[Block(1)] == [1,2]
 end

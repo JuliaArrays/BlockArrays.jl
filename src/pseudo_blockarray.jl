@@ -104,7 +104,7 @@ convert(::Type{PseudoBlockArray{T1}}, A::AbstractArray{T2, N}) where {T1,T2,N} =
 convert(::Type{PseudoBlockArray}, A::AbstractArray{T, N}) where {T,N} =
     convert(PseudoBlockArray{T, N}, A)
 
-copy(A::PseudoBlockArray) = PseudoBlockArray(copy(A.blocks), copy(A.block_sizes))
+copy(A::PseudoBlockArray) = PseudoBlockArray(copy(A.blocks), A.axes)
 
 ###########################
 # AbstractArray Interface #
