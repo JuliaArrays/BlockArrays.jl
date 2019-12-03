@@ -5,24 +5,25 @@ using BlockArrays, Test
         A = BlockArray(randn(6), 1:3)
 
         @test BlockArrays.BroadcastStyle(typeof(A)) == BlockArrays.BlockStyle{1}()
-
+        bc = Base.broadcasted(exp,A)
+        @test axes(A) === axes(bc) === axes(similar(bc, Float64))
         @test exp.(A) == exp.(Vector(A))
-        @test blocksizes(A) == blocksizes(exp.(A))
+        @test axes(A) === axes(exp.(A))
 
         @test A+A isa BlockArray
-        @test blocksizes(A + A) == blocksizes(A .+ A) == blocksizes(A)
-        @test blocksizes(A .+ 1) == blocksizes(A)
+        @test axes(A + A) === axes(A .+ A) === axes(A)
+        @test axes(A .+ 1) === axes(A)
 
         A = BlockArray(randn(6,6), 1:3,1:3)
 
         @test BlockArrays.BroadcastStyle(typeof(A)) == BlockArrays.BlockStyle{2}()
 
         @test exp.(A) == exp.(Matrix(A))
-        @test blocksizes(A) == blocksizes(exp.(A))
+        @test axes(A) === axes(exp.(A))
 
 
-        @test blocksizes(A + A) == blocksizes(A .+ A) == blocksizes(A)
-        @test blocksizes(A .+ 1) == blocksizes(A)
+        @test axes(A + A) === axes(A .+ A) === axes(A)
+        @test axes(A .+ 1) === axes(A)
     end
 
     @testset "PseudoBlockArray" begin
@@ -32,22 +33,22 @@ using BlockArrays, Test
 
 
         @test exp.(A) == exp.(Vector(A))
-        @test blocksizes(A) == blocksizes(exp.(A))
+        @test axes(A) === axes(exp.(A))
 
         @test A+A isa PseudoBlockArray
-        @test blocksizes(A + A) == blocksizes(A .+ A) == blocksizes(A)
-        @test blocksizes(A .+ 1) == blocksizes(A)
+        @test axes(A + A) === axes(A .+ A) === axes(A)
+        @test axes(A .+ 1) === axes(A)
 
         B = PseudoBlockArray(randn(6,6), 1:3,1:3)
 
         @test BlockArrays.BroadcastStyle(typeof(B)) == BlockArrays.PseudoBlockStyle{2}()
 
         @test exp.(B) == exp.(Matrix(B))
-        @test blocksizes(B) == blocksizes(exp.(B))
+        @test axes(B) === axes(exp.(B))
 
-        @test blocksizes(B + B) == blocksizes(B .+ B) == blocksizes(B)
-        @test blocksizes(B .+ 1) == blocksizes(B)
-        @test blocksizes(A .+ 1 .+ B) == blocksizes(B)
+        @test axes(B + B) === axes(B .+ B) === axes(B)
+        @test axes(B .+ 1) === axes(B)
+        @test axes(A .+ 1 .+ B) === axes(B)
         @test A .+ 1 .+ B == Vector(A) .+ 1 .+ B == Vector(A) .+ 1 .+ Matrix(B)
     end
 

@@ -38,6 +38,11 @@ else  # if VERSION >= v"1.2-"
                                         reindex(V, tail(idxs), tail(subidxs))...))
 end  # if VERSION >= v"1.2-"
 
+
+# _splatmap taken from Base:
+_splatmap(f, ::Tuple{}) = ()
+_splatmap(f, t::Tuple) = (f(t[1])..., _splatmap(f, tail(t))...)
+
 # De-reference blocks before creating a view to avoid taking `global2blockindex`
 # path in `AbstractBlockStyle` broadcasting.
 @inline function Base.unsafe_view(
