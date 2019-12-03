@@ -24,9 +24,9 @@ function _blockarray_print_matrix_row(io::IO,
 
     row_buf = IOBuffer()
 
-    row_sum = axes(X,1).block_cumsum
+    row_sum = _block_cumsum(axes(X,1))
     if ndims(X) == 2
-        col_sum = axes(X,2).block_cumsum[1:end-1]
+        col_sum = _block_cumsum(axes(X,2))[1:end-1]
     end
 
     # Loop over row

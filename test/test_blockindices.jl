@@ -149,7 +149,7 @@ end
         @test_throws BoundsError findblockindex(b,5)
 
         o = OffsetArray([2,2,3],-1:1)    
-        b = BlockArrays.CumsumBlockRange(o,Base.IdentityUnitRange(-3:3))    
+        b = BlockArrays.CumsumBlockRange(-3, cumsum(o) .- 4) 
         @test @inferred(findblock(b,-3)) == Block(-1)    
         @test @inferred(findblockindex(b,-3)) == Block(-1)[1]
         @test findblock.(Ref(b),-3:3) == Block.([-1,-1,0,0,1,1,1])
@@ -187,11 +187,8 @@ end
     @testset "misc" begin
         b = BlockArrays.CumsumBlockRange([1,2,3])
         @test axes(b) == Base.unsafe_indices(b) == (b,)
-        @test Base.dataids(b) == Base.dataids(b.block_cumsum)
+        @test Base.dataids(b) == Base.dataids(BlockArrays._block_cumsum(b))
         @test_throws ArgumentError BlockArrays.CumsumBlockRange(b)
-
-        o = OffsetArray([2,2,3],-1:1)
-        @test_throws ArgumentError BlockArrays.CumsumBlockRange(o,Base.IdentityUnitRange(-4:3))
     end
 
     @testset "OneTo interface" begin

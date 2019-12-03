@@ -114,17 +114,17 @@ end
     @test unsafe_load(pointer(V)) == V[1,1]
 end
 
-
 @testset "block indx range of block range" begin
     A = PseudoBlockArray(collect(1:6), 1:3)
     V = view(A, Block.(1:2))
     @test V == 1:3
-    @test axes(V,1) isa BlockArrays.BlockAxis
+    @test axes(V,1) isa BlockArrays.CumsumBlockRange
+    @test blockaxes(V,1) == Block.(1:2)
     @test view(V, Block(2)[1:2]) == [2,3]
     V = view(A, Block.(2:3))
+    @test V == 2:6
     @test view(V, Block(2)[1:2]) == [4,5] 
 end
-
 
 @testset "subarray implements block interface" begin
     A = PseudoBlockArray(reshape(Vector{Float64}(1:(6^2)),6,6), 1:3, 1:3)
@@ -133,23 +133,22 @@ end
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockArrays.BlockSizes([2],[3])
 
     V = view(A, Block(2), Block.(2:3))
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockArrays.BlockSizes([2],[2,3])
+    @test blocksize(V) == (1,2)
 
     V = view(A, Block.(2:3), Block(3))
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockArrays.BlockSizes([2,3],[3])
+    @test blocksize(V) == (2,1)
 
     V = view(A, Block.(2:3), Block.(1:2))
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockArrays.BlockSizes([2,3],[1,2])
+    @test blocksize(V) == (2,2)
 end

@@ -17,6 +17,7 @@ const DefaultBlockAxis = CumsumBlockRange{Vector{Int}}
 
 @inline _CumsumBlockRange(cs) = CumsumBlockRange(1,cs)
 
+CumsumBlockRange(::CumsumBlockRange) = throw(ArgumentError("Forbidden due to ambiguity"))
 @inline CumsumBlockRange(blocks::AbstractVector{Int}) = _CumsumBlockRange(cumsum(blocks))
 
 @inline _block_cumsum(a::CumsumBlockRange) = a.cumsum
@@ -72,12 +73,12 @@ function getindex(b::CumsumBlockRange, KR::BlockRange{1})
     @boundscheck J in bax || throw(BlockBoundsError(b,J))
     cs = _block_cumsum(b)
     K == first(bax) && return CumsumBlockRange(first(b),cs[k:j])
-    CumsumBlockRange(cs[k],cs[k+1:j])
+    CumsumBlockRange(cs[k-1]+1,cs[k:j])
 end
 
 function findblock(b::CumsumBlockRange, k::Integer)
-    @boundscheck k in axes(b,1) || throw(BoundsError(b,k))
-    Block(searchsortedfirst(_block_cumsum(b), k-first(b)+1))
+    @boundscheck k in b || throw(BoundsError(b,k))
+    Block(searchsortedfirst(_block_cumsum(b), k))
 end
 
 Base.dataids(b::CumsumBlockRange) = Base.dataids(_block_cumsum(b))

@@ -25,22 +25,22 @@ end
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64}(undef, (BlockArrays.BlockAxis(1:3),))
+    ret = BlockArray{Float64}(undef, (BlockArrays.CumsumBlockRange(1:3),))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1}(undef, (BlockArrays.BlockAxis(1:3),))
+    ret = BlockArray{Float64,1}(undef, (BlockArrays.CumsumBlockRange(1:3),))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, (BlockArrays.BlockAxis(1:3),))
+    ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, (BlockArrays.CumsumBlockRange(1:3),))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
     ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], 1:3)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (BlockArrays.BlockAxis(1:3),))
+    ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (BlockArrays.CumsumBlockRange(1:3),))
     @test Array(ret)  == zeros(6)
 
     ret = BlockArray{Float32}(undef_blocks, 1:3)
@@ -94,7 +94,7 @@ end
 
     ret = mortar([spzeros(2), spzeros(3)])
     @test eltype(ret.blocks) <: SparseVector
-    @test axes(ret) == (BlockArrays.BlockAxis([2, 3]),)
+    @test axes(ret) == (BlockArrays.CumsumBlockRange([2, 3]),)
 
     ret = mortar(
         (spzeros(1, 3), spzeros(1, 4)),
@@ -103,7 +103,7 @@ end
      )
     @test Array(ret) == zeros(8, 7)
     @test eltype(ret.blocks) <: SparseMatrixCSC
-    @test axes(ret) == BlockArrays.BlockAxis.(([1, 2, 5], [3, 4]))
+    @test axes(ret) == BlockArrays.CumsumBlockRange.(([1, 2, 5], [3, 4]))
 
     test_error_message("must have ndims consistent with ndims = 1") do
         mortar([ones(2,2)])
@@ -123,7 +123,7 @@ end
     a[1] = 2
     @test a == [2,2,3]
     @test a_data == [1,2,3]
-    a = BlockVector(a_data,(BlockArrays.BlockAxis([1,2]),))
+    a = BlockVector(a_data,(BlockArrays.CumsumBlockRange([1,2]),))
     a[1] = 2
     @test a == [2,2,3]
     @test a_data == [1,2,3]
@@ -131,7 +131,7 @@ end
     a[1] = 2
     @test a == [2,2,3]
     @test a_data == [2,2,3]
-    a = PseudoBlockVector(a_data,(BlockArrays.BlockAxis([1,2]),))
+    a = PseudoBlockVector(a_data,(BlockArrays.CumsumBlockRange([1,2]),))
     a[1] = 3
     @test a == [3,2,3]
     @test a_data == [3,2,3]
@@ -141,7 +141,7 @@ end
     a[1] = 2
     @test a == [2 2; 3 4]
     @test a_data == [1 2; 3 4]
-    a = BlockMatrix(a_data,BlockArrays.BlockAxis.(([1,1],[2])))
+    a = BlockMatrix(a_data,BlockArrays.CumsumBlockRange.(([1,1],[2])))
     a[1] = 2
     @test a == [2 2; 3 4]
     @test a_data == [1 2; 3 4]
@@ -149,7 +149,7 @@ end
     a[1] = 2
     @test a == [2 2; 3 4]
     @test a_data == [2 2; 3 4]
-    a = PseudoBlockMatrix(a_data, BlockArrays.BlockAxis.(([1,1],[2])))
+    a = PseudoBlockMatrix(a_data, BlockArrays.CumsumBlockRange.(([1,1],[2])))
     a[1] = 3
     @test a == [3 2; 3 4]
     @test a_data == [3 2; 3 4]
@@ -302,13 +302,12 @@ end
     A = BlockArray(rand(4, 5), [1,3], [2,3]);
     buf = IOBuffer()
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},Tuple{BlockArrays.BlockAxis{Array{Int64,1},Base.OneTo{Int64},Base.OneTo{Int64}},BlockArrays.BlockAxis{Array{Int64,1},Base.OneTo{Int64},Base.OneTo{Int64}}}} at block index [3,2]"
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},Tuple{BlockArrays.CumsumBlockRange{Array{Int64,1}},BlockArrays.CumsumBlockRange{Array{Int64,1}}}} at block index [3,2]"
 
     A = PseudoBlockArray(rand(4, 5), [1,3], [2,3]);
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},Tuple{BlockArrays.BlockAxis{Array{Int64,1},Base.OneTo{Int64},Base.OneTo{Int64}},BlockArrays.BlockAxis{Array{Int64,1},Base.OneTo{Int64},Base.OneTo{Int64}}}} at block index [3,2]"
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},Tuple{BlockArrays.CumsumBlockRange{Array{Int64,1}},BlockArrays.CumsumBlockRange{Array{Int64,1}}}} at block index [3,2]"
 end
-
 
 @testset "replstring" begin
     @test stringmime("text/plain",BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockArray{Int64,2}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
