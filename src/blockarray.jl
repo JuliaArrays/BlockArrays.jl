@@ -329,11 +329,15 @@ end
 
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)
-@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+@inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    BlockArray{T}(undef, axes)        
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)    
 
 const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange, Colon}
 # avoid ambiguities    
+@inline Base.similar(block_array::BlockArray, ::Type{T}, dims::NTuple{N,Int}) where {T,N} =
+    Array{T}(undef, dims)
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{OffsetAxis,Vararg{OffsetAxis}}) where T =
     BlockArray{T}(undef, axes)
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{Base.OneTo{Int},Vararg{Base.OneTo{Int}}}) where T =

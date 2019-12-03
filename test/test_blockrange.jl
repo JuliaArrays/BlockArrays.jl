@@ -16,11 +16,10 @@
     @test_throws ArgumentError Base.to_index(Block(1):Block(2))
 
     A = BlockArray(collect(1:6), 1:3)
-    view(A, Block.(1:2)) == [1,2,3]
-    A[Block.(1:2)] == [1,2,3]
+    @test view(A, Block.(1:2)) == [1,2,3]
+    @test A[Block.(1:2)] == [1,2,3]
 
     A = BlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
-
 
     @test view(A, Block.(1:2), Block.(1:2)) == A[1:3,1:7]
     @test A[Block.(1:2), Block.(1:2)] == A[1:3,1:7]
@@ -71,7 +70,6 @@
     @test V ==  A[Block.(1:2), Block.(2:3)]
 end
 
-
 @testset "block index range" begin
 	B = Block(2)
 	Bi = B[2:3]
@@ -80,10 +78,6 @@ end
 	@test collect(Bi) == [BlockIndex((2,), 2), BlockIndex((2,), 3)]
 
 	A = PseudoBlockArray(rand(4), [1,3])
-
-	@test BlockArrays._unblock(BlockArrays.blocksizes(A).cumul_sizes[1], (Bi,)) ==
-			BlockArrays.unblock(A, axes(A), (Bi, )) == BlockArrays.BlockSlice(Bi, 3:4) ==
-			parentindices(view(A, Bi))[1] == BlockArrays.BlockSlice(Bi, 3:4)
 
 	@test A[Bi] == A[3:4]
 

@@ -39,6 +39,7 @@ Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 
 # need to overload axes to return BlockAxis
 @inline size(block_array::AbstractBlockArray) = map(length, axes(block_array))
+@inline axes(block_array::AbstractBlockArray) = throw(error("axes for ", typeof(block_array), " is not implemented"))
 
 """
     getblock(A, inds...)
