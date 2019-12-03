@@ -302,11 +302,11 @@ end
     A = BlockArray(rand(4, 5), [1,3], [2,3]);
     buf = IOBuffer()
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},BlockArrays.BlockSizes{2,Tuple{Array{Int64,1},Array{Int64,1}}}} at block index [3,2]"
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},Tuple{BlockArrays.BlockAxis{Array{Int64,1},Base.OneTo{Int64},Base.OneTo{Int64}},BlockArrays.BlockAxis{Array{Int64,1},Base.OneTo{Int64},Base.OneTo{Int64}}}} at block index [3,2]"
 
     A = PseudoBlockArray(rand(4, 5), [1,3], [2,3]);
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},BlockArrays.BlockSizes{2,Tuple{Array{Int64,1},Array{Int64,1}}}} at block index [3,2]"
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},Tuple{BlockArrays.BlockAxis{Array{Int64,1},Base.OneTo{Int64},Base.OneTo{Int64}},BlockArrays.BlockAxis{Array{Int64,1},Base.OneTo{Int64},Base.OneTo{Int64}}}} at block index [3,2]"
 end
 
 
@@ -328,58 +328,6 @@ end
     A = BlockArray(undef_blocks, Matrix{Float64}, 1:3, 1:3)
     A[Block(2,3)] = ones(2,3)
     @test A[Block(2,3)] == ones(2,3)
-end
-
-@testset "Block arithmetic" begin
-    @test +(Block(1)) == Block(1)
-    @test -(Block(1)) == Block(-1)
-    @test Block(2) + Block(1) == Block(3)
-    @test Block(2) + 1 == Block(3)
-    @test 2 + Block(1) == Block(3)
-    @test Block(2) - Block(1) == Block(1)
-    @test Block(2) - 1 == Block(1)
-    @test 2 - Block(1) == Block(1)
-    @test 2*Block(1) == Block(2)
-    @test Block(1)*2 == Block(2)
-
-    @test isless(Block(1), Block(2))
-    @test !isless(Block(1), Block(1))
-    @test !isless(Block(2), Block(1))
-    @test Block(1) < Block(2)
-    @test Block(1) ≤ Block(1)
-    @test Block(2) > Block(1)
-    @test Block(1) ≥ Block(1)
-    @test min(Block(1), Block(2)) == Block(1)
-    @test max(Block(1), Block(2)) == Block(2)
-
-    @test +(Block(1,2)) == Block(1,2)
-    @test -(Block(1,2)) == Block(-1,-2)
-    @test Block(1,2) + Block(2,3) == Block(3,5)
-    @test Block(1,2) + 1 == Block(2,3)
-    @test 1 + Block(1,2) == Block(2,3)
-    @test Block(2,3) - Block(1,2) == Block(1,1)
-    @test Block(1,2) - 1 == Block(0,1)
-    @test 1 - Block(1,2) == Block(0,-1)
-    @test 2*Block(1,2) == Block(2,4)
-    @test Block(1,2)*2 == Block(2,4)
-
-    @test isless(Block(1,1), Block(2,2))
-    @test isless(Block(1,1), Block(2,1))
-    @test !isless(Block(1,1), Block(1,1))
-    @test !isless(Block(2,1), Block(1,1))
-    @test Block(1,1) < Block(2,1)
-    @test Block(1,1) ≤ Block(1,1)
-    @test Block(2,1) > Block(1,1)
-    @test Block(1,1) ≥ Block(1,1)
-    @test min(Block(1,2), Block(2,2)) == Block(1,2)
-    @test max(Block(1,2), Block(2,2)) == Block(2,2)
-
-    @test convert(Int, Block(2)) == 2
-    @test convert(Float64, Block(2)) == 2.0
-
-    @test_throws MethodError convert(Int, Block(2,1))
-    @test convert(Tuple{Int,Int}, Block(2,1)) == (2,1)
-    @test convert(Tuple{Float64,Int}, Block(2,1)) == (2.0,1)
 end
 
 @testset "Strided array interface" begin

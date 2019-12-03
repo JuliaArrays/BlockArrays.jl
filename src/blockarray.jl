@@ -326,6 +326,8 @@ end
 
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, convert.(AbstractBlockAxis, axes))
+@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{AbstractBlockAxis,Vararg{AbstractBlockAxis}}) where T =
+    BlockArray{T}(undef, axes)    
 
 const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange, Colon}
 # avoid ambiguities    

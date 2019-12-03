@@ -4,6 +4,58 @@ import BlockArrays: BlockAxis, BlockIndex, BlockIndexRange
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
     @test Block((Block(3), Block(4))) === Block(3,4)
+
+    @testset "Block arithmetic" begin
+        @test +(Block(1)) == Block(1)
+        @test -(Block(1)) == Block(-1)
+        @test Block(2) + Block(1) == Block(3)
+        @test Block(2) + 1 == Block(3)
+        @test 2 + Block(1) == Block(3)
+        @test Block(2) - Block(1) == Block(1)
+        @test Block(2) - 1 == Block(1)
+        @test 2 - Block(1) == Block(1)
+        @test 2*Block(1) == Block(2)
+        @test Block(1)*2 == Block(2)
+
+        @test isless(Block(1), Block(2))
+        @test !isless(Block(1), Block(1))
+        @test !isless(Block(2), Block(1))
+        @test Block(1) < Block(2)
+        @test Block(1) ≤ Block(1)
+        @test Block(2) > Block(1)
+        @test Block(1) ≥ Block(1)
+        @test min(Block(1), Block(2)) == Block(1)
+        @test max(Block(1), Block(2)) == Block(2)
+
+        @test +(Block(1,2)) == Block(1,2)
+        @test -(Block(1,2)) == Block(-1,-2)
+        @test Block(1,2) + Block(2,3) == Block(3,5)
+        @test Block(1,2) + 1 == Block(2,3)
+        @test 1 + Block(1,2) == Block(2,3)
+        @test Block(2,3) - Block(1,2) == Block(1,1)
+        @test Block(1,2) - 1 == Block(0,1)
+        @test 1 - Block(1,2) == Block(0,-1)
+        @test 2*Block(1,2) == Block(2,4)
+        @test Block(1,2)*2 == Block(2,4)
+
+        @test isless(Block(1,1), Block(2,2))
+        @test isless(Block(1,1), Block(2,1))
+        @test !isless(Block(1,1), Block(1,1))
+        @test !isless(Block(2,1), Block(1,1))
+        @test Block(1,1) < Block(2,1)
+        @test Block(1,1) ≤ Block(1,1)
+        @test Block(2,1) > Block(1,1)
+        @test Block(1,1) ≥ Block(1,1)
+        @test min(Block(1,2), Block(2,2)) == Block(1,2)
+        @test max(Block(1,2), Block(2,2)) == Block(2,2)
+
+        @test convert(Int, Block(2)) == 2
+        @test convert(Float64, Block(2)) == 2.0
+
+        @test_throws MethodError convert(Int, Block(2,1))
+        @test convert(Tuple{Int,Int}, Block(2,1)) == (2,1)
+        @test convert(Tuple{Float64,Int}, Block(2,1)) == (2.0,1)
+    end
 end
 
 @testset "BlockIndex" begin

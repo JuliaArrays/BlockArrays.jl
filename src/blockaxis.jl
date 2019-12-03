@@ -22,16 +22,16 @@ const DefaultBlockAxis = BlockAxis{Vector{Int},Base.OneTo{Int},Base.OneTo{Int}}
 
 BlockAxis(::AbstractBlockAxis) = throw(ArgumentError("Forbidden due to ambiguity"))
 
-function BlockAxis(blocks::AbstractVector{Int}) 
-    cs = cumsum(blocks)
-    BlockAxis(cs, axes(blocks)[1], Base.OneTo(last(cs)))
-end
-
-function BlockAxis(blocks::AbstractVector{Int}, axis) 
-    cs = cumsum(blocks)
+@inline function _cumsum2BlockAxis(cs, axis) 
     last(cs) == length(axis) || throw(ArgumentError("Block sizes must match axis"))
-    BlockAxis(cs, axes(blocks)[1], axis)
+    BlockAxis(cs, axes(cs,1), axis)
 end
+@inline _cumsum2BlockAxis(cs) = _cumsum2BlockAxis(cs, Base.OneTo(last(cs)))
+
+@inline BlockAxis(blocks::AbstractVector{Int}) = _cumsum2BlockAxis(cumsum(blocks))
+@inline BlockAxis(blocks::AbstractVector{Int}, axis)  = _cumsum2BlockAxis(cumsum(blocks), axis)
+
+@inline _block_cumsum(a::BlockAxis) = a.block_cumsum
 
 Base.convert(::Type{AbstractBlockAxis}, axis::AbstractBlockAxis) = axis
 Base.convert(::Type{AbstractBlockAxis}, axis::AbstractUnitRange{Int}) = convert(BlockAxis, axis)
@@ -106,3 +106,5 @@ function findblock(b::AbstractUnitRange{Int}, k::Integer)
     @boundscheck k in axes(b,1) || throw(BoundsError(b,k))
     Block(1)
 end
+
+_block_cumsum(a::AbstractUnitRange{Int}) = [length(a)]

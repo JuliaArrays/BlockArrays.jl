@@ -24,6 +24,12 @@ BroadcastStyle(a::AbstractBlockStyle{M}, ::StructuredMatrixStyle) where {M} = ty
 BroadcastStyle(::BlockStyle{M}, ::PseudoBlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 
+combine_blockaxes(a, b) = _cumsum2BlockAxis(sort!(union(_block_cumsum(a), _block_cumsum(b))))
+
+Base.Broadcast.axistype(a::T, b::T) where T<:AbstractBlockAxis = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::AbstractBlockAxis, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a, b::AbstractBlockAxis) = length(b) == 1 ? a : combine_blockaxes(a, b)
+
 
 similar(bc::Broadcasted{<:AbstractBlockStyle{N}}, ::Type{T}) where {T,N} =
     BlockArray{T,N}(undef, axes(bc))
@@ -98,7 +104,7 @@ Base.IteratorSize(::Type{<:SubBlockIterator}) = Base.HasLength()
 Base.length(it::SubBlockIterator) = length(it.block_cumsum)
 
 SubBlockIterator(arr::AbstractArray, bs::NTuple{N,AbstractBlockAxis}, dim::Integer) where N =
-    SubBlockIterator(axes(arr, dim).block_cumsum, bs[dim].block_cumsum)
+    SubBlockIterator(_block_cumsum(axes(arr, dim)), _block_cumsum(bs[dim]))
 
 function Base.iterate(it::SubBlockIterator, state=nothing)
     if state === nothing
