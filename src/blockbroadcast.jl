@@ -24,11 +24,11 @@ BroadcastStyle(a::AbstractBlockStyle{M}, ::StructuredMatrixStyle) where {M} = ty
 BroadcastStyle(::BlockStyle{M}, ::PseudoBlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 
-combine_blockaxes(a, b) = _cumsum2BlockAxis(sort!(union(_block_cumsum(a), _block_cumsum(b))))
+combine_blockaxes(a, b) = _CumsumBlockRange(sort!(union(_block_cumsum(a), _block_cumsum(b))))
 
-Base.Broadcast.axistype(a::T, b::T) where T<:AbstractBlockAxis = length(b) == 1 ? a : combine_blockaxes(a, b)
-Base.Broadcast.axistype(a::AbstractBlockAxis, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
-Base.Broadcast.axistype(a, b::AbstractBlockAxis) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::T, b::T) where T<:CumsumBlockRange = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::CumsumBlockRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a, b::CumsumBlockRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 
 
 similar(bc::Broadcasted{<:AbstractBlockStyle{N}}, ::Type{T}) where {T,N} =
@@ -103,7 +103,7 @@ Base.eltype(::Type{<:SubBlockIterator}) = BlockIndexRange{1,Tuple{UnitRange{Int6
 Base.IteratorSize(::Type{<:SubBlockIterator}) = Base.HasLength()
 Base.length(it::SubBlockIterator) = length(it.block_cumsum)
 
-SubBlockIterator(arr::AbstractArray, bs::NTuple{N,AbstractBlockAxis}, dim::Integer) where N =
+SubBlockIterator(arr::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N =
     SubBlockIterator(_block_cumsum(axes(arr, dim)), _block_cumsum(bs[dim]))
 
 function Base.iterate(it::SubBlockIterator, state=nothing)
@@ -122,10 +122,10 @@ function Base.iterate(it::SubBlockIterator, state=nothing)
     return (bir, (i + 1, j))
 end
 
-subblocks(::Any, bs::NTuple{N,AbstractBlockAxis}, dim::Integer) where N =
+subblocks(::Any, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N =
     (nothing for _ in blockaxes(bs[dim], 1))
 
-function subblocks(arr::AbstractArray, bs::NTuple{N,AbstractBlockAxis}, dim::Integer) where N
+function subblocks(arr::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N
     if size(arr, dim) == 1
         return (BlockIndexRange(Block(1), 1:1) for _ in blockaxes(bs[dim], 1))
     end

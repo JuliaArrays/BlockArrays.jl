@@ -253,7 +253,7 @@ BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
 (:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
 (:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
 Base.BroadcastStyle(::Type{<:BlockRange{1}}) = DefaultArrayStyle{1}()
-broadcasted(::DefaultArrayStyle{1}, ::typeof(Block), r::UnitRange) = Block(first(r)):Block(last(r))
+broadcasted(::DefaultArrayStyle{1}, ::typeof(Block), r::AbstractUnitRange) = Block(first(r)):Block(last(r))
 broadcasted(::DefaultArrayStyle{1}, ::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices)
 
 

@@ -40,10 +40,10 @@ julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
  0.0
 ```
 """
-struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:NTuple{N,AbstractBlockAxis}} <: AbstractBlockArray{T, N}
+struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{T, N}
     blocks::R
     axes::BS
-    PseudoBlockArray{T,N,R,BS}(blocks::R, axes::BS) where {T,N,R,BS<:NTuple{N,AbstractBlockAxis}} =
+    PseudoBlockArray{T,N,R,BS}(blocks::R, axes::BS) where {T,N,R,BS<:NTuple{N,AbstractUnitRange{Int}}} =
         new{T,N,R,BS}(blocks, axes)
 end
 
@@ -52,37 +52,37 @@ const PseudoBlockVector{T} = PseudoBlockArray{T, 1}
 const PseudoBlockVecOrMat{T} = Union{PseudoBlockMatrix{T}, PseudoBlockVector{T}}
 
 # Auxiliary outer constructors
-@inline PseudoBlockArray(blocks::R, baxes::BS) where {T,N,R<:AbstractArray{T,N},BS<:NTuple{N,AbstractBlockAxis}} =
+@inline PseudoBlockArray(blocks::R, baxes::BS) where {T,N,R<:AbstractArray{T,N},BS<:NTuple{N,AbstractUnitRange{Int}}} =
     PseudoBlockArray{T, N, R,BS}(blocks, baxes)
 
 @inline PseudoBlockArray(blocks::AbstractArray{T, N}, block_sizes::Vararg{Vector{Int}, N}) where {T, N} =
-    PseudoBlockArray(blocks, BlockAxis.(block_sizes))
+    PseudoBlockArray(blocks, CumsumBlockRange.(block_sizes))
 
 PseudoBlockArray(blocks::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
     PseudoBlockArray(blocks, Vector{Int}.(block_sizes)...)
 
-@inline PseudoBlockArray{T}(::UndefInitializer, baxes::NTuple{N,AbstractBlockAxis}) where {T, N} =
+@inline PseudoBlockArray{T}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N} =
     PseudoBlockArray(similar(Array{T, N}, length.(baxes)), baxes)
 
-@inline PseudoBlockArray{T, N}(::UndefInitializer, baxes::NTuple{N,AbstractBlockAxis}) where {T, N} =
+@inline PseudoBlockArray{T, N}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N} =
     PseudoBlockArray{T}(undef, baxes)
 
-@inline PseudoBlockArray{T, N, R}(::UndefInitializer, baxes::NTuple{N,AbstractBlockAxis}) where {T, N, R <: AbstractArray{T, N}} =
+@inline PseudoBlockArray{T, N, R}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N, R <: AbstractArray{T, N}} =
     PseudoBlockArray(similar(R, length.(baxes)), baxes)
 
 @inline PseudoBlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
-    PseudoBlockArray{T}(undef, BlockAxis.(block_sizes))
+    PseudoBlockArray{T}(undef, CumsumBlockRange.(block_sizes))
 
 @inline PseudoBlockArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
-    PseudoBlockArray{T, N}(undef, BlockAxis.(block_sizes))
+    PseudoBlockArray{T, N}(undef, CumsumBlockRange.(block_sizes))
 
 @inline PseudoBlockArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}} =
-    PseudoBlockArray{T, N, R}(undef, BlockAxis.(block_sizes))
+    PseudoBlockArray{T, N, R}(undef, CumsumBlockRange.(block_sizes))
 
 
-PseudoBlockVector(blocks::AbstractVector, baxes::Tuple{AbstractBlockAxis}) = PseudoBlockArray(blocks, baxes)
+PseudoBlockVector(blocks::AbstractVector, baxes::Tuple{AbstractUnitRange{Int}}) = PseudoBlockArray(blocks, baxes)
 PseudoBlockVector(blocks::AbstractVector, block_sizes::AbstractVector{Int}) = PseudoBlockArray(blocks, block_sizes)
-PseudoBlockMatrix(blocks::AbstractMatrix, baxes::NTuple{2,AbstractBlockAxis}) = PseudoBlockArray(blocks, baxes)
+PseudoBlockMatrix(blocks::AbstractMatrix, baxes::NTuple{2,AbstractUnitRange{Int}}) = PseudoBlockArray(blocks, baxes)
 PseudoBlockMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{Int},2}) = PseudoBlockArray(blocks, block_sizes...)
 
 # Convert AbstractArrays that conform to block array interface

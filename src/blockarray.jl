@@ -55,27 +55,27 @@ const undef_blocks = UndefBlocksInitializer()
 function _BlockArray end
 
 """
-    BlockArray{T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractBlockAxis}} <: AbstractBlockArray{T, N}
+    BlockArray{T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{T, N}
 
 A `BlockArray` is an array where each block is stored contiguously. This means that insertions and retrieval of blocks
 can be very fast and non allocating since no copying of data is needed.
 
 In the type definition, `R` defines the array type that holds the blocks, for example `Matrix{Matrix{Float64}}`.
 """
-struct BlockArray{T, N, R <: AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractBlockAxis}} <: AbstractBlockArray{T, N}
+struct BlockArray{T, N, R <: AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{T, N}
     blocks::R
     axes::BS
 
-    global _BlockArray(blocks::R, block_sizes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractBlockAxis}} =
+    global _BlockArray(blocks::R, block_sizes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
         new{T, N, R, BS}(blocks, block_sizes)
 end
 
 # Auxilary outer constructors
 _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
-    _BlockArray(blocks, map(BlockAxis, block_sizes))
+    _BlockArray(blocks, map(CumsumBlockRange, block_sizes))
 
 # support non-concrete eltypes in blocks    
-_BlockArray(blocks::R, block_axes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}, BS<:NTuple{N,AbstractBlockAxis}} =
+_BlockArray(blocks::R, block_axes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
     _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_axes)
 _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}} =
     _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_sizes...)    
@@ -89,9 +89,9 @@ const BlockVecOrMat{T, R} = Union{BlockMatrix{T, R}, BlockVector{T, R}}
 ################
 
 @inline _BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
-    _BlockArray(R, map(BlockAxis,block_sizes))
+    _BlockArray(R, map(CumsumBlockRange,block_sizes))
 
-function _BlockArray(::Type{R}, baxes::NTuple{N,AbstractBlockAxis}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
+function _BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
     n_blocks = map(blocklength,baxes)
     blocks = R(undef, n_blocks)
     _BlockArray(blocks, baxes)
@@ -127,7 +127,7 @@ julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
     undef_blocks_BlockArray(R, block_sizes...)
 
 
-@generated function initialized_blocks_BlockArray(::Type{R}, baxes::NTuple{N,AbstractBlockAxis}) where R<:AbstractArray{V,N} where {T,N,V<:AbstractArray{T,N}}
+@generated function initialized_blocks_BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where R<:AbstractArray{V,N} where {T,N,V<:AbstractArray{T,N}}
     return quote
         block_arr = _BlockArray(R, baxes)
         @nloops $N i i->blockaxes(baxes[i],1) begin
@@ -141,15 +141,15 @@ end
 
 
 initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
-    initialized_blocks_BlockArray(R, map(BlockAxis,block_sizes))
+    initialized_blocks_BlockArray(R, map(CumsumBlockRange,block_sizes))
 
-@inline BlockArray{T}(::UndefInitializer, baxes::NTuple{N,AbstractBlockAxis}) where {T, N} =
+@inline BlockArray{T}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, baxes)
 
-@inline BlockArray{T, N}(::UndefInitializer, baxes::NTuple{N,AbstractBlockAxis}) where {T, N} =
+@inline BlockArray{T, N}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, baxes)
 
-@inline BlockArray{T, N, R}(::UndefInitializer, baxes::NTuple{N,AbstractBlockAxis}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
+@inline BlockArray{T, N, R}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     initialized_blocks_BlockArray(R, baxes)
 
 @inline BlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
@@ -167,10 +167,10 @@ function BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector
             throw(DimensionMismatch("block size for dimension $i: $(block_sizes[i]) does not sum to the array size: $(size(arr, i))"))
         end
     end
-    BlockArray(arr, map(BlockAxis,block_sizes))
+    BlockArray(arr, map(CumsumBlockRange,block_sizes))
 end
 
-@generated function BlockArray(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractBlockAxis}) where {T,N}
+@generated function BlockArray(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
     return quote
         block_arr = _BlockArray(Array{typeof(arr),N}, baxes)
         @nloops $N i i->blockaxes(baxes[i],1) begin
@@ -183,15 +183,15 @@ end
     end
 end
 
-BlockVector(blocks::AbstractVector, baxes::Tuple{AbstractBlockAxis}) = BlockArray(blocks, baxes)
+BlockVector(blocks::AbstractVector, baxes::Tuple{AbstractUnitRange{Int}}) = BlockArray(blocks, baxes)
 BlockVector(blocks::AbstractVector, block_sizes::AbstractVector{Int}) = BlockArray(blocks, block_sizes)
-BlockMatrix(blocks::AbstractMatrix, baxes::NTuple{2,AbstractBlockAxis}) = BlockArray(blocks, baxes)
+BlockMatrix(blocks::AbstractMatrix, baxes::NTuple{2,AbstractUnitRange{Int}}) = BlockArray(blocks, baxes)
 BlockMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{Int},2}) = BlockArray(blocks, block_sizes...)
 
 """
     mortar(blocks::AbstractArray)
     mortar(blocks::AbstractArray{R, N}, sizes_1, sizes_2, ..., sizes_N)
-    mortar(blocks::AbstractArray{R, N}, block_sizes::NTuple{N,AbstractBlockAxis})
+    mortar(blocks::AbstractArray{R, N}, block_sizes::NTuple{N,AbstractUnitRange{Int}})
 
 Construct a `BlockArray` from `blocks`.  `block_sizes` is computed from
 `blocks` if it is not given.
@@ -220,7 +220,7 @@ julia> ans == mortar(
 true
 ```
 """
-mortar(blocks::AbstractArray{R, N}, baxes::NTuple{N,AbstractBlockAxis}) where {R, N} =
+mortar(blocks::AbstractArray{R, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {R, N} =
     _BlockArray(blocks, baxes)
 
 mortar(blocks::AbstractArray{R, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {R, N} =
@@ -328,16 +328,16 @@ end
 
 
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, convert.(AbstractBlockAxis, axes))
-@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{AbstractBlockAxis,Vararg{AbstractBlockAxis}}) where T =
+    BlockArray{T}(undef, axes)
+@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)    
 
 const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange, Colon}
 # avoid ambiguities    
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{OffsetAxis,Vararg{OffsetAxis}}) where T =
-    BlockArray{T}(undef, convert.(AbstractBlockAxis, axes))
+    BlockArray{T}(undef, axes)
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{Base.OneTo{Int},Vararg{Base.OneTo{Int}}}) where T =
-    BlockArray{T}(undef, convert.(AbstractBlockAxis, axes))    
+    BlockArray{T}(undef, axes)
 
 @inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
