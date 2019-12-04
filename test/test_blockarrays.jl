@@ -405,3 +405,15 @@ end
     @test mortar(B) == A
     @test mortar(B)[1,1] == 1.0
 end
+
+@testset "reshape" begin
+    A = BlockArray(1:6, 1:3)
+    @test reshape(A, Val(2)) isa PseudoBlockArray{Int64,2,Array{Int64,2},Tuple{BlockArrays.CumsumBlockRange{Array{Int64,1}},Base.OneTo{Int64}}}
+    @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (BlockArrays.CumsumBlockRange(1:3), Base.OneTo(1)))
+    @test reshape(A, (BlockArrays.CumsumBlockRange(Fill(2,3)),))[Block(1)] == 1:2
+
+    A = PseudoBlockArray(1:6, 1:3)
+    @test reshape(A, Val(2)) isa typeof(PseudoBlockArray(reshape(1:6,6,1), (BlockArrays.CumsumBlockRange(1:3), Base.OneTo(1))))
+    @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (BlockArrays.CumsumBlockRange(1:3), Base.OneTo(1)))
+    @test reshape(A, (BlockArrays.CumsumBlockRange(Fill(2,3)),))[Block(1)] == 1:2
+end

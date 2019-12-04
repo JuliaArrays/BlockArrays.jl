@@ -55,11 +55,8 @@ const PseudoBlockVecOrMat{T} = Union{PseudoBlockMatrix{T}, PseudoBlockVector{T}}
 @inline PseudoBlockArray(blocks::R, baxes::BS) where {T,N,R<:AbstractArray{T,N},BS<:NTuple{N,AbstractUnitRange{Int}}} =
     PseudoBlockArray{T, N, R,BS}(blocks, baxes)
 
-@inline PseudoBlockArray(blocks::AbstractArray{T, N}, block_sizes::Vararg{Vector{Int}, N}) where {T, N} =
-    PseudoBlockArray(blocks, CumsumBlockRange.(block_sizes))
-
 PseudoBlockArray(blocks::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
-    PseudoBlockArray(blocks, Vector{Int}.(block_sizes)...)
+    PseudoBlockArray(blocks, CumsumBlockRange.(block_sizes))
 
 @inline PseudoBlockArray{T}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N} =
     PseudoBlockArray(similar(Array{T, N}, length.(baxes)), baxes)
@@ -232,6 +229,10 @@ function rmul!(block_array::PseudoBlockArray, α::Number)
     rmul!(block_array.blocks, α)
     block_array
 end
+
+Base.reshape(block_array::PseudoBlockArray, axes::NTuple{N,AbstractUnitRange{Int}}) where N =
+    PseudoBlockArray(reshape(block_array.blocks,map(length,axes)),axes)
+
 
 
 ###########################

@@ -73,7 +73,7 @@ using BlockArrays, Test
         A = BlockArray(randn(6,6), 1:3, 1:3)
         D = Diagonal(ones(6))
         @test blocksize(A + D) == blocksize(A)
-        @test blocksize(B .+ D) == BlockArrays.BlockSizes([1,2,3],[6])
+        @test blocksize(B .+ D) == (3,1)
     end
 
     @testset "Mixed block sizes" begin
