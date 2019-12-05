@@ -21,6 +21,8 @@ CumsumBlockRange(::CumsumBlockRange) = throw(ArgumentError("Forbidden due to amb
 @inline CumsumBlockRange(blocks::AbstractVector{Int}) = _CumsumBlockRange(cumsum(blocks))
 
 @inline _block_cumsum(a::CumsumBlockRange) = a.cumsum
+blockisequal(a::AbstractVector, b::AbstractVector) = first(a) == first(b) && _block_cumsum(a) == _block_cumsum(b)
+blockisequal(a::Tuple, b::Tuple) = all(blockisequal.(a, b))
 
 Base.convert(::Type{CumsumBlockRange}, axis::CumsumBlockRange) = axis
 Base.convert(::Type{CumsumBlockRange}, axis::AbstractUnitRange{Int}) = CumsumBlockRange([length(axis)], axis)

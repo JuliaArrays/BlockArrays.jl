@@ -135,6 +135,10 @@ end
 @inline _bview(arg, ::Vararg) = arg
 @inline _bview(A::AbstractArray, I...) = view(A, I...)
 
+@inline function Base.Broadcast.materialize!(dest, bc::Broadcasted{BS}) where {Style,BS<:AbstractBlockStyle}
+    return copyto!(dest, Base.Broadcast.instantiate(Base.Broadcast.Broadcasted{BS}(bc.f, bc.args, combine_blockaxes.(axes(dest),axes(bc)))))
+end
+
 @generated function copyto!(
         dest::AbstractArray,
         bc::Broadcasted{<:AbstractBlockStyle{NDims}, <:Any, <:Any, Args},
@@ -168,7 +172,7 @@ end
 
     quote
         bs = axes(bc)
-        if axes(dest) ≠ bs
+        if !blockisequal(axes(dest), bs)
             copyto!(PseudoBlockArray(dest, bs), bc)
             return dest
         end
