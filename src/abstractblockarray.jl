@@ -22,13 +22,15 @@ const AbstractBlockVector{T} = AbstractBlockArray{T, 1}
 const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
-Base.summary(a::AbstractBlockArray) = string(block2string(blocksize(a), size(a)), " ", typeof(a))
+_block_summary(a) = string(block2string(blocksize(a), size(a)), " ", typeof(a))
+Base.summary(a::AbstractBlockArray) = _block_summary(a)
 _show_typeof(io, a) = show(io, typeof(a))
-function Base.summary(io::IO, a::AbstractBlockArray)
+function _block_summary(io, a)    
     print(io, block2string(blocksize(a), size(a)))
     print(io, ' ')
     _show_typeof(io, a)
 end
+Base.summary(io::IO, a::AbstractBlockArray) = _block_summary(io, a)
 
 # avoid to_shape which complicates axes
 Base.similar(a::AbstractBlockArray{T}) where {T}                             = similar(a, T)

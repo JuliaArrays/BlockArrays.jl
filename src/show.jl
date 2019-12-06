@@ -111,3 +111,14 @@ function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,Defaul
     show(io, N)
     print(io, '}')
 end
+
+
+## Cumsum
+
+Base.print_matrix_row(io::IO,
+        X::CumsumBlockRange, A::Vector,
+        i::Integer, cols::AbstractVector, sep::AbstractString) =
+        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
+
+Base.show(io::IO, mimetype::MIME"text/plain", a::CumsumBlockRange) = 
+    Base.invoke(show, Tuple{typeof(io),MIME"text/plain",AbstractArray},io, mimetype, a)

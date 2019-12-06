@@ -102,3 +102,6 @@ function findblock(b::AbstractUnitRange{Int}, k::Integer)
 end
 
 _block_cumsum(a::AbstractUnitRange{Int}) = [length(a)]
+
+Base.summary(a::CumsumBlockRange) = _block_summary(a)
+Base.summary(io::IO, a::CumsumBlockRange) =  _block_summary(io, a)

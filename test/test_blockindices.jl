@@ -1,4 +1,4 @@
-using BlockArrays, FillArrays, OffsetArrays, Test
+using BlockArrays, FillArrays, OffsetArrays, Test, Base64
 import BlockArrays: BlockIndex, BlockIndexRange
 
 @testset "Blocks" begin
@@ -203,7 +203,8 @@ end
         @test findblock(b,1) == Block(1)
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
-    end    
+        @test stringmime("text/plain",BlockArrays.CumsumBlockRange([1,2,2])) == "3-blocked 5-element BlockArrays.CumsumBlockRange{Array{Int64,1}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+    end  
 end
 
 #=
