@@ -24,10 +24,16 @@ CumsumBlockRange(::CumsumBlockRange) = throw(ArgumentError("Forbidden due to amb
 blockisequal(a::AbstractVector, b::AbstractVector) = first(a) == first(b) && _block_cumsum(a) == _block_cumsum(b)
 blockisequal(a::Tuple, b::Tuple) = all(blockisequal.(a, b))
 
+Base.similar(::Type{T}, shape::Tuple{CumsumBlockRange,Vararg{CumsumBlockRange}}) where {T<:AbstractArray} = 
+    similar(T, map(length,shape))
+
+
 Base.convert(::Type{CumsumBlockRange}, axis::CumsumBlockRange) = axis
 Base.convert(::Type{CumsumBlockRange}, axis::AbstractUnitRange{Int}) = CumsumBlockRange([length(axis)], axis)
 Base.convert(::Type{CumsumBlockRange}, axis::Base.Slice) = convert(CumsumBlockRange, axis.indices)
 Base.convert(::Type{CumsumBlockRange}, axis::Base.IdentityUnitRange) = convert(CumsumBlockRange, axis.indices)
+Base.convert(::Type{CumsumBlockRange{CS}}, axis::CumsumBlockRange{CS}) where CS = axis
+Base.convert(::Type{CumsumBlockRange{CS}}, axis::CumsumBlockRange) where CS = CumsumBlockRange(first(axis), convert(CS, _block_cumsum(axis)))
 
 """
     blockaxes(A)
@@ -55,7 +61,10 @@ blocklength(t) = (@_inline_meta; prod(blocksize(t)))
 axes(b::CumsumBlockRange) = (_CumsumBlockRange(_block_cumsum(b) .- (first(b)-1)),)
 unsafe_indices(b::CumsumBlockRange) = axes(b)
 first(b::CumsumBlockRange) = b.first
-last(b::CumsumBlockRange) = last(_block_cumsum(b))
+_last(b::CumsumBlockRange, _) = isempty(_block_cumsum(b)) ? first(b)-1 : last(_block_cumsum(b))
+last(b::CumsumBlockRange) = _last(b, axes(_block_cumsum(b),1))
+_length(b::CumsumBlockRange, _) = Base.invoke(length, Tuple{AbstractUnitRange{Int}}, b)
+length(b::CumsumBlockRange) = _length(b, axes(_block_cumsum(b),1))
 
 function getindex(b::CumsumBlockRange, K::Block{1})
     k = Int(K)
@@ -68,12 +77,13 @@ function getindex(b::CumsumBlockRange, K::Block{1})
 end
 
 function getindex(b::CumsumBlockRange, KR::BlockRange{1})
+    cs = _block_cumsum(b)
+    isempty(KR) && return CumsumBlockRange(1,cs[1:0])
     K,J = first(KR),last(KR)
     k,j = Int(K),Int(J)
     bax = blockaxes(b,1)
     @boundscheck K in bax || throw(BlockBoundsError(b,K))
     @boundscheck J in bax || throw(BlockBoundsError(b,J))
-    cs = _block_cumsum(b)
     K == first(bax) && return CumsumBlockRange(first(b),cs[k:j])
     CumsumBlockRange(cs[k-1]+1,cs[k:j])
 end
