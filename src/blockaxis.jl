@@ -17,15 +17,14 @@ const DefaultBlockAxis = CumsumBlockRange{Vector{Int}}
 
 @inline _CumsumBlockRange(cs) = CumsumBlockRange(1,cs)
 
+
 CumsumBlockRange(::CumsumBlockRange) = throw(ArgumentError("Forbidden due to ambiguity"))
-@inline CumsumBlockRange(blocks::AbstractVector{Int}) = _CumsumBlockRange(cumsum(blocks))
+_cumsum(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
+@inline CumsumBlockRange(blocks::AbstractVector{Int}) = _CumsumBlockRange(_cumsum(blocks))
 
 @inline _block_cumsum(a::CumsumBlockRange) = a.cumsum
 blockisequal(a::AbstractVector, b::AbstractVector) = first(a) == first(b) && _block_cumsum(a) == _block_cumsum(b)
 blockisequal(a::Tuple, b::Tuple) = all(blockisequal.(a, b))
-
-Base.similar(::Type{T}, shape::Tuple{CumsumBlockRange,Vararg{CumsumBlockRange}}) where {T<:AbstractArray} = 
-    similar(T, map(length,shape))
 
 
 Base.convert(::Type{CumsumBlockRange}, axis::CumsumBlockRange) = axis

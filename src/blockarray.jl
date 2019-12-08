@@ -325,14 +325,20 @@ end
 ###########################
 
 
-
-
-@inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)
-@inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)        
 @inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)    
+    BlockArray{T}(undef, axes)   
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{CumsumBlockRange,CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    BlockArray{T}(undef, axes)   
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    BlockArray{T}(undef, axes)   
+          
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    BlockArray{T}(undef, axes)  
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{CumsumBlockRange,CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    BlockArray{T}(undef, axes)          
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractUnitRange{Int},CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    BlockArray{T}(undef, axes)      
+    
 
 const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange, Colon}
 # avoid ambiguities    
