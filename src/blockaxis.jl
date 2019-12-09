@@ -8,19 +8,22 @@ function findblockindex(b::AbstractVector, k::Integer)
     K[searchsortedfirst(b[K], k)] # guaranteed to be in range
 end
 
+function _CumsumBlockRange end
+
 struct CumsumBlockRange{CS} <: AbstractUnitRange{Int}
     first::Int
     cumsum::CS
+    global _CumsumBlockRange(f, cs::CS) where CS = new{CS}(f, cs)
 end
 
 const DefaultBlockAxis = CumsumBlockRange{Vector{Int}}
 
-@inline _CumsumBlockRange(cs) = CumsumBlockRange(1,cs)
+@inline _CumsumBlockRange(cs) = _CumsumBlockRange(1,cs)
 
 
 CumsumBlockRange(::CumsumBlockRange) = throw(ArgumentError("Forbidden due to ambiguity"))
 _cumsum(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
-@inline CumsumBlockRange(blocks::AbstractVector{Int}) = _CumsumBlockRange(_cumsum(blocks))
+@inline blockedrange(blocks::AbstractVector{Int}) = _CumsumBlockRange(_cumsum(blocks))
 
 @inline _block_cumsum(a::CumsumBlockRange) = a.cumsum
 blockisequal(a::AbstractVector, b::AbstractVector) = first(a) == first(b) && _block_cumsum(a) == _block_cumsum(b)
@@ -28,11 +31,12 @@ blockisequal(a::Tuple, b::Tuple) = all(blockisequal.(a, b))
 
 
 Base.convert(::Type{CumsumBlockRange}, axis::CumsumBlockRange) = axis
-Base.convert(::Type{CumsumBlockRange}, axis::AbstractUnitRange{Int}) = CumsumBlockRange([length(axis)], axis)
+Base.convert(::Type{CumsumBlockRange}, axis::AbstractUnitRange{Int}) = _CumsumBlockRange(first(axis),[length(axis)])
 Base.convert(::Type{CumsumBlockRange}, axis::Base.Slice) = convert(CumsumBlockRange, axis.indices)
 Base.convert(::Type{CumsumBlockRange}, axis::Base.IdentityUnitRange) = convert(CumsumBlockRange, axis.indices)
 Base.convert(::Type{CumsumBlockRange{CS}}, axis::CumsumBlockRange{CS}) where CS = axis
-Base.convert(::Type{CumsumBlockRange{CS}}, axis::CumsumBlockRange) where CS = CumsumBlockRange(first(axis), convert(CS, _block_cumsum(axis)))
+Base.convert(::Type{CumsumBlockRange{CS}}, axis::CumsumBlockRange) where CS = _CumsumBlockRange(first(axis), convert(CS, _block_cumsum(axis)))
+Base.convert(::Type{CumsumBlockRange{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(CumsumBlockRange{CS}, convert(CumsumBlockRange, axis))
 
 """
     blockaxes(A)
@@ -77,14 +81,14 @@ end
 
 function getindex(b::CumsumBlockRange, KR::BlockRange{1})
     cs = _block_cumsum(b)
-    isempty(KR) && return CumsumBlockRange(1,cs[1:0])
+    isempty(KR) && return _CumsumBlockRange(1,cs[1:0])
     K,J = first(KR),last(KR)
     k,j = Int(K),Int(J)
     bax = blockaxes(b,1)
     @boundscheck K in bax || throw(BlockBoundsError(b,K))
     @boundscheck J in bax || throw(BlockBoundsError(b,J))
-    K == first(bax) && return CumsumBlockRange(first(b),cs[k:j])
-    CumsumBlockRange(cs[k-1]+1,cs[k:j])
+    K == first(bax) && return _CumsumBlockRange(first(b),cs[k:j])
+    _CumsumBlockRange(cs[k-1]+1,cs[k:j])
 end
 
 function findblock(b::CumsumBlockRange, k::Integer)

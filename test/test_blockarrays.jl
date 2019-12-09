@@ -25,22 +25,22 @@ end
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64}(undef, (BlockArrays.CumsumBlockRange(1:3),))
+    ret = BlockArray{Float64}(undef, (blockedrange(1:3),))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1}(undef, (BlockArrays.CumsumBlockRange(1:3),))
+    ret = BlockArray{Float64,1}(undef, (blockedrange(1:3),))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, (BlockArrays.CumsumBlockRange(1:3),))
+    ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, (blockedrange(1:3),))
     fill!(ret, 0)
     @test Array(ret)  == zeros(6)
 
     ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], 1:3)
     @test Array(ret)  == zeros(6)
 
-    ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (BlockArrays.CumsumBlockRange(1:3),))
+    ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (blockedrange(1:3),))
     @test Array(ret)  == zeros(6)
 
     ret = BlockArray{Float32}(undef_blocks, 1:3)
@@ -94,7 +94,7 @@ end
 
     ret = mortar([spzeros(2), spzeros(3)])
     @test eltype(ret.blocks) <: SparseVector
-    @test axes(ret) == (BlockArrays.CumsumBlockRange([2, 3]),)
+    @test axes(ret) == (blockedrange([2, 3]),)
 
     ret = mortar(
         (spzeros(1, 3), spzeros(1, 4)),
@@ -103,7 +103,7 @@ end
      )
     @test Array(ret) == zeros(8, 7)
     @test eltype(ret.blocks) <: SparseMatrixCSC
-    @test axes(ret) == BlockArrays.CumsumBlockRange.(([1, 2, 5], [3, 4]))
+    @test axes(ret) == blockedrange.(([1, 2, 5], [3, 4]))
 
     test_error_message("must have ndims consistent with ndims = 1") do
         mortar([ones(2,2)])
@@ -123,7 +123,7 @@ end
     a[1] = 2
     @test a == [2,2,3]
     @test a_data == [1,2,3]
-    a = BlockVector(a_data,(BlockArrays.CumsumBlockRange([1,2]),))
+    a = BlockVector(a_data,(blockedrange([1,2]),))
     a[1] = 2
     @test a == [2,2,3]
     @test a_data == [1,2,3]
@@ -131,7 +131,7 @@ end
     a[1] = 2
     @test a == [2,2,3]
     @test a_data == [2,2,3]
-    a = PseudoBlockVector(a_data,(BlockArrays.CumsumBlockRange([1,2]),))
+    a = PseudoBlockVector(a_data,(blockedrange([1,2]),))
     a[1] = 3
     @test a == [3,2,3]
     @test a_data == [3,2,3]
@@ -141,7 +141,7 @@ end
     a[1] = 2
     @test a == [2 2; 3 4]
     @test a_data == [1 2; 3 4]
-    a = BlockMatrix(a_data,BlockArrays.CumsumBlockRange.(([1,1],[2])))
+    a = BlockMatrix(a_data,blockedrange.(([1,1],[2])))
     a[1] = 2
     @test a == [2 2; 3 4]
     @test a_data == [1 2; 3 4]
@@ -149,7 +149,7 @@ end
     a[1] = 2
     @test a == [2 2; 3 4]
     @test a_data == [2 2; 3 4]
-    a = PseudoBlockMatrix(a_data, BlockArrays.CumsumBlockRange.(([1,1],[2])))
+    a = PseudoBlockMatrix(a_data, blockedrange.(([1,1],[2])))
     a[1] = 3
     @test a == [3 2; 3 4]
     @test a_data == [3 2; 3 4]
@@ -409,11 +409,11 @@ end
 @testset "reshape" begin
     A = BlockArray(1:6, 1:3)
     @test reshape(A, Val(2)) isa PseudoBlockArray{Int64,2,Array{Int64,2},Tuple{BlockArrays.CumsumBlockRange{Array{Int64,1}},Base.OneTo{Int64}}}
-    @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (BlockArrays.CumsumBlockRange(1:3), Base.OneTo(1)))
-    @test reshape(A, (BlockArrays.CumsumBlockRange(Fill(2,3)),))[Block(1)] == 1:2
+    @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
+    @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
 
     A = PseudoBlockArray(1:6, 1:3)
-    @test reshape(A, Val(2)) isa typeof(PseudoBlockArray(reshape(1:6,6,1), (BlockArrays.CumsumBlockRange(1:3), Base.OneTo(1))))
-    @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (BlockArrays.CumsumBlockRange(1:3), Base.OneTo(1)))
-    @test reshape(A, (BlockArrays.CumsumBlockRange(Fill(2,3)),))[Block(1)] == 1:2
+    @test reshape(A, Val(2)) isa typeof(PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1))))
+    @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
+    @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
 end

@@ -72,7 +72,7 @@ end
 
 # Auxilary outer constructors
 _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
-    _BlockArray(blocks, map(CumsumBlockRange, block_sizes))
+    _BlockArray(blocks, map(blockedrange, block_sizes))
 
 # support non-concrete eltypes in blocks    
 _BlockArray(blocks::R, block_axes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
@@ -89,7 +89,7 @@ const BlockVecOrMat{T, R} = Union{BlockMatrix{T, R}, BlockVector{T, R}}
 ################
 
 @inline _BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
-    _BlockArray(R, map(CumsumBlockRange,block_sizes))
+    _BlockArray(R, map(blockedrange,block_sizes))
 
 function _BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
     n_blocks = map(blocklength,baxes)
@@ -141,7 +141,7 @@ end
 
 
 initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
-    initialized_blocks_BlockArray(R, map(CumsumBlockRange,block_sizes))
+    initialized_blocks_BlockArray(R, map(blockedrange,block_sizes))
 
 @inline BlockArray{T}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, baxes)
@@ -167,7 +167,7 @@ function BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector
             throw(DimensionMismatch("block size for dimension $i: $(block_sizes[i]) does not sum to the array size: $(size(arr, i))"))
         end
     end
-    BlockArray(arr, map(CumsumBlockRange,block_sizes))
+    BlockArray(arr, map(blockedrange,block_sizes))
 end
 
 @generated function BlockArray(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
