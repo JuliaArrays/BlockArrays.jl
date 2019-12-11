@@ -1,4 +1,4 @@
-using BlockArrays, Test
+using BlockArrays, FillArrays, Test
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
@@ -110,4 +110,12 @@ using BlockArrays, Test
         @test broadcast(*, 2, v) isa BlockVector{Int,Vector{StepRange{Int,Int}}}
         @test broadcast(*, 2, v) == 2Vector(v)
     end
+
+    @testset "special axes" begin
+        A = BlockArray(randn(6), Ones{Int}(6))
+        B = BlockArray(randn(6), Ones{Int}(6))
+        @test axes(A+B,1) === axes(A,1)
+
+        C = BlockArray(randn(6), (BlockArrays._CumsumBlockRange(1,2:6),))
+        @test axes(A+C,1) === BlockArrays._CumsumBlockRange(1,1:6)
 end

@@ -24,9 +24,15 @@ BroadcastStyle(a::AbstractBlockStyle{M}, ::StructuredMatrixStyle) where {M} = ty
 BroadcastStyle(::BlockStyle{M}, ::PseudoBlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 
-combine_blockaxes(a, b) = _CumsumBlockRange(sort!(union(_block_cumsum(a), _block_cumsum(b))))
+
+# sortedunion can assume inputs are already sorted so this could be improved
+sortedunion(a,b) = sort!(union(a,b))
+sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
+sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
+combine_blockaxes(a, b) = _CumsumBlockRange(sortedunion(_block_cumsum(a), _block_cumsum(b)))
 
 Base.Broadcast.axistype(a::T, b::T) where T<:CumsumBlockRange = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::CumsumBlockRange, b::CumsumBlockRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 Base.Broadcast.axistype(a::CumsumBlockRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
 Base.Broadcast.axistype(a, b::CumsumBlockRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 
