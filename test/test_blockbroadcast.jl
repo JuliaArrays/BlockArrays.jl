@@ -118,4 +118,5 @@ using BlockArrays, FillArrays, Test
 
         C = BlockArray(randn(6), (BlockArrays._CumsumBlockRange(1,2:6),))
         @test axes(A+C,1) === BlockArrays._CumsumBlockRange(1,1:6)
+    end
 end
