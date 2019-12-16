@@ -30,9 +30,8 @@ AbstractBlockArray
 BlockBoundsError
 Block
 BlockIndex
-nblocks
+blockaxes
 blocksize
-blocksizes
 getblock
 getblock!
 setblock!

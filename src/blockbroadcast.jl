@@ -31,12 +31,12 @@ BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(
 sortedunion(a,b) = sort!(union(a,b))
 sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
-combine_blockaxes(a, b) = _CumsumBlockRange(sortedunion(_block_cumsum(a), _block_cumsum(b)))
+combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(_block_cumsum(a), _block_cumsum(b)))
 
-Base.Broadcast.axistype(a::T, b::T) where T<:CumsumBlockRange = length(b) == 1 ? a : combine_blockaxes(a, b)
-Base.Broadcast.axistype(a::CumsumBlockRange, b::CumsumBlockRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
-Base.Broadcast.axistype(a::CumsumBlockRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
-Base.Broadcast.axistype(a, b::CumsumBlockRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::T, b::T) where T<:BlockedUnitRange = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::BlockedUnitRange, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::BlockedUnitRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 
 
 similar(bc::Broadcasted{<:AbstractBlockStyle{N}}, ::Type{T}) where {T,N} =
@@ -46,8 +46,8 @@ similar(bc::Broadcasted{PseudoBlockStyle{N}}, ::Type{T}) where {T,N} =
     PseudoBlockArray{T,N}(undef, axes(bc))
 
 """
-    SubBlockIterator(subcumulsize::Vector{Int}, cumulsize::Vector{Int})
-    SubBlockIterator(A::AbstractArray, bs::BlockSizes, dim::Integer)
+    SubBlockIterator(subblock_cumsum::Vector{Int}, block_cumsum::Vector{Int})
+    SubBlockIterator(A::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}} where N, dim::Integer)
 
 An iterator for iterating `BlockIndexRange` of the blocks specified by
 `cumulsize`.  The `Block` index part of `BlockIndexRange` is
@@ -67,7 +67,7 @@ julia> import BlockArrays: SubBlockIterator, BlockIndexRange
 
 julia> A = BlockArray(1:6, 1:3);
 
-julia> subblock_cumsum = axes(A, 1).block_cumsum;
+julia> subblock_cumsum = axes(A, 1).cumsum;
 
 julia> @assert subblock_cumsum == [1, 3, 6];
 

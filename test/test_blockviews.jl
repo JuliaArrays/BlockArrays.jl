@@ -118,7 +118,7 @@ end
     A = PseudoBlockArray(collect(1:6), 1:3)
     V = view(A, Block.(1:2))
     @test V == 1:3
-    @test axes(V,1) isa BlockArrays.CumsumBlockRange
+    @test axes(V,1) isa BlockArrays.BlockedUnitRange
     @test blockaxes(V,1) == Block.(1:2)
     @test view(V, Block(2)[1:2]) == [2,3]
     V = view(A, Block.(2:3))

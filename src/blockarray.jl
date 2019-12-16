@@ -325,18 +325,18 @@ end
 ###########################
 
 
-@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)   
-@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{CumsumBlockRange,CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)   
-@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)   
           
-@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)  
-@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{CumsumBlockRange,CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)          
-@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractUnitRange{Int},CumsumBlockRange,Vararg{AbstractUnitRange{Int}}}) where T =
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)      
     
 const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange, Colon}

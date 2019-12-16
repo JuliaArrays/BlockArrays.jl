@@ -302,11 +302,11 @@ end
     A = BlockArray(rand(4, 5), [1,3], [2,3]);
     buf = IOBuffer()
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},Tuple{BlockArrays.CumsumBlockRange{Array{Int64,1}},BlockArrays.CumsumBlockRange{Array{Int64,1}}}} at block index [3,2]"
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}} at block index [3,2]"
 
     A = PseudoBlockArray(rand(4, 5), [1,3], [2,3]);
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},Tuple{BlockArrays.CumsumBlockRange{Array{Int64,1}},BlockArrays.CumsumBlockRange{Array{Int64,1}}}} at block index [3,2]"
+    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}} at block index [3,2]"
 end
 
 @testset "replstring" begin
@@ -408,7 +408,7 @@ end
 
 @testset "reshape" begin
     A = BlockArray(1:6, 1:3)
-    @test reshape(A, Val(2)) isa PseudoBlockArray{Int64,2,Array{Int64,2},Tuple{BlockArrays.CumsumBlockRange{Array{Int64,1}},Base.OneTo{Int64}}}
+    @test reshape(A, Val(2)) isa PseudoBlockArray{Int64,2,Array{Int64,2},Tuple{BlockedUnitRange{Array{Int64,1}},Base.OneTo{Int64}}}
     @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
     @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
 

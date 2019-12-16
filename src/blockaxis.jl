@@ -8,68 +8,132 @@ function findblockindex(b::AbstractVector, k::Integer)
     K[searchsortedfirst(b[K], k)] # guaranteed to be in range
 end
 
-function _CumsumBlockRange end
+function _BlockedUnitRange end
 
-struct CumsumBlockRange{CS} <: AbstractUnitRange{Int}
+
+"""
+    BlockedUnitRange
+
+is an `AbstractUnitRange{Int}` that has been divided
+into blocks, and is used to represent axes of block arrays.
+Construction is typically via `blockrange` which converts
+a vector of block lengths to a `BlockedUnitRange`.
+```jldoctest; setup = quote using BlockArrays end
+julia> blockedrange([2,2,3])
+3-blocked 7-element BlockedUnitRange{Array{Int64,1}}:
+ 1
+ 2
+ ─
+ 3
+ 4
+ ─
+ 5
+ 6
+ 7
+```
+"""    
+struct BlockedUnitRange{CS} <: AbstractUnitRange{Int}
     first::Int
     cumsum::CS
-    global _CumsumBlockRange(f, cs::CS) where CS = new{CS}(f, cs)
+    global _BlockedUnitRange(f, cs::CS) where CS = new{CS}(f, cs)
 end
 
-const DefaultBlockAxis = CumsumBlockRange{Vector{Int}}
+const DefaultBlockAxis = BlockedUnitRange{Vector{Int}}
 
-@inline _CumsumBlockRange(cs) = _CumsumBlockRange(1,cs)
+@inline _BlockedUnitRange(cs) = _BlockedUnitRange(1,cs)
 
 
-CumsumBlockRange(::CumsumBlockRange) = throw(ArgumentError("Forbidden due to ambiguity"))
+BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
 _cumsum(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
-@inline blockedrange(blocks::AbstractVector{Int}) = _CumsumBlockRange(_cumsum(blocks))
+@inline blockedrange(blocks::AbstractVector{Int}) = _BlockedUnitRange(_cumsum(blocks))
 
-@inline _block_cumsum(a::CumsumBlockRange) = a.cumsum
+@inline _block_cumsum(a::BlockedUnitRange) = a.cumsum
 blockisequal(a::AbstractVector, b::AbstractVector) = first(a) == first(b) && _block_cumsum(a) == _block_cumsum(b)
 blockisequal(a::Tuple, b::Tuple) = all(blockisequal.(a, b))
 
 
-Base.convert(::Type{CumsumBlockRange}, axis::CumsumBlockRange) = axis
-Base.convert(::Type{CumsumBlockRange}, axis::AbstractUnitRange{Int}) = _CumsumBlockRange(first(axis),[length(axis)])
-Base.convert(::Type{CumsumBlockRange}, axis::Base.Slice) = convert(CumsumBlockRange, axis.indices)
-Base.convert(::Type{CumsumBlockRange}, axis::Base.IdentityUnitRange) = convert(CumsumBlockRange, axis.indices)
-Base.convert(::Type{CumsumBlockRange{CS}}, axis::CumsumBlockRange{CS}) where CS = axis
-Base.convert(::Type{CumsumBlockRange{CS}}, axis::CumsumBlockRange) where CS = _CumsumBlockRange(first(axis), convert(CS, _block_cumsum(axis)))
-Base.convert(::Type{CumsumBlockRange{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(CumsumBlockRange{CS}, convert(CumsumBlockRange, axis))
+Base.convert(::Type{BlockedUnitRange}, axis::BlockedUnitRange) = axis
+Base.convert(::Type{BlockedUnitRange}, axis::AbstractUnitRange{Int}) = _BlockedUnitRange(first(axis),[length(axis)])
+Base.convert(::Type{BlockedUnitRange}, axis::Base.Slice) = convert(BlockedUnitRange, axis.indices)
+Base.convert(::Type{BlockedUnitRange}, axis::Base.IdentityUnitRange) = convert(BlockedUnitRange, axis.indices)
+Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange{CS}) where CS = axis
+Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange) where CS = _BlockedUnitRange(first(axis), convert(CS, _block_cumsum(axis)))
+Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(BlockedUnitRange{CS}, convert(BlockedUnitRange, axis))
 
 """
     blockaxes(A)
 
-Return the tuple of valid block indices for array `A`.
+Return the tuple of valid block indices for array `A`. 
+```jldoctest; setup = quote using BlockArrays end
+julia> A = BlockArray([1,2,3],[2,1])
+2-blocked 3-element BlockArray{Int64,1}:
+ 1
+ 2
+ ─
+ 3
+
+julia> blockaxes(A)[1]
+2-element BlockRange{1,Tuple{UnitRange{Int64}}}:
+ Block(1)
+ Block(2)
+```
 """
-blockaxes(b::CumsumBlockRange) = (Block.(axes(b.cumsum,1)),)
+blockaxes(b::BlockedUnitRange) = (Block.(axes(b.cumsum,1)),)
 blockaxes(b::AbstractArray{<:Any,N}) where N = blockaxes.(axes(b), 1)
 
 """
     blockaxes(A, d)
 
 Return the valid range of block indices for array `A` along dimension `d`.
-```
+```jldoctest; setup = quote using BlockArrays end
+julia> A = BlockArray([1,2,3],[2,1])
+2-blocked 3-element BlockArray{Int64,1}:
+ 1
+ 2
+ ─
+ 3
+
+julia> blockaxes(A,1)
+2-element BlockRange{1,Tuple{UnitRange{Int64}}}:
+ Block(1)
+ Block(2)
+```    
 """
 function blockaxes(A::AbstractArray{T,N}, d) where {T,N}
     @_inline_meta
     d::Integer <= N ? blockaxes(A)[d] : OneTo(1)
 end
 
+"""
+    blocksize(A)
+
+Return the tuple of the number of blocks along each
+dimension.
+```jldoctest; setup = quote using BlockArrays end
+julia> A = BlockArray(randn(3,3),[2,1],[1,1,1])
+2×3-blocked 3×3 BlockArray{Float64,2}:
+ -1.46829   │   1.21074   │  2.0992    
+  0.811394  │  -0.706665  │  0.0932036 
+ ───────────┼─────────────┼────────────
+  1.36788   │  -0.680385  │  0.00347046
+
+julia> blocksize(A)
+(2, 3)
+```
+"""
 blocksize(A) = map(length, blockaxes(A))
 blocksize(A,i) = length(blockaxes(A,i))
 blocklength(t) = (@_inline_meta; prod(blocksize(t)))
 
-axes(b::CumsumBlockRange) = (_CumsumBlockRange(_block_cumsum(b) .- (first(b)-1)),)
-unsafe_indices(b::CumsumBlockRange) = axes(b)
-first(b::CumsumBlockRange) = b.first
-_last(b::CumsumBlockRange, _) = isempty(_block_cumsum(b)) ? first(b)-1 : last(_block_cumsum(b))
-last(b::CumsumBlockRange) = _last(b, axes(_block_cumsum(b),1))
-_length(b::CumsumBlockRange, _) = Base.invoke(length, Tuple{AbstractUnitRange{Int}}, b)
-length(b::CumsumBlockRange) = _length(b, axes(_block_cumsum(b),1))
+axes(b::BlockedUnitRange) = (_BlockedUnitRange(_block_cumsum(b) .- (first(b)-1)),)
+unsafe_indices(b::BlockedUnitRange) = axes(b)
+first(b::BlockedUnitRange) = b.first
+_last(b::BlockedUnitRange, _) = isempty(_block_cumsum(b)) ? first(b)-1 : last(_block_cumsum(b))
+last(b::BlockedUnitRange) = _last(b, axes(_block_cumsum(b),1))
+_length(b::BlockedUnitRange, _) = Base.invoke(length, Tuple{AbstractUnitRange{Int}}, b)
+length(b::BlockedUnitRange) = _length(b, axes(_block_cumsum(b),1))
 
-function getindex(b::CumsumBlockRange, K::Block{1})
+function getindex(b::BlockedUnitRange, K::Block{1})
     k = Int(K)
     bax = blockaxes(b,1)
     cs = _block_cumsum(b)
@@ -79,28 +143,28 @@ function getindex(b::CumsumBlockRange, K::Block{1})
     return cs[k-1]+1:cs[k]
 end
 
-function getindex(b::CumsumBlockRange, KR::BlockRange{1})
+function getindex(b::BlockedUnitRange, KR::BlockRange{1})
     cs = _block_cumsum(b)
-    isempty(KR) && return _CumsumBlockRange(1,cs[1:0])
+    isempty(KR) && return _BlockedUnitRange(1,cs[1:0])
     K,J = first(KR),last(KR)
     k,j = Int(K),Int(J)
     bax = blockaxes(b,1)
     @boundscheck K in bax || throw(BlockBoundsError(b,K))
     @boundscheck J in bax || throw(BlockBoundsError(b,J))
-    K == first(bax) && return _CumsumBlockRange(first(b),cs[k:j])
-    _CumsumBlockRange(cs[k-1]+1,cs[k:j])
+    K == first(bax) && return _BlockedUnitRange(first(b),cs[k:j])
+    _BlockedUnitRange(cs[k-1]+1,cs[k:j])
 end
 
-function findblock(b::CumsumBlockRange, k::Integer)
+function findblock(b::BlockedUnitRange, k::Integer)
     @boundscheck k in b || throw(BoundsError(b,k))
     Block(searchsortedfirst(_block_cumsum(b), k))
 end
 
-Base.dataids(b::CumsumBlockRange) = Base.dataids(_block_cumsum(b))
+Base.dataids(b::BlockedUnitRange) = Base.dataids(_block_cumsum(b))
 
 
 ###
-# CumsumBlockRange interface
+# BlockedUnitRange interface
 ###
 function getindex(b::AbstractUnitRange{Int}, K::Block{1})
     @boundscheck K == Block(1) || throw(BlockBoundsError(b, K))
@@ -116,5 +180,5 @@ end
 
 _block_cumsum(a::AbstractUnitRange{Int}) = [length(a)]
 
-Base.summary(a::CumsumBlockRange) = _block_summary(a)
-Base.summary(io::IO, a::CumsumBlockRange) =  _block_summary(io, a)
+Base.summary(a::BlockedUnitRange) = _block_summary(a)
+Base.summary(io::IO, a::BlockedUnitRange) =  _block_summary(io, a)

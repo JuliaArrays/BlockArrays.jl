@@ -116,9 +116,9 @@ end
 ## Cumsum
 
 Base.print_matrix_row(io::IO,
-        X::CumsumBlockRange, A::Vector,
+        X::BlockedUnitRange, A::Vector,
         i::Integer, cols::AbstractVector, sep::AbstractString) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
-Base.show(io::IO, mimetype::MIME"text/plain", a::CumsumBlockRange) = 
+Base.show(io::IO, mimetype::MIME"text/plain", a::BlockedUnitRange) = 
     Base.invoke(show, Tuple{typeof(io),MIME"text/plain",AbstractArray},io, mimetype, a)

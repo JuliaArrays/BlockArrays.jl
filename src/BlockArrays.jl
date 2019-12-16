@@ -7,7 +7,7 @@ using LinearAlgebra
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
 export Block, getblock, getblock!, setblock!, blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, BlockIndex
-export BlockRange, blockedrange
+export BlockRange, blockedrange, BlockedUnitRange
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
 export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat

@@ -67,6 +67,9 @@ Int(index::Block{1}) = Int(index.n[1])
 Integer(index::Block{1}) = index.n[1]
 Number(index::Block{1}) = index.n[1]
 
+# print
+Base.show(io::IO, B::Block{1,Int}) = print(io, "Block($(Int(B)))")
+
 """
     BlockIndex{N}
 

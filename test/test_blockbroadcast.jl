@@ -116,7 +116,7 @@ using BlockArrays, FillArrays, Test
         B = BlockArray(randn(6), Ones{Int}(6))
         @test axes(A+B,1) === axes(A,1)
 
-        C = BlockArray(randn(6), (BlockArrays._CumsumBlockRange(1,2:6),))
-        @test axes(A+C,1) === BlockArrays._CumsumBlockRange(1,1:6)
+        C = BlockArray(randn(6), (BlockArrays._BlockedUnitRange(1,2:6),))
+        @test axes(A+C,1) === BlockArrays._BlockedUnitRange(1,1:6)
     end
 end
