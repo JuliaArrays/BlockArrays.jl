@@ -19,7 +19,7 @@ Pages = ["internals.md"]
 ## Internals
 
 ```@docs
-BlockUnitRange
+BlockedUnitRange
 BlockRange
 BlockIndexRange
 BlockSlice
