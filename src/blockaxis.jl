@@ -110,12 +110,12 @@ end
 Return the tuple of the number of blocks along each
 dimension.
 ```jldoctest; setup = quote using BlockArrays end
-julia> A = BlockArray(randn(3,3),[2,1],[1,1,1])
+julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
 2×3-blocked 3×3 BlockArray{Float64,2}:
- -1.46829   │   1.21074   │  2.0992    
-  0.811394  │  -0.706665  │  0.0932036 
- ───────────┼─────────────┼────────────
-  1.36788   │  -0.680385  │  0.00347046
+ 1.0  │  1.0  │  1.0
+ 1.0  │  1.0  │  1.0
+ ─────┼───────┼─────
+ 1.0  │  1.0  │  1.0
 
 julia> blocksize(A)
 (2, 3)
