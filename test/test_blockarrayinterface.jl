@@ -84,7 +84,7 @@ end
     @test A == [1 2 0 0; 0 0 1 2]
 end
 
-@testset "non-standard BlockSizes" begin
+@testset "non-standard block axes" begin
     A = BlockArray([1 2; 3 4], Fill(1,2),Fill(1,2))
     @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},NTuple{2,BlockedUnitRange{StepRange{Int64,Int64}}}}
     A = BlockArray([1 2; 3 4], Fill(1,2),[1,1])

@@ -218,7 +218,7 @@ end
 [6,1  6,2] | [6,3  6,4  6,5]
 =#
 
-# @testset "BlockSizes / BlockIndices" begin
+# @testset " BlockIndices" begin
 #     A = BlockVector([1,2,3],[1,2])
 #     @test A[Block(2)[2]] == 3
 #     @test A[Block(2)[1:2]] == [2,3]

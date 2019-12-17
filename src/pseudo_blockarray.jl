@@ -29,7 +29,7 @@ julia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
  0.849939  0.283365  │  0.365801
 
 julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
-3-blocked 6-element PseudoBlockArray{Float64,1,SparseVector{Float64,Int64},BlockArrays.BlockSizes{1,Tuple{Array{Int64,1}}}}:
+3-blocked 6-element PseudoBlockArray{Float64,1,SparseVector{Float64,Int64},Tuple{BlockedUnitRange{Array{Int64,1}}}}:
  0.0                
  0.5865981007905481
  0.0                
