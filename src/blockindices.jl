@@ -68,7 +68,14 @@ Integer(index::Block{1}) = index.n[1]
 Number(index::Block{1}) = index.n[1]
 
 # print
-Base.show(io::IO, B::Block{1,Int}) = print(io, "Block($(Int(B)))")
+Base.show(io::IO, B::Block{0,Int}) = print(io, "Block()")
+function Base.show(io::IO, B::Block{N,Int}) where N 
+    print(io, "Block($(B.n[1])")
+    for n in Base.tail(B.n)
+        print(io, ", $n")
+    end
+    print(io, ")")
+end
 
 """
     BlockIndex{N}
@@ -125,6 +132,15 @@ block(b::BlockIndex{1}) = Block(b.I[1])
 blockindex(b::BlockIndex{1}) = b.α[1]
 
 BlockIndex(indcs::NTuple{N,BlockIndex{1}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
+
+function Base.show(io::IO, B::BlockIndex)
+    show(io, Block(B.I...))
+    print(io, "[$(B.α[1])")
+    for α in Base.tail(B.α)
+        print(io, ", $α")
+    end
+    print(io, "]")
+end
 
 ##
 # checkindex
@@ -187,6 +203,17 @@ length(iter::BlockIndexRange) = prod(size(iter))
 
 
 Block(bs::BlockIndexRange) = bs.block
+
+function Base.show(io::IO, B::BlockIndexRange)
+    show(io, Block(B))
+    print(io, "[")
+    show(io, B.indices[1])
+    for α in Base.tail(B.indices)
+        print(io, ", ")
+        show(io, α)
+    end
+    print(io, "]")
+end
 
 
 # #################
