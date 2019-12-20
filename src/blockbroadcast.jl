@@ -123,7 +123,7 @@ function Base.iterate(it::SubBlockIterator, state=nothing)
     length(it.block_cumsum)+1 == i && return nothing
     idx = i == 1 ? (1:it.block_cumsum[i]) : (it.block_cumsum[i-1]+1:it.block_cumsum[i])
 
-    bir = BlockIndexRange(Block(j), j == 1 ? idx : idx .- it.subblock_cumsum[j-1])
+    bir = Block(j)[j == 1 ? idx : idx .- it.subblock_cumsum[j-1]]
     if it.subblock_cumsum[j] == it.block_cumsum[i]
         j += 1
     end
