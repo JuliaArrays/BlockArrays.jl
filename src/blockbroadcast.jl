@@ -61,7 +61,7 @@ be ensured by the caller.
 
 # Examples
 ```jldoctest
-julia> using BlockArrays 
+julia> using BlockArrays
 
 julia> import BlockArrays: SubBlockIterator, BlockIndexRange
 
@@ -123,7 +123,7 @@ function Base.iterate(it::SubBlockIterator, state=nothing)
     length(it.block_lasts)+1 == i && return nothing
     idx = i == 1 ? (1:it.block_lasts[i]) : (it.block_lasts[i-1]+1:it.block_lasts[i])
 
-    bir = BlockIndexRange(Block(j), j == 1 ? idx : idx .- it.subblock_lasts[j-1])
+    bir = Block(j)[j == 1 ? idx : idx .- it.subblock_lasts[j-1]]
     if it.subblock_lasts[j] == it.block_lasts[i]
         j += 1
     end
@@ -198,9 +198,9 @@ end
 
 
 for op in (:+, :-, :*)
-    @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N}}}) where N 
+    @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N}}}) where N
         (A,) = bc.args
-        _BlockArray(broadcast(a -> broadcast($op, a), A.blocks), axes(A))        
+        _BlockArray(broadcast(a -> broadcast($op, a), A.blocks), axes(A))
     end
 end
 
@@ -210,9 +210,9 @@ for op in (:+, :-, :*, :/, :\)
             x,A = bc.args
             _BlockArray(broadcast((x,a) -> broadcast($op, x, a), x, A.blocks), axes(A))
         end
-        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N},<:Number}}) where N 
+        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N},<:Number}}) where N
             A,x = bc.args
-            _BlockArray(broadcast((a,x) -> broadcast($op, a, x), A.blocks,x), axes(A))            
+            _BlockArray(broadcast((a,x) -> broadcast($op, a, x), A.blocks,x), axes(A))
         end
     end
 end
