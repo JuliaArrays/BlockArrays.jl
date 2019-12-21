@@ -34,7 +34,7 @@ julia> blockedrange([2,2,3])
 """    
 struct BlockedUnitRange{CS} <: AbstractUnitRange{Int}
     first::Int
-    cumsum::CS
+    lasts::CS
     global _BlockedUnitRange(f, cs::CS) where CS = new{CS}(f, cs)
 end
 
@@ -44,11 +44,14 @@ const DefaultBlockAxis = BlockedUnitRange{Vector{Int}}
 
 
 BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
-_cumsum(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
-@inline blockedrange(blocks::AbstractVector{Int}) = _BlockedUnitRange(_cumsum(blocks))
+_blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
+@inline blockedrange(blocks::AbstractVector{Int}) = _BlockedUnitRange(_blocklengths2blocklasts(blocks))
 
-@inline _block_cumsum(a::BlockedUnitRange) = a.cumsum
-blockisequal(a::AbstractVector, b::AbstractVector) = first(a) == first(b) && _block_cumsum(a) == _block_cumsum(b)
+@inline blockfirsts(a::BlockedUnitRange) = [a.first; @view(a.lasts[1:end-1]) .- 1]
+@inline blocklasts(a::BlockedUnitRange) = a.lasts
+@inline blocklengths(a::BlockedUnitRange) = [first(a.lasts)-a.first; diff(a.lasts)]
+
+blockisequal(a::AbstractVector, b::AbstractVector) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
 blockisequal(a::Tuple, b::Tuple) = all(blockisequal.(a, b))
 
 
@@ -57,7 +60,7 @@ Base.convert(::Type{BlockedUnitRange}, axis::AbstractUnitRange{Int}) = _BlockedU
 Base.convert(::Type{BlockedUnitRange}, axis::Base.Slice) = convert(BlockedUnitRange, axis.indices)
 Base.convert(::Type{BlockedUnitRange}, axis::Base.IdentityUnitRange) = convert(BlockedUnitRange, axis.indices)
 Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange{CS}) where CS = axis
-Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange) where CS = _BlockedUnitRange(first(axis), convert(CS, _block_cumsum(axis)))
+Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange) where CS = _BlockedUnitRange(first(axis), convert(CS, blocklasts(axis)))
 Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(BlockedUnitRange{CS}, convert(BlockedUnitRange, axis))
 
 """
@@ -78,7 +81,7 @@ julia> blockaxes(A)[1]
  Block(2)
 ```
 """
-blockaxes(b::BlockedUnitRange) = (Block.(axes(b.cumsum,1)),)
+blockaxes(b::BlockedUnitRange) = (Block.(axes(b.lasts,1)),)
 blockaxes(b::AbstractArray{<:Any,N}) where N = blockaxes.(axes(b), 1)
 
 """
@@ -125,18 +128,18 @@ blocksize(A) = map(length, blockaxes(A))
 blocksize(A,i) = length(blockaxes(A,i))
 blocklength(t) = (@_inline_meta; prod(blocksize(t)))
 
-axes(b::BlockedUnitRange) = (_BlockedUnitRange(_block_cumsum(b) .- (first(b)-1)),)
+axes(b::BlockedUnitRange) = (_BlockedUnitRange(blocklasts(b) .- (first(b)-1)),)
 unsafe_indices(b::BlockedUnitRange) = axes(b)
 first(b::BlockedUnitRange) = b.first
-_last(b::BlockedUnitRange, _) = isempty(_block_cumsum(b)) ? first(b)-1 : last(_block_cumsum(b))
-last(b::BlockedUnitRange) = _last(b, axes(_block_cumsum(b),1))
+_last(b::BlockedUnitRange, _) = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
+last(b::BlockedUnitRange) = _last(b, axes(blocklasts(b),1))
 _length(b::BlockedUnitRange, _) = Base.invoke(length, Tuple{AbstractUnitRange{Int}}, b)
-length(b::BlockedUnitRange) = _length(b, axes(_block_cumsum(b),1))
+length(b::BlockedUnitRange) = _length(b, axes(blocklasts(b),1))
 
 function getindex(b::BlockedUnitRange, K::Block{1})
     k = Int(K)
     bax = blockaxes(b,1)
-    cs = _block_cumsum(b)
+    cs = blocklasts(b)
     @boundscheck K in bax || throw(BlockBoundsError(b, k))
     S = first(bax)
     K == S && return first(b):first(cs)
@@ -144,7 +147,7 @@ function getindex(b::BlockedUnitRange, K::Block{1})
 end
 
 function getindex(b::BlockedUnitRange, KR::BlockRange{1})
-    cs = _block_cumsum(b)
+    cs = blocklasts(b)
     isempty(KR) && return _BlockedUnitRange(1,cs[1:0])
     K,J = first(KR),last(KR)
     k,j = Int(K),Int(J)
@@ -157,10 +160,10 @@ end
 
 function findblock(b::BlockedUnitRange, k::Integer)
     @boundscheck k in b || throw(BoundsError(b,k))
-    Block(searchsortedfirst(_block_cumsum(b), k))
+    Block(searchsortedfirst(blocklasts(b), k))
 end
 
-Base.dataids(b::BlockedUnitRange) = Base.dataids(_block_cumsum(b))
+Base.dataids(b::BlockedUnitRange) = Base.dataids(blocklasts(b))
 
 
 ###
@@ -178,7 +181,9 @@ function findblock(b::AbstractUnitRange{Int}, k::Integer)
     Block(1)
 end
 
-_block_cumsum(a::AbstractUnitRange{Int}) = [length(a)]
+blockfirsts(a::AbstractUnitRange{Int}) = [1]
+blocklasts(a::AbstractUnitRange{Int}) = [length(a)]
+blocklengths(a::AbstractUnitRange) = blocklasts(a) .- blockfirsts(a) .+ 1
 
 Base.summary(a::BlockedUnitRange) = _block_summary(a)
 Base.summary(io::IO, a::BlockedUnitRange) =  _block_summary(io, a)

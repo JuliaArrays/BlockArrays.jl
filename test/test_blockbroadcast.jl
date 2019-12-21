@@ -11,8 +11,8 @@ using BlockArrays, FillArrays, Test
         @test axes(A) === axes(exp.(A))
 
         @test A+A isa BlockArray
-        @test axes(A + A,1).cumsum == axes(A .+ A,1).cumsum == axes(A,1).cumsum
-        @test axes(A .+ 1,1).cumsum == axes(A,1).cumsum
+        @test axes(A + A,1).lasts == axes(A .+ A,1).lasts == axes(A,1).lasts
+        @test axes(A .+ 1,1).lasts == axes(A,1).lasts
 
         A = BlockArray(randn(6,6), 1:3,1:3)
 
@@ -32,11 +32,11 @@ using BlockArrays, FillArrays, Test
 
 
         @test exp.(A) == exp.(Vector(A))
-        @test axes(A,1).cumsum == axes(exp.(A),1).cumsum
+        @test axes(A,1).lasts == axes(exp.(A),1).lasts
 
         @test A+A isa PseudoBlockArray
-        @test axes(A + A,1).cumsum == axes(A .+ A,1).cumsum == axes(A,1).cumsum
-        @test axes(A .+ 1,1).cumsum == axes(A,1).cumsum
+        @test axes(A + A,1).lasts == axes(A .+ A,1).lasts == axes(A,1).lasts
+        @test axes(A .+ 1,1).lasts == axes(A,1).lasts
 
         B = PseudoBlockArray(randn(6,6), 1:3,1:3)
 
@@ -58,7 +58,7 @@ using BlockArrays, FillArrays, Test
         @test A + B isa BlockArray
         @test B + A isa BlockArray
 
-        @test axes(A + B,1).cumsum == axes(A,1).cumsum
+        @test axes(A + B,1).lasts == axes(A,1).lasts
 
         C = randn(6)
 

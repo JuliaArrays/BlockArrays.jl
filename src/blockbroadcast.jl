@@ -31,7 +31,7 @@ BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(
 sortedunion(a,b) = sort!(union(a,b))
 sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
-combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(_block_cumsum(a), _block_cumsum(b)))
+combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
 
 Base.Broadcast.axistype(a::T, b::T) where T<:BlockedUnitRange = length(b) == 1 ? a : combine_blockaxes(a, b)
 Base.Broadcast.axistype(a::BlockedUnitRange, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
@@ -46,17 +46,17 @@ similar(bc::Broadcasted{PseudoBlockStyle{N}}, ::Type{T}) where {T,N} =
     PseudoBlockArray{T,N}(undef, axes(bc))
 
 """
-    SubBlockIterator(subblock_cumsum::Vector{Int}, block_cumsum::Vector{Int})
+    SubBlockIterator(subblock_lasts::Vector{Int}, block_lasts::Vector{Int})
     SubBlockIterator(A::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}} where N, dim::Integer)
 
 An iterator for iterating `BlockIndexRange` of the blocks specified by
-`cumulsize`.  The `Block` index part of `BlockIndexRange` is
-determined by `subcumulsize`.  That is to say, the `Block` index first
-specifies one of the block represented by `subcumulsize` and then the
+`subblock_lasts`.  The `Block` index part of `BlockIndexRange` is
+determined by `subblock_lasts`.  That is to say, the `Block` index first
+specifies one of the block represented by `subblock_lasts` and then the
 inner-block index range specifies the region within the block.  Each
-such block corresponds to a block specified by `cumulsize`.
+such block corresponds to a block specified by `blocklasts`.
 
-Note that the invariance `subcumulsize ⊂ cumulsize` must hold and must
+Note that the invariance `subblock_lasts ⊂ block_lasts` must hold and must
 be ensured by the caller.
 
 # Examples
@@ -67,13 +67,13 @@ julia> import BlockArrays: SubBlockIterator, BlockIndexRange
 
 julia> A = BlockArray(1:6, 1:3);
 
-julia> subblock_cumsum = axes(A, 1).cumsum;
+julia> subblock_lasts = axes(A, 1).lasts;
 
-julia> @assert subblock_cumsum == [1, 3, 6];
+julia> @assert subblock_lasts == [1, 3, 6];
 
-julia> block_cumsum = [1, 3, 4, 6];
+julia> block_lasts = [1, 3, 4, 6];
 
-julia> for idx in SubBlockIterator(subblock_cumsum, block_cumsum)
+julia> for idx in SubBlockIterator(subblock_lasts, block_lasts)
            B = @show view(A, idx)
            @assert !(parent(B) isa BlockArray)
            idx :: BlockIndexRange
@@ -85,14 +85,14 @@ view(A, idx) = [2, 3]
 view(A, idx) = [4]
 view(A, idx) = [5, 6]
 
-julia> [idx.block.n[1] for idx in SubBlockIterator(subblock_cumsum, block_cumsum)]
+julia> [idx.block.n[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)]
 4-element Array{Int64,1}:
  1
  2
  3
  3
 
-julia> [idx.indices[1] for idx in SubBlockIterator(subblock_cumsum, block_cumsum)]
+julia> [idx.indices[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)]
 4-element Array{UnitRange{Int64},1}:
  1:1
  1:2
@@ -101,18 +101,18 @@ julia> [idx.indices[1] for idx in SubBlockIterator(subblock_cumsum, block_cumsum
 ```
 """
 struct SubBlockIterator
-    subblock_cumsum::Vector{Int}
-    block_cumsum::Vector{Int}
+    subblock_lasts::Vector{Int}
+    block_lasts::Vector{Int}
 end
 
 Base.IteratorEltype(::Type{<:SubBlockIterator}) = Base.HasEltype()
 Base.eltype(::Type{<:SubBlockIterator}) = BlockIndexRange{1,Tuple{UnitRange{Int64}}}
 
 Base.IteratorSize(::Type{<:SubBlockIterator}) = Base.HasLength()
-Base.length(it::SubBlockIterator) = length(it.block_cumsum)
+Base.length(it::SubBlockIterator) = length(it.block_lasts)
 
 SubBlockIterator(arr::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N =
-    SubBlockIterator(_block_cumsum(axes(arr, dim)), _block_cumsum(bs[dim]))
+    SubBlockIterator(blocklasts(axes(arr, dim)), blocklasts(bs[dim]))
 
 function Base.iterate(it::SubBlockIterator, state=nothing)
     if state === nothing
@@ -120,11 +120,11 @@ function Base.iterate(it::SubBlockIterator, state=nothing)
     else
         i, j = state
     end
-    length(it.block_cumsum)+1 == i && return nothing
-    idx = i == 1 ? (1:it.block_cumsum[i]) : (it.block_cumsum[i-1]+1:it.block_cumsum[i])
+    length(it.block_lasts)+1 == i && return nothing
+    idx = i == 1 ? (1:it.block_lasts[i]) : (it.block_lasts[i-1]+1:it.block_lasts[i])
 
-    bir = BlockIndexRange(Block(j), j == 1 ? idx : idx .- it.subblock_cumsum[j-1])
-    if it.subblock_cumsum[j] == it.block_cumsum[i]
+    bir = BlockIndexRange(Block(j), j == 1 ? idx : idx .- it.subblock_lasts[j-1])
+    if it.subblock_lasts[j] == it.block_lasts[i]
         j += 1
     end
     return (bir, (i + 1, j))

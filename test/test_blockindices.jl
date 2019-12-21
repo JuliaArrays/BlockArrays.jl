@@ -187,7 +187,7 @@ end
     @testset "misc" begin
         b = blockedrange([1,2,3])
         @test axes(b) == Base.unsafe_indices(b) == (b,)
-        @test Base.dataids(b) == Base.dataids(BlockArrays._block_cumsum(b))
+        @test Base.dataids(b) == Base.dataids(blocklasts(b))
         @test_throws ArgumentError BlockedUnitRange(b)
     end
 

@@ -1,12 +1,12 @@
-__precompile__()
-
 module BlockArrays
 using Base.Cartesian
 using LinearAlgebra
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
-export Block, getblock, getblock!, setblock!, blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, BlockIndex
+export Block, getblock, getblock!, setblock!
+export blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, BlockIndex
+export blocklengths, blocklasts, blockfirsts
 export BlockRange, blockedrange, BlockedUnitRange
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
