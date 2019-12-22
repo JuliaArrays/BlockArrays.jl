@@ -31,6 +31,7 @@ BlockBoundsError
 Block
 BlockIndex
 blockaxes
+blockisequal
 blocksize
 blockfirsts
 blocklasts
