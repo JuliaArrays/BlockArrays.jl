@@ -47,18 +47,28 @@ BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to amb
 _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
 @inline blockedrange(blocks::AbstractVector{Int}) = _BlockedUnitRange(_blocklengths2blocklasts(blocks))
 
-@inline blockfirsts(a::BlockedUnitRange) = [a.first; @view(a.lasts[1:end-1]) .- 1]
+@inline blockfirsts(a::BlockedUnitRange) = [a.first; @view(a.lasts[1:end-1]) .+ 1]
 @inline blocklasts(a::BlockedUnitRange) = a.lasts
-@inline blocklengths(a::BlockedUnitRange) = [first(a.lasts)-a.first; diff(a.lasts)]
+@inline blocklengths(a::BlockedUnitRange) = [first(a.lasts)-a.first+1; diff(a.lasts)]
 
-blockisequal(a::AbstractVector, b::AbstractVector) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
+"""
+   blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
+
+returns true if a and b have the same block structure.
+"""
+blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int}) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
+"""
+   blockisequal(a::Tuple, b::Tuple)
+
+returns true if `all(blockisequal.(a,b))`` is true.
+"""
 blockisequal(a::Tuple, b::Tuple) = all(blockisequal.(a, b))
 
 
 Base.convert(::Type{BlockedUnitRange}, axis::BlockedUnitRange) = axis
-Base.convert(::Type{BlockedUnitRange}, axis::AbstractUnitRange{Int}) = _BlockedUnitRange(first(axis),[length(axis)])
-Base.convert(::Type{BlockedUnitRange}, axis::Base.Slice) = convert(BlockedUnitRange, axis.indices)
-Base.convert(::Type{BlockedUnitRange}, axis::Base.IdentityUnitRange) = convert(BlockedUnitRange, axis.indices)
+Base.convert(::Type{BlockedUnitRange}, axis::AbstractUnitRange{Int}) = _BlockedUnitRange(first(axis),[last(axis)])
+Base.convert(::Type{BlockedUnitRange}, axis::Base.Slice) = _BlockedUnitRange(first(axis),[last(axis)])
+Base.convert(::Type{BlockedUnitRange}, axis::Base.IdentityUnitRange) = _BlockedUnitRange(first(axis),[last(axis)])
 Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange{CS}) where CS = axis
 Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange) where CS = _BlockedUnitRange(first(axis), convert(CS, blocklasts(axis)))
 Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(BlockedUnitRange{CS}, convert(BlockedUnitRange, axis))
@@ -181,8 +191,23 @@ function findblock(b::AbstractUnitRange{Int}, k::Integer)
     Block(1)
 end
 
+"""
+   blockfirsts(a::AbstractUnitRange{Int})
+
+returns the first index of each block of `a`.
+"""
 blockfirsts(a::AbstractUnitRange{Int}) = [1]
+"""
+   blocklasts(a::AbstractUnitRange{Int})
+
+returns the last index of each block of `a`.
+"""
 blocklasts(a::AbstractUnitRange{Int}) = [length(a)]
+"""
+   blocklengths(a::AbstractUnitRange{Int})
+
+returns the length of each block of `a`.
+"""
 blocklengths(a::AbstractUnitRange) = blocklasts(a) .- blockfirsts(a) .+ 1
 
 Base.summary(a::BlockedUnitRange) = _block_summary(a)

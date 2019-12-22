@@ -10,6 +10,7 @@ the block axis interface.
 | :---------------------- | :---------------- |
 | `blockaxes(A)`      | A one-tuple returning a range of blocks specifying the block structure |
 | `getindex(A, K::Block{1})`      | return a unit range of indices in the specified block |
+| `blocklasts(A)`      | Returns the last index of each block |
 | `findblock(A, k)`      | return the block that contains the `k`th entry of `A` 
 
 

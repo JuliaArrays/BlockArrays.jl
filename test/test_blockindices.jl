@@ -116,6 +116,25 @@ end
         @test_throws BlockBoundsError b[Block(1_000_001)]
     end
 
+    @testset "firsts/lasts/lengths" begin
+        b = blockedrange([1,2,3])
+        @test blockfirsts(b) == [1,2,4]
+        @test blocklasts(b) == [1,3,6]
+        @test blocklengths(b) == [1,2,3]
+    end
+
+    @testset "convert" begin
+        b = blockedrange(Fill(2,3))
+        c = blockedrange([2,2,2])
+        @test convert(BlockedUnitRange, b) === b
+        @test blockisequal(convert(BlockedUnitRange, Base.OneTo(5)), blockedrange([5]))
+        @test blockisequal(convert(BlockedUnitRange, Base.Slice(Base.OneTo(5))), blockedrange([5]))
+        @test blockisequal(convert(BlockedUnitRange, Base.IdentityUnitRange(-2:2)), BlockArrays._BlockedUnitRange(-2,[2]))
+        @test convert(BlockedUnitRange{Vector{Int}}, c) === c
+        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, b),b)
+        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, Base.OneTo(5)), blockedrange([5]))        
+    end
+
     @testset "findblock" begin
         b = blockedrange([1,2,3])
         @test @inferred(findblock(b,1)) == Block(1)
@@ -198,6 +217,9 @@ end
         @test b[Block(1)] == b
         @test b[Block(1)[2]] == 2
         @test b[Block(1)[2:3]] == 2:3
+        @test blockfirsts(b) == [1]
+        @test blocklasts(b) == [5]
+        @test blocklengths(b) == [5]
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(2)]
         @test findblock(b,1) == Block(1)

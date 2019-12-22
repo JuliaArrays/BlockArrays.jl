@@ -32,6 +32,9 @@ Block
 BlockIndex
 blockaxes
 blocksize
+blockfirsts
+blocklasts
+blocklengths
 getblock
 getblock!
 setblock!
