@@ -24,9 +24,9 @@ function _blockarray_print_matrix_row(io::IO,
 
     row_buf = IOBuffer()
 
-    row_sum = cumulsizes(X,1)[2:end] .- 1
+    row_sum = blocklasts(axes(X,1))
     if ndims(X) == 2
-        col_sum = (cumulsizes(X,2)[2:end] .- 1)[1:end-1]
+        col_sum = blocklasts(axes(X,2))[1:end-1]
     end
 
     # Loop over row
@@ -54,7 +54,7 @@ function _blockarray_print_matrix_row(io::IO,
         cumul += 1
         if ndims(X) == 2
             # Have accumulated enough for the block, should print a |
-            if block < length(cumulsizes(X,2)) - 1 && cumul == blocksize(X, 2, block)
+            if block < blocksize(X,2) && cumul == length(axes(X,2)[Block(block)])
                 block += 1
                 cumul = 0
                 print(io, "  │")
@@ -94,7 +94,7 @@ Base.print_matrix_row(io::IO,
         i::Integer, cols::AbstractVector, sep::AbstractString) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
-function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},DefaultBlockSizes{N}}) where {T,N}
+function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},NTuple{N,DefaultBlockAxis}}) where {T,N}
     Base.show_type_name(io, typeof(a).name)
     print(io, '{')
     show(io, T)
@@ -103,7 +103,7 @@ function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},DefaultBlock
     print(io, '}')
 end
 
-function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},DefaultBlockSizes{N}}) where {T,N}
+function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,DefaultBlockAxis}}) where {T,N}
     Base.show_type_name(io, typeof(a).name)
     print(io, '{')
     show(io, T)
@@ -111,3 +111,14 @@ function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},DefaultBlockSiz
     show(io, N)
     print(io, '}')
 end
+
+
+## Cumsum
+
+Base.print_matrix_row(io::IO,
+        X::BlockedUnitRange, A::Vector,
+        i::Integer, cols::AbstractVector, sep::AbstractString) =
+        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
+
+Base.show(io::IO, mimetype::MIME"text/plain", a::BlockedUnitRange) = 
+    Base.invoke(show, Tuple{typeof(io),MIME"text/plain",AbstractArray},io, mimetype, a)

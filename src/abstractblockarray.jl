@@ -22,109 +22,26 @@ const AbstractBlockVector{T} = AbstractBlockArray{T, 1}
 const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
-Base.summary(a::AbstractBlockArray) = string(block2string(nblocks(a), size(a)), " ", typeof(a))
+_block_summary(a) = string(block2string(blocksize(a), size(a)), " ", typeof(a))
+Base.summary(a::AbstractBlockArray) = _block_summary(a)
 _show_typeof(io, a) = show(io, typeof(a))
-function Base.summary(io::IO, a::AbstractBlockArray)
-    print(io, block2string(nblocks(a), size(a)))
+function _block_summary(io, a)    
+    print(io, block2string(blocksize(a), size(a)))
     print(io, ' ')
     _show_typeof(io, a)
 end
-Base.similar(block_array::AbstractBlockArray{T}) where {T} = similar(block_array, T)
+Base.summary(io::IO, a::AbstractBlockArray) = _block_summary(io, a)
+
+# avoid to_shape which complicates axes
+Base.similar(a::AbstractBlockArray{T}) where {T}                             = similar(a, T)
+Base.similar(a::AbstractBlockArray, ::Type{T}) where {T}                     = similar(a, T, axes(a))
+Base.similar(a::AbstractBlockArray{T}, dims::Tuple) where {T}                = similar(a, T, dims)
+
 Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 
-"""
-    nblocks(A, [dim...])
-
-Returns a tuple containing the number of blocks in a block array.  Optionally you can specify
-the dimension(s) you want the number of blocks for.
-
-```jldoctest; setup = quote using BlockArrays end
-julia> A =  BlockArray(rand(5,4,6), [1,4], [1,2,1], [1,2,2,1]);
-
-julia> nblocks(A)
-(2, 3, 4)
-
-julia> nblocks(A, 2)
-3
-
-julia> nblocks(A, 3, 2)
-(4, 3)
-```
-"""
-nblocks(block_array::AbstractArray, i::Integer) = nblocks(block_array)[i]
-
-nblocks(block_array::AbstractArray, i::Vararg{Integer, N}) where {N} =
-    nblocks(blocksizes(block_array), i...)
-
-
-"""
-    Block(inds...)
-
-A `Block` is simply a wrapper around a set of indices or enums so that it can be used to dispatch on. By
-indexing a `AbstractBlockArray` with a `Block` the a block at that block index will be returned instead of
-a single element.
-
-```jldoctest; setup = quote using BlockArrays end
-julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
-2×2-blocked 2×3 BlockArray{Float64,2}:
- 1.0  1.0  │  1.0
- ──────────┼─────
- 1.0  1.0  │  1.0
-
-julia> A[Block(1, 1)]
-1×2 Array{Float64,2}:
- 1.0  1.0
-```
-"""
-struct Block{N, T}
-    n::NTuple{N, T}
-    Block{N, T}(n::NTuple{N, T}) where {N, T} = new{N, T}(n)
-end
-
-
-Block{N, T}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
-Block{N}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
-Block() = Block{0,Int}()
-Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
-Block{1}(n::Tuple{T}) where {T} = Block{1, T}(n)
-Block{N}(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
-Block(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
-
-@inline function Block(blocks::NTuple{N, Block{1, T}}) where {N,T}
-    Block{N, T}(ntuple(i -> blocks[i].n[1], Val(N)))
-end
-
-
-# The following code is taken from CartesianIndex
-@inline (+)(index::Block{N}) where {N} = Block{N}(map(+, index.n))
-@inline (-)(index::Block{N}) where {N} = Block{N}(map(-, index.n))
-
-@inline (+)(index1::Block{N}, index2::Block{N}) where {N} =
-    Block{N}(map(+, index1.n, index2.n))
-@inline (-)(index1::Block{N}, index2::Block{N}) where {N} =
-    Block{N}(map(-, index1.n, index2.n))
-@inline min(index1::Block{N}, index2::Block{N}) where {N} =
-    Block{N}(map(min, index1.n, index2.n))
-@inline max(index1::Block{N}, index2::Block{N}) where {N} =
-    Block{N}(map(max, index1.n, index2.n))
-
-@inline (+)(i::Integer, index::Block) = index+i
-@inline (+)(index::Block{N}, i::Integer) where {N} = Block{N}(map(x->x+i, index.n))
-@inline (-)(index::Block{N}, i::Integer) where {N} = Block{N}(map(x->x-i, index.n))
-@inline (-)(i::Integer, index::Block{N}) where {N} = Block{N}(map(x->i-x, index.n))
-@inline (*)(a::Integer, index::Block{N}) where {N} = Block{N}(map(x->a*x, index.n))
-@inline (*)(index::Block, a::Integer) = *(a,index)
-
-# comparison
-@inline isless(I1::Block{N}, I2::Block{N}) where {N} = Base.IteratorsMD._isless(0, I1.n, I2.n)
-
-# conversions
-convert(::Type{T}, index::Block{1}) where {T<:Number} = convert(T, index.n[1])
-convert(::Type{T}, index::Block) where {T<:Tuple} = convert(T, index.n)
-
-Int(index::Block{1}) = Int(index.n[1])
-Integer(index::Block{1}) = index.n[1]
-Number(index::Block{1}) = index.n[1]
+# need to overload axes to return BlockAxis
+@inline size(block_array::AbstractBlockArray) = map(length, axes(block_array))
+@inline axes(block_array::AbstractBlockArray) = throw(error("axes for ", typeof(block_array), " is not implemented"))
 
 """
     getblock(A, inds...)
@@ -222,9 +139,11 @@ struct BlockBoundsError <: Exception
     a::Any
     i::Any
     BlockBoundsError() = new()
-    BlockBoundsError(a::AbstractBlockArray) = new(a)
-    BlockBoundsError(a::AbstractBlockArray, @nospecialize(i)) = new(a,i)
+    BlockBoundsError(a::AbstractArray) = new(a)
+    BlockBoundsError(a::AbstractArray, @nospecialize(i)) = new(a,i)
 end
+
+BlockBoundsError(a::AbstractArray, I::Block) = BlockBoundsError(a, I.n)
 
 function Base.showerror(io::IO, ex::BlockBoundsError)
     print(io, "BlockBoundsError")
@@ -250,7 +169,7 @@ specialize this method if they need to provide custom block bounds checking beha
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Array{Float64,2},2},BlockArrays.BlockSizes{2,Tuple{Array{Int64,1},Array{Int64,1}}}} at block index [3,2]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Array{Float64,2},2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}} at block index [3,2]
 [...]
 ```
 """
@@ -263,14 +182,12 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,
 end
 
 @inline function blockcheckbounds(::Type{Bool}, A::AbstractArray{T, N}, i::Vararg{Integer, N}) where {T,N}
-    n = nblocks(A)
+    n = blockaxes(A)
     k = 0
     for idx in 1:N # using enumerate here will allocate
         k += 1
         @inbounds _i = i[idx]
-        if _i <= 0 || _i > n[k]
-            return false
-        end
+        Block(_i) in n[k] || return false
     end
     return true
 end

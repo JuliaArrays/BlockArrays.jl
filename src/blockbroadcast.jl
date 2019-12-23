@@ -15,8 +15,10 @@ BlockStyle(::Val{N}) where {N} = BlockStyle{N}()
 PseudoBlockStyle(::Val{N}) where {N} = PseudoBlockStyle{N}()
 BlockStyle{M}(::Val{N}) where {N,M} = BlockStyle{N}()
 PseudoBlockStyle{M}(::Val{N}) where {N,M} = PseudoBlockStyle{N}()
-BroadcastStyle(::Type{<:BlockArray{<:Any,N}}) where N = BlockStyle{N}()
-BroadcastStyle(::Type{<:PseudoBlockArray{<:Any,N}}) where N = PseudoBlockStyle{N}()
+blockbroadcaststyle(::AbstractArrayStyle{N}) where N = BlockStyle{N}()
+pseudoblockbroadcaststyle(::AbstractArrayStyle{N}) where N = PseudoBlockStyle{N}()
+BroadcastStyle(::Type{<:BlockArray{<:Any,N,Arr}}) where {N,Arr} = blockbroadcaststyle(BroadcastStyle(Arr))
+BroadcastStyle(::Type{<:PseudoBlockArray{<:Any,N,Arr}}) where {N,Arr} = pseudoblockbroadcaststyle(BroadcastStyle(Arr))
 BroadcastStyle(::DefaultArrayStyle{N}, b::AbstractBlockStyle{M}) where {M,N} = typeof(b)(Val(max(M,N)))
 BroadcastStyle(a::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = typeof(a)(Val(max(M,N)))
 BroadcastStyle(::StructuredMatrixStyle, b::AbstractBlockStyle{M}) where {M} = typeof(b)(Val(max(M,2)))
@@ -25,59 +27,53 @@ BroadcastStyle(::BlockStyle{M}, ::PseudoBlockStyle{N}) where {M,N} = BlockStyle(
 BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 
 
-# following code modified from julia/base/broadcast.jl
-broadcast_cumulsizes(::Number) = ()
-broadcast_cumulsizes(A::AbstractArray) = cumulsizes(blocksizes(A))
-broadcast_cumulsizes(A::Broadcasted) = cumulsizes(blocksizes(A))
+# sortedunion can assume inputs are already sorted so this could be improved
+sortedunion(a,b) = sort!(union(a,b))
+sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
+sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
+combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
 
-combine_cumulsizes(A) = A
-combine_cumulsizes(A, B, C...) = combine_cumulsizes(_cms(A,B), C...)
-
-_cms(::Tuple{}, ::Tuple{}) = ()
-_cms(::Tuple{}, newshape::Tuple) = (newshape[1], _cms((), tail(newshape))...)
-_cms(shape::Tuple, ::Tuple{}) = (shape[1], _cms(tail(shape), ())...)
-_cms(shape::Tuple, newshape::Tuple) = (sort!(union(shape[1], newshape[1])), _cms(tail(shape), tail(newshape))...)
-
-
-blocksizes(A::Broadcasted{<:AbstractArrayStyle{N}}) where N =
-    BlockSizes(combine_cumulsizes(broadcast_cumulsizes.(A.args)...))
+Base.Broadcast.axistype(a::T, b::T) where T<:BlockedUnitRange = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::BlockedUnitRange, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::BlockedUnitRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 
 
 similar(bc::Broadcasted{<:AbstractBlockStyle{N}}, ::Type{T}) where {T,N} =
-    BlockArray{T,N}(undef, blocksizes(bc))
+    BlockArray{T,N}(undef, axes(bc))
 
 similar(bc::Broadcasted{PseudoBlockStyle{N}}, ::Type{T}) where {T,N} =
-    PseudoBlockArray{T,N}(undef, blocksizes(bc))
+    PseudoBlockArray{T,N}(undef, axes(bc))
 
 """
-    SubBlockIterator(subcumulsize::Vector{Int}, cumulsize::Vector{Int})
-    SubBlockIterator(A::AbstractArray, bs::BlockSizes, dim::Integer)
+    SubBlockIterator(subblock_lasts::Vector{Int}, block_lasts::Vector{Int})
+    SubBlockIterator(A::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}} where N, dim::Integer)
 
 An iterator for iterating `BlockIndexRange` of the blocks specified by
-`cumulsize`.  The `Block` index part of `BlockIndexRange` is
-determined by `subcumulsize`.  That is to say, the `Block` index first
-specifies one of the block represented by `subcumulsize` and then the
+`subblock_lasts`.  The `Block` index part of `BlockIndexRange` is
+determined by `subblock_lasts`.  That is to say, the `Block` index first
+specifies one of the block represented by `subblock_lasts` and then the
 inner-block index range specifies the region within the block.  Each
-such block corresponds to a block specified by `cumulsize`.
+such block corresponds to a block specified by `blocklasts`.
 
-Note that the invariance `subcumulsize ⊂ cumulsize` must hold and must
+Note that the invariance `subblock_lasts ⊂ block_lasts` must hold and must
 be ensured by the caller.
 
 # Examples
 ```jldoctest
-julia> using BlockArrays 
+julia> using BlockArrays
 
-julia> import BlockArrays: SubBlockIterator, BlockIndexRange, cumulsizes
+julia> import BlockArrays: SubBlockIterator, BlockIndexRange
 
 julia> A = BlockArray(1:6, 1:3);
 
-julia> subcumulsize = cumulsizes(A, 1);
+julia> subblock_lasts = axes(A, 1).lasts;
 
-julia> @assert subcumulsize == [1, 2, 4, 7]
+julia> @assert subblock_lasts == [1, 3, 6];
 
-julia> cumulsize = [1, 2, 4, 5, 7];
+julia> block_lasts = [1, 3, 4, 6];
 
-julia> for idx in SubBlockIterator(subcumulsize, cumulsize)
+julia> for idx in SubBlockIterator(subblock_lasts, block_lasts)
            B = @show view(A, idx)
            @assert !(parent(B) isa BlockArray)
            idx :: BlockIndexRange
@@ -89,14 +85,14 @@ view(A, idx) = [2, 3]
 view(A, idx) = [4]
 view(A, idx) = [5, 6]
 
-julia> [idx.block.n[1] for idx in SubBlockIterator(subcumulsize, cumulsize)]
+julia> [idx.block.n[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)]
 4-element Array{Int64,1}:
  1
  2
  3
  3
 
-julia> [idx.indices[1] for idx in SubBlockIterator(subcumulsize, cumulsize)]
+julia> [idx.indices[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)]
 4-element Array{UnitRange{Int64},1}:
  1:1
  1:2
@@ -105,47 +101,51 @@ julia> [idx.indices[1] for idx in SubBlockIterator(subcumulsize, cumulsize)]
 ```
 """
 struct SubBlockIterator
-    subcumulsize::Vector{Int}
-    cumulsize::Vector{Int}
+    subblock_lasts::Vector{Int}
+    block_lasts::Vector{Int}
 end
 
 Base.IteratorEltype(::Type{<:SubBlockIterator}) = Base.HasEltype()
 Base.eltype(::Type{<:SubBlockIterator}) = BlockIndexRange{1,Tuple{UnitRange{Int64}}}
 
 Base.IteratorSize(::Type{<:SubBlockIterator}) = Base.HasLength()
-Base.length(it::SubBlockIterator) = length(it.cumulsize) - 1
+Base.length(it::SubBlockIterator) = length(it.block_lasts)
 
-SubBlockIterator(arr::AbstractArray, bs::BlockSizes, dim::Integer) =
-    SubBlockIterator(cumulsizes(arr, dim), cumulsizes(bs, dim))
+SubBlockIterator(arr::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N =
+    SubBlockIterator(blocklasts(axes(arr, dim)), blocklasts(bs[dim]))
 
 function Base.iterate(it::SubBlockIterator, state=nothing)
     if state === nothing
-        i = 1
-        j = 1
+        i,j = 1,1
     else
         i, j = state
     end
-    length(it.cumulsize) == i && return nothing
-    idx = it.cumulsize[i]:it.cumulsize[i + 1] - 1
-    bir = BlockIndexRange(Block(j), idx .- (it.subcumulsize[j] - 1))
-    if it.subcumulsize[j + 1] == it.cumulsize[i + 1]
+    length(it.block_lasts)+1 == i && return nothing
+    idx = i == 1 ? (1:it.block_lasts[i]) : (it.block_lasts[i-1]+1:it.block_lasts[i])
+
+    bir = Block(j)[j == 1 ? idx : idx .- it.subblock_lasts[j-1]]
+    if it.subblock_lasts[j] == it.block_lasts[i]
         j += 1
     end
     return (bir, (i + 1, j))
 end
 
-subblocks(::Any, bs::BlockSizes, dim::Integer) =
-    (nothing for _ in 1:nblocks(bs, dim))
+subblocks(::Any, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N =
+    (nothing for _ in blockaxes(bs[dim], 1))
 
-function subblocks(arr::AbstractArray, bs::BlockSizes, dim::Integer)
+function subblocks(arr::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N
     if size(arr, dim) == 1
-        return (BlockIndexRange(Block(1), 1:1) for _ in 1:nblocks(bs, dim))
+        return (BlockIndexRange(Block(1), 1:1) for _ in blockaxes(bs[dim], 1))
     end
     return SubBlockIterator(arr, bs, dim)
 end
 
 @inline _bview(arg, ::Vararg) = arg
 @inline _bview(A::AbstractArray, I...) = view(A, I...)
+
+@inline function Base.Broadcast.materialize!(dest, bc::Broadcasted{BS}) where {Style,BS<:AbstractBlockStyle}
+    return copyto!(dest, Base.Broadcast.instantiate(Base.Broadcast.Broadcasted{BS}(bc.f, bc.args, combine_blockaxes.(axes(dest),axes(bc)))))
+end
 
 @generated function copyto!(
         dest::AbstractArray,
@@ -179,8 +179,8 @@ end
     end
 
     quote
-        bs = blocksizes(bc)
-        if blocksizes(dest) ≠ bs
+        bs = axes(bc)
+        if !blockisequal(axes(dest), bs)
             copyto!(PseudoBlockArray(dest, bs), bc)
             return dest
         end
@@ -198,9 +198,9 @@ end
 
 
 for op in (:+, :-, :*)
-    @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N}}}) where N 
+    @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N}}}) where N
         (A,) = bc.args
-        _BlockArray(broadcast(a -> broadcast($op, a), A.blocks), blocksizes(A))        
+        _BlockArray(broadcast(a -> broadcast($op, a), A.blocks), axes(A))
     end
 end
 
@@ -208,11 +208,11 @@ for op in (:+, :-, :*, :/, :\)
     @eval begin
         function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:Number,<:BlockArray{<:Number,N}}}) where N
             x,A = bc.args
-            _BlockArray(broadcast((x,a) -> broadcast($op, x, a), x, A.blocks), blocksizes(A))
+            _BlockArray(broadcast((x,a) -> broadcast($op, x, a), x, A.blocks), axes(A))
         end
-        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N},<:Number}}) where N 
+        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N},<:Number}}) where N
             A,x = bc.args
-            _BlockArray(broadcast((a,x) -> broadcast($op, a, x), A.blocks,x), blocksizes(A))            
+            _BlockArray(broadcast((a,x) -> broadcast($op, a, x), A.blocks,x), axes(A))
         end
     end
 end

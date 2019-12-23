@@ -1,28 +1,28 @@
-using BlockArrays, Test
+using BlockArrays, FillArrays, Test
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
         A = BlockArray(randn(6), 1:3)
 
         @test BlockArrays.BroadcastStyle(typeof(A)) == BlockArrays.BlockStyle{1}()
-
+        bc = Base.broadcasted(exp,A)
+        @test axes(A) === axes(bc) === axes(similar(bc, Float64))
         @test exp.(A) == exp.(Vector(A))
-        @test blocksizes(A) == blocksizes(exp.(A))
+        @test axes(A) === axes(exp.(A))
 
         @test A+A isa BlockArray
-        @test blocksizes(A + A) == blocksizes(A .+ A) == blocksizes(A)
-        @test blocksizes(A .+ 1) == blocksizes(A)
+        @test axes(A + A,1).lasts == axes(A .+ A,1).lasts == axes(A,1).lasts
+        @test axes(A .+ 1,1).lasts == axes(A,1).lasts
 
         A = BlockArray(randn(6,6), 1:3,1:3)
 
         @test BlockArrays.BroadcastStyle(typeof(A)) == BlockArrays.BlockStyle{2}()
 
         @test exp.(A) == exp.(Matrix(A))
-        @test blocksizes(A) == blocksizes(exp.(A))
+        @test axes(A) == axes(exp.(A))
 
-
-        @test blocksizes(A + A) == blocksizes(A .+ A) == blocksizes(A)
-        @test blocksizes(A .+ 1) == blocksizes(A)
+        @test axes(A + A) == axes(A .+ A) == axes(A)
+        @test axes(A .+ 1) == axes(A)
     end
 
     @testset "PseudoBlockArray" begin
@@ -32,22 +32,22 @@ using BlockArrays, Test
 
 
         @test exp.(A) == exp.(Vector(A))
-        @test blocksizes(A) == blocksizes(exp.(A))
+        @test axes(A,1).lasts == axes(exp.(A),1).lasts
 
         @test A+A isa PseudoBlockArray
-        @test blocksizes(A + A) == blocksizes(A .+ A) == blocksizes(A)
-        @test blocksizes(A .+ 1) == blocksizes(A)
+        @test axes(A + A,1).lasts == axes(A .+ A,1).lasts == axes(A,1).lasts
+        @test axes(A .+ 1,1).lasts == axes(A,1).lasts
 
         B = PseudoBlockArray(randn(6,6), 1:3,1:3)
 
         @test BlockArrays.BroadcastStyle(typeof(B)) == BlockArrays.PseudoBlockStyle{2}()
 
         @test exp.(B) == exp.(Matrix(B))
-        @test blocksizes(B) == blocksizes(exp.(B))
+        @test axes(B) == axes(exp.(B))
 
-        @test blocksizes(B + B) == blocksizes(B .+ B) == blocksizes(B)
-        @test blocksizes(B .+ 1) == blocksizes(B)
-        @test blocksizes(A .+ 1 .+ B) == blocksizes(B)
+        @test axes(B + B) == axes(B .+ B) == axes(B)
+        @test axes(B .+ 1) == axes(B)
+        @test axes(A .+ 1 .+ B) == axes(B)
         @test A .+ 1 .+ B == Vector(A) .+ 1 .+ B == Vector(A) .+ 1 .+ Matrix(B)
     end
 
@@ -58,7 +58,7 @@ using BlockArrays, Test
         @test A + B isa BlockArray
         @test B + A isa BlockArray
 
-        @test blocksizes(A + B) == blocksizes(A)
+        @test axes(A + B,1).lasts == axes(A,1).lasts
 
         C = randn(6)
 
@@ -67,24 +67,24 @@ using BlockArrays, Test
         @test B + C isa PseudoBlockVector{Float64}
         @test C + B isa PseudoBlockVector{Float64}
 
-        @test blocksizes(A+C) == blocksizes(C+A) == blocksizes(A)
-        @test blocksizes(B+C) == blocksizes(C+B) == blocksizes(B)
+        @test blocksize(A+C) == blocksize(C+A) == blocksize(A)
+        @test blocksize(B+C) == blocksize(C+B) == blocksize(B)
 
         A = BlockArray(randn(6,6), 1:3, 1:3)
         D = Diagonal(ones(6))
-        @test blocksizes(A + D) == blocksizes(A)
-        @test blocksizes(B .+ D) == BlockArrays.BlockSizes([1,2,3],[6])
+        @test blocksize(A + D) == blocksize(A)
+        @test blocksize(B .+ D) == (3,1)
     end
 
     @testset "Mixed block sizes" begin
         A = BlockArray(randn(6), 1:3)
         B = BlockArray(randn(6), fill(2,3))
-        @test blocksizes(A+B) == BlockArrays.BlockSizes([1,1,1,1,2])
+        @test blocksize(A+B) == (5,)
 
         A = BlockArray(randn(6,6), 1:3, 1:3)
         B = BlockArray(randn(6,6), fill(2,3), fill(3,2))
 
-        @test blocksizes(A+B) == BlockArrays.BlockSizes([1,1,1,1,2], 1:3)
+        @test blocksize(A+B) == (5,3)
     end
 
     @testset "UnitRange" begin
@@ -109,5 +109,14 @@ using BlockArrays, Test
         @test broadcast(+, v, 1) == Vector(v).+1
         @test broadcast(*, 2, v) isa BlockVector{Int,Vector{StepRange{Int,Int}}}
         @test broadcast(*, 2, v) == 2Vector(v)
+    end
+
+    @testset "special axes" begin
+        A = BlockArray(randn(6), Ones{Int}(6))
+        B = BlockArray(randn(6), Ones{Int}(6))
+        @test axes(A+B,1) === axes(A,1)
+
+        C = BlockArray(randn(6), (BlockArrays._BlockedUnitRange(1,2:6),))
+        @test axes(A+C,1) === BlockArrays._BlockedUnitRange(1,1:6)
     end
 end

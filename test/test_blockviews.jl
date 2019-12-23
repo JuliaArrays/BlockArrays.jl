@@ -1,3 +1,4 @@
+using BlockArrays, Test
 
 @testset "block slice" begin
     A = BlockArray(1:6,1:3)
@@ -48,6 +49,7 @@ end
 
     # test mixed blocks and other indices
     @test view(A, Block(2), 2) == [8,9]
+    @test similar(A, (Base.OneTo(5), axes(A,2))) isa BlockArray{Int}
     @test view(A, Block(2), :) == A[2:3,:]
 
     @test view(A, 2, Block(1)) == [2,8,14]
@@ -55,8 +57,8 @@ end
 
     @test view(V, Block(1, 1)) ≡ V
 
-    @test_throws BoundsError view(V, Block(1,2))
-    @test_throws BoundsError view(V, Block(2,1))
+    @test_throws BlockBoundsError view(V, Block(1,2))
+    @test_throws BlockBoundsError view(V, Block(2,1))
 
 
     A = BlockArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)
@@ -112,13 +114,17 @@ end
     @test unsafe_load(pointer(V)) == V[1,1]
 end
 
-
 @testset "block indx range of block range" begin
-     A = PseudoBlockArray(collect(1:6), 1:3)
-     V = view(A, Block.(2:3))
-     @test view(V, Block(2)[1:2]) == [4,5]
+    A = PseudoBlockArray(collect(1:6), 1:3)
+    V = view(A, Block.(1:2))
+    @test V == 1:3
+    @test axes(V,1) isa BlockArrays.BlockedUnitRange
+    @test blockaxes(V,1) == Block.(1:2)
+    @test view(V, Block(2)[1:2]) == [2,3]
+    V = view(A, Block.(2:3))
+    @test V == 2:6
+    @test view(V, Block(2)[1:2]) == [4,5] 
 end
-
 
 @testset "subarray implements block interface" begin
     A = PseudoBlockArray(reshape(Vector{Float64}(1:(6^2)),6,6), 1:3, 1:3)
@@ -127,23 +133,22 @@ end
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockArrays.BlockSizes([2],[3])
 
     V = view(A, Block(2), Block.(2:3))
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockArrays.BlockSizes([2],[2,3])
+    @test blocksize(V) == (1,2)
 
     V = view(A, Block.(2:3), Block(3))
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockArrays.BlockSizes([2,3],[3])
+    @test blocksize(V) == (2,1)
 
     V = view(A, Block.(2:3), Block.(1:2))
     @test PseudoBlockArray(V) isa PseudoBlockArray
     @test BlockArray(V) isa BlockArray
     @test PseudoBlockArray(V) == BlockArray(V) == V
-    @test blocksizes(V) == BlockArrays.BlockSizes([2,3],[1,2])
+    @test blocksize(V) == (2,2)
 end

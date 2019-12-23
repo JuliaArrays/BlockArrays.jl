@@ -1,68 +1,71 @@
-"""
-    BlockSlice(indices)
+### Views
+to_index(::BlockIndexRange) = throw(ArgumentError("BlockIndexRange must be converted by to_indices(...)"))
 
-Represent an AbstractUnitRange of indices that attaches a block.
+@inline to_indices(A, inds, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where R =
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
 
-Upon calling `to_indices()`, Blocks are converted to BlockSlice objects to represent
-the indices over which the Block spans.
+# splat out higher dimensional blocks
+# this mimics view of a CartesianIndex
+@inline to_indices(A, inds, I::Tuple{BlockIndexRange, Vararg{Any}}) =
+    to_indices(A, inds, (BlockRange.(Block.(I[1].block.n), tuple.(I[1].indices))..., tail(I)...))
 
-This mimics the relationship between `Colon` and `Base.Slice`.
-"""
-struct BlockSlice{BB} <: AbstractUnitRange{Int}
-    block::BB
-    indices::UnitRange{Int}
+
+# In 0.7, we need to override to_indices to avoid calling linearindices
+@inline to_indices(A, I::Tuple{BlockIndexRange, Vararg{Any}}) =
+    to_indices(A, axes(A), I)
+
+if VERSION >= v"1.2-"  # See also `reindex` definitions in views.jl
+    reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+            subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
+        (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
+                                                                subidxs[1].block.indices),
+                                                idxs[1].indices[subidxs[1].indices]),
+                                    reindex(tail(idxs), tail(subidxs))...))
+else  # if VERSION >= v"1.2-"
+    reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+            subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
+        (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
+                                                                subidxs[1].block.indices),
+                                                idxs[1].indices[subidxs[1].indices]),
+                                        reindex(V, tail(idxs), tail(subidxs))...))
+end  # if VERSION >= v"1.2-"
+
+
+# _splatmap taken from Base:
+_splatmap(f, ::Tuple{}) = ()
+_splatmap(f, t::Tuple) = (f(t[1])..., _splatmap(f, tail(t))...)
+
+# De-reference blocks before creating a view to avoid taking `global2blockindex`
+# path in `AbstractBlockStyle` broadcasting.
+@inline function Base.unsafe_view(
+        A::BlockArray{<:Any, N},
+        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+    @_propagate_inbounds_meta
+    B = A[map(x -> x.block.block, I)...]
+    return view(B, _splatmap(x -> x.block.indices, I)...)
 end
 
-Block(bs::BlockSlice{<:Block}) = bs.block
-
-
-for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
-          :unsafe_length, :start)
-    @eval $f(S::BlockSlice) = $f(S.indices)
+@inline function Base.unsafe_view(
+        A::PseudoBlockArray{<:Any, N},
+        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+    @_propagate_inbounds_meta
+    return view(A.blocks, map(x -> x.indices, I)...)
 end
 
-getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
-show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
-next(S::BlockSlice, s) = next(S.indices, s)
-done(S::BlockSlice, s) = done(S.indices, s)
-
-function _unblock(cum_sizes, I::Tuple{Block{1, T},Vararg{Any}}) where {T}
-    B = first(I)
-    b = first(B.n)
-
-    range = cum_sizes[b]:cum_sizes[b + 1] - 1
-
-    BlockSlice(B, range)
+@inline function Base.unsafe_view(
+        A::ReshapedArray{<:Any, N, <:AbstractBlockArray{<:Any, M}},
+        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N, M}
+    @_propagate_inbounds_meta
+    # Note: assuming that I[M+1:end] are verified to be singletons
+    return reshape(view(A.parent, I[1:M]...), Val(N))
 end
 
-
-function _unblock(cum_sizes, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where {R}
-    B = first(I)
-    b_start = first(first(B.indices))
-    b_stop = last(first(B.indices))
-
-    range = cum_sizes[b_start]:cum_sizes[b_stop + 1] - 1
-
-    BlockSlice(B, range)
+@inline function Base.unsafe_view(
+        A::Array{<:Any, N},
+        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+    @_propagate_inbounds_meta
+    return view(A, map(x -> x.indices, I)...)
 end
-
-
-_sub_cumul_sizes(cs, inds) = _sub_cumul_sizes(cs, inds[1], tail(inds))
-_sub_cumul_sizes(::Tuple{}, ::Tuple{}) = ()
-
-function _sub_cumul_sizes(cs, inds1::BlockSlice{Block{1,Int}}, inds)
-    B = Int(inds1.block)
-    ret = view(cs[1], B:B+1)
-    (ret .- ret[1] .+ 1, _sub_cumul_sizes(tail(cs), inds)...)
-end
-
-function _sub_cumul_sizes(cs, inds1::BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, inds)
-    ret = view(cs[1], inds1.block.indices[1][1]:(inds1.block.indices[1][end]+1))
-    (ret .- ret[1] .+ 1, _sub_cumul_sizes(tail(cs), inds)...)
-end
-
-
-blocksizes(V::SubArray) = BlockSizes(_sub_cumul_sizes(cumulsizes(parent(V)), parentindices(V)))
 
 
 """
@@ -71,17 +74,19 @@ blocksizes(V::SubArray) = BlockSizes(_sub_cumul_sizes(cumulsizes(parent(V)), par
 Returns the indices associated with a block as a `BlockSlice`.
 """
 function unblock(A::AbstractArray{T,N}, inds, I) where {T, N}
+    B = first(I)
     if length(inds) == 0
         # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
         # similar to `ones(2)[1:1, 1:1]`.
-        _unblock(Base.OneTo(2), I)
+        BlockSlice(B,Base.OneTo(1))
     else
-        _unblock(cumulsizes(A, N - length(inds) + 1), I)
+        BlockSlice(B,inds[1][B])
     end
 end
 
 
 to_index(::Block) = throw(ArgumentError("Block must be converted by to_indices(...)"))
+to_index(::BlockIndex) = throw(ArgumentError("BlockIndex must be converted by to_indices(...)"))
 to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to_indices(...)"))
 
 @inline to_indices(A, inds, I::Tuple{Block{1}, Vararg{Any}}) =
@@ -163,7 +168,7 @@ end  # if VERSION >= v"1.2-"
 const BlockOrRangeIndex = Union{RangeIndex, BlockSlice}
 
 function unsafe_convert(::Type{Ptr{T}},
-                        V::SubArray{T, N, BlockArray{T,N,AT,BS}, NTuple{N, BlockSlice{Block{1,Int}}}}) where {AT <: AbstractArray{<:AbstractArray{T,N},N}, BS <: AbstractBlockSizes{N}} where {T,N}
+                        V::SubArray{T, N, BlockArray{T,N,AT,BS}, <:NTuple{N, BlockSlice{Block{1,Int}}}}) where {AT <: AbstractArray{<:AbstractArray{T,N},N}, BS <: NTuple{N,AbstractUnitRange{Int}}} where {T,N}
     unsafe_convert(Ptr{T}, parent(V).blocks[Int.(Block.(parentindices(V)))...])
 end
 
