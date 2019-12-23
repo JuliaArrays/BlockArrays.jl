@@ -13,146 +13,164 @@ function test_error_message(f, needle, expected = Exception)
 end
 
 @testset "block constructors" begin
-    ret = BlockArray{Float64}(undef, 1:3)
-    fill!(ret, 0)
-    @test Array(ret)  == zeros(6)
+    @testset "BlockArray Constructors" begin
+        ret = BlockArray{Float64}(undef, 1:3)
+        fill!(ret, 0)
+        @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1}(undef, 1:3)
-    fill!(ret, 0)
-    @test Array(ret)  == zeros(6)
+        ret = BlockArray{Float64,1}(undef, 1:3)
+        fill!(ret, 0)
+        @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, 1:3)
-    fill!(ret, 0)
-    @test Array(ret)  == zeros(6)
+        ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, 1:3)
+        fill!(ret, 0)
+        @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64}(undef, (blockedrange(1:3),))
-    fill!(ret, 0)
-    @test Array(ret)  == zeros(6)
+        ret = BlockArray{Float64}(undef, (blockedrange(1:3),))
+        fill!(ret, 0)
+        @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1}(undef, (blockedrange(1:3),))
-    fill!(ret, 0)
-    @test Array(ret)  == zeros(6)
+        ret = BlockArray{Float64,1}(undef, (blockedrange(1:3),))
+        fill!(ret, 0)
+        @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, (blockedrange(1:3),))
-    fill!(ret, 0)
-    @test Array(ret)  == zeros(6)
+        ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, (blockedrange(1:3),))
+        fill!(ret, 0)
+        @test Array(ret)  == zeros(6)
 
-    ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], 1:3)
-    @test Array(ret)  == zeros(6)
+        ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], 1:3)
+        @test Array(ret)  == zeros(6)
 
-    ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (blockedrange(1:3),))
-    @test Array(ret)  == zeros(6)
+        ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (blockedrange(1:3),))
+        @test Array(ret)  == zeros(6)
 
-    ret = BlockArray{Float32}(undef_blocks, 1:3)
-    @test eltype(ret.blocks) == Vector{Float32}
-    @test_throws UndefRefError ret.blocks[1]
+        ret = BlockArray{Float32}(undef_blocks, 1:3)
+        @test eltype(ret.blocks) == Vector{Float32}
+        @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray{Float32,1}(undef_blocks, 1:3)
-    @test eltype(ret.blocks) == Vector{Float32}
-    @test_throws UndefRefError ret.blocks[1]
+        ret = BlockArray{Float32,1}(undef_blocks, 1:3)
+        @test eltype(ret.blocks) == Vector{Float32}
+        @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray{Float32,1,Vector{Vector{Float32}}}(undef_blocks, 1:3)
-    @test eltype(ret.blocks) == Vector{Float32}
-    @test_throws UndefRefError ret.blocks[1]
+        ret = BlockArray{Float32,1,Vector{Vector{Float32}}}(undef_blocks, 1:3)
+        @test eltype(ret.blocks) == Vector{Float32}
+        @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray{Float32}(undef_blocks, 1:3, 1:3)
-    @test eltype(ret.blocks) == Matrix{Float32}
-    @test_throws UndefRefError ret.blocks[1]
+        ret = BlockArray{Float32}(undef_blocks, 1:3, 1:3)
+        @test eltype(ret.blocks) == Matrix{Float32}
+        @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray(undef_blocks, Vector{Float32}, 1:3)
-    @test eltype(ret) == Float32
-    @test eltype(ret.blocks) == Vector{Float32}
-    @test_throws UndefRefError ret.blocks[1]
+        ret = BlockArray(undef_blocks, Vector{Float32}, 1:3)
+        @test eltype(ret) == Float32
+        @test eltype(ret.blocks) == Vector{Float32}
+        @test_throws UndefRefError ret.blocks[1]
 
-    ret = BlockArray{Float64}(undef, 1:3, 1:3)
-    fill!(ret, 0)
-    @test Matrix(ret) == zeros(6,6)
+        ret = BlockArray{Float64}(undef, 1:3, 1:3)
+        fill!(ret, 0)
+        @test Matrix(ret) == zeros(6,6)
+    end
+    @testset "PseudoBlockArray constructors" begin
+        ret = PseudoBlockArray{Float64}(undef, 1:3)
+        fill!(ret, 0)
+        @test Array(ret)  == zeros(6)
 
-    ret = PseudoBlockArray{Float64}(undef, 1:3)
-    fill!(ret, 0)
-    @test Array(ret)  == zeros(6)
+        ret = PseudoBlockArray{Float64,1}(undef, 1:3)
+        fill!(ret, 0)
+        @test Array(ret)  == zeros(6)
 
-    ret = PseudoBlockArray{Float64,1}(undef, 1:3)
-    fill!(ret, 0)
-    @test Array(ret)  == zeros(6)
+        ret = PseudoBlockArray{Float64,1,Vector{Float64}}(undef, 1:3)
+        fill!(ret, 0)
+        @test Array(ret)  == zeros(6)
 
-    ret = PseudoBlockArray{Float64,1,Vector{Float64}}(undef, 1:3)
-    fill!(ret, 0)
-    @test Array(ret)  == zeros(6)
+        ret = PseudoBlockArray{Float64}(undef, 1:3, 1:3)
+        fill!(ret, 0)
+        @test Matrix(ret) == zeros(6,6)
+    end
 
-    ret = PseudoBlockArray{Float64}(undef, 1:3, 1:3)
-    fill!(ret, 0)
-    @test Matrix(ret) == zeros(6,6)
+    @testset "similar" begin
+        ret = BlockArray{Float64}(undef, 1:3)
+        @test similar(typeof(ret), axes(ret)) isa BlockArray
+        @test similar(typeof(ret), (Base.OneTo(6),)) isa BlockArray
+        ret = BlockArray{Float64}(undef, 1:3, 1:3)
+        @test similar(typeof(ret), axes(ret)) isa BlockArray
+        @test similar(typeof(ret), (Base.OneTo(6),axes(ret,2))) isa BlockArray
+    end
 
     @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])
 
-    @testset for sizes in [(1:3,), (1:3, 1:3), (1:3, 1:3, 1:3)]
-        dims = sum.(sizes)
-        A = BlockArray(copy(reshape(1:prod(dims), dims)), sizes...)
-        @test mortar(A.blocks) == A
-    end
+    @testset "mortar" begin
+        @testset for sizes in [(1:3,), (1:3, 1:3), (1:3, 1:3, 1:3)]
+            dims = sum.(sizes)
+            A = BlockArray(copy(reshape(1:prod(dims), dims)), sizes...)
+            @test mortar(A.blocks) == A
+        end
 
-    ret = mortar([spzeros(2), spzeros(3)])
-    @test eltype(ret.blocks) <: SparseVector
-    @test axes(ret) == (blockedrange([2, 3]),)
+        ret = mortar([spzeros(2), spzeros(3)])
+        @test eltype(ret.blocks) <: SparseVector
+        @test axes(ret) == (blockedrange([2, 3]),)
 
-    ret = mortar(
-        (spzeros(1, 3), spzeros(1, 4)),
-        (spzeros(2, 3), spzeros(2, 4)),
-        (spzeros(5, 3), spzeros(5, 4)),
-     )
-    @test Array(ret) == zeros(8, 7)
-    @test eltype(ret.blocks) <: SparseMatrixCSC
-    @test axes(ret) == blockedrange.(([1, 2, 5], [3, 4]))
-
-    test_error_message("must have ndims consistent with ndims = 1") do
-        mortar([ones(2,2)])
-    end
-    test_error_message("must have ndims consistent with ndims = 2") do
-        mortar(reshape([ones(2), ones(2, 2)], (1, 2)))
-    end
-    test_error_message("size(blocks[2, 2]) (= (111, 222)) is incompatible with expected size: (2, 4)") do
-        mortar(
-            (zeros(1, 3), zeros(1, 4)),
-            (zeros(2, 3), zeros(111, 222)),
+        ret = mortar(
+            (spzeros(1, 3), spzeros(1, 4)),
+            (spzeros(2, 3), spzeros(2, 4)),
+            (spzeros(5, 3), spzeros(5, 4)),
         )
+
+        @test Array(ret) == zeros(8, 7)
+        @test eltype(ret.blocks) <: SparseMatrixCSC
+        @test axes(ret) == blockedrange.(([1, 2, 5], [3, 4]))
+
+        test_error_message("must have ndims consistent with ndims = 1") do
+            mortar([ones(2,2)])
+        end
+        test_error_message("must have ndims consistent with ndims = 2") do
+            mortar(reshape([ones(2), ones(2, 2)], (1, 2)))
+        end
+        test_error_message("size(blocks[2, 2]) (= (111, 222)) is incompatible with expected size: (2, 4)") do
+            mortar(
+                (zeros(1, 3), zeros(1, 4)),
+                (zeros(2, 3), zeros(111, 222)),
+            )
+        end
     end
-
-    a_data = [1,2,3]
-    a = BlockVector(a_data,[1,2])
-    a[1] = 2
-    @test a == [2,2,3]
-    @test a_data == [1,2,3]
-    a = BlockVector(a_data,(blockedrange([1,2]),))
-    a[1] = 2
-    @test a == [2,2,3]
-    @test a_data == [1,2,3]
-    a = PseudoBlockVector(a_data,[1,2])
-    a[1] = 2
-    @test a == [2,2,3]
-    @test a_data == [2,2,3]
-    a = PseudoBlockVector(a_data,(blockedrange([1,2]),))
-    a[1] = 3
-    @test a == [3,2,3]
-    @test a_data == [3,2,3]
-
-    a_data = [1 2; 3 4]
-    a = BlockMatrix(a_data,[1,1],[2])
-    a[1] = 2
-    @test a == [2 2; 3 4]
-    @test a_data == [1 2; 3 4]
-    a = BlockMatrix(a_data,blockedrange.(([1,1],[2])))
-    a[1] = 2
-    @test a == [2 2; 3 4]
-    @test a_data == [1 2; 3 4]
-    a = PseudoBlockMatrix(a_data,[1,1],[2])
-    a[1] = 2
-    @test a == [2 2; 3 4]
-    @test a_data == [2 2; 3 4]
-    a = PseudoBlockMatrix(a_data, blockedrange.(([1,1],[2])))
-    a[1] = 3
-    @test a == [3 2; 3 4]
-    @test a_data == [3 2; 3 4]
+    
+    @testset "BlockVector" begin
+        a_data = [1,2,3]
+        a = BlockVector(a_data,[1,2])
+        a[1] = 2
+        @test a == [2,2,3]
+        @test a_data == [1,2,3]
+        a = BlockVector(a_data,(blockedrange([1,2]),))
+        a[1] = 2
+        @test a == [2,2,3]
+        @test a_data == [1,2,3]
+        a = PseudoBlockVector(a_data,[1,2])
+        a[1] = 2
+        @test a == [2,2,3]
+        @test a_data == [2,2,3]
+        a = PseudoBlockVector(a_data,(blockedrange([1,2]),))
+        a[1] = 3
+        @test a == [3,2,3]
+        @test a_data == [3,2,3]
+    end
+    @testset "BlockMatrix" begin
+        a_data = [1 2; 3 4]
+        a = BlockMatrix(a_data,[1,1],[2])
+        a[1] = 2
+        @test a == [2 2; 3 4]
+        @test a_data == [1 2; 3 4]
+        a = BlockMatrix(a_data,blockedrange.(([1,1],[2])))
+        a[1] = 2
+        @test a == [2 2; 3 4]
+        @test a_data == [1 2; 3 4]
+        a = PseudoBlockMatrix(a_data,[1,1],[2])
+        a[1] = 2
+        @test a == [2 2; 3 4]
+        @test a_data == [2 2; 3 4]
+        a = PseudoBlockMatrix(a_data, blockedrange.(([1,1],[2])))
+        a[1] = 3
+        @test a == [3 2; 3 4]
+        @test a_data == [3 2; 3 4]
+    end
 end
 
 @testset "block indexing" begin

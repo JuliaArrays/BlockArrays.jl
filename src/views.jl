@@ -1,12 +1,4 @@
 ### Views
-function _unblock(cum_sizes, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where {R}
-    B = Block(first(I))
-    range = cum_sizes[Int(B)]-1 .+ first(I).indices[1]
-
-    BlockSlice(I[1], range)
-end
-
-
 to_index(::BlockIndexRange) = throw(ArgumentError("BlockIndexRange must be converted by to_indices(...)"))
 
 @inline to_indices(A, inds, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where R =

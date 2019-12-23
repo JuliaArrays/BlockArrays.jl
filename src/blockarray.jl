@@ -126,7 +126,6 @@ julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
 @inline BlockArray{T,N,R}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     undef_blocks_BlockArray(R, block_sizes...)
 
-
 @generated function initialized_blocks_BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where R<:AbstractArray{V,N} where {T,N,V<:AbstractArray{T,N}}
     return quote
         block_arr = _BlockArray(R, baxes)
@@ -152,6 +151,9 @@ initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}
 @inline BlockArray{T, N, R}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     initialized_blocks_BlockArray(R, baxes)
 
+@inline BlockArray{T,N,R,BS}(::UndefInitializer, baxes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
+    initialized_blocks_BlockArray(R, baxes)
+
 @inline BlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, block_sizes...)
 
@@ -160,6 +162,10 @@ initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}
 
 @inline BlockArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     initialized_blocks_BlockArray(R, block_sizes...)
+
+
+@inline BlockArray{T,N,R,BS}(::UndefInitializer, sizes::NTuple{N,Int}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
+    BlockArray{T,N,R,BS}(undef, convert(BS, map(Base.OneTo, sizes)))    
 
 function BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N}
     for i in 1:N
