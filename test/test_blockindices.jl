@@ -68,6 +68,9 @@ import BlockArrays: BlockIndex, BlockIndexRange
         @test Block.(2:5) isa BlockRange
         @test Block.(Base.OneTo(5)) isa BlockRange
         @test Block.(2:5) == [Block(2),Block(3),Block(4),Block(5)]
+        b = Block.(2:5)
+        @test Int.(b) === 2:5
+        @test Base.OneTo.(1:5) isa Vector{Base.OneTo{Int}} #98
     end
 end
 
