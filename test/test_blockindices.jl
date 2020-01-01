@@ -272,5 +272,3 @@ end
     @test !BlockArrays.sortedin(0,v)
     @test !BlockArrays.sortedin(5,v)
 end
-
-"
