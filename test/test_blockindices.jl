@@ -1,5 +1,5 @@
 using BlockArrays, FillArrays, OffsetArrays, Test, Base64
-import BlockArrays: BlockIndex, BlockIndexRange
+import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -55,6 +55,8 @@ import BlockArrays: BlockIndex, BlockIndexRange
         @test_throws MethodError convert(Int, Block(2,1))
         @test convert(Tuple{Int,Int}, Block(2,1)) == (2,1)
         @test convert(Tuple{Float64,Int}, Block(2,1)) == (2.0,1)
+
+        @test Block(1)[:] ≡ Block(1)[Base.Slice(1:2)] ≡ Block(1)
     end
 
     @testset "BlockIndex" begin
@@ -62,6 +64,7 @@ import BlockArrays: BlockIndex, BlockIndexRange
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
+        @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
     end
 
     @testset "BlockRange" begin
@@ -232,6 +235,12 @@ end
     end  
 end
 
+@testset "BlockSlice" begin
+    b = BlockSlice(Block(5),1:3)
+    @test b[Base.Slice(1:3)] ≡ b
+    @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
+end
+
 #=
 [1,1  1,2] | [1,3  1,4  1,5]
 --------------------------
@@ -263,3 +272,5 @@ end
     @test !BlockArrays.sortedin(0,v)
     @test !BlockArrays.sortedin(5,v)
 end
+
+"

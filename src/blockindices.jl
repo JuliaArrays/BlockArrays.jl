@@ -175,6 +175,7 @@ BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where {
 
 getindex(B::Block{N}, inds::Vararg{Int,N}) where N = BlockIndex(B,inds)
 getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where N = BlockIndexRange(B,inds)
+getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
 getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{Int}) = BlockIndexRange(B.block, B.indices[1][kr])
