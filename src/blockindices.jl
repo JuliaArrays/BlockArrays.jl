@@ -175,6 +175,10 @@ BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where {
 
 getindex(B::Block{N}, inds::Vararg{Int,N}) where N = BlockIndex(B,inds)
 getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where N = BlockIndexRange(B,inds)
+getindex(B::Block{1}, inds::Colon) = B
+getindex(B::Block{1}, inds::Base.Slice) = B
+
+getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{Int}) = BlockIndexRange(B.block, B.indices[1][kr])
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))
 eltype(::Type{BlockIndexRange{N}}) where {N} = BlockIndex{N}
@@ -250,6 +254,8 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
 end
 
 getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
+getindex(S::BlockSlice{<:Block}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
+getindex(S::BlockSlice{<:BlockIndexRange}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
 next(S::BlockSlice, s) = next(S.indices, s)
 done(S::BlockSlice, s) = done(S.indices, s)
@@ -285,8 +291,8 @@ BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
 (:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
 (:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
 Base.BroadcastStyle(::Type{<:BlockRange{1}}) = DefaultArrayStyle{1}()
-broadcasted(::DefaultArrayStyle{1}, ::typeof(Block), r::AbstractUnitRange) = Block(first(r)):Block(last(r))
-broadcasted(::DefaultArrayStyle{1}, ::typeof(Int), block_range::BlockRange{1}) = first(block_range.indices)
+broadcasted(::DefaultArrayStyle{1}, ::Type{Block}, r::AbstractUnitRange) = Block(first(r)):Block(last(r))
+broadcasted(::DefaultArrayStyle{1}, ::Type{Int}, block_range::BlockRange{1}) = first(block_range.indices)
 
 
 # AbstractArray implementation

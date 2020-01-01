@@ -417,20 +417,6 @@ Base.dataids(arr::BlockArray) = (dataids(arr.blocks)..., dataids(arr.axes)...)
     end
 end
 
-@generated function copyto!(block_array::BlockArray{T, N, R}, arr::R) where {T,N,R <: AbstractArray}
-    return quote
-        block_sizes = blocksizes(block_array)
-
-        @nloops $N i i->(1:nblocks(block_sizes, i)) begin
-            block_index = @ntuple $N i
-            indices = globalrange(block_sizes, block_index)
-            copyto!(getblock(block_array, block_index...), arr[indices...])
-        end
-
-        return block_array
-    end
-end
-
 function Base.fill!(block_array::BlockArray, v)
     for block in block_array.blocks
         fill!(block, v)

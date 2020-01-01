@@ -1,5 +1,5 @@
 using BlockArrays, FillArrays, OffsetArrays, Test, Base64
-import BlockArrays: BlockIndex, BlockIndexRange
+import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -55,6 +55,8 @@ import BlockArrays: BlockIndex, BlockIndexRange
         @test_throws MethodError convert(Int, Block(2,1))
         @test convert(Tuple{Int,Int}, Block(2,1)) == (2,1)
         @test convert(Tuple{Float64,Int}, Block(2,1)) == (2.0,1)
+
+        @test Block(1)[:] ≡ Block(1)[Base.Slice(1:2)] ≡ Block(1)
     end
 
     @testset "BlockIndex" begin
@@ -62,12 +64,16 @@ import BlockArrays: BlockIndex, BlockIndexRange
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
+        @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
     end
 
     @testset "BlockRange" begin
         @test Block.(2:5) isa BlockRange
         @test Block.(Base.OneTo(5)) isa BlockRange
         @test Block.(2:5) == [Block(2),Block(3),Block(4),Block(5)]
+        b = Block.(2:5)
+        @test Int.(b) === 2:5
+        @test Base.OneTo.(1:5) isa Vector{Base.OneTo{Int}} #98
     end
 end
 
@@ -227,6 +233,12 @@ end
         @test_throws BoundsError findblock(b,6)
         @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Array{Int64,1}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
     end  
+end
+
+@testset "BlockSlice" begin
+    b = BlockSlice(Block(5),1:3)
+    @test b[Base.Slice(1:3)] ≡ b
+    @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
 end
 
 #=

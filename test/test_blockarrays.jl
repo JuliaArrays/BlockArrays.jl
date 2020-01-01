@@ -301,6 +301,12 @@ end
     @test C ≈ A ≈ BlockArray(A)
     @test eltype(C) == Float32
 
+    Ã = PseudoBlockArray(rand(2,3), Fill(1,2), [2,1])
+    @test convert(typeof(A), Ã) == Ã
+    
+    @test PseudoBlockArray(A, axes(Ã)) isa typeof(Ã)
+    @test PseudoBlockArray(A, axes(Ã)) == A    
+
 
     A = BlockArray(rand(2,3), [1,1], [2,1])
     C = convert(PseudoBlockArray, A)
