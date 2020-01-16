@@ -232,6 +232,7 @@ julia> sum.(eachblock(A))
 ```
 """
 function eachblock(A::AbstractBlockArray)
-    blockinds = CartesianIndices(blocksize(A))
+    # blockinds = CartesianIndices(blocksize(A))
+    blockinds = CartesianIndices(axes.(blocklasts.(axes(A)),1))
     (view(A, Block(Tuple(I))) for I in blockinds)
 end
