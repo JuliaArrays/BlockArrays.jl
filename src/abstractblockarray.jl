@@ -201,3 +201,38 @@ blockcheckbounds(A::AbstractArray{T, N}, i::Block{N}) where {T,N} = blockcheckbo
 @propagate_inbounds Base.setindex!(block_arr::AbstractBlockVector, v, block::Block{1})               =  setblock!(block_arr, v, block.n[1])
 @inline Base.getindex(block_arr::AbstractBlockArray{T,N}, block::Vararg{Block{1}, N}) where {T,N}     =  getblock(block_arr, (Block(block).n)...)
 @inline Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N} =  setblock!(block_arr, v, (Block(block).n)...)
+
+"""
+    eachblock(A::AbstractBlockArray)
+
+Create a generator that iterates over each block of an `AbstractBlockArray`
+returning views.
+
+```jldoctest; setup = quote using BlockArrays end
+julia> v = Array(reshape(1:6, (2, 3)))
+2×3 Array{Int64,2}:
+ 1  3  5
+ 2  4  6
+
+julia> A = BlockArray(v, [1,1], [2,1])
+2×2-blocked 2×3 BlockArray{Int64,2}:
+ 1  3  │  5
+ ──────┼───
+ 2  4  │  6
+
+julia> Matrix.(collect(eachblock(A)))
+2×2 Array{Array{Int64,2},2}:
+ [1 3]  [5]
+ [2 4]  [6]
+
+julia> sum.(eachblock(A))
+2×2 Array{Int64,2}:
+ 4  5
+ 6  6
+```
+"""
+function eachblock(A::AbstractBlockArray)
+    # blockinds = CartesianIndices(blocksize(A))
+    blockinds = CartesianIndices(axes.(blocklasts.(axes(A)),1))
+    (view(A, Block(Tuple(I))) for I in blockinds)
+end
