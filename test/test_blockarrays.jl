@@ -441,3 +441,12 @@ end
     @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
     @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
 end
+
+@testset "*" begin
+    A = BlockArray(randn(6,6), 1:3,1:3)
+    Ã = PseudoBlockArray(A)
+    b = randn(6)
+    @test A*b isa PseudoBlockVector{Float64}
+    @test Ã*b isa PseudoBlockVector{Float64}
+    @test A*b ≈ Ã*b ≈ Matrix(A)*b 
+end

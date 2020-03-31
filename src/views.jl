@@ -73,7 +73,7 @@ end
 
 Returns the indices associated with a block as a `BlockSlice`.
 """
-function unblock(A::AbstractArray{T,N}, inds, I) where {T, N}
+function unblock(A, inds, I)
     B = first(I)
     if length(inds) == 0
         # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is

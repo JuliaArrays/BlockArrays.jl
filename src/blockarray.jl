@@ -167,16 +167,19 @@ initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}
 @inline BlockArray{T,N,R,BS}(::UndefInitializer, sizes::NTuple{N,Int}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
     BlockArray{T,N,R,BS}(undef, convert(BS, map(Base.OneTo, sizes)))    
 
-function BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N}
+function BlockArray{T}(arr::AbstractArray{V, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,V,N}
     for i in 1:N
         if sum(block_sizes[i]) != size(arr, i)
             throw(DimensionMismatch("block size for dimension $i: $(block_sizes[i]) does not sum to the array size: $(size(arr, i))"))
         end
     end
-    BlockArray(arr, map(blockedrange,block_sizes))
+    BlockArray{T}(arr, map(blockedrange,block_sizes))
 end
 
-@generated function BlockArray(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
+BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N} = 
+    BlockArray{T}(arr, block_sizes...)
+
+@generated function BlockArray{T}(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
     return quote
         block_arr = _BlockArray(Array{typeof(arr),N}, baxes)
         @nloops $N i i->blockaxes(baxes[i],1) begin
@@ -188,6 +191,9 @@ end
         return block_arr
     end
 end
+
+BlockArray(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N} =
+    BlockArray{T}(arr, baxes)
 
 BlockVector(blocks::AbstractVector, baxes::Tuple{AbstractUnitRange{Int}}) = BlockArray(blocks, baxes)
 BlockVector(blocks::AbstractVector, block_sizes::AbstractVector{Int}) = BlockArray(blocks, block_sizes)
@@ -343,7 +349,7 @@ end
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)          
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)      
+    BlockArray{T}(undef, axes) 
     
 const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange, Colon}
 

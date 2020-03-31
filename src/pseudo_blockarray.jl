@@ -121,6 +121,20 @@ function Base.similar(block_array::PseudoBlockArray{T,N}, ::Type{T2}) where {T,N
     PseudoBlockArray(similar(block_array.blocks, T2), axes(block_array))
 end
 
+@inline Base.similar(block_array::Type{<:Array{T}}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    PseudoBlockArray{T}(undef, axes)  
+@inline Base.similar(block_array::Type{<:Array{T}}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    PseudoBlockArray{T}(undef, axes)          
+@inline Base.similar(block_array::Type{<:Array{T}}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    PseudoBlockArray{T}(undef, axes)     
+
+@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    PseudoBlockArray{T}(undef, axes)  
+@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    PseudoBlockArray{T}(undef, axes)          
+@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    PseudoBlockArray{T}(undef, axes)         
+
 @inline function Base.getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr.blocks[i...]
