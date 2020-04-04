@@ -32,7 +32,7 @@ import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broad
 import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
                         StructuredMatrixStyle
 import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, materialize!, MemoryLayout, 
-                        sublayout
+                        sublayout, transposelayout, conjlayout
 
 include("blockindices.jl")                        
 include("blockaxis.jl")
