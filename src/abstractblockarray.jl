@@ -16,7 +16,7 @@ the `AbstractBlockArray` interface should subtype from this type.
 
 * `AbstractBlockVecOrMat{T}` -> `Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}`
 """
-abstract type AbstractBlockArray{T, N} <: AbstractArray{T, N} end
+abstract type AbstractBlockArray{T, N} <: LayoutArray{T, N} end
 const AbstractBlockMatrix{T} = AbstractBlockArray{T, 2}
 const AbstractBlockVector{T} = AbstractBlockArray{T, 1}
 const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}

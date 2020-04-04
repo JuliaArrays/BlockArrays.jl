@@ -1,6 +1,6 @@
 module BlockArrays
 using Base.Cartesian
-using LinearAlgebra
+using LinearAlgebra, ArrayLayouts
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
@@ -27,11 +27,12 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
 using Base: ReshapedArray, dataids
 
 
-import Base: (:), IteratorSize, iterate, axes1
+import Base: (:), IteratorSize, iterate, axes1, strides
 import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted
 import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
                         StructuredMatrixStyle
-
+import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, materialize!, MemoryLayout, 
+                        sublayout
 
 include("blockindices.jl")                        
 include("blockaxis.jl")
@@ -42,7 +43,7 @@ include("views.jl")
 include("show.jl")
 include("blockarrayinterface.jl")
 include("blockbroadcast.jl")
-# include("linalg.jl")
+include("blocklinalg.jl")
 
 
 end # module
