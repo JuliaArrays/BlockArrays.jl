@@ -175,7 +175,7 @@ end
 
 @inline function getblock(block_arr::PseudoBlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
     range = getindex.(axes(block_arr), Block.(block))
-    return block_arr.blocks[range...]
+    return view(block_arr.blocks, range...)
 end
 
 @inline function _check_getblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Integer}) where {T,N}

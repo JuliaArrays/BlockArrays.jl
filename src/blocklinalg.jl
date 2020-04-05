@@ -4,7 +4,7 @@ blockrowsupport(_, A, k) = blockaxes(A,2)
 
 gives an iterator containing the possible non-zero entries in the k-th row of A.
 """
-blockrowsupport(A, k) = blockrowsupport(MemoryLayout(typeof(A)), A, k)
+blockrowsupport(A, k) = blockrowsupport(MemoryLayout(A), A, k)
 blockrowsupport(A) = blockrowsupport(A, blockaxes(A,1))
 
 blockcolsupport(_, A, j) = blockaxes(A,1)
@@ -14,14 +14,12 @@ blockcolsupport(_, A, j) = blockaxes(A,1)
 
 gives an iterator containing the possible non-zero entries in the j-th column of A.
 """
-blockcolsupport(A, j) = blockcolsupport(MemoryLayout(typeof(A)), A, j)
+blockcolsupport(A, j) = blockcolsupport(MemoryLayout(A), A, j)
 blockcolsupport(A) = blockcolsupport(A, blockaxes(A,2))
 
 abstract type AbstractBlockLayout <: MemoryLayout end
 struct BlockLayout{LAY} <: AbstractBlockLayout end
 
-## BlockSlice1 is a convenience for views
-const BlockSlice1 = BlockSlice{Block{1,Int},UnitRange{Int}}
 
 similar(M::MulAdd{<:AbstractBlockLayout,<:AbstractBlockLayout}, ::Type{T}, axes) where {T,N} = 
     similar(BlockArray{T}, axes)
@@ -37,15 +35,6 @@ conjlayout(::Type{T}, ::BlockLayout{LAY}) where {T<:Real,LAY} = BlockLayout{LAY}
 
 transposelayout(::BlockLayout{LAY}) where LAY = BlockLayout{typeof(transposelayout(LAY()))}()
 
-
-block(A::BlockSlice) = block(A.block)
-block(A::Block) = A
-
-getblock(A::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}) where N = 
-    getblock(parent(A), Int.(block.(parentindices(A)))...)
-
-strides(A::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}) where N = 
-    strides(getblock(A))
 
 
 #############
@@ -81,8 +70,18 @@ function _block_muladd!(α, A, X, β, Y)
     Y
 end 
 
-materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractBlockLayout}) =
-    _block_muladd!(M.α, M.A, M.B, M.β, M.C)
+mul_blockscompatible(A, B, C) = blockisequal(axes(A,2), axes(B,1)) && 
+    blockisequal(axes(A,1), axes(C,1)) && 
+    blockisequal(axes(B,2), axes(C,2))
+
+function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractBlockLayout})
+    α, A, B, β, C = M.α, M.A, M.B, M.β, M.C
+    if mul_blockscompatible(A,B,C)
+        _block_muladd!(α, A, B, β, C)
+    else # use default
+        materialize!(MulAdd{UnknownLayout,UnknownLayout,UnknownLayout}(α, A, B, β, C))
+    end
+end
 
 function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractColumnMajor})
     α, A, X, β, Y_in = M.α, M.A, M.B, M.β, M.C
@@ -90,7 +89,6 @@ function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayou
     _block_muladd!(α, A, X, β, Y)
     Y_in
 end
-
 
 function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractColumnMajor,<:AbstractColumnMajor})
     α, A, X_in, β, Y_in = M.α, M.A, M.B, M.β, M.C
@@ -111,3 +109,132 @@ function materialize!(M::MatMulMatAdd{<:AbstractColumnMajor,<:AbstractBlockLayou
 end
 
 
+
+####
+# Triangular
+####
+
+@inline hasmatchingblocks(A) = blockisequal(axes(A)...)
+
+triangularlayout(::Type{Tri}, ::ML) where {Tri,ML<:AbstractBlockLayout} = Tri{ML}()
+
+_triangular_matrix(::Val{'U'}, ::Val{'N'}, A) = UpperTriangular(A)
+_triangular_matrix(::Val{'L'}, ::Val{'N'}, A) = LowerTriangular(A)
+_triangular_matrix(::Val{'U'}, ::Val{'U'}, A) = UnitUpperTriangular(A)
+_triangular_matrix(::Val{'L'}, ::Val{'U'}, A) = UnitLowerTriangular(A)
+
+
+function _matchingblocks_triangular_mul!(::Val{'U'}, UNIT, A::AbstractMatrix{T}, dest) where T
+    # impose block structure
+    b = PseudoBlockArray(dest, (axes(A,1),))
+
+    for K = blockaxes(A,1)
+        b_2 = view(b, K)
+        Ũ = _triangular_matrix(Val('U'), UNIT, view(A, K,K))
+        materialize!(Lmul(Ũ, b_2))
+        JR = (K+1):last(blockrowsupport(A,K))
+        if !isempty(JR)
+            muladd!(one(T), view(A, K, JR), view(b,JR), one(T), b_2)
+        end
+    end
+    dest
+end
+
+function _matchingblocks_triangular_mul!(::Val{'L'}, UNIT, A::AbstractMatrix{T}, dest) where T
+    # impose block structure
+    b = PseudoBlockArray(dest, (axes(A,1),))
+
+    N = blocksize(A,1)
+
+    for K = N:-1:1
+        b_2 = view(b, Block(K))
+        L̃ = _triangular_matrix(Val('L'), UNIT, view(A, Block(K,K)))
+        materialize!(Lmul(L̃, b_2))
+        JR = blockrowstart(A,K):Block(K-1)
+        if !isempty(JR)
+            muladd!(one(T), view(A, Block(K), JR), view(b,JR), one(T), b_2)
+        end
+    end
+
+    dest
+end
+
+@inline function materialize!(M::MatLmulVec{<:TriangularLayout{UPLO,UNIT,<:AbstractBlockLayout},
+                                   <:AbstractStridedLayout}) where {UPLO,UNIT}
+    U,x = M.A,M.B
+    @boundscheck size(U,1) == size(x,1) || throw(BoundsError())
+    if hasmatchingblocks(U)
+        _matchingblocks_triangular_mul!(Val(UPLO), Val(UNIT), triangulardata(U), x)
+    else # use default
+        _block_muladd!(one(T), U, x, zero(T), dest)
+    end
+end
+
+
+for UNIT in ('U', 'N')
+    @eval begin
+        @inline function materialize!(M::MatLdivVec{<:TriangularLayout{'U',$UNIT,<:AbstractBlockLayout},
+                                        <:AbstractStridedLayout})
+            U,dest = M.A,M.B
+            T = eltype(dest)
+
+            A = triangulardata(U)
+            if !hasmatchingblocks(A) # Use default for now
+                return materialize!(Ldiv{TriangularLayout{'U',$UNIT,UnknownLayout}, 
+                                         typeof(MemoryLayout(dest))}(U, dest))
+            end
+
+            @boundscheck size(A,1) == size(dest,1) || throw(BoundsError())
+
+            # impose block structure
+            b = PseudoBlockArray(dest, (axes(A,1),))
+
+            N = blocksize(A,1)
+
+            for K = N:-1:1
+                b_2 = view(b, Block(K))
+                Ũ = _triangular_matrix(Val('U'), Val($UNIT), view(A, Block(K,K)))
+                materialize!(Ldiv(Ũ, b_2))
+
+                if K ≥ 2
+                    KR = first(blockcolsupport(A, K)):Block(K-1)
+                    V_12 = view(A, KR, Block(K))
+                    b̃_1 = view(b, KR)
+                    muladd!(-one(T), V_12, b_2, one(T), b̃_1)
+                end
+            end
+
+            dest
+        end
+
+        @inline function materialize!(M::MatLdivVec{<:TriangularLayout{'L',$UNIT,<:AbstractBlockLayout},
+                                        <:AbstractStridedLayout})
+            L,dest = M.A, M.B
+            T = eltype(dest)
+            A = triangulardata(L)
+            @assert hasmatchingblocks(A)
+
+            @boundscheck size(A,1) == size(dest,1) || throw(BoundsError())
+
+            # impose block structure
+            b = PseudoBlockArray(dest, (axes(A,1),))
+
+            N = blocksize(A,1)
+
+            for K = 1:N
+                b_2 = view(b, Block(K))
+                L̃ = _triangular_matrix(Val('L'), Val($UNIT), view(A, Block(K,K)))
+                materialize!(Ldiv(L̃, b_2))
+
+                if K < N
+                    KR = Block(K+1):last(blockcolsupport(A, K))
+                    V_12 = view(A, KR, Block(K))
+                    b̃_1 = view(b, KR)
+                    muladd!(-one(T), V_12, b_2, one(T), b̃_1)
+                end
+            end
+
+            dest
+        end
+    end
+end

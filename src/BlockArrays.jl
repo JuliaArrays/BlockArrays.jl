@@ -31,8 +31,9 @@ import Base: (:), IteratorSize, iterate, axes1, strides
 import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted
 import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
                         StructuredMatrixStyle
-import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, materialize!, MemoryLayout, 
-                        sublayout, transposelayout, conjlayout
+import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdivVec,
+                        materialize!, MemoryLayout, sublayout, transposelayout, conjlayout, 
+                        triangularlayout, triangulardata
 
 include("blockindices.jl")                        
 include("blockaxis.jl")
