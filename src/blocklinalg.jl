@@ -2,7 +2,7 @@ blockrowsupport(_, A, k) = blockaxes(A,2)
 """"
     blockrowsupport(A, k)
 
-gives an iterator containing the possible non-zero entries in the k-th row of A.
+gives an iterator containing the possible non-zero blocks in the k-th block-row of A.
 """
 blockrowsupport(A, k) = blockrowsupport(MemoryLayout(A), A, k)
 blockrowsupport(A) = blockrowsupport(A, blockaxes(A,1))
@@ -12,10 +12,20 @@ blockcolsupport(_, A, j) = blockaxes(A,1)
 """"
     blockcolsupport(A, j)
 
-gives an iterator containing the possible non-zero entries in the j-th column of A.
+gives an iterator containing the possible non-zero blocks in the j-th block-column of A.
 """
 blockcolsupport(A, j) = blockcolsupport(MemoryLayout(A), A, j)
 blockcolsupport(A) = blockcolsupport(A, blockaxes(A,2))
+
+blockcolstart(A...) = first(blockcolsupport(A...))
+blockcolstop(A...) = last(blockcolsupport(A...))
+blockrowstart(A...) = first(blockrowsupport(A...))
+blockrowstop(A...) = last(blockrowsupport(A...))
+
+for Func in (:blockcolstart, :blockcolstop, :blockrowstart, :blockrowstop)
+    @eval $Func(A, i::Block{1}) = $Func(A, Int(i))
+end
+
 
 abstract type AbstractBlockLayout <: MemoryLayout end
 struct BlockLayout{LAY} <: AbstractBlockLayout end
@@ -162,11 +172,14 @@ end
 @inline function materialize!(M::MatLmulVec{<:TriangularLayout{UPLO,UNIT,<:AbstractBlockLayout},
                                    <:AbstractStridedLayout}) where {UPLO,UNIT}
     U,x = M.A,M.B
+    T = eltype(M)
     @boundscheck size(U,1) == size(x,1) || throw(BoundsError())
     if hasmatchingblocks(U)
         _matchingblocks_triangular_mul!(Val(UPLO), Val(UNIT), triangulardata(U), x)
     else # use default
-        _block_muladd!(one(T), U, x, zero(T), dest)
+        x_1 = PseudoBlockArray(copy(x), (axes(U,2),))
+        x_2 = PseudoBlockArray(x, (axes(U,1),))
+        _block_muladd!(one(T), U, x_1, zero(T), x_2)
     end
 end
 
@@ -197,7 +210,7 @@ for UNIT in ('U', 'N')
                 materialize!(Ldiv(Ũ, b_2))
 
                 if K ≥ 2
-                    KR = first(blockcolsupport(A, K)):Block(K-1)
+                    KR = blockcolstart(A, K):Block(K-1)
                     V_12 = view(A, KR, Block(K))
                     b̃_1 = view(b, KR)
                     muladd!(-one(T), V_12, b_2, one(T), b̃_1)
@@ -212,7 +225,11 @@ for UNIT in ('U', 'N')
             L,dest = M.A, M.B
             T = eltype(dest)
             A = triangulardata(L)
-            @assert hasmatchingblocks(A)
+            if !hasmatchingblocks(A) # Use default for now
+                return materialize!(Ldiv{TriangularLayout{'L',$UNIT,UnknownLayout}, 
+                                         typeof(MemoryLayout(dest))}(L, dest))
+            end
+
 
             @boundscheck size(A,1) == size(dest,1) || throw(BoundsError())
 
@@ -227,7 +244,7 @@ for UNIT in ('U', 'N')
                 materialize!(Ldiv(L̃, b_2))
 
                 if K < N
-                    KR = Block(K+1):last(blockcolsupport(A, K))
+                    KR = Block(K+1):blockcolstop(A, K)
                     V_12 = view(A, KR, Block(K))
                     b̃_1 = view(b, KR)
                     muladd!(-one(T), V_12, b_2, one(T), b̃_1)

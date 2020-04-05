@@ -105,6 +105,7 @@ import ArrayLayouts: DenseRowMajor
 
     @testset "triangular" begin
         A = BlockArray(randn(6,6), 1:3, 1:3) 
+        B = BlockArray(randn(6,6), fill(2,3), 1:3) 
         b = randn(6)
         @test MemoryLayout(UpperTriangular(A)) isa TriangularLayout{'U','N',BlockLayout{DenseColumnMajor}}
         @test UpperTriangular(A) == UpperTriangular(Matrix(A))
@@ -112,9 +113,34 @@ import ArrayLayouts: DenseRowMajor
         @test MemoryLayout(UpperTriangular(V)) isa TriangularLayout{'U','N',DenseColumnMajor}
         @test mul(UpperTriangular(V),b[2:3]) ≈ UpperTriangular(V)*b[2:3] ≈ UpperTriangular(Matrix(V))*b[2:3]
 
-        b2 = PseudoBlockArray(b,(axes(A,1),))
-        @test Base.unsafe_convert(Ptr{Float64}, b) == Base.unsafe_convert(Ptr{Float64}, b2) == Base.unsafe_convert(Ptr{Float64}, view(b2,Block(1)))
-        @test UpperTriangular(A) * b ≈ UpperTriangular(Matrix(A)) * b
+        @testset "bug in view pointer" begin
+            b2 = PseudoBlockArray(b,(axes(A,1),))
+            @test Base.unsafe_convert(Ptr{Float64}, b) == Base.unsafe_convert(Ptr{Float64}, b2) == 
+                    Base.unsafe_convert(Ptr{Float64}, view(b2,Block(1)))
+        end
+
+        @testset "matching blocks" begin
+            @test UpperTriangular(A) * b ≈ UpperTriangular(Matrix(A)) * b
+            @test UnitUpperTriangular(A) * b ≈ UnitUpperTriangular(Matrix(A)) * b
+            @test LowerTriangular(A) * b ≈ LowerTriangular(Matrix(A)) * b
+            @test UnitLowerTriangular(A) * b ≈ UnitLowerTriangular(Matrix(A)) * b
+
+            @test UpperTriangular(A) \ b ≈ UpperTriangular(Matrix(A)) \ b
+            @test UnitUpperTriangular(A) \ b ≈ UnitUpperTriangular(Matrix(A)) \ b
+            @test LowerTriangular(A) \ b ≈ LowerTriangular(Matrix(A)) \ b
+            @test UnitLowerTriangular(A) \ b ≈ UnitLowerTriangular(Matrix(A)) \ b
+        end
+        @testset "non-matching blocks" begin
+            @test UpperTriangular(B) * b ≈ UpperTriangular(Matrix(B)) * b
+            @test UnitUpperTriangular(B) * b ≈ UnitUpperTriangular(Matrix(B)) * b
+            @test LowerTriangular(B) * b ≈ LowerTriangular(Matrix(B)) * b
+            @test UnitLowerTriangular(B) * b ≈ UnitLowerTriangular(Matrix(B)) * b
+
+            @test UpperTriangular(B) \ b ≈ UpperTriangular(Matrix(B)) \ b
+            @test UnitUpperTriangular(B) \ b ≈ UnitUpperTriangular(Matrix(B)) \ b
+            @test LowerTriangular(B) \ b ≈ LowerTriangular(Matrix(B)) \ b
+            @test UnitLowerTriangular(B) \ b ≈ UnitLowerTriangular(Matrix(B)) \ b
+        end
     end
 end
 
