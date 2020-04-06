@@ -56,7 +56,10 @@ const PseudoBlockVecOrMat{T} = Union{PseudoBlockMatrix{T}, PseudoBlockVector{T}}
     PseudoBlockArray{T, N, R,BS}(blocks, baxes)
 
 @inline PseudoBlockArray{T}(blocks::R, baxes::BS) where {T,N,R<:AbstractArray{T,N},BS<:NTuple{N,AbstractUnitRange{Int}}} =
-    PseudoBlockArray{T, N, R,BS}(blocks, baxes)    
+    PseudoBlockArray{T, N, R,BS}(blocks, baxes)  
+    
+@inline PseudoBlockArray{T}(blocks::AbstractArray{<:Any,N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N} =
+    PseudoBlockArray{T}(convert(AbstractArray{T,N}, blocks), baxes)      
 
 @inline PseudoBlockArray(blocks::PseudoBlockArray, baxes::BS) where {N,BS<:NTuple{N,AbstractUnitRange{Int}}} =
     PseudoBlockArray(blocks.blocks, baxes)

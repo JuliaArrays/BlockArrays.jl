@@ -91,8 +91,12 @@ import ArrayLayouts: DenseRowMajor
         b = randn(6)
         @test MemoryLayout(A') isa BlockLayout{DenseRowMajor}
 
+        @test getblock(A', 2, 3) == getblock(A, 3,2)'
+        @test getblock(transpose(A), 2, 3) == transpose(getblock(A, 3,2))
+
         V = view(A', Block(2,3))
         @test MemoryLayout(V) isa DenseRowMajor
+        @test strides(V) == (2,1)
         @test V*b[5:6] == A[Block(3,2)]'b[5:6]
         @test V'*b[3:4] == A[Block(3,2)]*b[3:4]
         @test A'*b ≈ Matrix(A)'*b

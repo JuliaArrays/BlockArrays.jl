@@ -192,6 +192,9 @@ BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}
     end
 end
 
+BlockArray{T}(arr::AbstractArray{<:Any, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N} =
+    BlockArray{T}(convert(AbstractArray{T, N}, arr), baxes)
+
 BlockArray(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N} =
     BlockArray{T}(arr, baxes)
 
