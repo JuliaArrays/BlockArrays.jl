@@ -68,6 +68,11 @@ end
         ret = BlockArray{Float64}(undef, 1:3, 1:3)
         fill!(ret, 0)
         @test Matrix(ret) == zeros(6,6)
+
+        A = [1,2,3,4,5,6]
+        @test A == BlockArray(A, 1:3) == BlockArray{Int}(A, 1:3) == 
+            BlockArray(A, (blockedrange(1:3),)) == BlockArray{Int}(A, (blockedrange(1:3),)) ==
+            BlockArray{Float64}(A, 1:3)
     end
     @testset "PseudoBlockArray constructors" begin
         ret = PseudoBlockArray{Float64}(undef, 1:3)
@@ -85,15 +90,29 @@ end
         ret = PseudoBlockArray{Float64}(undef, 1:3, 1:3)
         fill!(ret, 0)
         @test Matrix(ret) == zeros(6,6)
+
+        A = [1,2,3,4,5,6]
+        @test A == PseudoBlockArray(A, 1:3) == PseudoBlockArray{Int}(A, 1:3) == 
+            PseudoBlockArray(A, (blockedrange(1:3),)) == PseudoBlockArray{Int}(A, (blockedrange(1:3),)) ==
+            PseudoBlockArray{Float64}(A, 1:3)
     end
 
     @testset "similar" begin
         ret = BlockArray{Float64}(undef, 1:3)
         @test similar(typeof(ret), axes(ret)) isa BlockArray
         @test similar(typeof(ret), (Base.OneTo(6),)) isa BlockArray
+        @test similar(Array{Float64}, axes(ret)) isa PseudoBlockArray
+        @test similar(Vector{Float64}, axes(ret)) isa PseudoBlockArray
+        @test similar(randn(5,5), Float64, axes(ret)) isa PseudoBlockArray
+
         ret = BlockArray{Float64}(undef, 1:3, 1:3)
         @test similar(typeof(ret), axes(ret)) isa BlockArray
         @test similar(typeof(ret), (Base.OneTo(6),axes(ret,2))) isa BlockArray
+        @test similar(Array{Float64}, axes(ret)) isa PseudoBlockArray
+        @test similar(Vector{Float64}, axes(ret)) isa PseudoBlockArray
+        @test similar(Array{Float64}, (Base.OneTo(5), axes(ret,2))) isa PseudoBlockArray
+        @test similar(randn(5,5), Float64, axes(ret)) isa PseudoBlockArray
+        @test similar(randn(5,5), Float64, (Base.OneTo(5), axes(ret,2))) isa PseudoBlockArray
     end
 
     @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])
@@ -440,4 +459,13 @@ end
     @test reshape(A, Val(2)) isa typeof(PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1))))
     @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
     @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
+end
+
+@testset "*" begin
+    A = BlockArray(randn(6,6), 1:3,1:3)
+    Ã = PseudoBlockArray(A)
+    b = randn(6)
+    @test A*b isa PseudoBlockVector{Float64}
+    @test Ã*b isa PseudoBlockVector{Float64}
+    @test A*b ≈ Ã*b ≈ Matrix(A)*b 
 end

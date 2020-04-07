@@ -114,7 +114,7 @@ julia> blockaxes(A,1)
 """
 function blockaxes(A::AbstractArray{T,N}, d) where {T,N}
     @_inline_meta
-    d::Integer <= N ? blockaxes(A)[d] : OneTo(1)
+    d::Integer <= N ? blockaxes(A)[d] : Base.OneTo(1)
 end
 
 """
