@@ -11,7 +11,8 @@ import ArrayLayouts: DenseRowMajor
         @test MemoryLayout(V) isa DenseColumnMajor
         @test strides(V) == (1,2)
 
-        @test all(V*view(b,4:6) .=== V*b[4:6] .=== Matrix(V) * b[4:6])
+        @test V*view(b,4:6) ≈ V*b[4:6] ≈ Matrix(V) * b[4:6]
+        @test all(muladd!(1.0,V,view(b,4:6),0.0,similar(b,2)) .=== BLAS.gemv!('N', 1.0, Matrix(V), b[4:6], 0.0, similar(b,2)))
 
         @test A*b isa PseudoBlockVector
         @test A*BlockVector(b,1:3) isa BlockVector
@@ -46,7 +47,8 @@ import ArrayLayouts: DenseRowMajor
         @test MemoryLayout(V) isa ColumnMajor
         @test strides(V) == (1,6)
 
-        @test all(V*view(b,4:6) .=== V*b[4:6] .=== Matrix(V) * b[4:6])
+        @test V*view(b,4:6) ≈ V*b[4:6] ≈ Matrix(V) * b[4:6]
+        @test all(muladd!(1.0,V,view(b,4:6),0.0,similar(b,2)) .=== BLAS.gemv!('N', 1.0, Matrix(V), b[4:6], 0.0, similar(b,2)))
 
         @test A*b isa PseudoBlockVector
         @test blockisequal(axes(A*b,1), axes(A,1))
