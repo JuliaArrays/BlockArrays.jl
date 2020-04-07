@@ -91,18 +91,42 @@ import ArrayLayouts: DenseRowMajor
         B = BlockArray(randn(6,6), 1:3, 1:3)
         C = BlockArray(randn(6,6) + im*randn(6,6), fill(2,3), 1:3)
         b = randn(6)
+        c = randn(6) .+ im*randn(6)
         @test MemoryLayout(A') isa BlockLayout{DenseRowMajor}
+        @test MemoryLayout(C') isa BlockLayout{ConjLayout{DenseRowMajor}}
 
         @test getblock(A', 2, 3) == getblock(A, 3,2)'
         @test getblock(transpose(A), 2, 3) == transpose(getblock(A, 3,2))
+        @test getblock(C', 2, 3) == getblock(C, 3,2)'
+        @test getblock(transpose(C), 2, 3) == transpose(getblock(C, 3,2))
 
         V = view(A', Block(2,3))
         @test MemoryLayout(V) isa DenseRowMajor
         @test strides(V) == (2,1)
-        @test V*b[5:6] == A[Block(3,2)]'b[5:6]
-        @test V'*b[3:4] == A[Block(3,2)]*b[3:4]
+        @test V*b[5:6] ≈ A[Block(3,2)]'b[5:6]
+        @test V'*b[3:4] ≈ A[Block(3,2)]*b[3:4]
+        @test V*c[5:6] ≈ A[Block(3,2)]'c[5:6]
+        @test V'*c[3:4] ≈ A[Block(3,2)]*c[3:4]
+        @test all(muladd!(1.0,V,b[5:6],0.0,similar(b,2)) .=== BLAS.gemv!('T', 1.0, Matrix(V'), b[5:6], 0.0, similar(b,2)))
+        @test all(muladd!(1.0,V',b[3:4],0.0,similar(b,2)) .=== BLAS.gemv!('N', 1.0, Matrix(V'), b[3:4], 0.0, similar(b,2)))
         @test A'*b ≈ Matrix(A)'*b
+        @test A'*c ≈ Matrix(A)'*c
         @test all(transpose(A)*b .=== A'b)
+        @test all(transpose(A)*c .=== A'c)
+
+        V = view(C', Block(2,3))
+        @test MemoryLayout(V) isa ConjLayout{DenseRowMajor}
+        @test strides(V) == (2,1)
+        @test V*b[5:6] ≈ C[Block(3,2)]'b[5:6]
+        @test V'*b[3:4] ≈ C[Block(3,2)]*b[3:4]
+        @test V*c[5:6] ≈ C[Block(3,2)]'c[5:6]
+        @test V'*c[3:4] ≈ C[Block(3,2)]*c[3:4]
+        @test all(muladd!(1.0+0im,V,c[5:6],0.0+0im,similar(c,2)) .=== BLAS.gemv!('C', 1.0+0im, Matrix(V'), c[5:6], 0.0+0im, similar(c,2)))
+        @test all(muladd!(1.0,V',c[3:4],0.0+0im,similar(c,2)) .=== BLAS.gemv!('N', 1.0+0im, Matrix(V'), c[3:4], 0.0+0im, similar(c,2)))
+        @test A'*b ≈ Matrix(A)'*b
+        @test A'*c ≈ Matrix(A)'*c
+        @test all(transpose(A)*b .=== A'b)
+        @test all(transpose(A)*c .=== A'c)
         
         @test A'*B ≈ A'*Matrix(B) ≈ Matrix(A)'*B
         @test B'*A' ≈ Matrix(B)'*A' ≈ B'*Matrix(A)' ≈ Matrix(B')*Matrix(A')

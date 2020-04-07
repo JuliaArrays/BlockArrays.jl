@@ -40,7 +40,7 @@ MemoryLayout(::Type{<:BlockArray{T,N,R}}) where {T,N,R} = BlockLayout{typeof(Mem
 sublayout(::BlockLayout{LAY}, ::Type{NTuple{N,BlockSlice1}}) where {LAY,N} = LAY()
 sublayout(BL::BlockLayout, ::Type{<:NTuple{N,BlockSlice}}) where N = BL
 
-conjlayout(::Type{T}, ::BlockLayout{LAY}) where {T<:Complex,LAY} = BlockLayout{typeof(conjlayout(T,LAY))}()
+conjlayout(::Type{T}, ::BlockLayout{LAY}) where {T<:Complex,LAY} = BlockLayout{typeof(conjlayout(T,LAY()))}()
 conjlayout(::Type{T}, ::BlockLayout{LAY}) where {T<:Real,LAY} = BlockLayout{LAY}()
 
 transposelayout(::BlockLayout{LAY}) where LAY = BlockLayout{typeof(transposelayout(LAY()))}()
