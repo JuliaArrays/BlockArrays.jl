@@ -30,9 +30,9 @@ using BlockArrays, Test
     @test blocksize(AB) == blocksize(B)
 
     #Test: Size of resulting blocks
-    for i in 1:blocksize(AB)[1]
-        for j in 1:blocksize(AB)[2]
-            @test size(AB[Block(i, j)]) == (mi[i]*pi[i], ni[j]*qi[j])
+    for i in blockaxes(AB,1)
+        for j in blockaxes(AB,2)
+            @test size(AB[i, j]) == (mi[Int(i)]*pi[Int(i)], ni[Int(j)]*qi[Int(j)])
         end
     end
 end
@@ -62,23 +62,23 @@ end
     B = BlockArray(ones(p, q), pi, qi)
 
     #Test: Resulting values for a matrix of constant sub-blocks
-    for i in 1:blocksize(A)[1]
-        for j in 1:blocksize(A)[2]
-            A[Block(i, j)] .*= i+j
+    for i in blockaxes(A,1)
+        for j in blockaxes(A,2)
+            A[i, j] .*= Int(i)+Int(j)
         end
     end
 
-    for i in 1:blocksize(B)[1]
-        for j in 1:blocksize(B)[2]
-            B[Block(i, j)] .*= i+j+10
+    for i in blockaxes(B,1)
+        for j in blockaxes(B,2)
+            B[i, j] .*= Int(i)+Int(j)+10
         end
     end
 
     AB = khatri_rao(A, B)
 
-    for i in 1:blocksize(AB)[1]
-        for j in 1:blocksize(AB)[2]
-            @test AB[Block(i, j)] ≈ (i+j)*(i+j+10)*ones(mi[i]*pi[i], ni[j]*qi[j])
+    for i in blockaxes(AB,1)
+        for j in blockaxes(AB,2)
+            @test AB[i, j] ≈ (Int(i)+Int(j))*(Int(i)+Int(j)+10)*ones(mi[Int(i)]*pi[Int(i)], ni[Int(j)]*qi[Int(j)])
         end
     end
 

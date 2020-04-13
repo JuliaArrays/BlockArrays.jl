@@ -7,22 +7,22 @@ References
 """
 function khatri_rao(A::AbstractBlockMatrix, B::AbstractBlockMatrix)
     # 
-    _Ablksize = blocksize(A)
-    _Bblksize = blocksize(B)
+    Ablksize = blocksize(A)
+    Bblksize = blocksize(B)
 
-    @assert _Ablksize == _Bblksize "A and B must have the same blocksize"
+    @assert Ablksize == Bblksize "A and B must have the same blocksize"
 
-    _kblk = []
-    for _iblk in 1:_Ablksize[1]
-        _kblk_j = []
-        for _jblk in 1:_Ablksize[2]
-            _Ablk = A[Block(_iblk, _jblk)]
-            _Bblk = B[Block(_iblk, _jblk)]
-            push!(_kblk_j, kron(_Ablk, _Bblk))
+    kblk = []
+    for iblk in blockaxes(A,1)
+        kblk_j = []
+        for _jblk in blockaxes(A,2)
+            Ablk = A[iblk, _jblk]
+            Bblk = B[iblk, _jblk]
+            push!(kblk_j, kron(Ablk, Bblk))
         end
-        push!(_kblk, tuple(_kblk_j...))
+        push!(kblk, tuple(kblk_j...))
     end
-    mortar(_kblk...)
+    mortar(kblk...)
 end
 
 function khatri_rao(A::AbstractMatrix, B::AbstractMatrix)
