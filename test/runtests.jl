@@ -8,4 +8,5 @@ using BlockArrays, LinearAlgebra, Test
     include("test_blockarrayinterface.jl")
     include("test_blockbroadcast.jl")
     include("test_blocklinalg.jl")
+    include("test_blockproduct.jl")
 end

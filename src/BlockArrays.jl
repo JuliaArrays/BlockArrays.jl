@@ -14,6 +14,8 @@ export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrM
 
 export undef_blocks, undef, findblock, findblockindex
 
+export khatri_rao
+
 import Base: @propagate_inbounds, Array, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
@@ -45,6 +47,6 @@ include("show.jl")
 include("blockarrayinterface.jl")
 include("blockbroadcast.jl")
 include("blocklinalg.jl")
-
+include("blockproduct.jl")
 
 end # module
