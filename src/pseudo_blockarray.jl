@@ -169,12 +169,19 @@ end
 # Indexing #
 ############
 
-@inline function Base.getindex(block_arr::PseudoBlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N}
+@inline function _pseudoblockindex_getindex(block_arr, blockindex)
     I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
     @boundscheck checkbounds(block_arr.blocks, I...)
     @inbounds v = block_arr.blocks[I...]
     return v
 end
+
+@inline Base.getindex(block_arr::PseudoBlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
+    _pseudoblockindex_getindex(block_arr, blockindex)
+
+
+@inline Base.getindex(block_arr::PseudoBlockVector{T}, blockindex::BlockIndex{1}) where T =
+    _pseudoblockindex_getindex(block_arr, blockindex)
 
 @inline function getblock(block_arr::PseudoBlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
     range = getindex.(axes(block_arr), Block.(block))
