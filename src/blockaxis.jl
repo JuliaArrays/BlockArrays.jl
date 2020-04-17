@@ -1,9 +1,15 @@
 
 # interface
+
 @inline getindex(b::AbstractVector, K::BlockIndex{1}) = b[Block(K.I[1])][K.α[1]]
-@inline Base.getindex(b::AbstractArray{T,N}, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
-    b[BlockIndex(blockindex)]
-@inline getindex(b::AbstractVector, K::BlockIndexRange{1}) = b[K.block][K.indices[1]]
+@inline getindex(b::AbstractArray{T,N}, K::BlockIndex{N}) where {T,N} =
+    b[block(K)][K.α...]
+@inline getindex(b::AbstractArray{T,N}, K::Vararg{BlockIndex{1},N}) where {T,N} =
+    b[BlockIndex(K)]
+
+@inline getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = 
+    b[block(K)][K.indices...]    
+
 
 function findblockindex(b::AbstractVector, k::Integer)
     K = findblock(b, k)
