@@ -331,9 +331,6 @@ end
     _blockindex_getindex(block_arr, blockindex)
 @inline Base.getindex(block_arr::BlockVector{T}, blockindex::BlockIndex{1}) where {T} =
     _blockindex_getindex(block_arr, blockindex)
-@inline Base.getindex(block_arr::BlockArray{T,N}, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
-    block_arr[BlockIndex(blockindex)]
-
 
 ###########################
 # AbstractArray Interface #
