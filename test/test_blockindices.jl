@@ -106,14 +106,14 @@ end
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(4)]
 
-        o = OffsetArray([2,2,3],-1:1)    
+        o = OffsetArray([2,2,3],-1:1)
         b = BlockArrays._BlockedUnitRange(-3, cumsum(o) .- 4)
         @test axes(b,1) == blockedrange([2,2,3])
         @test b[Block(-1)] == -3:-2
         @test b[Block(0)] == -1:0
         @test b[Block(1)] == 1:3
         @test_throws BlockBoundsError b[Block(-2)]
-        @test_throws BlockBoundsError b[Block(2)]        
+        @test_throws BlockBoundsError b[Block(2)]
 
         b = blockedrange(Fill(3,1_000_000))
         @test b isa BlockedUnitRange{StepRange{Int,Int}}
@@ -138,7 +138,7 @@ end
         @test blockisequal(convert(BlockedUnitRange, Base.IdentityUnitRange(-2:2)), BlockArrays._BlockedUnitRange(-2,[2]))
         @test convert(BlockedUnitRange{Vector{Int}}, c) === c
         @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, b),b)
-        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, Base.OneTo(5)), blockedrange([5]))        
+        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, Base.OneTo(5)), blockedrange([5]))
     end
 
     @testset "findblock" begin
@@ -173,37 +173,37 @@ end
         @test_throws BoundsError findblockindex(b,-2)
         @test_throws BoundsError findblockindex(b,5)
 
-        o = OffsetArray([2,2,3],-1:1)    
-        b = BlockArrays._BlockedUnitRange(-3, cumsum(o) .- 4) 
-        @test @inferred(findblock(b,-3)) == Block(-1)    
+        o = OffsetArray([2,2,3],-1:1)
+        b = BlockArrays._BlockedUnitRange(-3, cumsum(o) .- 4)
+        @test @inferred(findblock(b,-3)) == Block(-1)
         @test @inferred(findblockindex(b,-3)) == Block(-1)[1]
         @test findblock.(Ref(b),-3:3) == Block.([-1,-1,0,0,1,1,1])
         @test findblockindex.(Ref(b),-3:3) == BlockIndex.([-1,-1,0,0,1,1,1], [1,2,1,2,1,2,3])
         @test_throws BoundsError findblock(b,-4)
-        @test_throws BoundsError findblock(b,5) 
+        @test_throws BoundsError findblock(b,5)
         @test_throws BoundsError findblockindex(b,-4)
-        @test_throws BoundsError findblockindex(b,5)                   
-        
+        @test_throws BoundsError findblockindex(b,5)
+
         b = blockedrange(Fill(3,1_000_000))
         @test @inferred(findblock(b, 1)) == Block(1)
         @test @inferred(findblockindex(b, 1)) == Block(1)[1]
         @test findblock.(Ref(b),299_997:300_001) == Block.([99_999,100_000,100_000,100_000,100_001])
         @test findblockindex.(Ref(b),299_997:300_001) == BlockIndex.([99_999,100_000,100_000,100_000,100_001],[3,1,2,3,1])
         @test_throws BoundsError findblock(b,0)
-        @test_throws BoundsError findblock(b,3_000_001)    
+        @test_throws BoundsError findblock(b,3_000_001)
         @test_throws BoundsError findblockindex(b,0)
-        @test_throws BoundsError findblockindex(b,3_000_001)            
+        @test_throws BoundsError findblockindex(b,3_000_001)
     end
 
     @testset "BlockIndex indexing" begin
-       b = blockedrange([1,2,3]) 
+       b = blockedrange([1,2,3])
        @test b[Block(3)[2]] == b[Block(3)][2] == 5
        @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
     end
 
     @testset "BlockRange indexing" begin
-       b = blockedrange([1,2,3]) 
-       @test b[Block.(1:2)] == blockedrange([1,2]) 
+       b = blockedrange([1,2,3])
+       @test b[Block.(1:2)] == blockedrange([1,2])
        @test b[Block.(1:3)] == b
        @test_throws BlockBoundsError b[Block.(0:2)]
        @test_throws BlockBoundsError b[Block.(1:4)]
@@ -232,7 +232,11 @@ end
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
         @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Array{Int64,1}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
-    end  
+    end
+
+    @testset "BlockIndex type piracy (#108)" begin
+        @test zeros()[] == 0.0
+    end
 end
 
 @testset "BlockSlice" begin
@@ -257,7 +261,7 @@ end
 #     @test A[Block(2)[2]] == 3
 #     @test A[Block(2)[1:2]] == [2,3]
 #     @test A[getindex.(Block.(1:2), 1)] == [1,2]
-    
+
 #     @test_throws BlockBoundsError A[Block(3)]
 #     @test_throws BlockBoundsError A[Block(3)[1]]
 #     @test_throws BoundsError A[Block(3)[1:1]] # this is likely an error
