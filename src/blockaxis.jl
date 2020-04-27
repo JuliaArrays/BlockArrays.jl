@@ -192,12 +192,19 @@ function getindex(b::AbstractUnitRange{Int}, K::Block{1})
     b
 end
 
+function getindex(b::AbstractUnitRange{Int}, K::BlockRange)
+    @boundscheck K == Block.(1:1) || throw(BlockBoundsError(b, K))
+    b
+end
+
 blockaxes(b::AbstractUnitRange{Int}) = (Block.(Base.OneTo(1)),)
 
 function findblock(b::AbstractUnitRange{Int}, k::Integer)
     @boundscheck k in axes(b,1) || throw(BoundsError(b,k))
     Block(1)
 end
+
+
 
 """
    blockfirsts(a::AbstractUnitRange{Int})

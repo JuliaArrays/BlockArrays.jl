@@ -74,6 +74,8 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         b = Block.(2:5)
         @test Int.(b) === 2:5
         @test Base.OneTo.(1:5) isa Vector{Base.OneTo{Int}} #98
+        @test Base.OneTo(5)[Block.(1:1)] === Base.OneTo(5)
+        @test_throws BlockBoundsError Base.OneTo(5)[Block.(1:3)]
     end
 end
 
