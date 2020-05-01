@@ -254,6 +254,12 @@ function copyto!(block_array::PseudoBlockArray{T, N, R}, arr::R) where {T,N,R <:
     copyto!(block_array.blocks, arr)
 end
 
+function copyto!(block_array::PseudoBlockArray{T, N, R}, arr::R) where {T,N,R <: LayoutArray}
+    copyto!(block_array.blocks, arr)
+end
+
+
+
 function Base.copy(block_array::PseudoBlockArray{T, N, R}) where {T,N,R <: AbstractArray}
     copy(block_array.blocks)
 end
