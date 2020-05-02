@@ -204,8 +204,6 @@ function findblock(b::AbstractUnitRange{Int}, k::Integer)
     Block(1)
 end
 
-
-
 """
    blockfirsts(a::AbstractUnitRange{Int})
 
