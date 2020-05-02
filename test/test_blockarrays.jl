@@ -421,6 +421,15 @@ end
     B[1] = 2
     @test B[1] == 2
     @test A[1] ≠ 2
+    @testset "copyto!" begin
+        A = PseudoBlockArray(randn(6), 1:3)
+        B = BlockArray(randn(6), 1:3)
+        @test copyto!(BlockArray{Float64}(undef, 1:3), A) == A
+        @test copyto!(PseudoBlockArray{Float64}(undef, 1:3), A) == A
+
+        @test copyto!(BlockArray{Float64}(undef, 1:3), B) == B
+        @test copyto!(PseudoBlockArray{Float64}(undef, 1:3), B) == B
+    end
 end
 
 @testset "const block size" begin
