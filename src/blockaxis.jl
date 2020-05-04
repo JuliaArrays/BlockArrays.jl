@@ -187,6 +187,9 @@ Base.dataids(b::BlockedUnitRange) = Base.dataids(blocklasts(b))
 ###
 # BlockedUnitRange interface
 ###
+Base.checkindex(::Type{Bool}, b::BlockRange, K::Int) = checkindex(Bool, Int.(b), K)
+Base.checkindex(::Type{Bool}, b::AbstractUnitRange{Int}, K::Block{1}) = checkindex(Bool, blockaxes(b,1), Int(K))
+
 function getindex(b::AbstractUnitRange{Int}, K::Block{1})
     @boundscheck K == Block(1) || throw(BlockBoundsError(b, K))
     b
