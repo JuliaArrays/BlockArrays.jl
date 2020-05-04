@@ -239,6 +239,14 @@ end
     @testset "BlockIndex type piracy (#108)" begin
         @test zeros()[] == 0.0
     end
+
+    @testset "checkindex" begin
+        b = blockedrange([1,2,3])
+        @test !checkindex(Bool, b, Block(0))
+        @test checkindex(Bool, b, Block(1))
+        @test checkindex(Bool, b, Block(3))
+        @test !checkindex(Bool, b, Block(4))
+    end
 end
 
 @testset "BlockSlice" begin
