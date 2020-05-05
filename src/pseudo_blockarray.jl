@@ -100,6 +100,16 @@ PseudoBlockVector(blocks::AbstractVector, block_sizes::AbstractVector{Int}) = Ps
 PseudoBlockMatrix(blocks::AbstractMatrix, baxes::NTuple{2,AbstractUnitRange{Int}}) = PseudoBlockArray(blocks, baxes)
 PseudoBlockMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{Int},2}) = PseudoBlockArray(blocks, block_sizes...)
 
+PseudoBlockArray{T}(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = PseudoBlockArray{T}(Matrix(λ, map(length,baxes)...), baxes)
+PseudoBlockArray{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int}, 2}) where T = PseudoBlockArray{T}(λ, map(blockedrange,block_sizes))
+PseudoBlockArray(λ::UniformScaling{T}, block_sizes::Vararg{AbstractVector{Int}, 2}) where T = PseudoBlockArray{T}(λ, block_sizes...)
+PseudoBlockArray(λ::UniformScaling{T}, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = PseudoBlockArray{T}(λ, baxes)
+PseudoBlockMatrix(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) = PseudoBlockArray(λ, baxes)
+PseudoBlockMatrix(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) = PseudoBlockArray(λ, block_sizes...)
+PseudoBlockMatrix{T}(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = PseudoBlockArray{T}(λ, baxes)
+PseudoBlockMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) where T = PseudoBlockArray{T}(λ, block_sizes...)
+
+
 # Convert AbstractArrays that conform to block array interface
 convert(::Type{PseudoBlockArray{T,N,R,BS}}, A::PseudoBlockArray{T,N,R,BS}) where {T,N,R,BS} = A
 convert(::Type{PseudoBlockArray{T,N,R}}, A::PseudoBlockArray{T,N,R}) where {T,N,R} = A

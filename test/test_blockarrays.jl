@@ -74,6 +74,7 @@ end
             BlockArray(A, (blockedrange(1:3),)) == BlockArray{Int}(A, (blockedrange(1:3),)) ==
             BlockArray{Float64}(A, 1:3)
     end
+
     @testset "PseudoBlockArray constructors" begin
         ret = PseudoBlockArray{Float64}(undef, 1:3)
         fill!(ret, 0)
@@ -171,6 +172,7 @@ end
         @test a == [3,2,3]
         @test a_data == [3,2,3]
     end
+
     @testset "BlockMatrix" begin
         a_data = [1 2; 3 4]
         a = BlockMatrix(a_data,[1,1],[2])
@@ -189,6 +191,36 @@ end
         a[1] = 3
         @test a == [3 2; 3 4]
         @test a_data == [3 2; 3 4]
+    end
+
+    @testset "UniformScaling" begin
+        B = BlockArray(I, fill(2,4), fill(2,5))
+        @test B isa BlockMatrix{Bool}
+        @test B == BlockMatrix(I, fill(2,4), fill(2,5)) ==
+                    BlockArray(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                    BlockMatrix(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                    Matrix(I, 8, 10)
+        
+        B = BlockArray{Float64}(I, fill(2,4), fill(2,5))
+        @test B isa BlockMatrix{Float64}
+        @test B == BlockMatrix{Float64}(I, fill(2,4), fill(2,5)) ==
+                    BlockArray{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                    BlockMatrix{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                    Matrix(I, 8, 10)
+
+        B = PseudoBlockArray(I, fill(2,4), fill(2,5))
+        @test B isa PseudoBlockMatrix{Bool}
+        @test B == PseudoBlockMatrix(I, fill(2,4), fill(2,5)) ==
+                    PseudoBlockArray(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                    PseudoBlockMatrix(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                    Matrix(I, 8, 10)
+        
+        B = PseudoBlockArray{Float64}(I, fill(2,4), fill(2,5))
+        @test B isa PseudoBlockMatrix{Float64}
+        @test B == PseudoBlockMatrix{Float64}(I, fill(2,4), fill(2,5)) ==
+                    PseudoBlockArray{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                    PseudoBlockMatrix{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                    Matrix(I, 8, 10)
     end
 end
 
