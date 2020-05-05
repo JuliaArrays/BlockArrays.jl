@@ -172,6 +172,23 @@ import ArrayLayouts: DenseRowMajor
             @test UnitLowerTriangular(B) \ b ≈ UnitLowerTriangular(Matrix(B)) \ b
         end
     end
+
+    @testset "inv" begin
+        A = PseudoBlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
+        F = factorize(A)
+        # Defaults to QR for generality
+        @test F isa LinearAlgebra.QRCompactWY
+        B = randn(6,6)
+        @test ldiv!(F, copy(B)) ≈ Matrix(A) \ B
+        B̃ = PseudoBlockArray(copy(B),1:3,fill(2,3))
+        @test ldiv!(F, B̃) ≈ A\B ≈ Matrix(A) \ B
+
+        @test inv(A) isa PseudoBlockArray
+        @test inv(A) ≈ inv(Matrix(A))
+        @test inv(A)*A ≈ I(6)
+
+        A = BlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
+        @test inv(A) isa BlockArray
+        @test inv(A)*A ≈ I(6)
+    end
 end
-
-
