@@ -203,6 +203,15 @@ BlockVector(blocks::AbstractVector, block_sizes::AbstractVector{Int}) = BlockArr
 BlockMatrix(blocks::AbstractMatrix, baxes::NTuple{2,AbstractUnitRange{Int}}) = BlockArray(blocks, baxes)
 BlockMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{Int},2}) = BlockArray(blocks, block_sizes...)
 
+BlockArray{T}(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = BlockArray{T}(Matrix(λ, map(length,baxes)...), baxes)
+BlockArray{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int}, 2}) where T = BlockArray{T}(λ, map(blockedrange,block_sizes))
+BlockArray(λ::UniformScaling{T}, block_sizes::Vararg{AbstractVector{Int}, 2}) where T = BlockArray{T}(λ, block_sizes...)
+BlockArray(λ::UniformScaling{T}, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = BlockArray{T}(λ, baxes)
+BlockMatrix(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) = BlockArray(λ, baxes)
+BlockMatrix(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) = BlockArray(λ, block_sizes...)
+BlockMatrix{T}(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = BlockArray{T}(λ, baxes)
+BlockMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) where T = BlockArray{T}(λ, block_sizes...)
+
 """
     mortar(blocks::AbstractArray)
     mortar(blocks::AbstractArray{R, N}, sizes_1, sizes_2, ..., sizes_N)
