@@ -452,3 +452,7 @@ function rmul!(block_array::BlockArray, α::Number)
     end
     block_array
 end
+
+# Temporary work around
+Base.reshape(block_array::BlockArray, axes::NTuple{N,AbstractUnitRange{Int}}) where N = 
+    reshape(PseudoBlockArray(block_array), axes)

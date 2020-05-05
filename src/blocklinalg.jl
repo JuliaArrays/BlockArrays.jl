@@ -255,6 +255,3 @@ for UNIT in ('U', 'N')
         end
     end
 end
-
-# For now, use PseudoBlockArray
-_inv(::AbstractBlockLayout, axes, A) = BlockArray(inv(PseudoBlockArray(A)))
