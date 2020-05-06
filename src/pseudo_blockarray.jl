@@ -297,8 +297,8 @@ end
 _pseudo_reshape(block_array, axes) = PseudoBlockArray(reshape(block_array.blocks,map(length,axes)),axes)
 Base.reshape(block_array::PseudoBlockArray, axes::NTuple{N,AbstractUnitRange{Int}}) where N =
     _pseudo_reshape(block_array, axes)
-Base.reshape(block_array::PseudoBlockArray, axes::Tuple{Union{Integer,Base.OneTo}, Vararg{Union{Integer,Base.OneTo}}}) where N =
-    _pseudo_reshape(block_array, axes)
+Base.reshape(parent::PseudoBlockArray, shp::Tuple{Union{Integer,Base.OneTo}, Vararg{Union{Integer,Base.OneTo}}}) where N =
+    reshape(parent, Base.to_shape(shp))
 Base.reshape(parent::PseudoBlockArray, dims::Tuple{Int,Vararg{Int}}) =
     Base._reshape(parent, dims)
 

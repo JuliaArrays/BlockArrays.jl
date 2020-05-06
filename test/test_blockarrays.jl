@@ -105,6 +105,7 @@ end
         @test similar(Array{Float64}, axes(ret)) isa PseudoBlockArray
         @test similar(Vector{Float64}, axes(ret)) isa PseudoBlockArray
         @test similar(randn(5,5), Float64, axes(ret)) isa PseudoBlockArray
+        @test similar(ret, Float64, (Base.IdentityUnitRange(1:3),)) isa BlockArray
 
         ret = BlockArray{Float64}(undef, 1:3, 1:3)
         @test similar(typeof(ret), axes(ret)) isa BlockArray
@@ -371,6 +372,11 @@ end
     C = convert(PseudoBlockArray{Float32, 2}, A)
     @test C ≈ A ≈ PseudoBlockArray(A)
     @test eltype(C) == Float32
+
+    @test convert(BlockArray, A) === A
+    @test convert(BlockArray{Float64}, A) === A
+    @test convert(BlockMatrix{Float64}, A) === A
+    @test convert(BlockMatrix{Float64,Matrix{Matrix{Float64}}}, A) === A
 end
 
 @testset "string" begin
@@ -495,11 +501,15 @@ end
     @test reshape(A, Val(2)) isa PseudoBlockArray{Int64,2,Array{Int64,2},Tuple{BlockedUnitRange{Array{Int64,1}},Base.OneTo{Int64}}}
     @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
     @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
+    @test reshape(A, 2, 3) == reshape(A, Base.OneTo(2), 3) == reshape(Vector(A), 2, 3)
+
+    @test_throws DimensionMismatch reshape(A,3)
 
     A = PseudoBlockArray(1:6, 1:3)
     @test reshape(A, Val(2)) isa typeof(PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1))))
     @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
     @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
+    @test reshape(A, 2, 3) == reshape(A, Base.OneTo(2), 3) == reshape(Vector(A), 2, 3)
 end
 
 @testset "*" begin
