@@ -74,11 +74,11 @@ end
 _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     _BlockArray(blocks, map(blockedrange, block_sizes))
 
-# support non-concrete eltypes in blocks    
+# support non-concrete eltypes in blocks
 _BlockArray(blocks::R, block_axes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
     _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_axes)
 _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}} =
-    _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_sizes...)    
+    _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_sizes...)
 
 const BlockMatrix{T, R <: AbstractMatrix{<:AbstractMatrix{T}}} = BlockArray{T, 2, R}
 const BlockVector{T, R <: AbstractVector{<:AbstractVector{T}}} = BlockArray{T, 1, R}
@@ -165,7 +165,7 @@ initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}
 
 
 @inline BlockArray{T,N,R,BS}(::UndefInitializer, sizes::NTuple{N,Int}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
-    BlockArray{T,N,R,BS}(undef, convert(BS, map(Base.OneTo, sizes)))    
+    BlockArray{T,N,R,BS}(undef, convert(BS, map(Base.OneTo, sizes)))
 
 function BlockArray{T}(arr::AbstractArray{V, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,V,N}
     for i in 1:N
@@ -176,7 +176,7 @@ function BlockArray{T}(arr::AbstractArray{V, N}, block_sizes::Vararg{AbstractVec
     BlockArray{T}(arr, map(blockedrange,block_sizes))
 end
 
-BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N} = 
+BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N} =
     BlockArray{T}(arr, block_sizes...)
 
 @generated function BlockArray{T}(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
@@ -347,22 +347,22 @@ end
 
 
 @inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)   
+    BlockArray{T}(undef, axes)
 @inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)   
+    BlockArray{T}(undef, axes)
 @inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)   
-          
+    BlockArray{T}(undef, axes)
+
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)  
+    BlockArray{T}(undef, axes)
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)          
+    BlockArray{T}(undef, axes)
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes) 
-    
+    BlockArray{T}(undef, axes)
+
 const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange, Colon}
 
-# avoid ambiguities    
+# avoid ambiguities
 @inline Base.similar(block_array::BlockArray, ::Type{T}, dims::NTuple{N,Int}) where {T,N} =
     Array{T}(undef, dims)
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{OffsetAxis,Vararg{OffsetAxis}}) where T =
@@ -454,5 +454,11 @@ function rmul!(block_array::BlockArray, α::Number)
 end
 
 # Temporary work around
-Base.reshape(block_array::BlockArray, axes::NTuple{N,AbstractUnitRange{Int}}) where N = 
+Base.reshape(block_array::BlockArray, axes::NTuple{N,AbstractUnitRange{Int}}) where N =
     reshape(PseudoBlockArray(block_array), axes)
+Base.reshape(block_array::BlockArray, dims::Tuple{Int,Vararg{Int}}) =
+    reshape(PseudoBlockArray(block_array), dims)
+Base.reshape(block_array::BlockArray, axes::Tuple{Union{Integer,Base.OneTo}, Vararg{Union{Integer,Base.OneTo}}}) =
+    reshape(PseudoBlockArray(block_array), axes)
+Base.reshape(block_array::BlockArray, dims::Tuple{Vararg{Union{Int,Colon}}}) =
+    reshape(PseudoBlockArray(block_array), dims)
