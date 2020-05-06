@@ -185,10 +185,10 @@ import ArrayLayouts: DenseRowMajor
 
         @test inv(A) isa PseudoBlockArray
         @test inv(A) ≈ inv(Matrix(A))
-        @test inv(A)*A ≈ I(6)
+        @test inv(A)*A ≈ Matrix(I,6,6)
 
         A = BlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
         @test inv(A) isa BlockArray
-        @test inv(A)*A ≈ I(6)
+        @test inv(A)*A ≈ Matrix(I,6,6)
     end
 end
