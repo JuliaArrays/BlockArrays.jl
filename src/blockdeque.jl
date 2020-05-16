@@ -16,7 +16,7 @@ Base.append!(dest::BlockVector, sources...; alias::Bool = false) =
 
 function Base.append!(dest::BlockVector, src; alias::Bool = false)
     if _blocktype(dest) === _blocktype(src) && alias
-        return append_nocopy!(dest, src)
+        return blockappend!(dest, src)
     else
         return append_copy!(dest, src)
     end
@@ -27,7 +27,14 @@ _blocktype(::T) where {T<:AbstractArray} = T
 _blocktype(::BlockArray{<:Any,<:Any,<:AbstractArray{T}}) where {T<:AbstractArray} = T
 _blocktype(::PseudoBlockArray{<:Any,<:Any,T}) where {T<:AbstractArray} = T
 
-function append_nocopy!(dest::BlockVector{<:Any,T}, src::BlockVector{<:Any,T}) where {T}
+"""
+    blockappend!(dest::BlockVector, src)
+
+Append blocks from `src` to `dest`.  When `src` is a vector of the same type
+as the blocks of `dest`, or a `PseudoBlockVector` with the same underlying
+array type, a single vector block is appended to `dest`.
+"""
+function blockappend!(dest::BlockVector{<:Any,T}, src::BlockVector{<:Any,T}) where {T}
     isempty(src) && return dest
     append!(dest.blocks, src.blocks)
     offset = last(dest.axes[1]) + 1 - src.axes[1].first
@@ -35,12 +42,12 @@ function append_nocopy!(dest::BlockVector{<:Any,T}, src::BlockVector{<:Any,T}) w
     return dest
 end
 
-append_nocopy!(
+blockappend!(
     dest::BlockVector{<:Any,<:AbstractArray{T}},
     src::PseudoBlockVector{<:Any,T},
-) where {T} = append_nocopy!(dest, src.blocks)
+) where {T} = blockappend!(dest, src.blocks)
 
-function append_nocopy!(dest::BlockVector{<:Any,<:AbstractArray{T}}, src::T) where {T}
+function blockappend!(dest::BlockVector{<:Any,<:AbstractArray{T}}, src::T) where {T}
     isempty(src) && return dest
     push!(dest.blocks, src)
     push!(dest.axes[1].lasts, last(dest.axes[1]) + length(src))

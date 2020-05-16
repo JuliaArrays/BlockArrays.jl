@@ -25,6 +25,20 @@ using BlockArrays, Test
 
         @test append!(dest, src; alias = alias) === dest
         @test dest == 1:9
+
+        @test dest[Block(1)] == [1, 2, 3]
+        if alias && compatible
+            @test dest[Block(2)] == [4, 5]
+            if srctype === :BlockVector
+                @test dest[Block(3)] == [6, 7]
+                @test dest[Block(4)] == [8, 9]
+            else
+                @test dest[Block(3)] == [6, 7, 8, 9]
+            end
+        else
+            @test dest[Block(2)] == 4:9
+        end
+
         src[1] = 666
         if alias && compatible
             @test dest[6] == 666
