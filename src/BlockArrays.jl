@@ -16,7 +16,7 @@ export undef_blocks, undef, findblock, findblockindex
 
 export khatri_rao
 
-export blockappend!
+export blockappend!, blockpush!
 
 import Base: @propagate_inbounds, Array, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,

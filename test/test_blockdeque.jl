@@ -45,6 +45,40 @@ using BlockArrays, Test
             @test dest[6] == 6
         end
     end
+
+    @testset "empty blocks" begin
+        dest = mortar([[1, 2, 3], [4, 5]])
+        @test blockappend!(dest, mortar([Int[]])) === dest == 1:5
+        @test blocklength(dest) == 3
+        @test blockappend!(dest, mortar([Int[], Int[]])) === dest == 1:5
+        @test blocklength(dest) == 5
+    end
+end
+
+@testset "blockpush!(::BlockVector, _)" begin
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpush!(dest, [6]) === dest == 1:6
+    @test blocklength(dest) == 3
+
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpush!(dest, [6.0]) === dest == 1:6
+    @test blocklength(dest) == 3
+
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpush!(dest, Int[]) === dest == 1:5
+    @test blocklength(dest) == 3
+
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpush!(dest, (6, 7.0)) === dest == 1:7
+    @test blocklength(dest) == 3
+
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpush!(dest, (x for x in 6:7 if iseven(x))) === dest == 1:6
+    @test blocklength(dest) == 3
+
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpush!(dest, [6], Int[], 7:8) === dest == 1:8
+    @test blocklength(dest) == 5
 end
 
 @testset "append!(::BlockVector, _)" begin

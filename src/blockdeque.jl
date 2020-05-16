@@ -31,7 +31,6 @@ blockappend!(dest::BlockVector, s1, s2, sources...) =
     foldl(blockappend!, (s1, s2, sources...); init = dest)
 
 function blockappend!(dest::BlockVector{<:Any,T}, src::BlockVector{<:Any,T}) where {T}
-    isempty(src) && return dest
     append!(dest.blocks, src.blocks)
     offset = last(dest.axes[1]) + 1 - src.axes[1].first
     append!(dest.axes[1].lasts, (n + offset for n in src.axes[1].lasts))
@@ -43,27 +42,69 @@ function blockappend!(
     src::PseudoBlockVector{<:Any,T},
 ) where {T}
     if blocklength(src) == 1
-        return blockappend!(dest, src.blocks)
+        return _blockpush!(dest, src.blocks)
     else
         return blockappend_fallback!(dest, src)
     end
 end
 
-function blockappend!(
+blockappend!(
     dest::BlockVector{<:Any,<:AbstractArray{T}},
     src::T,
-) where {T<:AbstractVector}
-    isempty(src) && return dest
-    push!(dest.blocks, src)
-    push!(dest.axes[1].lasts, last(dest.axes[1]) + length(src))
-    return dest
-end
+) where {T<:AbstractVector} = _blockpush!(dest, src)
 
 blockappend!(dest::BlockVector{<:Any,<:Any}, src::AbstractVector) =
     blockappend_fallback!(dest, src)
 
 blockappend_fallback!(dest::BlockVector{<:Any,<:AbstractArray{T}}, src) where {T} =
     blockappend!(dest, mortar([convert(T, @view src[b]) for b in blockaxes(src, 1)]))
+
+"""
+    blockpush!(dest::BlockVector, blocks...) -> dest
+
+Push `blocks` to `dest`.
+
+This function avoids copying the elements of the `blocks` when these blocks
+are compatible with `dest`.  Importantly, this means that mutating `blocks`
+afterwards alters the items in `dest` and it may even break the invariance
+of `dest` if the length of `blocks` are changed.
+
+# Examples
+```jldoctest
+julia> using BlockArrays
+
+julia> blockpush!(mortar([[1], [2, 3]]), [4, 5], [6])
+4-blocked 6-element BlockArray{Int64,1}:
+ 1
+ ─
+ 2
+ 3
+ ─
+ 4
+ 5
+ ─
+ 6
+```
+"""
+blockpush!(dest::BlockVector, blocks...) = foldl(blockpush!, blocks; init = dest)
+
+blockpush!(dest::BlockVector{<:Any,<:AbstractArray{T}}, block::T) where {T} =
+    _blockpush!(dest, block)
+
+function blockpush!(dest::BlockVector, block)
+    if Iterators.IteratorSize(block) isa Union{Base.HasShape,Base.HasLength}
+        newblock = copyto!(eltype(dest.blocks)(undef, length(block)), block)
+    else
+        newblock = foldl(push!, block; init = eltype(dest.blocks)(undef, 0))
+    end
+    return _blockpush!(dest, newblock)
+end
+
+function _blockpush!(dest, block)
+    push!(dest.blocks, block)
+    push!(dest.axes[1].lasts, last(dest.axes[1]) + length(block))
+    return dest
+end
 
 """
     append!(dest::BlockVector, sources...)

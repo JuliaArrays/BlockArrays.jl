@@ -51,6 +51,7 @@ undef_blocks
 UndefBlocksInitializer
 mortar
 blockappend!
+blockpush!
 Base.append!
 Base.push!
 Base.pushfirst!
