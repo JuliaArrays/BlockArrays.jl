@@ -81,6 +81,46 @@ end
     @test blocklength(dest) == 5
 end
 
+@testset "blockpushfirst!(::BlockVector, _)" begin
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpushfirst!(dest, [0]) === dest == 0:5
+    @test blocklength(dest) == 3
+
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpushfirst!(dest, [0.0]) === dest == 0:5
+    @test blocklength(dest) == 3
+
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpushfirst!(dest, Int[]) === dest == 1:5
+    @test blocklength(dest) == 3
+
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpushfirst!(dest, (-1, 0.0)) === dest == -1:5
+    @test blocklength(dest) == 3
+
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpushfirst!(dest, (x for x in -1:0 if iseven(x))) === dest == 0:5
+    @test blocklength(dest) == 3
+
+    dest = mortar([[1, 2, 3], [4, 5]])
+    @test blockpushfirst!(dest, [-2], Int[], -1:0) === dest == -2:5
+    @test blocklength(dest) == 5
+end
+
+@testset "blockpop!(::BlockVector, _)" begin
+    A = mortar([[1, 2, 3], [4, 5]])
+    @test blockpop!(A) == 4:5
+    @test A == 1:3
+    @test A[Block(1)] == 1:3
+end
+
+@testset "blockpopfirst!(::BlockVector, _)" begin
+    A = mortar([[1, 2, 3], [4, 5]])
+    @test blockpopfirst!(A) == 1:3
+    @test A == 4:5
+    @test A[Block(1)] == 4:5
+end
+
 @testset "append!(::BlockVector, _)" begin
     @testset "$label" for (label, itr) in [
         "UnitRange" => 6:9,

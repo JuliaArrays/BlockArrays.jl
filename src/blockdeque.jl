@@ -62,7 +62,7 @@ blockappend_fallback!(dest::BlockVector{<:Any,<:AbstractArray{T}}, src) where {T
 """
     blockpush!(dest::BlockVector, blocks...) -> dest
 
-Push `blocks` to `dest`.
+Push `blocks` to the end of `dest`.
 
 This function avoids copying the elements of the `blocks` when these blocks
 are compatible with `dest`.  Importantly, this means that mutating `blocks`
@@ -91,19 +91,117 @@ blockpush!(dest::BlockVector, blocks...) = foldl(blockpush!, blocks; init = dest
 blockpush!(dest::BlockVector{<:Any,<:AbstractArray{T}}, block::T) where {T} =
     _blockpush!(dest, block)
 
-function blockpush!(dest::BlockVector, block)
+blockpush!(dest::BlockVector, block) = _blockpush!(dest, _newblockfor(dest, block))
+
+_newblockfor(dest, block) =
     if Iterators.IteratorSize(block) isa Union{Base.HasShape,Base.HasLength}
-        newblock = copyto!(eltype(dest.blocks)(undef, length(block)), block)
+        copyto!(eltype(dest.blocks)(undef, length(block)), block)
     else
-        newblock = foldl(push!, block; init = eltype(dest.blocks)(undef, 0))
+        foldl(push!, block; init = eltype(dest.blocks)(undef, 0))
     end
-    return _blockpush!(dest, newblock)
-end
 
 function _blockpush!(dest, block)
     push!(dest.blocks, block)
     push!(dest.axes[1].lasts, last(dest.axes[1]) + length(block))
     return dest
+end
+
+"""
+    blockpushfirst!(dest::BlockVector, blocks...) -> dest
+
+Push `blocks` to the beginning of `dest`.  See also [`blockpush!`](@ref).
+
+This function avoids copying the elements of the `blocks` when these blocks
+are compatible with `dest`.  Importantly, this means that mutating `blocks`
+afterwards alters the items in `dest` and it may even break the invariance
+of `dest` if the length of `blocks` are changed.
+
+# Examples
+```jldoctest
+julia> using BlockArrays
+
+julia> blockpushfirst!(mortar([[1], [2, 3]]), [4, 5], [6])
+4-blocked 6-element BlockArray{Int64,1}:
+ 4
+ 5
+ ─
+ 6
+ ─
+ 1
+ ─
+ 2
+ 3
+```
+"""
+blockpushfirst!(A::BlockVector, b1, b2, blocks...) =
+    foldl(blockpushfirst!, reverse((b1, b2, blocks...)); init = A)
+
+blockpushfirst!(dest::BlockVector{<:Any,<:AbstractArray{T}}, block::T) where {T} =
+    _blockpushfirst!(dest, block)
+
+blockpushfirst!(dest::BlockVector{<:Any,<:Any}, block) =
+    _blockpushfirst!(dest, _newblockfor(dest, block))
+
+function _blockpushfirst!(dest, block)
+    pushfirst!(dest.blocks, block)
+    dest.axes[1].lasts .+= length(block) - 1 + dest.axes[1].first
+    pushfirst!(dest.axes[1].lasts, length(block))
+    return dest
+end
+
+"""
+    blockpop!(A::BlockVector) -> block
+
+Pop a `block` from the end of `dest`.
+
+# Examples
+```jldoctest
+julia> using BlockArrays
+
+julia> A = mortar([[1], [2, 3]]);
+
+julia> blockpop!(A)
+2-element Array{Int64,1}:
+ 2
+ 3
+
+julia> A
+1-blocked 1-element BlockArray{Int64,1}:
+ 1
+```
+"""
+function blockpop!(A::BlockVector)
+    block = pop!(A.blocks)
+    pop!(A.axes[1].lasts)
+    return block
+end
+
+"""
+    blockpopfirst!(dest::BlockVector) -> block
+
+Pop a `block` from the beginning of `dest`.
+
+# Examples
+```jldoctest
+julia> using BlockArrays
+
+julia> A = mortar([[1], [2, 3]]);
+
+julia> blockpopfirst!(A)
+1-element Array{Int64,1}:
+ 1
+
+julia> A
+1-blocked 2-element BlockArray{Int64,1}:
+ 2
+ 3
+```
+"""
+function blockpopfirst!(A::BlockVector)
+    block = popfirst!(A.blocks)
+    n = popfirst!(A.axes[1].lasts)
+    A.axes[1].lasts .-= n
+    return block
 end
 
 """
