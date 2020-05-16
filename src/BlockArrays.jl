@@ -48,5 +48,7 @@ include("blockarrayinterface.jl")
 include("blockbroadcast.jl")
 include("blocklinalg.jl")
 include("blockproduct.jl")
+include("blockreduce.jl")
+include("blockdeque.jl")
 
 end # module
