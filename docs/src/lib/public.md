@@ -36,6 +36,7 @@ blocksize
 blockfirsts
 blocklasts
 blocklengths
+blocks
 eachblock
 getblock
 getblock!

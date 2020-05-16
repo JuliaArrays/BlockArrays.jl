@@ -4,7 +4,7 @@ using LinearAlgebra, ArrayLayouts
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
-export Block, getblock, getblock!, setblock!, eachblock
+export Block, getblock, getblock!, setblock!, eachblock, blocks
 export blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, BlockIndex
 export blocklengths, blocklasts, blockfirsts, blockisequal
 export BlockRange, blockedrange, BlockedUnitRange
@@ -37,6 +37,20 @@ import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdi
                         materialize!, MemoryLayout, sublayout, transposelayout, conjlayout, 
                         triangularlayout, triangulardata, _inv
 
+if !@isdefined(only)
+    @propagate_inbounds function only(x)
+        i = iterate(x)
+        @boundscheck if i === nothing
+            throw(ArgumentError("Collection is empty, must contain exactly 1 element"))
+        end
+        (ret, state) = i
+        @boundscheck if iterate(x, state) !== nothing
+            throw(ArgumentError("Collection has multiple elements, must contain exactly 1 element"))
+        end
+        return ret
+    end
+end
+
 include("blockindices.jl")                        
 include("blockaxis.jl")
 include("abstractblockarray.jl")
@@ -44,6 +58,7 @@ include("blockarray.jl")
 include("pseudo_blockarray.jl")
 include("views.jl")
 include("show.jl")
+include("blocks.jl")
 include("blockarrayinterface.jl")
 include("blockbroadcast.jl")
 include("blocklinalg.jl")

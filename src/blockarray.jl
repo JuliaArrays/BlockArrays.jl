@@ -220,6 +220,8 @@ BlockMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) w
 Construct a `BlockArray` from `blocks`.  `block_sizes` is computed from
 `blocks` if it is not given.
 
+This is an "inverse" of [`blocks`](@ref).
+
 # Examples
 ```jldoctest; setup = quote using BlockArrays end
 julia> blocks = permutedims(reshape([
