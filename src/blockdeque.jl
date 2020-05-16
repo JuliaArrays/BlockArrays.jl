@@ -1,39 +1,35 @@
 """
-    append!(dest::BlockVector, sources...; alias = false)
+    blockappend!(dest::BlockVector, sources...) -> dest
 
-Append items from `sources` to the last block of `dest`.  If `alias = true`,
-append the blocks in `sources` as-is if they are compatible with the internal
-block array type of `dest`.  Importantly, this means that mutating `sources`
-afterwards alters the items in `dest` and it may even break the invariance
-of `dest` if the length of `sources` are changed.  The elements may be copied
-even if `alias = true` if the corresponding implementation does not exist.
+Append blocks from `sources` to `dest`.  The number of blocks in `dest` are
+increased by `sum(blocklength, sources)`.
+
+This function avoids copying the elements of the blocks in `sources` when
+these blocks are compatible with `dest`.  Importantly, this means that
+mutating `sources` afterwards alters the items in `dest` and it may even
+break the invariance of `dest` if the length of `sources` are changed.
 
 The blocks in `dest` must not alias with `sources` or components of them.
-For example, the result of `append!(x, x)` is undefined.
+For example, the result of `blockappend!(x, x)` is undefined.
+
+# Examples
+```jldoctest
+julia> using BlockArrays
+
+julia> blockappend!(mortar([[1], [2, 3]]), mortar([[4, 5]]))
+3-blocked 5-element BlockArray{Int64,1}:
+ 1
+ ─
+ 2
+ 3
+ ─
+ 4
+ 5
+```
 """
-Base.append!(dest::BlockVector, sources...; alias::Bool = false) =
-    foldl((d, s) -> append!(d, s; alias = alias), sources; init = dest)
+blockappend!(dest::BlockVector, s1, s2, sources...) =
+    foldl(blockappend!, (s1, s2, sources...); init = dest)
 
-function Base.append!(dest::BlockVector, src; alias::Bool = false)
-    if _blocktype(dest) === _blocktype(src) && alias
-        return blockappend!(dest, src)
-    else
-        return append_copy!(dest, src)
-    end
-end
-
-_blocktype(::Any) = nothing
-_blocktype(::T) where {T<:AbstractArray} = T
-_blocktype(::BlockArray{<:Any,<:Any,<:AbstractArray{T}}) where {T<:AbstractArray} = T
-_blocktype(::PseudoBlockArray{<:Any,<:Any,T}) where {T<:AbstractArray} = T
-
-"""
-    blockappend!(dest::BlockVector, src)
-
-Append blocks from `src` to `dest`.  When `src` is a vector of the same type
-as the blocks of `dest`, or a `PseudoBlockVector` with the same underlying
-array type, a single vector block is appended to `dest`.
-"""
 function blockappend!(dest::BlockVector{<:Any,T}, src::BlockVector{<:Any,T}) where {T}
     isempty(src) && return dest
     append!(dest.blocks, src.blocks)
@@ -42,21 +38,60 @@ function blockappend!(dest::BlockVector{<:Any,T}, src::BlockVector{<:Any,T}) whe
     return dest
 end
 
-blockappend!(
+function blockappend!(
     dest::BlockVector{<:Any,<:AbstractArray{T}},
     src::PseudoBlockVector{<:Any,T},
-) where {T} = blockappend!(dest, src.blocks)
+) where {T}
+    if blocklength(src) == 1
+        return blockappend!(dest, src.blocks)
+    else
+        return blockappend_fallback!(dest, src)
+    end
+end
 
-function blockappend!(dest::BlockVector{<:Any,<:AbstractArray{T}}, src::T) where {T}
+function blockappend!(
+    dest::BlockVector{<:Any,<:AbstractArray{T}},
+    src::T,
+) where {T<:AbstractVector}
     isempty(src) && return dest
     push!(dest.blocks, src)
     push!(dest.axes[1].lasts, last(dest.axes[1]) + length(src))
     return dest
 end
 
-append_copy!(dest::BlockVector, src) = _append_copy!(dest, Base.IteratorSize(src), src)
+blockappend!(dest::BlockVector{<:Any,<:Any}, src::AbstractVector) =
+    blockappend_fallback!(dest, src)
 
-function _append_copy!(dest::BlockVector, ::Union{Base.HasShape,Base.HasLength}, src)
+blockappend_fallback!(dest::BlockVector{<:Any,<:AbstractArray{T}}, src) where {T} =
+    blockappend!(dest, mortar([convert(T, @view src[b]) for b in blockaxes(src, 1)]))
+
+"""
+    append!(dest::BlockVector, sources...)
+
+Append items from `sources` to the last block of `dest`.
+
+The blocks in `dest` must not alias with `sources` or components of them.
+For example, the result of `append!(x, x)` is undefined.
+
+# Examples
+```jldoctest
+julia> using BlockArrays
+
+julia> append!(mortar([[1], [2, 3]]), mortar([[4], [5]]))
+2-blocked 5-element BlockArray{Int64,1}:
+ 1
+ ─
+ 2
+ 3
+ 4
+ 5
+```
+"""
+Base.append!(dest::BlockVector, sources...) = foldl(append!, sources; init = dest)
+
+Base.append!(dest::BlockVector, src) = append_itr!(dest, Base.IteratorSize(src), src)
+
+function append_itr!(dest::BlockVector, ::Union{Base.HasShape,Base.HasLength}, src)
     block = dest.blocks[end]
     li = lastindex(block)
     resize!(block, length(block) + length(src))
@@ -72,7 +107,7 @@ function _append_copy!(dest::BlockVector, ::Union{Base.HasShape,Base.HasLength},
     return dest
 end
 
-function _append_copy!(dest::BlockVector, ::Base.SizeUnknown, src)
+function append_itr!(dest::BlockVector, ::Base.SizeUnknown, src)
     block = dest.blocks[end]
     # Equivalent to `n = 0; for x in src; ...; end` but (maybe) faster:
     n = foldl(src, init = 0) do n, x

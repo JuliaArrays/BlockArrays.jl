@@ -1,9 +1,8 @@
 using BlockArrays, Test
 
-@testset "append!(::BlockVector, vector)" begin
-    @testset for alias in [false, true],
-        compatible in [false, true],
-        srctype in [:BlockVector, :PseudoBlockVector, :Vector]
+@testset "blockappend!(::BlockVector, _)" begin
+    @testset for compatible in [false, true],
+        srctype in [:BlockVector, :PseudoBlockVector, :PseudoBlockVector2, :Vector]
 
         dest = mortar([[1, 2, 3], [4, 5]])
 
@@ -16,31 +15,31 @@ using BlockArrays, Test
         if srctype === :BlockVector
             src = mortar([T[6, 7], T[8, 9]])
         elseif srctype === :PseudoBlockVector
-            src = PseudoBlockVector(T[6:9;], [3, 1])
+            src = PseudoBlockVector(T[6:9;], [4])
+        elseif srctype === :PseudoBlockVector2
+            src = PseudoBlockVector(T[6:9;], [2, 2])
         elseif srctype === :Vector
             src = T[6:9;]
         else
             error("Unknown srctype = $srctype")
         end
 
-        @test append!(dest, src; alias = alias) === dest
+        @test blockappend!(dest, src) === dest
         @test dest == 1:9
 
         @test dest[Block(1)] == [1, 2, 3]
-        if alias && compatible
-            @test dest[Block(2)] == [4, 5]
-            if srctype === :BlockVector
-                @test dest[Block(3)] == [6, 7]
-                @test dest[Block(4)] == [8, 9]
-            else
-                @test dest[Block(3)] == [6, 7, 8, 9]
-            end
+        @test dest[Block(2)] == [4, 5]
+        if blocklength(src) == 2
+            @test dest[Block(3)] == [6, 7]
+            @test dest[Block(4)] == [8, 9]
+        elseif blocklength(src) == 1
+            @test dest[Block(3)] == 6:9
         else
-            @test dest[Block(2)] == 4:9
+            error("Unexpected: blocklength(src) = ", blocklength(src))
         end
 
         src[1] = 666
-        if alias && compatible
+        if compatible && srctype !== :PseudoBlockVector2
             @test dest[6] == 666
         else
             @test dest[6] == 6
@@ -48,14 +47,18 @@ using BlockArrays, Test
     end
 end
 
-@testset "append!(::BlockVector, iterator)" begin
+@testset "append!(::BlockVector, _)" begin
     @testset "$label" for (label, itr) in [
+        "UnitRange" => 6:9,
+        "BlockVector" => mortar([[6, 7], [8, 9]]),
         "with length" => (x + 0 for x in 6:9),
         "no length" => (x for x in 6:9 if x > 0),
     ]
         dest = mortar([[1, 2, 3], [4, 5]])
         @test append!(dest, itr) === dest
         @test dest == 1:9
+        @test dest[Block(1)] == [1, 2, 3]
+        @test dest[Block(2)] == 4:9
     end
 end
 
