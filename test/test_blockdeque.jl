@@ -54,7 +54,7 @@ end
         "no length" => (x for x in 6:9 if x > 0),
     ]
         dest = mortar([[1, 2, 3], [4, 5]])
-        @test append!(dest, src) === dest
+        @test append!(dest, itr) === dest
         @test dest == 1:9
     end
 end
