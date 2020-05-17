@@ -3,6 +3,7 @@ using Test, BlockArrays
 @testset "blocks(::BlockVector)" begin
     vector_blocks = [[1, 2], [3, 4, 5], Int[]]
     @test blocks(mortar(vector_blocks)) === vector_blocks
+    @test blocks(view(mortar(vector_blocks), Block(1):Block(2))) == vector_blocks[1:2]
 end
 
 @testset "blocks(::BlockMatrix)" begin
@@ -11,6 +12,8 @@ end
         3ones(2, 3), 4ones(2, 2),
     ], (2, 2)))
     @test blocks(mortar(matrix_blocks)) === matrix_blocks
+    @test blocks(view(mortar(matrix_blocks), Block(1):Block(2), Block(2):Block(2))) ==
+          matrix_blocks[1:2, 2:2]
 end
 
 @testset "blocks(::PseudoBlockVector)" begin
