@@ -51,6 +51,13 @@ blocks(a::BlockArray) = a.blocks
 blocks(A::Adjoint) = adjoint(blocks(parent(A)))
 blocks(A::Transpose) = transpose(blocks(parent(A)))
 
+# convert a tuple of BlockRange to a tuple of `AbstractUnitRange{Int}`
+_blockrange2int() = ()
+_blockrange2int(A, B...) = tuple(Int.(A.block), _blockrange2int(B...)...)
+
+blocks(A::SubArray{<:Any,N,<:Any,<:NTuple{N,BlockSlice}}) where N =
+    view(blocks(parent(A)), _blockrange2int(parentindices(A)...)...)
+
 struct BlocksView{
     S,                            # eltype(eltype(BlocksView(...)))
     N,                            # ndims
