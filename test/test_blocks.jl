@@ -63,3 +63,11 @@ end
     @test m[1, 1] == 123
     @test parent(blocks(m)[1, 1]) === m
 end
+
+@testset "blocks(::Adjoint|Transpose)" begin
+    m = BlockArray([rand(ComplexF64, 2, 2) for _ in 1:3, _ in 1:5], [1, 2], [2, 3])
+    @testset for i in 1:2, j in 1:2
+        @test blocks(m')[i, j] == m'[Block(i), Block(j)]
+        @test blocks(transpose(m))[i, j] == transpose(m)[Block(i), Block(j)]
+    end
+end

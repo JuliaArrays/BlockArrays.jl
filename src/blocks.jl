@@ -48,6 +48,8 @@ julia> a  # in-place mutation is reflected to the block array
 blocks(a::AbstractArray) = blocks(PseudoBlockArray(a, axes(a)))
 blocks(a::AbstractBlockArray) = BlocksView(a)
 blocks(a::BlockArray) = a.blocks
+blocks(A::Adjoint) = adjoint(blocks(parent(A)))
+blocks(A::Transpose) = transpose(blocks(parent(A)))
 
 struct BlocksView{
     S,                            # eltype(eltype(BlocksView(...)))
