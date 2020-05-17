@@ -13,9 +13,7 @@ Singleton type used in block array initialization, indicating the
 array-constructor-caller would like an uninitialized block array. See also
 undef_blocks (@ref), an alias for UndefBlocksInitializer().
 
-Examples
-
-≡≡≡≡≡≡≡≡≡≡
+# Examples
 ```julia
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockArray{Float32,2}:
@@ -23,7 +21,7 @@ julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
  ────────────────────────┼────────────────
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
- ```
+```
 """
 struct UndefBlocksInitializer end
 
@@ -34,9 +32,7 @@ Alias for UndefBlocksInitializer(), which constructs an instance of the singleto
 type UndefBlocksInitializer (@ref), used in block array initialization to indicate the
 array-constructor-caller would like an uninitialized block array.
 
-Examples
-
-≡≡≡≡≡≡≡≡≡≡
+# Examples
 ```julia
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockArray{Float32,2}:
@@ -44,7 +40,7 @@ julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
  ------------------------┼----------------
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
- ```
+```
 """
 const undef_blocks = UndefBlocksInitializer()
 
