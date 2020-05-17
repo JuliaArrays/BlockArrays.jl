@@ -212,6 +212,14 @@ BlockMatrix(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) = Bl
 BlockMatrix{T}(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = BlockArray{T}(λ, baxes)
 BlockMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) where T = BlockArray{T}(λ, block_sizes...)
 
+
+"""
+   blocks(A::AbstractArray)
+
+returns a matrix of the blocks of `A`.
+"""
+blocks(A::BlockArray) = A.blocks
+
 """
     mortar(blocks::AbstractArray)
     mortar(blocks::AbstractArray{R, N}, sizes_1, sizes_2, ..., sizes_N)

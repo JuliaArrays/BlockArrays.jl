@@ -88,12 +88,6 @@ function _blockarray_print_matrix_row(io::IO,
     end
 end
 
-
-Base.print_matrix_row(io::IO,
-        X::AbstractBlockVecOrMat, A::Vector,
-        i::Integer, cols::AbstractVector, sep::AbstractString) =
-        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
-
 function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},NTuple{N,DefaultBlockAxis}}) where {T,N}
     Base.show_type_name(io, typeof(a).name)
     print(io, '{')
@@ -102,6 +96,11 @@ function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},NTuple{N,Def
     show(io, N)
     print(io, '}')
 end
+
+layout_print_matrix_row(::Tuple{BlockedUnitRange}, io, X, A, i, cols, sep) =
+        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
+layout_print_matrix_row(::NTuple{2,BlockedUnitRange}, io, X, A, i, cols, sep) =
+        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
 function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,DefaultBlockAxis}}) where {T,N}
     Base.show_type_name(io, typeof(a).name)
@@ -112,13 +111,7 @@ function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,Defaul
     print(io, '}')
 end
 
-
 ## Cumsum
-
-Base.print_matrix_row(io::IO,
-        X::BlockedUnitRange, A::Vector,
-        i::Integer, cols::AbstractVector, sep::AbstractString) =
-        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
 Base.show(io::IO, mimetype::MIME"text/plain", a::BlockedUnitRange) = 
     Base.invoke(show, Tuple{typeof(io),MIME"text/plain",AbstractArray},io, mimetype, a)

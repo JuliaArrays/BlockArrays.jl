@@ -35,7 +35,8 @@ import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
                         StructuredMatrixStyle
 import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdivVec,
                         materialize!, MemoryLayout, sublayout, transposelayout, conjlayout, 
-                        triangularlayout, triangulardata, _inv
+                        triangularlayout, triangulardata, _inv, _copyto!, layout_print_matrix_row,
+                        colsupport, rowsupport
 
 include("blockindices.jl")                        
 include("blockaxis.jl")
@@ -43,10 +44,10 @@ include("abstractblockarray.jl")
 include("blockarray.jl")
 include("pseudo_blockarray.jl")
 include("views.jl")
-include("show.jl")
 include("blockarrayinterface.jl")
 include("blockbroadcast.jl")
 include("blocklinalg.jl")
 include("blockproduct.jl")
+include("show.jl")
 
 end # module

@@ -28,23 +28,46 @@ end
 
 
 abstract type AbstractBlockLayout <: MemoryLayout end
-struct BlockLayout{LAY} <: AbstractBlockLayout end
+struct BlockLayout{ArrLay,BlockLay} <: AbstractBlockLayout end
 
+function colsupport(::BlockLayout, A, j)
+    KR = colsupport(blocks(A), Int(findblock(axes(A,2), j)))
+    axes(A,1)[Block.(KR)]
+end
 
-similar(M::MulAdd{<:AbstractBlockLayout,<:AbstractBlockLayout}, ::Type{T}, axes) where {T,N} = 
+function rowsupport(::BlockLayout, A, k)
+    JR = rowsupport(blocks(A), Int(findblock(axes(A,1), k)))
+    axes(A,2)[Block.(JR)]
+end
+
+similar(M::MulAdd{<:AbstractBlockLayout,<:AbstractBlockLayout}, ::Type{T}, axes) where {T,N} =
     similar(BlockArray{T}, axes)
 
 MemoryLayout(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = MemoryLayout(R)
-MemoryLayout(::Type{<:BlockArray{T,N,R}}) where {T,N,R} = BlockLayout{typeof(MemoryLayout(R))}()
+MemoryLayout(::Type{<:BlockArray{T,N,R}}) where {T,N,D,R<:AbstractArray{D,N}} =
+    BlockLayout{typeof(MemoryLayout(R)),typeof(MemoryLayout(D))}()
 
-sublayout(::BlockLayout{LAY}, ::Type{NTuple{N,BlockSlice1}}) where {LAY,N} = LAY()
-sublayout(BL::BlockLayout, ::Type{<:NTuple{N,BlockSlice}}) where N = BL
+sublayout(::BlockLayout{MLAY,BLAY}, ::Type{NTuple{N,BlockSlice1}}) where {MLAY,BLAY,N} = BLAY()
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:BlockSlice{BlockRange{1,Tuple{II}}}}}) where {N,MLAY,BLAY,II} =
+    BlockLayout{typeof(sublayout(MLAY(),NTuple{N,II})), BLAY}()
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{BlockSlice1,<:BlockSlice{BlockRange{1,Tuple{II}}}}}) where {MLAY,BLAY,II} =
+    BlockLayout{typeof(sublayout(MLAY(),Tuple{Int,II})), BLAY}()
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{<:BlockSlice{BlockRange{1,Tuple{II}}},BlockSlice1}}) where {MLAY,BLAY,II} =
+    BlockLayout{typeof(sublayout(MLAY(),Tuple{II,Int})), BLAY}()
 
-conjlayout(::Type{T}, ::BlockLayout{LAY}) where {T<:Complex,LAY} = BlockLayout{typeof(conjlayout(T,LAY()))}()
-conjlayout(::Type{T}, ::BlockLayout{LAY}) where {T<:Real,LAY} = BlockLayout{LAY}()
 
-transposelayout(::BlockLayout{LAY}) where LAY = BlockLayout{typeof(transposelayout(LAY()))}()
+conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Complex,MLAY,BLAY} = BlockLayout{MLAY,typeof(conjlayout(T,BLAY()))}()
+conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Real,MLAY,BLAY} = BlockLayout{MLAY,BLAY}()
 
+transposelayout(::BlockLayout{MLAY,BLAY}) where {MLAY,BLAY} =
+    BlockLayout{typeof(transposelayout(MLAY())),typeof(transposelayout(BLAY()))}()
+
+# convert a tuple of BlockRange to a tuple of `AbstractUnitRange{Int}`
+_blockrange2int() = ()
+_blockrange2int(A, B...) = tuple(Int.(A.block), _blockrange2int(B...)...)
+
+blocks(A::SubArray{<:Any,N,<:Any,<:NTuple{N,BlockSlice}}) where N =
+    view(blocks(parent(A)), _blockrange2int(parentindices(A)...)...)
 
 
 #############
@@ -78,10 +101,10 @@ function _block_muladd!(α, A, X, β, Y)
         muladd!(α, view(A,K,N), view(X,N,J), one(α), view(Y,K,J))
     end
     Y
-end 
+end
 
-mul_blockscompatible(A, B, C) = blockisequal(axes(A,2), axes(B,1)) && 
-    blockisequal(axes(A,1), axes(C,1)) && 
+mul_blockscompatible(A, B, C) = blockisequal(axes(A,2), axes(B,1)) &&
+    blockisequal(axes(A,1), axes(C,1)) &&
     blockisequal(axes(B,2), axes(C,2))
 
 function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractBlockLayout})
@@ -193,7 +216,7 @@ for UNIT in ('U', 'N')
 
             A = triangulardata(U)
             if !hasmatchingblocks(A) # Use default for now
-                return materialize!(Ldiv{TriangularLayout{'U',$UNIT,UnknownLayout}, 
+                return materialize!(Ldiv{TriangularLayout{'U',$UNIT,UnknownLayout},
                                          typeof(MemoryLayout(dest))}(U, dest))
             end
 
@@ -226,7 +249,7 @@ for UNIT in ('U', 'N')
             T = eltype(dest)
             A = triangulardata(L)
             if !hasmatchingblocks(A) # Use default for now
-                return materialize!(Ldiv{TriangularLayout{'L',$UNIT,UnknownLayout}, 
+                return materialize!(Ldiv{TriangularLayout{'L',$UNIT,UnknownLayout},
                                          typeof(MemoryLayout(dest))}(L, dest))
             end
 
