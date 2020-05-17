@@ -50,6 +50,16 @@ BlockArray
 undef_blocks
 UndefBlocksInitializer
 mortar
+blockappend!
+blockpush!
+blockpushfirst!
+blockpop!
+blockpopfirst!
+Base.append!
+Base.push!
+Base.pushfirst!
+Base.pop!
+Base.popfirst!
 ```
 
 
