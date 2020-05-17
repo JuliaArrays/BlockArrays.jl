@@ -17,7 +17,7 @@ end
     v0 = rand(3)
     vb = PseudoBlockArray(v0, [1, 2])
     @test size(blocks(vb)) == (2,)
-    blocks(vb)[1][1] = 123
+    blocks(vb)[1] = [123]
     @test v0[1] == 123
     @test parent(blocks(vb)[1]) === v0
 
@@ -34,8 +34,9 @@ end
     m0 = rand(2, 4)
     mb = PseudoBlockArray(m0, [1, 1], [2, 1, 1])
     @test size(blocks(mb)) == (2, 3)
-    blocks(mb)[1, 1][1, 1] = 123
+    blocks(mb)[1, 1] = [123 456]
     @test m0[1, 1] == 123
+    @test m0[1, 2] == 456
     @test parent(blocks(mb)[1, 1]) === m0
 
     # toplevel = true:

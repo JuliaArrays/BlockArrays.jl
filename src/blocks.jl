@@ -79,7 +79,7 @@ Base.axes(a::BlocksView) = map(br -> only(br.indices), blockaxes(a.array))
 @propagate_inbounds Base.getindex(a::BlocksView{T,N}, i::Vararg{Int,N}) where {T,N} =
     _view(a.array, Block(i...))
 @propagate_inbounds Base.setindex!(a::BlocksView{T,N}, b, i::Vararg{Int,N}) where {T,N} =
-    copyto!(a[i...])
+    copyto!(a[i...], b)
 
 function Base.showarg(io::IO, a::BlocksView, toplevel::Bool)
     if toplevel
