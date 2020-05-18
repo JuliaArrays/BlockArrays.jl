@@ -97,9 +97,14 @@ function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},NTuple{N,Def
     print(io, '}')
 end
 
+# LayoutArray with blocked axes will dispatch to here
 layout_print_matrix_row(::Tuple{BlockedUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 layout_print_matrix_row(::NTuple{2,BlockedUnitRange}, io, X, A, i, cols, sep) =
+        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
+
+# Need to handled BlockedUnitRange, which is not a LayoutVector
+Base.print_matrix_row(io::IO, X::BlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
 function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,DefaultBlockAxis}}) where {T,N}

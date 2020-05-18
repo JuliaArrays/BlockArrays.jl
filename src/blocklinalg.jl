@@ -31,12 +31,14 @@ abstract type AbstractBlockLayout <: MemoryLayout end
 struct BlockLayout{ArrLay,BlockLay} <: AbstractBlockLayout end
 
 function colsupport(::BlockLayout, A, j)
-    KR = colsupport(blocks(A), Int(findblock(axes(A,2), j)))
+    JR = Int(findblock(axes(A,2), minimum(j))):Int(findblock(axes(A,2), maximum(j)))
+    KR = colsupport(blocks(A), JR)
     axes(A,1)[Block.(KR)]
 end
 
 function rowsupport(::BlockLayout, A, k)
-    JR = rowsupport(blocks(A), Int(findblock(axes(A,1), k)))
+    KR = Int(findblock(axes(A,1), minimum(k))):Int(findblock(axes(A,1), maximum(k)))
+    JR = rowsupport(blocks(A), KR)
     axes(A,2)[Block.(JR)]
 end
 

@@ -220,8 +220,8 @@ returns a matrix of the blocks of `A`.
 """
 blocks(A::BlockArray) = A.blocks
 
-blocks(A::Adjoint) = transpose(map(adjoint,blocks(parent(A))))
-blocks(A::Transpose) = transpose(map(transpose,blocks(parent(A))))
+blocks(A::Adjoint) = adjoint(blocks(parent(A)))
+blocks(A::Transpose) = transpose(blocks(parent(A)))
 
 """
     mortar(blocks::AbstractArray)
