@@ -1,4 +1,4 @@
-using BlockArrays, LinearAlgebra, Base64
+using BlockArrays, LinearAlgebra, FillArrays, Base64
 
 struct PartiallyImplementedBlockVector <: AbstractBlockArray{Float64,1} end
 
@@ -79,3 +79,17 @@ end
     @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},Tuple{BlockedUnitRange{StepRange{Int64,Int64}},BlockedUnitRange{Vector{Int}}}}
 end
 
+@testset "block Fill" begin
+    A = Fill(2,(blockedrange([1,2,2]),))
+    @test A[Block(1)] == [2]
+    @test A[Block.(1:2)] == [2,2,2]
+    @test_broken A[Block(1)] isa Fill
+    @test_broken A[Block.(1:2)] isa Fill
+    @test_broken 2A
+
+    B = Eye((blockedrange([1,2,2]),))
+    @test B[Block(2,2)] == Matrix(I,2,2)
+
+    C = Eye((blockedrange([1,2,2]),blockedrange([2,2])))
+    @test C[Block(2,2)] == [0 0; 1.0 0]
+end

@@ -35,7 +35,7 @@ import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
                         StructuredMatrixStyle
 import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdivVec,
                         materialize!, MemoryLayout, sublayout, transposelayout, conjlayout, 
-                        triangularlayout, triangulardata, _inv, _copyto!, layout_print_matrix_row,
+                        triangularlayout, triangulardata, _inv, _copyto!, axes_print_matrix_row,
                         colsupport, rowsupport
 
 include("blockindices.jl")                        

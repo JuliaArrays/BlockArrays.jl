@@ -310,3 +310,11 @@ Base.reshape(parent::PseudoBlockArray, dims::Tuple{Int,Vararg{Int}}) =
 Base.strides(A::PseudoBlockArray) = strides(A.blocks)
 Base.stride(A::PseudoBlockArray, i::Integer) = stride(A.blocks, i)
 Base.unsafe_convert(::Type{Ptr{T}}, A::PseudoBlockArray) where T = Base.unsafe_convert(Ptr{T}, A.blocks)
+
+
+###
+# col/rowsupport
+###
+
+colsupport(A::PseudoBlockArray, j) = colsupport(A.blocks, j)
+rowsupport(A::PseudoBlockArray, j) = rowsupport(A.blocks, j)
