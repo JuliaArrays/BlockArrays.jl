@@ -13,9 +13,7 @@ Singleton type used in block array initialization, indicating the
 array-constructor-caller would like an uninitialized block array. See also
 undef_blocks (@ref), an alias for UndefBlocksInitializer().
 
-Examples
-
-≡≡≡≡≡≡≡≡≡≡
+# Examples
 ```julia
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockArray{Float32,2}:
@@ -23,7 +21,7 @@ julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
  ────────────────────────┼────────────────
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
- ```
+```
 """
 struct UndefBlocksInitializer end
 
@@ -34,9 +32,7 @@ Alias for UndefBlocksInitializer(), which constructs an instance of the singleto
 type UndefBlocksInitializer (@ref), used in block array initialization to indicate the
 array-constructor-caller would like an uninitialized block array.
 
-Examples
-
-≡≡≡≡≡≡≡≡≡≡
+# Examples
 ```julia
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockArray{Float32,2}:
@@ -44,7 +40,7 @@ julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
  ------------------------┼----------------
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
- ```
+```
 """
 const undef_blocks = UndefBlocksInitializer()
 
@@ -231,9 +227,11 @@ blocks(A::Transpose) = transpose(blocks(parent(A)))
 Construct a `BlockArray` from `blocks`.  `block_sizes` is computed from
 `blocks` if it is not given.
 
+This is an "inverse" of [`blocks`](@ref).
+
 # Examples
 ```jldoctest; setup = quote using BlockArrays end
-julia> blocks = permutedims(reshape([
+julia> arrays = permutedims(reshape([
                   1ones(1, 3), 2ones(1, 2),
                   3ones(2, 3), 4ones(2, 2),
               ], (2, 2)))
@@ -241,7 +239,7 @@ julia> blocks = permutedims(reshape([
  [1.0 1.0 1.0]               [2.0 2.0]
  [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
 
-julia> mortar(blocks)
+julia> mortar(arrays)
 2×2-blocked 3×5 BlockArray{Float64,2}:
  1.0  1.0  1.0  │  2.0  2.0
  ───────────────┼──────────

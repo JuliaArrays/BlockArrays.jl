@@ -4,7 +4,7 @@ using LinearAlgebra, ArrayLayouts
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
-export Block, getblock, getblock!, setblock!, eachblock
+export Block, getblock, getblock!, setblock!, eachblock, blocks
 export blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, BlockIndex
 export blocklengths, blocklasts, blockfirsts, blockisequal
 export BlockRange, blockedrange, BlockedUnitRange
@@ -15,6 +15,8 @@ export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrM
 export undef_blocks, undef, findblock, findblockindex
 
 export khatri_rao
+
+export blockappend!, blockpush!, blockpushfirst!, blockpop!, blockpopfirst!
 
 import Base: @propagate_inbounds, Array, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
@@ -38,16 +40,23 @@ import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdi
                         triangularlayout, triangulardata, _inv, _copyto!, axes_print_matrix_row,
                         colsupport, rowsupport
 
+if !@isdefined(only)
+    using Compat: only
+end
+
 include("blockindices.jl")                        
 include("blockaxis.jl")
 include("abstractblockarray.jl")
 include("blockarray.jl")
 include("pseudo_blockarray.jl")
 include("views.jl")
+include("blocks.jl")
 include("blockarrayinterface.jl")
 include("blockbroadcast.jl")
 include("blocklinalg.jl")
 include("blockproduct.jl")
 include("show.jl")
+include("blockreduce.jl")
+include("blockdeque.jl")
 
 end # module

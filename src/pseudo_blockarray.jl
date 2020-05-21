@@ -302,6 +302,17 @@ Base.reshape(parent::PseudoBlockArray, shp::Tuple{Union{Integer,Base.OneTo}, Var
 Base.reshape(parent::PseudoBlockArray, dims::Tuple{Int,Vararg{Int}}) =
     Base._reshape(parent, dims)
 
+function Base.showarg(io::IO, A::PseudoBlockArray, toplevel::Bool)
+    if toplevel
+        print(io, "PseudoBlockArray of ")
+        Base.showarg(io, A.blocks, true)
+    else
+        print(io, "::PseudoBlockArray{…,")
+        Base.showarg(io, A.blocks, false)
+        print(io, '}')
+    end
+end
+
 
 ###########################
 # Strided Array interface #
