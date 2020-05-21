@@ -224,7 +224,7 @@ This is an "inverse" of [`blocks`](@ref).
 
 # Examples
 ```jldoctest; setup = quote using BlockArrays end
-julia> blocks = permutedims(reshape([
+julia> arrays = permutedims(reshape([
                   1ones(1, 3), 2ones(1, 2),
                   3ones(2, 3), 4ones(2, 2),
               ], (2, 2)))
@@ -232,7 +232,7 @@ julia> blocks = permutedims(reshape([
  [1.0 1.0 1.0]               [2.0 2.0]
  [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
 
-julia> mortar(blocks)
+julia> mortar(arrays)
 2×2-blocked 3×5 BlockArray{Float64,2}:
  1.0  1.0  1.0  │  2.0  2.0
  ───────────────┼──────────
