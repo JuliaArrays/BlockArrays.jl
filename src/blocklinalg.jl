@@ -64,14 +64,6 @@ conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Real,MLAY,BLAY} = Bloc
 transposelayout(::BlockLayout{MLAY,BLAY}) where {MLAY,BLAY} =
     BlockLayout{typeof(transposelayout(MLAY())),typeof(transposelayout(BLAY()))}()
 
-# convert a tuple of BlockRange to a tuple of `AbstractUnitRange{Int}`
-_blockrange2int() = ()
-_blockrange2int(A, B...) = tuple(Int.(A.block), _blockrange2int(B...)...)
-
-blocks(A::SubArray{<:Any,N,<:Any,<:NTuple{N,BlockSlice}}) where N =
-    view(blocks(parent(A)), _blockrange2int(parentindices(A)...)...)
-
-
 #############
 # BLAS overrides
 #############
