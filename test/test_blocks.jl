@@ -3,6 +3,7 @@ using Test, BlockArrays
 @testset "blocks(::BlockVector)" begin
     vector_blocks = [[1, 2], [3, 4, 5], Int[]]
     @test blocks(mortar(vector_blocks)) === vector_blocks
+    @test collect(blocks(mortar(vector_blocks))) == vector_blocks
 end
 
 @testset "blocks(::BlockMatrix)" begin
@@ -38,6 +39,11 @@ end
     @test m0[1, 1] == 123
     @test m0[1, 2] == 456
     @test parent(blocks(mb)[1, 1]) === m0
+
+    # linear indexing
+    @test blocks(mb)[1] == m0[1:1, 1:2]
+    blocks(mb)[1] = [111 222]
+    @test mb[Block(1, 1)] == [111 222]
 
     # toplevel = true:
     str = sprint(show, "text/plain", blocks(mb))
