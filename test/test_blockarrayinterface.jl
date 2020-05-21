@@ -86,10 +86,15 @@ end
     @test_broken A[Block(1)] isa Fill
     @test_broken A[Block.(1:2)] isa Fill
     @test_broken 2A
+    @test stringmime("text/plain", A) == "5-element Fill{Int64,1,Tuple{BlockedUnitRange{Array{Int64,1}}}} with indices 1:1:5:\n 2\n ─\n 2\n 2\n ─\n 2\n 2"
 
-    B = Eye((blockedrange([1,2,2]),))
+    B = Eye((blockedrange([1,2]),))
     @test B[Block(2,2)] == Matrix(I,2,2)
+    @test stringmime("text/plain", B) == "3×3 Diagonal{Float64,Ones{Float64,1,Tuple{BlockedUnitRange{Array{Int64,1}}}}} with indices 1:1:3×1:1:3:\n 1.0  │   ⋅    ⋅ \n ─────┼──────────\n  ⋅   │  1.0   ⋅ \n  ⋅   │   ⋅   1.0"
 
     C = Eye((blockedrange([1,2,2]),blockedrange([2,2])))
     @test C[Block(2,2)] == [0 0; 1.0 0]
+
+    U = UpperTriangular(Ones((blockedrange([1,2]),blockedrange([2,1]))))
+    @test stringmime("text/plain", U) == "3×3 UpperTriangular{Float64,Ones{Float64,2,Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}}} with indices 1:1:3×1:1:3:\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
 end

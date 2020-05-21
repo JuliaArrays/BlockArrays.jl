@@ -214,6 +214,13 @@ for op in (:+, :-, :*, :/, :\)
     end
 end
 
+# exploit special cases for *, for example, *(::Number, ::Diagonal)
+for op in (:*, :/) 
+    @eval @inline $op(A::BlockArray, x::Number) = _BlockArray($op(blocks(A),x), axes(A))
+end
+for op in (:*, :\)
+    @eval @inline $op(x::Number, A::BlockArray) = _BlockArray($op(x,blocks(A)), axes(A))
+end
 
 ###
 # SubViews
