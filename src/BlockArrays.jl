@@ -38,17 +38,7 @@ import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdi
                         triangularlayout, triangulardata, _inv
 
 if !@isdefined(only)
-    @propagate_inbounds function only(x)
-        i = iterate(x)
-        @boundscheck if i === nothing
-            throw(ArgumentError("Collection is empty, must contain exactly 1 element"))
-        end
-        (ret, state) = i
-        @boundscheck if iterate(x, state) !== nothing
-            throw(ArgumentError("Collection has multiple elements, must contain exactly 1 element"))
-        end
-        return ret
-    end
+    using Compat: only
 end
 
 include("blockindices.jl")                        
