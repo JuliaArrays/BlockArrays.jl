@@ -157,7 +157,9 @@ using BlockArrays, Test, Base64
     @testset "Block-BlockRange blocks" begin
         A = BlockArray([1 2 3; 4 5 6; 7 8 9], 1:2, 1:2)
         V = view(A,Block(1),Block.(1:2))
-        @test stringmime("text/plain", V) == "1×3 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},Tuple{BlockedUnitRange{Array{$Int,1}},BlockedUnitRange{Array{$Int,1}}}}, BlockSlice(Block(1),1:1), BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3)) with eltype $Int with indices Base.OneTo(1)×1:1:3:\n 1  │  2  3"
+        if VERSION ≥ v"1.2"
+            @test stringmime("text/plain", V) == "1×3 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},Tuple{BlockedUnitRange{Array{$Int,1}},BlockedUnitRange{Array{$Int,1}}}}, BlockSlice(Block(1),1:1), BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3)) with eltype $Int with indices Base.OneTo(1)×1:1:3:\n 1  │  2  3"
+        end
         @test blocks(V) == blocks(A)[1:1,1:2]
     end
 end
