@@ -102,6 +102,10 @@ axes_print_matrix_row(::Tuple{BlockedUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 axes_print_matrix_row(::NTuple{2,BlockedUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
+axes_print_matrix_row(::Tuple{AbstractUnitRange,BlockedUnitRange}, io, X, A, i, cols, sep) =
+        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
+axes_print_matrix_row(::Tuple{BlockedUnitRange,AbstractUnitRange}, io, X, A, i, cols, sep) =
+        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
 # Need to handled BlockedUnitRange, which is not a LayoutVector
 Base.print_matrix_row(io::IO, X::BlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString) =
