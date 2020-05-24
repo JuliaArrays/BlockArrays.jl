@@ -7,7 +7,7 @@ gives an iterator containing the possible non-zero blocks in the k-th block-row 
 blockrowsupport(A, k) = blockrowsupport(MemoryLayout(A), A, k)
 blockrowsupport(A) = blockrowsupport(A, blockaxes(A,1))
 
-blockcolsupport(_, A, j) = blockaxes(A,1)
+blockcolsupport(_, A, j) = Block.(colsupport(blocks(A), Int.(j)))
 
 """"
     blockcolsupport(A, j)

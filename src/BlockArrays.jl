@@ -21,7 +21,7 @@ export blockappend!, blockpush!, blockpushfirst!, blockpop!, blockpopfirst!
 import Base: @propagate_inbounds, Array, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
-            getindex, show,
+            getindex, ndims, show,
             step, 
             broadcast, eltype, convert, similar,
             @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
@@ -31,8 +31,8 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
 using Base: ReshapedArray, dataids
 
 
-import Base: (:), IteratorSize, iterate, axes1, strides
-import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted
+import Base: (:), IteratorSize, iterate, axes1, strides, isempty
+import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, broadcastable
 import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
                         StructuredMatrixStyle
 import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdivVec,
