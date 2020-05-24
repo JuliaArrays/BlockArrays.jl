@@ -147,10 +147,8 @@ end
     return copyto!(dest, Base.Broadcast.instantiate(Base.Broadcast.Broadcasted{BS}(bc.f, bc.args, combine_blockaxes.(axes(dest),axes(bc)))))
 end
 
-@generated function copyto!(
-        dest::AbstractArray,
-        bc::Broadcasted{<:AbstractBlockStyle{NDims}, <:Any, <:Any, Args},
-        ) where {NDims, Args <: Tuple}
+@generated function copyto!(dest::AbstractArray,
+                            bc::Broadcasted{<:AbstractBlockStyle{NDims}, <:Any, <:Any, Args}) where {NDims, Args <: Tuple}
 
     NArgs = length(Args.parameters)
 
@@ -190,29 +188,47 @@ end
     end
 end
 
-@inline function Broadcast.instantiate(
-        bc::Broadcasted{Style}) where {Style <:AbstractBlockStyle}
-    bcf = Broadcast.flatten(Broadcasted{Nothing}(bc.f, bc.args, bc.axes))
+@inline function Broadcast.instantiate(bc::Broadcasted{Style}) where {Style <:AbstractBlockStyle}
+    bcf = Broadcast.instantiate(Broadcast.flatten(Broadcasted{Nothing}(bc.f, bc.args, bc.axes)))
     return Broadcasted{Style}(bcf.f, bcf.args, bcf.axes)
 end
 
 
 for op in (:+, :-, :*)
-    @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N}}}) where N
+    @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:AbstractArray{<:Number,N}}}) where N
         (A,) = bc.args
-        _BlockArray(broadcast(a -> broadcast($op, a), A.blocks), axes(A))
+        _BlockArray(broadcast(a -> broadcast($op, a), blocks(A)), axes(A))
     end
 end
 
 for op in (:+, :-, :*, :/, :\)
     @eval begin
-        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:Number,<:BlockArray{<:Number,N}}}) where N
+        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:Number,<:AbstractArray{<:Number,N}}}) where N
             x,A = bc.args
-            _BlockArray(broadcast((x,a) -> broadcast($op, x, a), x, A.blocks), axes(A))
+            _BlockArray(broadcast((x,a) -> broadcast($op, x, a), x, blocks(A)), axes(A))
         end
-        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:BlockArray{<:Number,N},<:Number}}) where N
+        function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:AbstractArray{<:Number,N},<:Number}}) where N
             A,x = bc.args
-            _BlockArray(broadcast((a,x) -> broadcast($op, a, x), A.blocks,x), axes(A))
+            _BlockArray(broadcast((a,x) -> broadcast($op, a, x), blocks(A),x), axes(A))
         end
     end
 end
+
+# exploit special cases for *, for example, *(::Number, ::Diagonal)
+for op in (:*, :/) 
+    @eval @inline $op(A::BlockArray, x::Number) = _BlockArray($op(blocks(A),x), axes(A))
+end
+for op in (:*, :\)
+    @eval @inline $op(x::Number, A::BlockArray) = _BlockArray($op(x,blocks(A)), axes(A))
+end
+
+###
+# SubViews
+###
+
+_blocktype(::Type{<:BlockArray{<:Any,N,<:AbstractArray{R,N}}}) where {N,R} = R
+
+BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice1},false}}) where {T,N,Arr<:BlockArray} = 
+    BroadcastStyle(_blocktype(Arr))
+BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice{BlockRange{1,Tuple{II}}}},false}}) where {T,N,Arr<:BlockArray,II} = 
+    BroadcastStyle(Arr)

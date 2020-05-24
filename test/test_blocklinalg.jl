@@ -1,12 +1,18 @@
 using BlockArrays, ArrayLayouts, LinearAlgebra, Test
 import BlockArrays: BlockLayout
-import ArrayLayouts: DenseRowMajor
+import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
 
 @testset "Linear Algebra" begin
+    @testset "BlockArray scalar * matrix" begin
+        A = BlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
+        @test 2A == A*2 == 2Matrix(A)
+        @test blockisequal(axes(2A),axes(A))
+    end
+
     @testset "BlockArray matrix * vector" begin
         A = BlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
         b = randn(6)
-        @test MemoryLayout(A) isa BlockLayout{DenseColumnMajor}
+        @test MemoryLayout(A) isa BlockLayout{DenseColumnMajor,DenseColumnMajor}
         V = view(A,Block(2,3))
         @test MemoryLayout(V) isa DenseColumnMajor
         @test strides(V) == (1,2)
@@ -21,17 +27,17 @@ import ArrayLayouts: DenseRowMajor
         @test all(A*b .=== A*PseudoBlockVector(b,1:3))
 
         V = view(A, Block.(1:2), Block(3))
-        @test MemoryLayout(V) isa BlockLayout{DenseColumnMajor}
+        @test MemoryLayout(V) isa BlockLayout{DenseColumnMajor,DenseColumnMajor}
         @test all(V*view(b,4:6) .=== V*b[4:6])
         @test V*b[4:6] ≈ Matrix(V)*b[4:6]
 
         V = view(A, Block(3), Block.(1:2))
-        @test MemoryLayout(V) isa BlockLayout{DenseColumnMajor}
+        @test MemoryLayout(V) isa BlockLayout{StridedLayout,DenseColumnMajor}
         @test all(V*view(b,4:6) .=== V*b[4:6])
         @test V*b[4:6] ≈ Matrix(V)*b[4:6]
 
         V = view(A, Block.(2:3), Block.(1:2))
-        @test MemoryLayout(V) isa BlockLayout{DenseColumnMajor}
+        @test MemoryLayout(V) isa BlockLayout{ColumnMajor,DenseColumnMajor}
         @test all(V*view(b,4:6) .=== V*b[4:6])
         @test V*b[4:6] ≈ Matrix(V)*b[4:6]  
 
@@ -92,8 +98,8 @@ import ArrayLayouts: DenseRowMajor
         C = BlockArray(randn(6,6) + im*randn(6,6), fill(2,3), 1:3)
         b = randn(6)
         c = randn(6) .+ im*randn(6)
-        @test MemoryLayout(A') isa BlockLayout{DenseRowMajor}
-        @test MemoryLayout(C') isa BlockLayout{ConjLayout{DenseRowMajor}}
+        @test MemoryLayout(A') isa BlockLayout{DenseRowMajor,DenseRowMajor}
+        @test MemoryLayout(C') isa BlockLayout{DenseRowMajor,ConjLayout{DenseRowMajor}}
 
         @test getblock(A', 2, 3) == getblock(A, 3,2)'
         @test getblock(transpose(A), 2, 3) == transpose(getblock(A, 3,2))
@@ -137,7 +143,7 @@ import ArrayLayouts: DenseRowMajor
         A = BlockArray(randn(6,6), 1:3, 1:3) 
         B = BlockArray(randn(6,6), fill(2,3), 1:3) 
         b = randn(6)
-        @test MemoryLayout(UpperTriangular(A)) isa TriangularLayout{'U','N',BlockLayout{DenseColumnMajor}}
+        @test MemoryLayout(UpperTriangular(A)) isa TriangularLayout{'U','N',BlockLayout{DenseColumnMajor,DenseColumnMajor}}
         @test UpperTriangular(A) == UpperTriangular(Matrix(A))
         V = view(A, Block(2,2))
         @test MemoryLayout(UpperTriangular(V)) isa TriangularLayout{'U','N',DenseColumnMajor}
@@ -190,5 +196,10 @@ import ArrayLayouts: DenseRowMajor
         A = BlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
         @test inv(A) isa BlockArray
         @test inv(A)*A ≈ Matrix(I,6,6)
+    end
+
+    @testset "Block Diagonal" begin
+        D = mortar(Diagonal([randn(2,2),randn(2,2)]))
+        @test MemoryLayout(D) isa BlockLayout{DiagonalLayout{DenseColumnMajor},DenseColumnMajor} 
     end
 end

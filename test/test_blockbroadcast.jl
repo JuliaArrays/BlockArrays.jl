@@ -119,4 +119,16 @@ using BlockArrays, FillArrays, Test
         C = BlockArray(randn(6), (BlockArrays._BlockedUnitRange(1,2:6),))
         @test axes(A+C,1) === BlockArrays._BlockedUnitRange(1,1:6)
     end
+
+    @testset "Views" begin
+        A = BlockArray(randn(6), 1:3)
+        @test Base.BroadcastStyle(typeof(view(A, Block(2)))) isa Base.Broadcast.DefaultArrayStyle{1}
+        V = view(A, Block.(2:3))
+        @test Base.BroadcastStyle(typeof(V)) isa BlockArrays.BlockStyle{1}
+        @test V .+ 1 isa BlockArray
+        @test 1 .+ V isa BlockArray
+        @test V .+ 1 == 1 .+ V == A[Block.(2:3)] .+ 1
+        @test -V isa BlockArray
+        @test -V == -A[Block.(2:3)]
+    end
 end

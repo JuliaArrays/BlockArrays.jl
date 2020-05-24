@@ -1,4 +1,4 @@
-using BlockArrays, LinearAlgebra, Base64
+using BlockArrays, LinearAlgebra, FillArrays, Base64
 
 struct PartiallyImplementedBlockVector <: AbstractBlockArray{Float64,1} end
 
@@ -79,3 +79,26 @@ end
     @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},Tuple{BlockedUnitRange{StepRange{Int64,Int64}},BlockedUnitRange{Vector{Int}}}}
 end
 
+@testset "block Fill" begin
+    A = Fill(2,(blockedrange([1,2,2]),))
+    @test A[Block(1)] == [2]
+    @test A[Block.(1:2)] == [2,2,2]
+    @test_broken A[Block(1)] isa Fill
+    @test_broken A[Block.(1:2)] isa Fill
+    @test_broken 2A
+
+
+    B = Eye((blockedrange([1,2]),))
+    @test B[Block(2,2)] == Matrix(I,2,2)
+
+    C = Eye((blockedrange([1,2,2]),blockedrange([2,2])))
+    @test C[Block(2,2)] == [0 0; 1.0 0]
+
+    U = UpperTriangular(Ones((blockedrange([1,2]),blockedrange([2,1]))))
+
+    if VERSION ≥ v"1.2"
+        @test stringmime("text/plain", A) == "5-element Fill{Int64,1,Tuple{BlockedUnitRange{Array{Int64,1}}}} with indices 1:1:5:\n 2\n ─\n 2\n 2\n ─\n 2\n 2"
+        @test stringmime("text/plain", B) == "3×3 Diagonal{Float64,Ones{Float64,1,Tuple{BlockedUnitRange{Array{Int64,1}}}}} with indices 1:1:3×1:1:3:\n 1.0  │   ⋅    ⋅ \n ─────┼──────────\n  ⋅   │  1.0   ⋅ \n  ⋅   │   ⋅   1.0"
+        @test stringmime("text/plain", U) == "3×3 UpperTriangular{Float64,Ones{Float64,2,Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}}} with indices 1:1:3×1:1:3:\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
+    end
+end

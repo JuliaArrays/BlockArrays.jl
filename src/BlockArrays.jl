@@ -21,23 +21,24 @@ export blockappend!, blockpush!, blockpushfirst!, blockpop!, blockpopfirst!
 import Base: @propagate_inbounds, Array, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
-            getindex, show,
+            getindex, ndims, show,
             step, 
             broadcast, eltype, convert, similar,
             @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
             RangeIndex, Int, Integer, Number,
-            +, -, min, max, *, isless, in, copy, copyto!, axes, @deprecate,
+            +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
             BroadcastStyle, checkbounds, throw_boundserror
 using Base: ReshapedArray, dataids
 
 
-import Base: (:), IteratorSize, iterate, axes1, strides
-import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted
+import Base: (:), IteratorSize, iterate, axes1, strides, isempty
+import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, broadcastable
 import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
                         StructuredMatrixStyle
 import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdivVec,
                         materialize!, MemoryLayout, sublayout, transposelayout, conjlayout, 
-                        triangularlayout, triangulardata, _inv
+                        triangularlayout, triangulardata, _inv, _copyto!, axes_print_matrix_row,
+                        colsupport, rowsupport
 
 if !@isdefined(only)
     using Compat: only
@@ -49,12 +50,12 @@ include("abstractblockarray.jl")
 include("blockarray.jl")
 include("pseudo_blockarray.jl")
 include("views.jl")
-include("show.jl")
 include("blocks.jl")
 include("blockarrayinterface.jl")
 include("blockbroadcast.jl")
 include("blocklinalg.jl")
 include("blockproduct.jl")
+include("show.jl")
 include("blockreduce.jl")
 include("blockdeque.jl")
 
