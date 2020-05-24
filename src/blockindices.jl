@@ -37,6 +37,7 @@ end
 
 # iterate and broadcast like Number
 length(b::Block) = 1
+size(b::Block) = ()
 iterate(x::Block) = (x, nothing)
 iterate(x::Block, ::Any) = nothing
 isempty(x::Block) = false
@@ -44,6 +45,7 @@ broadcastable(x::Block) = x
 ndims(::Type{<:Block}) = 0
 ndims(::Block) = 0
 eltype(::Type{B}) where B<:Block = B
+getindex(B::Block, ::CartesianIndex{0}) = B
 
 # The following code is taken from CartesianIndex
 @inline (+)(index::Block{N}) where {N} = Block{N}(map(+, index.n))

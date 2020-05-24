@@ -6,10 +6,15 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
     @test Block((Block(3), Block(4))) === Block(3,4)
 
     @testset "Block iterator" begin
-        @test eltype(Block(3)) == Block{1,Int}
-        @test ndims(Block(3)) == ndims(Block{1,Int}) == 0
-        @test !isempty(Block(3))
-        @test collect(Block(3)) == [Block(3)]
+        B = Block(3)
+        @test length(B) == 1
+        @test eltype(B) == eltype(typeof(B)) == Block{1,Int}
+        @test ndims(B) == ndims(Block{1,Int}) == 0
+        @test !isempty(B)
+        @test collect(B) == [B]
+        @test B .+ 1 == Block(4)
+        @test iterate(B) == (B, nothing)
+        @test Int.(B) == 3
     end
 
     @testset "Block arithmetic" begin
