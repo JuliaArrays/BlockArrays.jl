@@ -5,7 +5,6 @@ version = "0.12.7"
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
-FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]
