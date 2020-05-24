@@ -42,6 +42,8 @@ iterate(x::Block, ::Any) = nothing
 isempty(x::Block) = false
 broadcastable(x::Block) = x
 ndims(::Type{<:Block}) = 0
+ndims(::Block) = 0
+eltype(::Type{B}) where B<:Block = B
 
 # The following code is taken from CartesianIndex
 @inline (+)(index::Block{N}) where {N} = Block{N}(map(+, index.n))

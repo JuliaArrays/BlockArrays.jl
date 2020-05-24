@@ -3,6 +3,12 @@ import BlockArrays: BlockLayout
 import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
 
 @testset "Linear Algebra" begin
+    @testset "BlockArray scalar * matrix" begin
+        A = BlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
+        @test 2A == A*2 == 2Matrix(A)
+        @test blockisequal(axes(2A),axes(A))
+    end
+
     @testset "BlockArray matrix * vector" begin
         A = BlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
         b = randn(6)

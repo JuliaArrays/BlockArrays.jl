@@ -5,6 +5,13 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
     @test Block((Block(3), Block(4))) === Block(3,4)
 
+    @testset "Block iterator" begin
+        @test eltype(Block(3)) == Block{1,Int}
+        @test ndims(Block(3)) == ndims(Block{1,Int}) == 0
+        @test !isempty(Block(3))
+        @test collect(Block(3)) == [Block(3)]
+    end
+
     @testset "Block arithmetic" begin
         @test +(Block(1)) == Block(1)
         @test -(Block(1)) == Block(-1)
