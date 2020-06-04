@@ -165,4 +165,13 @@ using BlockArrays, Test, Base64
             @test stringmime("text/plain", W) == "3×1 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},Tuple{BlockedUnitRange{Array{$Int,1}},BlockedUnitRange{Array{$Int,1}}}}, BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3), BlockSlice(Block(1),1:1)) with eltype $Int with indices 1:1:3×Base.OneTo(1):\n 1\n ─\n 4\n 7"
         end
     end
+
+    @testset "getindex with BlockRange" begin
+        A = BlockArray(randn(6), 1:3)
+        @test A[Block.(2:3)] isa BlockArray
+        @test A[Block.(2:3)] == A[2:end]
+        A = PseudoBlockArray(randn(6), 1:3)
+        @test A[Block.(2:3)] isa PseudoBlockArray
+        @test A[Block.(2:3)] == A[2:end]
+    end
 end
