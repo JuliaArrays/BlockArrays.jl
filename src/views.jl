@@ -156,16 +156,16 @@ const BlockSlice1 = BlockSlice{Block{1,Int},UnitRange{Int}}
 block(A::BlockSlice) = block(A.block)
 block(A::Block) = A
 
-getblock(A::SubArray{<:Any,N,<:Any,NTuple{N,BlockSlice1}}) where N = 
+getblock(A::SubArray{<:Any,N,<:Any,NTuple{N,BlockSlice1}}) where N =
     getblock(parent(A), Int.(block.(parentindices(A)))...)
 getblock(A::Adjoint, k::Int, j::Int) = getblock(parent(A), j, k)'
 getblock(A::Transpose, k::Int, j::Int) = transpose(getblock(parent(A), j, k))
 
-strides(A::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}) where N = 
+strides(A::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}) where N =
     strides(getblock(A))
 
 for Adj in (:Transpose, :Adjoint)
-    @eval strides(A::SubArray{<:Any,N,<:$Adj{<:Any,<:BlockArray},NTuple{N,BlockSlice1}}) where N = 
+    @eval strides(A::SubArray{<:Any,N,<:$Adj{<:Any,<:BlockArray},NTuple{N,BlockSlice1}}) where N =
         strides(getblock(A))
 end
 
@@ -175,3 +175,5 @@ unsafe_convert(::Type{Ptr{T}}, V::SubArray{T, N, <:Any, <:NTuple{N, BlockSlice1}
 
 unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,PseudoBlockArray{T,N,AT},<:Tuple{Vararg{BlockOrRangeIndex}}}) where {T,N,AT} =
     unsafe_convert(Ptr{T}, V.parent) + (Base.first_index(V)-1)*sizeof(T)
+
+

@@ -42,6 +42,8 @@ function rowsupport(::BlockLayout, A, k)
     axes(A,2)[Block.(JR)]
 end
 
+
+
 similar(M::MulAdd{<:AbstractBlockLayout,<:AbstractBlockLayout}, ::Type{T}, axes) where {T,N} =
     similar(BlockArray{T}, axes)
 
@@ -57,6 +59,9 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{BlockSlice1,<:BlockSlice{Bl
 sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{<:BlockSlice{BlockRange{1,Tuple{II}}},BlockSlice1}}) where {MLAY,BLAY,II} =
     BlockLayout{typeof(sublayout(MLAY(),Tuple{II,Int})), BLAY}()
 
+# materialize views, used for `getindex`
+sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
+sub_materialize(::AbstractStridedLayout, V, ::Tuple{<:BlockedUnitRange}) = PseudoBlockArray(V)
 
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Complex,MLAY,BLAY} = BlockLayout{MLAY,typeof(conjlayout(T,BLAY()))}()
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Real,MLAY,BLAY} = BlockLayout{MLAY,BLAY}()
