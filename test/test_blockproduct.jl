@@ -100,3 +100,10 @@ end
     @test khatri_rao(A, B) ≈ kron(A, B)
 end
 
+@testset "blockkron" begin
+    a = [1,2]
+    b = [3,4,5]
+    K = blockkron(a,b)
+    @test K == kron(a,b)
+    @test K[Block(1)] == a[1]*b
+end

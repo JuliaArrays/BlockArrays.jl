@@ -39,11 +39,27 @@ struct BlockKron{T,N,ARGS<:Tuple} <: LayoutArray{T,N}
     args::ARGS
 end
 
-BlockKron{T}(A...) where {T} = BlockKron{T,typeof(A)}(A)
+BlockKron{T,N}(A...) where {T,N} = BlockKron{T,N,typeof(A)}(A)
+BlockKron{T}(A::AbstractVector...) where {T} = BlockKron{T,1}(A...)
+BlockKron{T}(A...) where {T} = BlockKron{T,2}(A...)
 BlockKron(A...) = BlockKron{mapreduce(eltype,promote_type,A)}(A...)
 
 
 size(B::BlockKron) = size(Kron(B))
+
+size(K::BlockKron, j::Int) = prod(size.(K.args, j))
+size(a::BlockKron{<:Any,1}) = (size(a,1),)
+size(a::BlockKron{<:Any,2}) = (size(a,1), size(a,2))
+
+function axes(K::BlockKron{<:Any,1})
+    A,B = K.args
+    (blockedrange(fill(size(B,1), size(A,1))),)
+end
+
+function axes(K::BlockKron{<:Any,2})
+    A,B = K.args
+    blockedrange.((fill(size(B,1), size(A,1)), fill(size(B,2), size(A,2))))
+end
 
 kron_getindex((A,)::Tuple{AbstractVector}, k::Integer) = A[k]
 function kron_getindex((A,B)::NTuple{2,AbstractVector}, k::Integer)
@@ -63,16 +79,11 @@ kron_getindex(args::Tuple, k::Integer) = kron_getindex(tuple(Kron(args[1:2]...),
 getindex(K::BlockKron{<:Any,1}, k::Integer) = kron_getindex(K.args, k)
 getindex(K::BlockKron{<:Any,2}, k::Integer, j::Integer) = kron_getindex(K.args, k, j)
 
-function axes(K::BlockKron)
-    A,B = K.args
-    blockedrange.((Fill(size(B,1), size(A,1)), Fill(size(B,2), size(A,2))))
-end
-
-const SubKron{T,M1,M2,R1,R2} = SubArray{T,2,<:BlockKron{T,M1,M2},<:Tuple{<:BlockSlice{R1},<:BlockSlice{R2}}}
+# const SubKron{T,M1,M2,R1,R2} = SubArray{T,2,<:BlockKron{T,M1,M2},<:Tuple{<:BlockSlice{R1},<:BlockSlice{R2}}}
 
 
-BroadcastStyle(::Type{<:SubKron{<:Any,<:Any,B,Block1,Block1}}) where B =
-    BroadcastStyle(B)
+# BroadcastStyle(::Type{<:SubKron{<:Any,<:Any,B,Block1,Block1}}) where B =
+#     BroadcastStyle(B)
 
 
 # allow dispatch on memory layout
