@@ -329,3 +329,11 @@ Base.unsafe_convert(::Type{Ptr{T}}, A::PseudoBlockArray) where T = Base.unsafe_c
 
 colsupport(A::PseudoBlockArray, j) = colsupport(A.blocks, j)
 rowsupport(A::PseudoBlockArray, j) = rowsupport(A.blocks, j)
+
+###
+# zeros/ones
+###
+
+for op in (:zeros, :ones)
+    @eval $op(::Type{T}, axs::Tuple{BlockedUnitRange,Vararg{Any}}) where T = PseudoBlockArray($op(T, map(length,axs)...), axs)
+end

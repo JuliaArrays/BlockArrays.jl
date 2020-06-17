@@ -177,3 +177,15 @@ unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,PseudoBlockArray{T,N,AT},<:Tuple{
     unsafe_convert(Ptr{T}, V.parent) + (Base.first_index(V)-1)*sizeof(T)
 
 
+# The default blocksize(V) is slow for views as it calls axes(V), which
+# allocates. Here we work around this.
+
+_sub_blocksize() = ()
+_sub_blocksize(ind::BlockSlice{<:BlockRange{1}}, inds...) = tuple(length(ind.block),_sub_blocksize(inds...)...)
+_sub_blocksize(ind::BlockSlice{<:Block{1}}, inds...) = tuple(1,_sub_blocksize(inds...)...)
+_sub_blocksize(ind::AbstractVector, inds...) = tuple(blocksize(ind,1),_sub_blocksize(inds...)...)
+_sub_blocksize(ind::Integer, inds...) = _sub_blocksize(inds...)
+blocksize(V::SubArray) = _sub_blocksize(parentindices(V)...)
+blocksize(V::SubArray, i::Int) = _sub_blocksize(parentindices(V)[i])[1]
+
+hasmatchingblocks(V::SubArray{<:Any,2}) = hasmatchingblocks(parent(V)) && ==(parentindices(V)...)
