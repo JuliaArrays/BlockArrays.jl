@@ -178,13 +178,13 @@ using BlockArrays, Test, Base64
     @testset "non-allocation blocksize" begin
         A = BlockArray(randn(5050), 1:100)
         @test blocksize(A) == (100,)
-        @test @allocated(blocksize(A)) ≤ 20
+        @test @allocated(blocksize(A)) ≤ 40
         V = view(A, Block(3))
         @test blocksize(V) == (1,)
-        @test @allocated(blocksize(V)) ≤ 20
+        @test @allocated(blocksize(V)) ≤ 40
         V = view(A, Block.(1:30))
         @test blocksize(V) == (30,)
-        @test @allocated(blocksize(V)) ≤ 20
+        @test @allocated(blocksize(V)) ≤ 40
         V = view(A, 3:43)
         @test blocksize(V) == (1,)
         V = view(A, 5)
@@ -195,7 +195,7 @@ using BlockArrays, Test, Base64
         @test @allocated(blocksize(A)) ≤ 40
         V = view(A, Block(3,2))
         @test blocksize(V) == (1,1)
-        @test @allocated(blocksize(V)) ≤ 20
+        @test @allocated(blocksize(V)) ≤ 40
         V = view(A, Block.(1:30), Block(3))
         @test blocksize(V) == (30,1)
         @test @allocated(blocksize(V)) ≤ 40
