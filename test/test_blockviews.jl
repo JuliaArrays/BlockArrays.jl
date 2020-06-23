@@ -207,4 +207,18 @@ using BlockArrays, Test, Base64
         V = view(A, 5, 1:3)
         @test blocksize(V) == (1,)
     end
+
+    @testset "hasmatchingblocks" begin
+        A = BlockArray{Int}(undef, 1:20, 1:20)
+        B = BlockArray{Int}(undef, 1:3, fill(3,2))
+        V = view(A,Block.(1:10),Block.(1:10))
+
+        @test BlockArrays.hasmatchingblocks(A)
+        @test BlockArrays.hasmatchingblocks(V)
+        @test @allocated(BlockArrays.hasmatchingblocks(V)) == 0
+        @test !BlockArrays.hasmatchingblocks(view(A,Block.(1:2),1:3))
+        @test !BlockArrays.hasmatchingblocks(view(A,Block.(1:2),Block.(2:3)))
+
+        @test BlockArrays.hasmatchingblocks(view(B,Block.(3:3),Block.(2:2)))
+    end
 end

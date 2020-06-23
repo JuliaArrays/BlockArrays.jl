@@ -188,4 +188,13 @@ _sub_blocksize(ind::Integer, inds...) = _sub_blocksize(inds...)
 blocksize(V::SubArray) = _sub_blocksize(parentindices(V)...)
 blocksize(V::SubArray, i::Int) = _sub_blocksize(parentindices(V)[i])[1]
 
-hasmatchingblocks(V::SubArray{<:Any,2}) = hasmatchingblocks(parent(V)) && ==(parentindices(V)...)
+function hasmatchingblocks(V::SubArray{<:Any,2,<:Any,<:NTuple{2,BlockSlice{<:BlockRange{1}}}})
+    a,b = axes(parent(V))
+    kr,jr = parentindices(V)
+    KR,JR = (kr.block),(jr.block)
+    length(KR) == length(JR) || return false
+    for (K,J) in zip(KR,JR)
+        length(a[K]) == length(b[J]) || return false
+    end
+    true
+end
