@@ -6,18 +6,6 @@ function _sym_axes(A)
     (ax, ax)
 end
 
-function _sym_blocksize(A)
-    ax = blocksize(parent(A),2)
-    (ax, ax)
-end
-
-function _sym_blockaxes(A)
-    ax = blockaxes(parent(A),2)
-    (ax, ax)
-end
-
-
-
 # Symmetric and Triangular should inherit blocks from parent
 axes(A::HermOrSym{<:Any,<:AbstractBlockMatrix}) = _sym_axes(A)
 axes(A::HermOrSym{<:Any,<:SubArray{<:Any,2,<:AbstractBlockMatrix}}) = _sym_axes(A)
