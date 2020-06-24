@@ -174,4 +174,51 @@ using BlockArrays, Test, Base64
         @test A[Block.(2:3)] isa PseudoBlockArray
         @test A[Block.(2:3)] == A[2:end]
     end
+
+    @testset "non-allocation blocksize" begin
+        A = BlockArray(randn(5050), 1:100)
+        @test blocksize(A) == (100,)
+        @test @allocated(blocksize(A)) ≤ 40
+        V = view(A, Block(3))
+        @test blocksize(V) == (1,)
+        @test @allocated(blocksize(V)) ≤ 40
+        V = view(A, Block.(1:30))
+        @test blocksize(V) == (30,)
+        @test @allocated(blocksize(V)) ≤ 40
+        V = view(A, 3:43)
+        @test blocksize(V) == (1,)
+        V = view(A, 5)
+        @test blocksize(V) == ()
+
+        A = BlockArray(randn(5050,21), 1:100, 1:6)
+        @test blocksize(A) == (100,6)
+        @test @allocated(blocksize(A)) ≤ 40
+        V = view(A, Block(3,2))
+        @test blocksize(V) == (1,1)
+        @test @allocated(blocksize(V)) ≤ 40
+        V = view(A, Block.(1:30), Block(3))
+        @test blocksize(V) == (30,1)
+        @test @allocated(blocksize(V)) ≤ 40
+        V = view(A, Block.(1:30), Block.(1:3))
+        @test blocksize(V) == (30,3)
+        @test @allocated(blocksize(V)) ≤ 40
+        V = view(A, 3:43,1:3)
+        @test blocksize(V) == (1,1)
+        V = view(A, 5, 1:3)
+        @test blocksize(V) == (1,)
+    end
+
+    @testset "hasmatchingblocks" begin
+        A = BlockArray{Int}(undef, 1:20, 1:20)
+        B = BlockArray{Int}(undef, 1:3, fill(3,2))
+        V = view(A,Block.(1:10),Block.(1:10))
+
+        @test BlockArrays.hasmatchingblocks(A)
+        @test BlockArrays.hasmatchingblocks(V)
+        @test @allocated(BlockArrays.hasmatchingblocks(V)) == 0
+        @test !BlockArrays.hasmatchingblocks(view(A,Block.(1:2),1:3))
+        @test !BlockArrays.hasmatchingblocks(view(A,Block.(1:2),Block.(2:3)))
+
+        @test BlockArrays.hasmatchingblocks(view(B,Block.(3:3),Block.(2:2)))
+    end
 end
