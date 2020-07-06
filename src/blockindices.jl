@@ -362,3 +362,6 @@ last(iter::BlockRange)  = Block(map(last, iter.indices))
 end
 _in(b, ::Tuple{}, ::Tuple{}, ::Tuple{}) = b
 @inline _in(b, i, start, stop) = _in(b & (start[1] <= i[1] <= stop[1]), tail(i), tail(start), tail(stop))
+
+# We sometimes need intersection of BlockRange to return a BlockRange
+intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1], b.indices[1]))
