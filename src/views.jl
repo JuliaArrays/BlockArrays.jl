@@ -7,14 +7,11 @@ Returns the indices associated with a block as a `BlockSlice`.
 """
 function unblock(A, inds, I)
     B = first(I)
-    if length(inds) == 0
-        # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
-        # similar to `ones(2)[1:1, 1:1]`.
-        BlockSlice(B,Base.OneTo(1))
-    else
-        BlockSlice(B,inds[1][B])
-    end
+    BlockSlice(B,inds[1][B])
 end
+# Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
+# similar to `ones(2)[1:1, 1:1]`.
+unblock(A, ::Tuple{}, I) = BlockSlice(first(I),Base.OneTo(1))
 
 to_index(::Block) = throw(ArgumentError("Block must be converted by to_indices(...)"))
 to_index(::BlockIndex) = throw(ArgumentError("BlockIndex must be converted by to_indices(...)"))
