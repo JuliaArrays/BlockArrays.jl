@@ -1,27 +1,68 @@
 
-# Function for cholesky decomposition on block matries
-# 'cholesky' is the build-in one in LAPACK
+##########################
+# Cholesky Factorization #
+##########################
 
-function Bcholesky(A::Symmetric{<:Any,<:BlockArray})
-    chol_U = BlockArray{Float64}(zeros(size(A)), fill(size(A)[1]÷blocksize(A)[1], blocksize(A)[1]), fill(size(A)[1]÷blocksize(A)[1], blocksize(A)[1]))
+"""
+Instructions and examples
+"""
+
+"""
+Update
+1.changed all computations into in-place but there are still many allocations 
+which is highly depended on the number of blocks.
+For example, I took a block matrix A with n=5 and d=3 and it had 59 allocations. The build-in only have 5 instead.
+I will focus on reducing these allocations.
+
+2.I added 'cholesky' 'cholesky!' and 'cholcopy' in 'BlockArrays.jl' and included the file in my local version during the test.
+"""
+
+
+"""
+Funtions to do
+
+1.cholesky structure
+
+2.check square
+
+3.check positive definite
+
+4.swap 'cholesky!'
+
+"""
+
+function cholesky(A::Symmetric{<:Any,<:BlockArray})
+
+    chol_U = cholcopy(A)
+    chol_P = parent(chol_U)
 
     # Initializing the first role of blocks
-    chol_U[Block(1,1)] = cholesky!(A[Block(1,1)]).U
+    cholesky!(Symmetric(getblock(chol_P,1,1)))
     for j = 2:blocksize(A)[1]
-        chol_U[Block(1,j)] = chol_U[Block(1,1)]' \ A[Block(1,j)]
+        ldiv!(UpperTriangular(getblock(chol_P,1,1))', getblock(chol_P,1,j))
     end
 
-    # For the left blocks
-    for i = 2:blocksize(A)[1]
+        # For the left blocks
+     for i = 2:blocksize(A)[1]
         for j = i:blocksize(A)[1]
             if j == i
-                chol_U[Block(i,j)] = cholesky!(A[Block(i,j)] - sum(chol_U[Block(k,j)]'chol_U[Block(k,j)] for k in 1:j-1)).U
+                Pij = getblock(chol_P,i,j) # Will this asign an allocation? Or we can just use getblock() in mul! ?
+                for k = 1:j-1
+                    mul!(Pij,getblock(chol_P,k,j)',getblock(chol_P,k,j),-1.0,1.0)
+                end
+                cholesky!(Symmetric(Pij))
             else
-                chol_U[Block(i,j)] = chol_U[Block(i,i)]' \ (A[Block(i,j)] - sum(chol_U[Block(k,i)]'chol_U[Block(k,j)] for k in 1:j-1))
+                Pinj = getblock(chol_P,i,j)
+                for k = 1:i-1
+                    mul!(Pinj,getblock(chol_P,k,i)',getblock(chol_P,k,j),-1.0,1.0)
+                end
+                ldiv!(UpperTriangular(getblock(chol_P,i,i))', Pinj)
             end
         end
     end
-
-    return chol_U
+    
+    return UpperTriangular(chol_U)
 
 end
+
+
