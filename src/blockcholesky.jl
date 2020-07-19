@@ -30,11 +30,11 @@ Funtions to do
 4.swap 'cholesky!'
 
 """
+cholesky(A::Symmetric{<:Real,<:BlockArray},
+    ::Val{false}=Val(false); check::Bool = true) = cholesky!(cholcopy(A); check = check)
 
-function cholesky(A::Symmetric{<:Any,<:BlockArray})
-
-    chol_U = cholcopy(A)
-    chol_P = parent(chol_U)
+function cholesky!(A::Symmetric{<:Real,<:BlockArray}; check::Bool = true)
+    chol_P = parent(A)
 
     # Initializing the first role of blocks
     cholesky!(Symmetric(getblock(chol_P,1,1)))
@@ -50,7 +50,7 @@ function cholesky(A::Symmetric{<:Any,<:BlockArray})
                 for k = 1:j-1
                     mul!(Pij,getblock(chol_P,k,j)',getblock(chol_P,k,j),-1.0,1.0)
                 end
-                cholesky!(Symmetric(Pij))
+                cholesky!(Symmetric(Pij); check=check)
             else
                 Pinj = getblock(chol_P,i,j)
                 for k = 1:i-1
@@ -61,8 +61,7 @@ function cholesky(A::Symmetric{<:Any,<:BlockArray})
         end
     end
     
-    return UpperTriangular(chol_U)
-
+    return UpperTriangular(chol_P)
 end
 
 

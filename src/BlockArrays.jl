@@ -35,7 +35,7 @@ using Base: ReshapedArray, dataids
 import Base: (:), IteratorSize, iterate, axes1, strides, isempty
 import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, broadcastable
 import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
-                        StructuredMatrixStyle
+                        StructuredMatrixStyle, cholesky, cholesky!, cholcopy
 import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdivVec,
                         materialize!, MemoryLayout, sublayout, transposelayout, conjlayout, 
                         triangularlayout, triangulardata, _inv, _copyto!, axes_print_matrix_row,
@@ -59,5 +59,6 @@ include("blockproduct.jl")
 include("show.jl")
 include("blockreduce.jl")
 include("blockdeque.jl")
+include("blockcholesky.jl")
 
 end # module
