@@ -7,14 +7,11 @@ Returns the indices associated with a block as a `BlockSlice`.
 """
 function unblock(A, inds, I)
     B = first(I)
-    if length(inds) == 0
-        # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
-        # similar to `ones(2)[1:1, 1:1]`.
-        BlockSlice(B,Base.OneTo(1))
-    else
-        BlockSlice(B,inds[1][B])
-    end
+    BlockSlice(B,inds[1][B])
 end
+# Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
+# similar to `ones(2)[1:1, 1:1]`.
+unblock(A, ::Tuple{}, I) = BlockSlice(first(I),Base.OneTo(1))
 
 to_index(::Block) = throw(ArgumentError("Block must be converted by to_indices(...)"))
 to_index(::BlockIndex) = throw(ArgumentError("BlockIndex must be converted by to_indices(...)"))
@@ -177,3 +174,24 @@ unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,PseudoBlockArray{T,N,AT},<:Tuple{
     unsafe_convert(Ptr{T}, V.parent) + (Base.first_index(V)-1)*sizeof(T)
 
 
+# The default blocksize(V) is slow for views as it calls axes(V), which
+# allocates. Here we work around this.
+
+_sub_blocksize() = ()
+_sub_blocksize(ind::BlockSlice{<:BlockRange{1}}, inds...) = tuple(length(ind.block),_sub_blocksize(inds...)...)
+_sub_blocksize(ind::BlockSlice{<:Block{1}}, inds...) = tuple(1,_sub_blocksize(inds...)...)
+_sub_blocksize(ind::AbstractVector, inds...) = tuple(blocksize(ind,1),_sub_blocksize(inds...)...)
+_sub_blocksize(ind::Integer, inds...) = _sub_blocksize(inds...)
+blocksize(V::SubArray) = _sub_blocksize(parentindices(V)...)
+blocksize(V::SubArray, i::Int) = _sub_blocksize(parentindices(V)[i])[1]
+
+function hasmatchingblocks(V::SubArray{<:Any,2,<:Any,<:NTuple{2,BlockSlice{<:BlockRange{1}}}})
+    a,b = axes(parent(V))
+    kr,jr = parentindices(V)
+    KR,JR = (kr.block),(jr.block)
+    length(KR) == length(JR) || return false
+    for (K,J) in zip(KR,JR)
+        length(a[K]) == length(b[J]) || return false
+    end
+    true
+end
