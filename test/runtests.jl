@@ -12,4 +12,5 @@ using BlockArrays, LinearAlgebra, Test
     include("test_blockproduct.jl")
     include("test_blockreduce.jl")
     include("test_blockdeque.jl")
+    include("test_cholesky.jl")
 end
