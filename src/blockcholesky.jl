@@ -1,37 +1,33 @@
 
 
-##########################
-# Cholesky Factorization #
-##########################
+##########################################
+# Cholesky Factorization on BlockMatrices#
+##########################################
 
-"""
-Funtions to do
-2.check square
-3.check positive definite
-"""
 
 cholesky(A::Symmetric{<:Real,<:BlockArray},
-    ::Val{false}=Val(false); check::Bool = true) = cholesky!(cholcopy(A); check = check)
+    ::Val{false}=Val(false); check::Bool = false) = cholesky!(cholcopy(A); check = check)
 
 
 function b_chol!(A::BlockArray{T}, ::Type{UpperTriangular}) where T<:Real
     n = blocksize(A)[1]
 
     @inbounds begin
-        # Initializing the first role of blocks
-        cholesky!(Symmetric(getblock(A,1,1)))
-        for j = 2:n
-            ldiv!(UpperTriangular(getblock(A,1,1))', getblock(A,1,j))
-        end
-
-        # For the left blocks
-        for i = 2:n
+        for i = 1:n
             Pii = getblock(A,i,i) 
             for k = 1:i-1
                 muladd!(-1.0, getblock(A,k,i)', getblock(A,k,i), 1.0, Pii)
             end
-            cholesky!(Symmetric(Pii))
-    
+            Aii, info = LinearAlgebra._chol!(Pii, UpperTriangular)
+            if !iszero(info)
+                @assert info > 0
+                if i == 1
+                    return UpperTriangular(A), info
+                end
+                info += sum(size(A[Block(l,l)])[1] for l=1:i-1) 
+                return UpperTriangular(A), info
+            end
+
             for j = i+1:n
                 Pij = getblock(A,i,j)
                 for k = 1:i-1
@@ -41,26 +37,29 @@ function b_chol!(A::BlockArray{T}, ::Type{UpperTriangular}) where T<:Real
             end
         end
     end
-
-    return UpperTriangular(A)
+ 
+    return UpperTriangular(A), 0
 end
+
+
 function b_chol!(A::BlockArray{T}, ::Type{LowerTriangular}) where T<:Real
     n = blocksize(A)[1]
 
     @inbounds begin
-        # Initializing the first role of blocks
-        cholesky!(Symmetric(getblock(A,1,1), :L))
-        for j = 2:n
-            rdiv!(getblock(A,j,1), LowerTriangular(getblock(A,1,1))')
-        end
-
-        # For the left blocks
-        for i = 2:n
+        for i = 1:n
             Pii = getblock(A,i,i) 
             for k = 1:i-1
                 muladd!(-1.0, getblock(A,i,k), getblock(A,i,k)', 1.0, Pii)
             end
-            cholesky!(Symmetric(Pii, :L))
+            Aii, info = LinearAlgebra._chol!(Pii, LowerTriangular)
+            if !iszero(info)
+                @assert info > 0
+                if i == 1
+                    return UpperTriangular(A), info
+                end
+                info += sum(size(A[Block(l,l)])[1] for l=1:i-1) 
+                return LowerTriangular(A), info
+            end
     
             for j = i+1:n
                 Pij = getblock(A,j,i)
@@ -72,12 +71,12 @@ function b_chol!(A::BlockArray{T}, ::Type{LowerTriangular}) where T<:Real
         end
     end
 
-    return LowerTriangular(A)
+    return LowerTriangular(A), 0
 end
 
-function cholesky!(A::Symmetric{<:Real,<:BlockArray}, ::Val{false}=Val(false); check::Bool = true)
-    C = b_chol!(A.data, A.uplo == 'U' ? UpperTriangular : LowerTriangular)
-    #check && checkpositivedefinite(info)
-    return Cholesky(C.data, A.uplo, 0)
+function cholesky!(A::Symmetric{<:Real,<:BlockArray}, ::Val{false}=Val(false); check::Bool = false)
+    C, info = b_chol!(A.data, A.uplo == 'U' ? UpperTriangular : LowerTriangular)
+    #check && LinearAlgebra.checkpositivedefinite(info)
+    return Cholesky(C.data, A.uplo, info)
 end
 

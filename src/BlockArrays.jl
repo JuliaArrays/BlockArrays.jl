@@ -54,11 +54,11 @@ include("views.jl")
 include("blocks.jl")
 include("blockarrayinterface.jl")
 include("blockbroadcast.jl")
+include("blockcholesky.jl")
 include("blocklinalg.jl")
 include("blockproduct.jl")
 include("show.jl")
 include("blockreduce.jl")
 include("blockdeque.jl")
-include("blockcholesky.jl")
 
 end # module
