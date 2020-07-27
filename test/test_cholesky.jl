@@ -5,15 +5,15 @@ using BlockArrays, Test, LinearAlgebra
 @testset "Block cholesky" begin
 
     # Generating random positive definite and symmetric matrices
-    A = BlockArray{Float64}(randn(9,9)+100I, fill(3,3), fill(3,3)); A = Symmetric(A)
-    B = BlockArray{Float64}(randn(55,55)+100I, 1:10, 1:10); B = Symmetric(B)
-    C = BlockArray{Float64}(randn(9,9)+100I, fill(3,3), fill(3,3)); C = Symmetric(C, :L)
-    D = BlockArray{Float64}(randn(55,55)+100I, 1:10, 1:10); D = Symmetric(D, :L)
-    E = BlockArray{Float64}(randn(9,9)+100I, fill(3,3), fill(3,3)); E = Symmetric(E)
+    A = BlockArray{Float32}(randn(9,9)+100I, fill(3,3), fill(3,3)); A = Symmetric(A)
+    B = BlockArray{Float32}(randn(55,55)+100I, 1:10, 1:10); B = Symmetric(B)
+    C = BlockArray{Float32}(randn(9,9)+100I, fill(3,3), fill(3,3)); C = Symmetric(C, :L)
+    D = BlockArray{Float32}(randn(55,55)+100I, 1:10, 1:10); D = Symmetric(D, :L)
+    E = BlockArray{Float32}(randn(9,9)+100I, fill(3,3), fill(3,3)); E = Symmetric(E)
     E2 = copy(E); E2[2,2] = 0
     E5 = copy(E); E5[5,5] = 0
     E8 = copy(E); E8[8,8] = 0
-    nsym = BlockArray{Float64}(randn(6,8), fill(2,3), fill(2,4))
+    nsym = BlockArray{Float32}(randn(6,8), fill(2,3), fill(2,4))
 
     A_T = Matrix(A)
     B_T = Matrix(B)

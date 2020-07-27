@@ -9,14 +9,14 @@ cholesky(A::Symmetric{<:Real,<:BlockArray},
     ::Val{false}=Val(false); check::Bool = false) = cholesky!(cholcopy(A); check = check)
 
 
-function b_chol!(A::BlockArray{T}, ::Type{UpperTriangular}) where T<:Real
+function _block_chol!(A::BlockArray{T}, ::Type{UpperTriangular}) where T<:Real
     n = blocksize(A)[1]
 
     @inbounds begin
         for i = 1:n
             Pii = getblock(A,i,i) 
             for k = 1:i-1
-                muladd!(-1.0, getblock(A,k,i)', getblock(A,k,i), 1.0, Pii)
+                muladd!(-one(T), getblock(A,k,i)', getblock(A,k,i), one(T), Pii)
             end
             Aii, info = LinearAlgebra._chol!(Pii, UpperTriangular)
             if !iszero(info)
@@ -31,7 +31,7 @@ function b_chol!(A::BlockArray{T}, ::Type{UpperTriangular}) where T<:Real
             for j = i+1:n
                 Pij = getblock(A,i,j)
                 for k = 1:i-1
-                    muladd!(-1.0, getblock(A,k,i)', getblock(A,k,j), 1.0, Pij)
+                    muladd!(-one(T), getblock(A,k,i)', getblock(A,k,j), one(T), Pij)
                 end
                 ldiv!(UpperTriangular(getblock(A,i,i))', Pij)
             end
@@ -42,14 +42,14 @@ function b_chol!(A::BlockArray{T}, ::Type{UpperTriangular}) where T<:Real
 end
 
 
-function b_chol!(A::BlockArray{T}, ::Type{LowerTriangular}) where T<:Real
+function _block_chol!(A::BlockArray{T}, ::Type{LowerTriangular}) where T<:Real
     n = blocksize(A)[1]
 
     @inbounds begin
         for i = 1:n
             Pii = getblock(A,i,i) 
             for k = 1:i-1
-                muladd!(-1.0, getblock(A,i,k), getblock(A,i,k)', 1.0, Pii)
+                muladd!(-one(T), getblock(A,i,k), getblock(A,i,k)', one(T), Pii)
             end
             Aii, info = LinearAlgebra._chol!(Pii, LowerTriangular)
             if !iszero(info)
@@ -64,7 +64,7 @@ function b_chol!(A::BlockArray{T}, ::Type{LowerTriangular}) where T<:Real
             for j = i+1:n
                 Pij = getblock(A,j,i)
                 for k = 1:i-1
-                    muladd!(-1.0, getblock(A,j,k), getblock(A,i,k)', 1.0, Pij)
+                    muladd!(-one(T), getblock(A,j,k), getblock(A,i,k)', one(T), Pij)
                 end
                 rdiv!(Pij, LowerTriangular(getblock(A,i,i))')
             end
@@ -75,7 +75,7 @@ function b_chol!(A::BlockArray{T}, ::Type{LowerTriangular}) where T<:Real
 end
 
 function cholesky!(A::Symmetric{<:Real,<:BlockArray}, ::Val{false}=Val(false); check::Bool = false)
-    C, info = b_chol!(A.data, A.uplo == 'U' ? UpperTriangular : LowerTriangular)
+    C, info = _block_chol!(A.data, A.uplo == 'U' ? UpperTriangular : LowerTriangular)
     #check && LinearAlgebra.checkpositivedefinite(info)
     return Cholesky(C.data, A.uplo, info)
 end
