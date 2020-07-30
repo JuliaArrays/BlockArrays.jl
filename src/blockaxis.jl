@@ -100,7 +100,7 @@ julia> blockaxes(A)[1]
 ```
 """
 blockaxes(b::BlockedUnitRange) = (Block.(axes(b.lasts,1)),)
-blockaxes(b::AbstractArray{<:Any,N}) where N = blockaxes.(axes(b), 1)
+blockaxes(b) = blockaxes.(axes(b), 1)
 
 """
     blockaxes(A, d)
