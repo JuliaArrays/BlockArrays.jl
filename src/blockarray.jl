@@ -313,7 +313,7 @@ convert(::Type{BlockArray{T1}}, A::AbstractArray{T2, N}) where {T1,T2,N} =
 convert(::Type{BlockArray}, A::AbstractArray{T, N}) where {T,N} =
     convert(BlockArray{T, N}, A)
 
-copy(A::BlockArray) = _BlockArray(copy.(A.blocks), A.axes)
+copy(A::BlockArray) = _BlockArray(map(copy,A.blocks), A.axes)
 
 ################################
 # AbstractBlockArray Interface #
