@@ -131,4 +131,10 @@ using BlockArrays, FillArrays, Test
         @test -V isa BlockArray
         @test -V == -A[Block.(2:3)]
     end
+
+    @testset "Fill broadcast" begin
+        A = BlockArray(randn(6), 1:3)
+        @test blockisequal(axes(A .* Zeros(6)), axes(A .* zeros(6)))
+        @test blockisequal(axes(A .* Ones(6)), axes(A .* ones(6)))
+    end
 end
