@@ -323,7 +323,7 @@ Base.stride(A::PseudoBlockArray, i::Integer) = stride(A.blocks, i)
 Base.unsafe_convert(::Type{Ptr{T}}, A::PseudoBlockArray) where T = Base.unsafe_convert(Ptr{T}, A.blocks)
 
 if VERSION ≥ v"1.5"
-    Base.elsize(::Type{<:PseudoBlockArray{T}}) where {T} = Base.aligned_sizeof(T)
+    Base.elsize(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = Base.elsize(R)
 end
 
 ###
