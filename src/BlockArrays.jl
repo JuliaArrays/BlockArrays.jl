@@ -60,5 +60,6 @@ include("blockproduct.jl")
 include("show.jl")
 include("blockreduce.jl")
 include("blockdeque.jl")
+include("blockbandedcholesky.jl")
 
 end # module
