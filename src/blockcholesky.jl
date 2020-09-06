@@ -1,5 +1,4 @@
 
-
 ##########################################
 # Cholesky Factorization on BlockMatrices#
 ##########################################
@@ -7,7 +6,6 @@
 
 cholesky(A::Symmetric{<:Real,<:AbstractArray},
     ::Val{false}=Val(false); check::Bool = true) = cholesky!(cholcopy(A); check = check)
-
 
 function _diag_chol!(A::AbstractArray{T}, i::Int, ::Type{UpperTriangular}) where T<:Real
     Pii = view(A,Block(i,i))
@@ -31,7 +29,7 @@ function _nondiag_chol!(A::AbstractArray{T}, i::Int, n::Int, ::Type{UpperTriangu
         for k = 1:i-1
             muladd!(-one(T), getblock(A,k,i)', getblock(A,k,j), one(T), Pij)
         end
-        ldiv!(UpperTriangular(getblock(A,i,i))', Pij)
+        ldiv!(transpose(UpperTriangular(getblock(A,i,i))), Pij)
     end
 end
 
@@ -45,13 +43,12 @@ function _nondiag_chol!(A::AbstractArray{T}, i::Int, n::Int, ::Type{LowerTriangu
     end
 end
 
-
 function _block_chol!(A::AbstractArray{T}, ::Type{UpperTriangular}) where T<:Real
     n = blocksize(A)[1]
 
     @inbounds begin
         for i = 1:n
-            Aii, info = _diag_chol!(A, i, UpperTriangular)
+            _, info = _diag_chol!(A, i, UpperTriangular)
 
             if !iszero(info)
                 @assert info > 0
@@ -65,23 +62,22 @@ function _block_chol!(A::AbstractArray{T}, ::Type{UpperTriangular}) where T<:Rea
             _nondiag_chol!(A, i, n, UpperTriangular)
         end
     end
- 
+
     return UpperTriangular(A), 0
 end
 
-
 function _block_chol!(A::AbstractArray{T}, ::Type{LowerTriangular}) where T<:Real
     n = blocksize(A)[1]
-    A = BlockArray(transpose(A))
+    A = copy(transpose(A))
 
     @inbounds begin
         for i = 1:n
-            Aii, info = _diag_chol!(A, i, LowerTriangular)
+            _, info = _diag_chol!(A, i, LowerTriangular)
 
             if !iszero(info)
                 @assert info > 0
                 if i == 1
-                    return LowerTriangular(A), info
+                    return LowerTriangular(copy(transpose(A))), info
                 end
                 info += sum(size(A[Block(l,l)])[1] for l=1:i-1) 
                 return LowerTriangular(A), info
@@ -91,11 +87,10 @@ function _block_chol!(A::AbstractArray{T}, ::Type{LowerTriangular}) where T<:Rea
         end
     end
 
-    return LowerTriangular(BlockArray(transpose(A))), 0
+    return LowerTriangular(transpose(A)), 0
 end
 
 function cholesky!(A::Symmetric{<:Real,<:AbstractArray}, ::Val{false}=Val(false); check::Bool = true)
     C, info = _block_chol!(A.data, A.uplo == 'U' ? UpperTriangular : LowerTriangular)
-    #check && LinearAlgebra.checkpositivedefinite(info)
     return Cholesky(C.data, A.uplo, info)
 end
