@@ -283,3 +283,9 @@ end
 
 # For now, use PseudoBlockArray
 _inv(::AbstractBlockLayout, axes, A) = BlockArray(inv(PseudoBlockArray(A)))
+
+for op in (:exp, :log, :sqrt)
+    @eval begin
+       $op(A::PseudoBlockMatrix) = PseudoBlockMatrix($op(A.blocks), axes(A))
+    end
+end
