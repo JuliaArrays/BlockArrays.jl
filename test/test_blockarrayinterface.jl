@@ -123,9 +123,9 @@ end
     A = Fill(2,(blockedrange([1,2,2]),))
     @test A[Block(1)] == [2]
     @test A[Block.(1:2)] == [2,2,2]
-    @test_broken A[Block(1)] isa Fill
-    @test_broken A[Block.(1:2)] isa Fill
-    @test_broken 2A
+    @test A[Block(1)] isa Fill
+    @test A[Block.(1:2)] isa Fill
+    @test_broken 2A ≡ Fill(4,axes(A))
 
 
     B = Eye((blockedrange([1,2]),))
