@@ -228,3 +228,15 @@ blocklengths(a::AbstractUnitRange) = blocklasts(a) .- blockfirsts(a) .+ 1
 
 Base.summary(a::BlockedUnitRange) = _block_summary(a)
 Base.summary(io::IO, a::BlockedUnitRange) =  _block_summary(io, a)
+
+
+###
+# Slice{<:BlockedUnitRange}
+###
+
+Base.axes(S::Base.Slice{<:BlockedUnitRange}) = (S.indices,)
+Base.unsafe_indices(S::Base.Slice{<:BlockedUnitRange}) = (S.indices,)
+Base.axes1(S::Base.Slice{<:BlockedUnitRange}) = S.indices
+blockaxes(S::Base.Slice) = blockaxes(S.indices)
+getindex(S::Base.Slice, b::Block{1}) = S.indices[b]
+getindex(S::Base.Slice, b::BlockRange{1}) = S.indices[b]
