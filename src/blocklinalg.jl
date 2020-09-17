@@ -63,8 +63,6 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{<:BlockSlice{BlockRange{1,T
 sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
 sub_materialize(::AbstractBlockLayout, V, ::Tuple{<:BlockedUnitRange}) = BlockArray(V)
 sub_materialize(::AbstractBlockLayout, V, ::Tuple{<:BlockedUnitRange,<:BlockedUnitRange}) = BlockArray(V)
-sub_materialize(::AbstractBlockLayout, V, ::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) = BlockArray(V)
-sub_materialize(::AbstractBlockLayout, V, ::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) = BlockArray(V)
 # if it's not a block layout, best to use PseudoBlockArray
 sub_materialize(_, V, ::Tuple{<:BlockedUnitRange}) = PseudoBlockArray(V)
 sub_materialize(_, V, ::Tuple{<:BlockedUnitRange,<:BlockedUnitRange}) = PseudoBlockArray(V)
