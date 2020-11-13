@@ -258,4 +258,11 @@ using BlockArrays, Test, Base64
         @test A[1:3,Block.(1:2),1:3] isa BlockArray
         @test B[1:3,Block.(1:2),1:3] isa PseudoBlockArray
     end
+
+    @testset "BlockArray BlockRange view" begin
+        a = BlockArray(randn(6), 1:3)
+        v = view(a, Block(3)[1:2])
+        v[1] = 5
+        @test a[4] == 5
+    end
 end
