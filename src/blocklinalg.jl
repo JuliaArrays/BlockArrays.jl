@@ -74,13 +74,13 @@ sub_materialize(_, V, ::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) = PseudoB
 
 # Special for FillArrays.jl
 sub_materialize(::ArrayLayouts.AbstractFillLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
-    Fill(getindex_value(V), ax)
+    Fill(FillArrays.getindex_value(V), ax)
 sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
     Ones{eltype(V)}(ax)
 sub_materialize(::ArrayLayouts.ZerosLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
     Zeros{eltype(V)}(ax)
 sub_materialize(::ArrayLayouts.AbstractFillLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
-    Fill(getindex_value(V), ax)
+    Fill(FillArrays.getindex_value(V), ax)
 sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
     Ones{eltype(V)}(ax)
 sub_materialize(::ArrayLayouts.ZerosLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
