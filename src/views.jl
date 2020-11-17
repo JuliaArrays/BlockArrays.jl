@@ -71,7 +71,7 @@ _splatmap(f, t::Tuple) = (f(t[1])..., _splatmap(f, tail(t))...)
         A::BlockArray{<:Any, N},
         I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
     @_propagate_inbounds_meta
-    B = A[map(x -> x.block.block, I)...]
+    B = getblock(A, map(x -> Int(x.block.block), I)...)
     return view(B, _splatmap(x -> x.block.indices, I)...)
 end
 
