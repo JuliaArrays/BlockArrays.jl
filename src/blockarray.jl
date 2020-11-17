@@ -313,7 +313,7 @@ convert(::Type{BlockArray{T1}}, A::AbstractArray{T2, N}) where {T1,T2,N} =
 convert(::Type{BlockArray}, A::AbstractArray{T, N}) where {T,N} =
     convert(BlockArray{T, N}, A)
 
-copy(A::BlockArray) = _BlockArray(copy.(A.blocks), A.axes)
+copy(A::BlockArray) = _BlockArray(map(copy,A.blocks), A.axes)
 
 ################################
 # AbstractBlockArray Interface #
@@ -358,7 +358,7 @@ end
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)
 
-const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange, Colon}
+const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
 
 # avoid ambiguities
 @inline Base.similar(block_array::BlockArray, ::Type{T}, dims::NTuple{N,Int}) where {T,N} =

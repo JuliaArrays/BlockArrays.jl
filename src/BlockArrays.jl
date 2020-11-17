@@ -1,6 +1,6 @@
 module BlockArrays
 using Base.Cartesian
-using LinearAlgebra, ArrayLayouts
+using LinearAlgebra, ArrayLayouts, FillArrays
 
 # AbstractBlockArray interface exports
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat

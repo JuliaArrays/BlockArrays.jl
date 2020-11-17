@@ -230,6 +230,8 @@ end
         @test axes(b) == Base.unsafe_indices(b) == (b,)
         @test Base.dataids(b) == Base.dataids(blocklasts(b))
         @test_throws ArgumentError BlockedUnitRange(b)
+
+        @test summary(b) == "3-blocked 6-element BlockedUnitRange{Array{$Int,1}}"
     end
 
     @testset "OneTo interface" begin
@@ -260,6 +262,15 @@ end
         @test checkindex(Bool, b, Block(1))
         @test checkindex(Bool, b, Block(3))
         @test !checkindex(Bool, b, Block(4))
+    end
+
+    @testset "Slice" begin
+        b = blockedrange([1,2,3])
+        S = Base.Slice(b)
+        @test blockaxes(S) == blockaxes(b)
+        @test S[Block(2)] == 2:3
+        @test S[Block.(1:2)] == 1:3
+        @test axes(S) == axes(b)
     end
 end
 

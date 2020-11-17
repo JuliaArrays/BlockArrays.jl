@@ -100,7 +100,7 @@ julia> blockaxes(A)[1]
 ```
 """
 blockaxes(b::BlockedUnitRange) = (Block.(axes(b.lasts,1)),)
-blockaxes(b::AbstractArray{<:Any,N}) where N = blockaxes.(axes(b), 1)
+blockaxes(b) = blockaxes.(axes(b), 1)
 
 """
     blockaxes(A, d)
@@ -228,3 +228,15 @@ blocklengths(a::AbstractUnitRange) = blocklasts(a) .- blockfirsts(a) .+ 1
 
 Base.summary(a::BlockedUnitRange) = _block_summary(a)
 Base.summary(io::IO, a::BlockedUnitRange) =  _block_summary(io, a)
+
+
+###
+# Slice{<:BlockedUnitRange}
+###
+
+Base.axes(S::Base.Slice{<:BlockedUnitRange}) = (S.indices,)
+Base.unsafe_indices(S::Base.Slice{<:BlockedUnitRange}) = (S.indices,)
+Base.axes1(S::Base.Slice{<:BlockedUnitRange}) = S.indices
+blockaxes(S::Base.Slice) = blockaxes(S.indices)
+getindex(S::Base.Slice, b::Block{1}) = S.indices[b]
+getindex(S::Base.Slice, b::BlockRange{1}) = S.indices[b]

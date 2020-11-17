@@ -221,4 +221,41 @@ using BlockArrays, Test, Base64
 
         @test BlockArrays.hasmatchingblocks(view(B,Block.(3:3),Block.(2:2)))
     end
+
+    @testset "sub_materialize cases" begin
+        a = BlockArray(randn(6), 1:3)
+        b = PseudoBlockArray(randn(6), 1:3)
+        @test a[Block.(1:2)] isa BlockArray
+        @test b[Block.(1:2)] isa PseudoBlockArray
+        @test a[1:3] isa Array
+        @test b[1:3] isa Array
+        A = BlockArray(randn(6,6), 1:3, fill(3,2))
+        B = PseudoBlockArray(randn(6,6), 1:3, fill(3,2))
+        @test A[Block.(1:2),Block.(1:2)] isa BlockArray
+        @test B[Block.(1:2),Block.(1:2)] isa PseudoBlockArray
+        @test A[Block.(1:2),1:3] isa PseudoBlockArray
+        @test B[Block.(1:2),1:3] isa PseudoBlockArray
+        @test A[1:3,Block.(1:2)] isa PseudoBlockArray
+        @test B[1:3,Block.(1:2)] isa PseudoBlockArray
+        @test A[Block.(1:2),:] isa PseudoBlockArray
+        @test B[Block.(1:2),:] isa PseudoBlockArray
+        @test blockisequal(axes(A,2),axes(A[Block.(1:2),:],2))
+        @test blockisequal(axes(B,2),axes(B[Block.(1:2),:],2))
+        @test A[:,Block.(1:2)] isa PseudoBlockArray
+        @test B[:,Block.(1:2)] isa PseudoBlockArray
+        @test blockisequal(axes(A,1),axes(A[:,Block.(1:2)],1))
+        @test blockisequal(axes(B,1),axes(B[:,Block.(1:2)],1))
+        @test A[:,:] isa PseudoBlockArray
+        @test B[:,:] isa PseudoBlockArray
+        @test blockisequal(axes(A),axes(A[:,:]))
+        @test blockisequal(axes(B),axes(B[:,:]))
+        @test A[1:3,1:3] isa Array
+        @test B[1:3,1:3] isa Array
+        A = BlockArray(randn(6,6,6), 1:3, fill(3,2),1:3)
+        B = PseudoBlockArray(randn(6,6,6), 1:3, fill(3,2),1:3)
+        @test A[Block.(1:2),Block.(1:2),Block.(1:2)] isa BlockArray
+        @test B[Block.(1:2),Block.(1:2),Block.(1:2)] isa PseudoBlockArray
+        @test A[1:3,Block.(1:2),1:3] isa BlockArray
+        @test B[1:3,Block.(1:2),1:3] isa PseudoBlockArray
+    end
 end
