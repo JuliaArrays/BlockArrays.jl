@@ -103,7 +103,21 @@ end
 @testset "blockkron" begin
     a = [1,2]
     b = [3,4,5]
-    K = blockkron(a,b)
-    @test K == kron(a,b)
-    @test K[Block(1)] == a[1]*b
+    k = blockkron(a,b)
+    @test k == kron(a,b)
+    @test blocksize(k) == size(a)
+    @test k[Block(1)] == a[1]*b
+    @test k[Block(2)] == a[2]*b
+    c = 6:8
+    @test blockkron(a,b,c) == kron(a,b,c)
+
+    A = randn(2,3)
+    B = randn(3,4)
+    K = blockkron(A,B)
+    @test K == kron(A,B)
+    @test blocksize(K) == size(A)
+    @test K[Block(1,1)] == A[1,1]*B
+    @test K[Block(2,3)] == A[2,3]*B
+    C = randn(2,5)
+    @test blockkron(A,B,C) == kron(A,B,C)
 end

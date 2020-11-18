@@ -6,7 +6,7 @@ References
 * Khatri, C. G., and Rao, C. Radhakrishna (1968) Solutions to Some Functional Equations and Their Applications to Characterization of Probability Distributions. Sankhya: Indian J. Statistics, Series A 30, 167–180.
 """
 function khatri_rao(A::AbstractBlockMatrix, B::AbstractBlockMatrix)
-    # 
+    #
     Ablksize = blocksize(A)
     Bblksize = blocksize(B)
 
@@ -53,12 +53,13 @@ size(a::BlockKron{<:Any,2}) = (size(a,1), size(a,2))
 
 function axes(K::BlockKron{<:Any,1})
     A,B = K.args
-    (blockedrange(fill(size(B,1), size(A,1))),)
+    (blockedrange(fill(prod(size.(tail(K.args),1)), size(K.args[1],1))),)
 end
 
 function axes(K::BlockKron{<:Any,2})
     A,B = K.args
-    blockedrange.((fill(size(B,1), size(A,1)), fill(size(B,2), size(A,2))))
+    blockedrange.((fill(prod(size.(tail(K.args),1)), size(K.args[1],1)),
+                   fill(prod(size.(tail(K.args),2)), size(K.args[1],2))))
 end
 
 kron_getindex((A,)::Tuple{AbstractVector}, k::Integer) = A[k]
@@ -73,8 +74,8 @@ function kron_getindex((A,B)::NTuple{2,AbstractVecOrMat}, k::Integer, j::Integer
     A[K+1,J+1]*B[κ+1,ξ+1]
 end
 
-kron_getindex(args::Tuple, k::Integer, j::Integer) = kron_getindex(tuple(Kron(args[1:2]...), args[3:end]...), k, j)
-kron_getindex(args::Tuple, k::Integer) = kron_getindex(tuple(Kron(args[1:2]...), args[3:end]...), k)
+kron_getindex(args::Tuple, k::Integer, j::Integer) = kron_getindex(tuple(BlockKron(args[1:2]...), args[3:end]...), k, j)
+kron_getindex(args::Tuple, k::Integer) = kron_getindex(tuple(BlockKron(args[1:2]...), args[3:end]...), k)
 
 getindex(K::BlockKron{<:Any,1}, k::Integer) = kron_getindex(K.args, k)
 getindex(K::BlockKron{<:Any,2}, k::Integer, j::Integer) = kron_getindex(K.args, k, j)
@@ -94,7 +95,7 @@ _blockkron(_, A) = BlockArray(BlockKron(A...))
     blockkron(A...)
 
 creates a blocked version of kron(A...) with the natural
-block-structure imposed. 
+block-structure imposed.
 """
 blockkron(A...) = _blockkron(map(MemoryLayout,A), A)
 
