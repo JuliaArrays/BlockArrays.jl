@@ -14,7 +14,7 @@ export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrM
 
 export undef_blocks, undef, findblock, findblockindex
 
-export khatri_rao
+export khatri_rao, blockkron, BlockKron
 
 export blockappend!, blockpush!, blockpushfirst!, blockpop!, blockpopfirst!
 
