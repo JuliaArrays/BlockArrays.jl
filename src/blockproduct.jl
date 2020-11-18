@@ -35,14 +35,14 @@ end
 creates a lazy representation of kron(A...) with the natural
 block-structure imposed. This is a component in `blockkron(A...)`.
 """
-struct BlockKron{T,N,ARGS<:Tuple} <: LayoutArray{T,N}
+struct BlockKron{T,N,ARGS<:Tuple} <: AbstractBlockArray{T,N}
     args::ARGS
 end
 
 BlockKron{T,N}(A...) where {T,N} = BlockKron{T,N,typeof(A)}(A)
-BlockKron{T}(A::AbstractVector...) where {T} = BlockKron{T,1}(A...)
-BlockKron{T}(A...) where {T} = BlockKron{T,2}(A...)
-BlockKron(A...) = BlockKron{mapreduce(eltype,promote_type,A)}(A...)
+BlockKron{T}(A::AbstractVector, B::AbstractVector, C::AbstractVector...) where {T} = BlockKron{T,1}(A, B, C...)
+BlockKron{T}(A, B, C...) where {T} = BlockKron{T,2}(A, B, C...)
+BlockKron(A, B, C...) = BlockKron{mapreduce(eltype,promote_type,(A,B,C...))}(A, B, C...)
 
 
 size(B::BlockKron) = size(Kron(B))
@@ -79,6 +79,15 @@ kron_getindex(args::Tuple, k::Integer) = kron_getindex(tuple(BlockKron(args[1:2]
 
 getindex(K::BlockKron{<:Any,1}, k::Integer) = kron_getindex(K.args, k)
 getindex(K::BlockKron{<:Any,2}, k::Integer, j::Integer) = kron_getindex(K.args, k, j)
+
+kron_getblock((a,b)::Tuple{Any,Any}, k::Integer) = a[k]*b
+kron_getblock(args, k::Integer) = args[1][k]*BlockKron(tail(args)...)
+
+kron_getblock((a,b)::Tuple{Any,Any}, k::Integer, j::Integer) = a[k,j]*b
+kron_getblock(args, k::Integer, j::Integer) = args[1][k,j]*BlockKron(tail(args)...)
+
+getblock(K::BlockKron{<:Any,1}, k::Integer) = kron_getblock(K.args, k)
+getblock(K::BlockKron{<:Any,2}, k::Integer, j::Integer) = kron_getblock(K.args, k, j)
 
 # const SubKron{T,M1,M2,R1,R2} = SubArray{T,2,<:BlockKron{T,M1,M2},<:Tuple{<:BlockSlice{R1},<:BlockSlice{R2}}}
 
