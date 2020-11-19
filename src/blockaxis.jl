@@ -240,3 +240,7 @@ Base.axes1(S::Base.Slice{<:BlockedUnitRange}) = S.indices
 blockaxes(S::Base.Slice) = blockaxes(S.indices)
 getindex(S::Base.Slice, b::Block{1}) = S.indices[b]
 getindex(S::Base.Slice, b::BlockRange{1}) = S.indices[b]
+
+
+# This supports broadcasting with infinite block arrays
+Base.BroadcastStyle(::Type{BlockedUnitRange{R}}) where R = Base.BroadcastStyle(R)
