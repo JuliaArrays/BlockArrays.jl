@@ -399,7 +399,7 @@ end
     A = PseudoBlockArray(design,[6],[4,5])
     @test stringmime("text/plain",A) == "1×2-blocked 6×9 PseudoBlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
     D = PseudoBlockArray(Diagonal(1:3), [1,2], [2,1])
-    @test stringmime("text/plain", D) == "2×2-blocked 3×3 PseudoBlockArray{$Int,2,Diagonal{$Int,UnitRange{$Int}},Tuple{BlockedUnitRange{Array{$Int,1}},BlockedUnitRange{Array{$Int,1}}}}:\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
+    @test stringmime("text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockArray{Int,2,Diagonal{Int,UnitRange{Int}},Tuple{BlockedUnitRange{Array{Int,1}},BlockedUnitRange{Array{Int,1}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
 end
 
 @testset "AbstractVector{Int} blocks" begin
