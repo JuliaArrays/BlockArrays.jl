@@ -272,6 +272,11 @@ end
         @test S[Block.(1:2)] == 1:3
         @test axes(S) == axes(b)
     end
+
+    @testset "StaticArrays" begin
+        @test blockisequal(blockedrange(SVector(1,2,3)), blockedrange([1,2,3]))
+        @test @allocated(blockedrange(SVector(1,2,3))) == 0
+    end
 end
 
 @testset "BlockSlice" begin
