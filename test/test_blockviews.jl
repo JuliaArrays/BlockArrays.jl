@@ -265,4 +265,10 @@ using BlockArrays, Test, Base64
         v[1] = 5
         @test a[4] == 5
     end
+
+    @testset "types with custom views" begin
+        a = mortar([7:9,5:6])
+        v = view(a,Block.(1:2))
+        @test a[Block(1)[1:3]] ≡ view(a,Block(1)[1:3]) ≡ view(v,Block(1)[1:3]) ≡ 7:9
+    end
 end

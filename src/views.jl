@@ -51,6 +51,11 @@ if VERSION >= v"1.2-"  # See also `reindex` definitions in views.jl
                                                                 subidxs[1].block.indices),
                                                 idxs[1].indices[subidxs[1].indices]),
                                     reindex(tail(idxs), tail(subidxs))...))
+    reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+            subidxs::Tuple{BlockSlice{<:Block}, Vararg{Any}}) =
+        (@_propagate_inbounds_meta; (BlockSlice(idxs[1].block[Int(subidxs[1].block)],
+                                                idxs[1].indices[subidxs[1].indices]),
+                                    reindex(tail(idxs), tail(subidxs))...))
 else  # if VERSION >= v"1.2-"
     reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
             subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
@@ -95,6 +100,13 @@ end
         I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
     @_propagate_inbounds_meta
     return view(A, map(x -> x.indices, I)...)
+end
+
+# make sure we reindex correctrly
+function Base._maybe_reindex(V, I::Tuple{BlockSlice{<:BlockIndexRange{1}}, Vararg{Any}}, ::Tuple{})
+    @_inline_meta
+    @inbounds idxs = to_indices(V.parent, reindex(V.indices, I))
+    view(V.parent, idxs...)
 end
 
 
@@ -195,3 +207,15 @@ function hasmatchingblocks(V::SubArray{<:Any,2,<:Any,<:NTuple{2,BlockSlice{<:Blo
     end
     true
 end
+
+
+####
+# sub_materialize
+# 
+# needed to get special typing
+####
+
+# TODO: remove when `getblock` is replaced with `view`
+
+sub_materialize(_, V::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}, _) where N =
+    parent(V)[block.(parentindices(V))...]

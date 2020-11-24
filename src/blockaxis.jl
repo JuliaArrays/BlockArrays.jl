@@ -65,6 +65,7 @@ _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changin
 returns true if a and b have the same block structure.
 """
 blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int}) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
+blockisequal(a, b, c, d...) = blockisequal(a,b) && blockisequal(b,c,d...)
 """
    blockisequal(a::Tuple, b::Tuple)
 
@@ -174,6 +175,16 @@ function getindex(b::BlockedUnitRange, KR::BlockRange{1})
     @boundscheck J in bax || throw(BlockBoundsError(b,J))
     K == first(bax) && return _BlockedUnitRange(first(b),cs[k:j])
     _BlockedUnitRange(cs[k-1]+1,cs[k:j])
+end
+
+function getindex(b::BlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
+    cs = blocklasts(b)
+    isempty(KR) && return _BlockedUnitRange(1,cs[Base.OneTo(0)])
+    J = last(KR)
+    j = Int(J)
+    bax = blockaxes(b,1)
+    @boundscheck J in bax || throw(BlockBoundsError(b,J))
+    _BlockedUnitRange(first(b),cs[Base.OneTo(j)])
 end
 
 function findblock(b::BlockedUnitRange, k::Integer)

@@ -47,8 +47,8 @@ end
 similar(M::MulAdd{<:AbstractBlockLayout,<:AbstractBlockLayout}, ::Type{T}, axes) where {T,N} =
     similar(BlockArray{T}, axes)
 
-MemoryLayout(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = MemoryLayout(R)
-MemoryLayout(::Type{<:BlockArray{T,N,R}}) where {T,N,D,R<:AbstractArray{D,N}} =
+@inline MemoryLayout(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = MemoryLayout(R)
+@inline MemoryLayout(::Type{<:BlockArray{T,N,R}}) where {T,N,D,R<:AbstractArray{D,N}} =
     BlockLayout{typeof(MemoryLayout(R)),typeof(MemoryLayout(D))}()
 
 sublayout(::BlockLayout{MLAY,BLAY}, ::Type{NTuple{N,BlockSlice1}}) where {MLAY,BLAY,N} = BLAY()
@@ -91,6 +91,23 @@ conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Real,MLAY,BLAY} = Bloc
 
 transposelayout(::BlockLayout{MLAY,BLAY}) where {MLAY,BLAY} =
     BlockLayout{typeof(transposelayout(MLAY())),typeof(transposelayout(BLAY()))}()
+
+#############
+# copyto!
+#############
+
+function _copyto!(_, ::AbstractBlockLayout, dest::AbstractVector, src::AbstractVector)
+    if !blockisequal(axes(dest), axes(src))
+        # impose block structure
+        copyto!(PseudoBlockArray(dest, axes(src)), src)
+        return dest
+    end
+
+    @inbounds for K = blockaxes(src,1)
+        copyto!(view(dest,K), view(src,K))
+    end
+    dest
+end
 
 #############
 # BLAS overrides

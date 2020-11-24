@@ -231,7 +231,7 @@ _blocktype(::Type{<:BlockArray{<:Any,N,<:AbstractArray{R,N}}}) where {N,R} = R
 BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice1},false}}) where {T,N,Arr<:BlockArray} = 
     BroadcastStyle(_blocktype(Arr))
 BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice{BlockRange{1,Tuple{II}}}},false}}) where {T,N,Arr<:BlockArray,II} = 
-    BroadcastStyle(Arr)
+    BlockStyle{N}()
 
 
 ###
