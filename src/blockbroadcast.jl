@@ -147,7 +147,7 @@ end
     return copyto!(dest, Base.Broadcast.instantiate(Base.Broadcast.Broadcasted{BS}(bc.f, bc.args, combine_blockaxes.(axes(dest),axes(bc)))))
 end
 
-@generated function copyto!(dest::AbstractArray,
+@generated function _generic_blockbroadcast_copyto!(dest::AbstractArray,
                             bc::Broadcasted{<:AbstractBlockStyle{NDims}, <:Any, <:Any, Args}) where {NDims, Args <: Tuple}
 
     NArgs = length(Args.parameters)
@@ -188,6 +188,32 @@ end
     end
 end
 
+copyto!(dest::AbstractArray,
+        bc::Broadcasted{<:AbstractBlockStyle{NDims}, <:Any, <:Any, Args}) where {NDims, Args <: Tuple} =
+    _generic_blockbroadcast_copyto!(dest, bc)
+
+# type-stable version of _bview.(args, K)
+__bview(args::Tuple{}, K) = ()
+__bview(args::Tuple, K) = tuple(_bview(args[1],K), __bview(tail(args), K)...)
+
+function _fast_blockbradcast_copyto!(dest, bc)
+    @inbounds for K in blockaxes(bc)[1]
+        KI = K[1:Int(K)]
+        broadcast!(bc.f, view(dest,KI), __bview(bc.args, KI)...)
+    end
+    dest
+end
+
+_hasscalarlikevec() = false
+_hasscalarlikevec(a, b...) = _hasscalarlikevec(b...)
+_hasscalarlikevec(a::AbstractVector, b...) = size(a,1) == 1 || _hasscalarlikevec(b...)
+    
+function copyto!(dest::AbstractVector,
+        bc::Broadcasted{<:AbstractBlockStyle{1}, <:Any, <:Any, Args}) where {Args <: Tuple}
+    _hasscalarlikevec(bc.args...) && return _generic_blockbroadcast_copyto!(dest, bc)
+    
+    _fast_blockbradcast_copyto!(dest, bc)
+end
 @inline function Broadcast.instantiate(bc::Broadcasted{Style}) where {Style <:AbstractBlockStyle}
     bcf = Broadcast.instantiate(Broadcast.flatten(Broadcasted{Nothing}(bc.f, bc.args, bc.axes)))
     return Broadcasted{Style}(bcf.f, bcf.args, bcf.axes)

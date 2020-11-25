@@ -73,6 +73,11 @@ sub_materialize(_, V, ::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) = PseudoB
 sub_materialize(_, V, ::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) = PseudoBlockArray(V)
 
 # Special for FillArrays.jl
+
+# special case for fill blocks
+FillArrays.getindex_value(V::SubArray{<:Any,1,<:BlockArray,<:Tuple{BlockArrays.BlockSlice{<:Block{1}}}}) =
+    FillArrays.getindex_value(getblock(parent(V), Int(parentindices(V)[1].block)))
+
 sub_materialize(::ArrayLayouts.AbstractFillLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
     Fill(FillArrays.getindex_value(V), ax)
 sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =

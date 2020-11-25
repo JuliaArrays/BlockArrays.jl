@@ -53,6 +53,7 @@ const DefaultBlockAxis = BlockedUnitRange{Vector{Int}}
 
 BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
 _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
+_blocklengths2blocklasts(blocks::AbstractRange) = ArrayLayouts.RangeCumsum(blocks)
 @inline blockedrange(blocks::AbstractVector{Int}) = _BlockedUnitRange(_blocklengths2blocklasts(blocks))
 
 @inline blockfirsts(a::BlockedUnitRange) = [a.first; @view(a.lasts[1:end-1]) .+ 1]

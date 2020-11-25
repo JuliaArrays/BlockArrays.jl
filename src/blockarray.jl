@@ -252,6 +252,8 @@ mortar(blocks::AbstractArray) = mortar(blocks, sizes_from_blocks(blocks)...)
 
 sizes_from_blocks(blocks) = sizes_from_blocks(blocks, axes(blocks)) # allow overriding on axes
 
+sizes_from_blocks(blocks::AbstractVector, _) = (map(length, blocks),)
+
 function sizes_from_blocks(blocks::AbstractArray{<:Any, N}, _) where N
     if length(blocks) == 0
         return zeros.(Int, size(blocks))

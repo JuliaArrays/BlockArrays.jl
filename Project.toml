@@ -6,10 +6,11 @@ version = "0.13.1"
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
+LazyArrays = "5078a376-72f3-5289-bfd5-ec5146d43c02"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]
-ArrayLayouts = "0.4.12"
+ArrayLayouts = "0.4.13"
 Compat = "2.2, 3"
 FillArrays = "0.10.1"
 julia = "1.1"
@@ -17,10 +18,11 @@ julia = "1.1"
 [extras]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
+LazyArrays = "5078a376-72f3-5289-bfd5-ec5146d43c02"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Base64", "FillArrays", "OffsetArrays", "SparseArrays", "StaticArrays", "Test"]
+test = ["Base64", "FillArrays", "LazyArrays", "OffsetArrays", "SparseArrays", "StaticArrays", "Test"]
