@@ -28,7 +28,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             RangeIndex, Int, Integer, Number,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
             BroadcastStyle, checkbounds, throw_boundserror, 
-            ones, zeros, intersect
+            ones, zeros, intersect, Slice
 using Base: ReshapedArray, dataids
 
 

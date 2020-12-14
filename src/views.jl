@@ -160,21 +160,21 @@ end  # if VERSION >= v"1.2-"
 const BlockOrRangeIndex = Union{RangeIndex, BlockSlice}
 
 ## BlockSlice1 is a convenience for views
-const BlockSlice1 = BlockSlice{Block{1,Int},UnitRange{Int}}
+const BlockSlice1 = BlockSlice{Block{1,Int}}
 
 block(A::BlockSlice) = block(A.block)
 block(A::Block) = A
 
-getblock(A::SubArray{<:Any,N,<:Any,NTuple{N,BlockSlice1}}) where N =
+getblock(A::SubArray{<:Any,N,<:Any,<:NTuple{N,BlockSlice1}}) where N =
     getblock(parent(A), Int.(block.(parentindices(A)))...)
 getblock(A::Adjoint, k::Int, j::Int) = getblock(parent(A), j, k)'
 getblock(A::Transpose, k::Int, j::Int) = transpose(getblock(parent(A), j, k))
 
-strides(A::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}) where N =
+strides(A::SubArray{<:Any,N,<:BlockArray,<:NTuple{N,BlockSlice1}}) where N =
     strides(getblock(A))
 
 for Adj in (:Transpose, :Adjoint)
-    @eval strides(A::SubArray{<:Any,N,<:$Adj{<:Any,<:BlockArray},NTuple{N,BlockSlice1}}) where N =
+    @eval strides(A::SubArray{<:Any,N,<:$Adj{<:Any,<:BlockArray},<:NTuple{N,BlockSlice1}}) where N =
         strides(getblock(A))
 end
 
@@ -219,3 +219,5 @@ end
 
 sub_materialize(_, V::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}, _) where N =
     parent(V)[block.(parentindices(V))...]
+sub_materialize(::AbstractFillLayout, V::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}, _) where N =
+    parent(V)[block.(parentindices(V))...]    

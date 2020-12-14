@@ -38,8 +38,6 @@ blocklasts
 blocklengths
 blocks
 eachblock
-getblock
-getblock!
 setblock!
 blockcheckbounds
 ```

@@ -53,7 +53,6 @@ const DefaultBlockAxis = BlockedUnitRange{Vector{Int}}
 
 BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
 _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
-_blocklengths2blocklasts(blocks::AbstractRange) = ArrayLayouts.RangeCumsum(blocks)
 @inline blockedrange(blocks::AbstractVector{Int}) = _BlockedUnitRange(_blocklengths2blocklasts(blocks))
 
 @inline blockfirsts(a::BlockedUnitRange) = [a.first; @view(a.lasts[1:end-1]) .+ 1]
@@ -256,3 +255,25 @@ getindex(S::Base.Slice, b::BlockRange{1}) = S.indices[b]
 
 # This supports broadcasting with infinite block arrays
 Base.BroadcastStyle(::Type{BlockedUnitRange{R}}) where R = Base.BroadcastStyle(R)
+
+
+###
+# Special Fill/Range cases
+# 
+# We want to use lazy types when possible
+###
+
+_blocklengths2blocklasts(blocks::AbstractRange) = ArrayLayouts.RangeCumsum(blocks)
+function blocklengths(a::BlockedUnitRange{Base.OneTo{Int}})
+    @assert a.first == 1 # TODO: BlockedUnitRange -> OffsetBlockedUnitRange
+    Ones{Int}(length(a.lasts))
+end
+function blocklengths(a::BlockedUnitRange{<:AbstractRange})
+    st = step(a.lasts)
+    @assert a.first == 1
+    @assert first(a.last)-a.first == st
+    Fill(st,length(a.lasts))
+end
+
+
+

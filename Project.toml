@@ -1,6 +1,6 @@
 name = "BlockArrays"
 uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
-version = "0.13.1"
+version = "0.14.0"
 
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
@@ -12,7 +12,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 [compat]
 ArrayLayouts = "0.4.13"
 Compat = "2.2, 3"
-FillArrays = "0.10.1"
+FillArrays = "0.11"
 julia = "1.1"
 
 [extras]

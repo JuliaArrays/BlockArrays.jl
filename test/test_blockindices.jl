@@ -1,4 +1,4 @@
-using BlockArrays, FillArrays, OffsetArrays, Test, Base64
+using BlockArrays, FillArrays, OffsetArrays, Test, Base64, StaticArrays
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
 @testset "Blocks" begin

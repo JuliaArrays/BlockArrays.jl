@@ -101,7 +101,7 @@ end
     @testset "similar" begin
         ret = BlockArray{Float64}(undef, 1:3)
         @test similar(typeof(ret), axes(ret)) isa BlockArray
-        @test similar(typeof(ret), (Base.OneTo(6),)) isa BlockArray
+        @test similar(typeof(ret), (Base.OneTo(6),)) isa Array
         @test similar(Array{Float64}, axes(ret)) isa PseudoBlockArray
         @test similar(Vector{Float64}, axes(ret)) isa PseudoBlockArray
         @test similar(randn(5,5), Float64, axes(ret)) isa PseudoBlockArray
@@ -500,7 +500,7 @@ end
 
 @testset "reshape" begin
     A = BlockArray(1:6, 1:3)
-    @test reshape(A, Val(2)) isa PseudoBlockArray{Int64,2,Array{Int64,2},Tuple{BlockedUnitRange{Array{Int64,1}},Base.OneTo{Int64}}}
+    @test reshape(A, Val(2)) isa PseudoBlockArray{Int,2,Array{Int,2},Tuple{typeof(axes(A,1)),Base.OneTo{Int}}}
     @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
     @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
     @test reshape(A, 2, 3) == reshape(A, Base.OneTo(2), 3) == reshape(Vector(A), 2, 3)

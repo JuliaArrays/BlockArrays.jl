@@ -211,8 +211,11 @@ _hasscalarlikevec(a::AbstractVector, b...) = size(a,1) == 1 || _hasscalarlikevec
 function copyto!(dest::AbstractVector,
         bc::Broadcasted{<:AbstractBlockStyle{1}, <:Any, <:Any, Args}) where {Args <: Tuple}
     _hasscalarlikevec(bc.args...) && return _generic_blockbroadcast_copyto!(dest, bc)
-    
-    _fast_blockbradcast_copyto!(dest, bc)
+    ax = axes(dest,1)
+    for a in bc.args
+        blockisequal(ax, axes(a,1)) || return _generic_blockbroadcast_copyto!(dest, bc)
+    end
+    return _fast_blockbradcast_copyto!(dest, bc)
 end
 @inline function Broadcast.instantiate(bc::Broadcasted{Style}) where {Style <:AbstractBlockStyle}
     bcf = Broadcast.instantiate(Broadcast.flatten(Broadcasted{Nothing}(bc.f, bc.args, bc.axes)))
