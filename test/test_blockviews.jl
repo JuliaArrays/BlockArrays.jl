@@ -160,10 +160,8 @@ using BlockArrays, Test, Base64
         W = view(A,Block.(1:2),Block(1))
         @test blocks(V) == blocks(A)[1:1,1:2]
         @test blocks(W) == blocks(A)[1:2,1:1]
-        if VERSION ≥ v"1.2"
-            @test stringmime("text/plain", V) == "1×3 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},$(typeof(axes(A)))}, BlockSlice(Block(1),1:1), BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3)) with eltype $Int with indices Base.OneTo(1)×1:1:3:\n 1  │  2  3"
-            @test stringmime("text/plain", W) == "3×1 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},$(typeof(axes(A)))}, BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3), BlockSlice(Block(1),1:1)) with eltype $Int with indices 1:1:3×Base.OneTo(1):\n 1\n ─\n 4\n 7"
-        end
+        @test stringmime("text/plain", V) == "1×3 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},$(typeof(axes(A)))}, BlockSlice(Block(1),1:1), BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3)) with eltype $Int with indices Base.OneTo(1)×1:1:3:\n 1  │  2  3"
+        @test stringmime("text/plain", W) == "3×1 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},$(typeof(axes(A)))}, BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3), BlockSlice(Block(1),1:1)) with eltype $Int with indices 1:1:3×Base.OneTo(1):\n 1\n ─\n 4\n 7"
     end
 
     @testset "getindex with BlockRange" begin
@@ -245,7 +243,7 @@ using BlockArrays, Test, Base64
         @test B[:,Block.(1:2)] isa PseudoBlockArray
         @test blockisequal(axes(A,1),axes(A[:,Block.(1:2)],1))
         @test blockisequal(axes(B,1),axes(B[:,Block.(1:2)],1))
-        @test A[:,:] isa PseudoBlockArray
+        @test A[:,:] isa BlockArray
         @test B[:,:] isa PseudoBlockArray
         @test blockisequal(axes(A),axes(A[:,:]))
         @test blockisequal(axes(B),axes(B[:,:]))

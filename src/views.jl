@@ -44,26 +44,17 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
 @inline to_indices(A, I::Tuple{Block, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{BlockRange, Vararg{Any}}) = to_indices(A, axes(A), I)
 
-if VERSION >= v"1.2-"  # See also `reindex` definitions in views.jl
-    reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
-                                                                subidxs[1].block.indices),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                    reindex(tail(idxs), tail(subidxs))...))
-    reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{<:Block}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(idxs[1].block[Int(subidxs[1].block)],
-                                                idxs[1].indices[subidxs[1].indices]),
-                                    reindex(tail(idxs), tail(subidxs))...))
-else  # if VERSION >= v"1.2-"
-    reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
-                                                                subidxs[1].block.indices),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                        reindex(V, tail(idxs), tail(subidxs))...))
-end  # if VERSION >= v"1.2-"
+reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
+                                                            subidxs[1].block.indices),
+                                            idxs[1].indices[subidxs[1].indices]),
+                                reindex(tail(idxs), tail(subidxs))...))
+reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:Block}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(idxs[1].block[Int(subidxs[1].block)],
+                                            idxs[1].indices[subidxs[1].indices]),
+                                reindex(tail(idxs), tail(subidxs))...))
 
 
 # _splatmap taken from Base:
@@ -113,44 +104,24 @@ end
 # The first argument for `reindex` is removed as of
 # https://github.com/JuliaLang/julia/pull/30789 in Julia `Base`.  So,
 # we define 2-arg `reindex` for Julia 1.2 and later.
-if VERSION >= v"1.2-"
-    # BlockSlices map the blocks and the indices
-    # this is loosely based on Slice reindex in subarray.jl
-    reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                    reindex(tail(idxs), tail(subidxs))...))
+# BlockSlices map the blocks and the indices
+# this is loosely based on Slice reindex in subarray.jl
+reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
+                                            idxs[1].indices[subidxs[1].indices]),
+                                reindex(tail(idxs), tail(subidxs))...))
 
-    reindex(idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(Block(idxs[1].block.indices[1][Int(subidxs[1].block)]),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                    reindex(tail(idxs), tail(subidxs))...))
+reindex(idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(Block(idxs[1].block.indices[1][Int(subidxs[1].block)]),
+                                            idxs[1].indices[subidxs[1].indices]),
+                                reindex(tail(idxs), tail(subidxs))...))
 
-    function reindex(idxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}})
-            (idxs[1], reindex(tail(idxs), tail(subidxs))...)
-    end
-else  # if VERSION >= v"1.2-"
-    reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                        reindex(V, tail(idxs), tail(subidxs))...))
-
-    reindex(V, idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(Block(idxs[1].block.indices[1][Int(subidxs[1].block)]),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                        reindex(V, tail(idxs), tail(subidxs))...))
-
-    function reindex(V, idxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}})
-        subidxs[1].block == Block(1) || throw(BoundsError(V, subidxs[1].block))
-        (idxs[1], reindex(V, tail(idxs), tail(subidxs))...)
-    end
-end  # if VERSION >= v"1.2-"
+function reindex(idxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}})
+        (idxs[1], reindex(tail(idxs), tail(subidxs))...)
+end
 
 
 #################

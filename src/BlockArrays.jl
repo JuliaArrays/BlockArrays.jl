@@ -41,10 +41,6 @@ import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdi
                         triangularlayout, triangulardata, _inv, _copyto!, axes_print_matrix_row,
                         colsupport, rowsupport, sub_materialize
 
-if !@isdefined(only)
-    using Compat: only
-end
-
 include("blockindices.jl")                        
 include("blockaxis.jl")
 include("abstractblockarray.jl")
