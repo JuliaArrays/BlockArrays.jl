@@ -327,17 +327,22 @@ copy(A::BlockArray) = _BlockArray(map(copy,A.blocks), A.axes)
 ################################
 @inline axes(block_array::BlockArray) = block_array.axes
 
-
-@inline function getblock(block_arr::BlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
-    @boundscheck blockcheckbounds(block_arr, block...)
-    block_arr.blocks[block...]
+function _getblock(block_arr::BlockArray, block)
+    blks = block.n
+    @boundscheck blockcheckbounds(block_arr, blks...)
+    block_arr.blocks[blks...]
 end
 
-@inline function _blockindex_getindex(block_arr, blockindex)
-    @boundscheck blockcheckbounds(block_arr, Block(blockindex.I))
-    @inbounds block = getblock(block_arr, blockindex.I...)
-    @boundscheck checkbounds(block, blockindex.α...)
-    @inbounds v = block[blockindex.α...]
+@inline Base.view(block_arr::BlockArray{T,N}, block::Block{N}) where {T,N} = _getblock(block_arr, block)
+@inline Base.view(block_arr::BlockVector{T}, block::Block{1}) where T = _getblock(block_arr, block)
+
+
+@inline function _blockindex_getindex(block_arr, bi)
+    @boundscheck blockcheckbounds(block_arr, Block(bi.I))
+    @inbounds bl = view(block_arr, block(bi))
+    inds = bi.α
+    @boundscheck checkbounds(bl, inds...)
+    @inbounds v = bl[inds...]
     return v
 end
 
@@ -400,18 +405,18 @@ function _check_setblock!(block_arr::BlockArray{T, N}, v, block::NTuple{N, Integ
     end
 end
 
-
-@inline function setblock!(block_arr::BlockArray{T, N}, v, block::Vararg{Integer, N}) where {T,N}
-    @boundscheck blockcheckbounds(block_arr, block...)
-    @boundscheck _check_setblock!(block_arr, v, block)
-    @inbounds block_arr.blocks[block...] = v
+@inline function Base.setindex!(block_arr::BlockArray{T, N}, v, block::Vararg{Block{1}, N}) where {T,N}
+    blks = Int.(block)
+    @boundscheck blockcheckbounds(block_arr, blks...)
+    @boundscheck _check_setblock!(block_arr, v, blks)
+    @inbounds block_arr.blocks[blks...] = v
     return block_arr
 end
 
 @inline @propagate_inbounds Base.setindex!(block_arr::BlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N} =
-    getblock(block_arr, blockindex.I...)[blockindex.α...] = v
+    view(block_arr, block(blockindex))[blockindex.α...] = v
 @inline @propagate_inbounds Base.setindex!(block_arr::BlockVector{T}, v, blockindex::BlockIndex{1}) where {T} =
-    getblock(block_arr, blockindex.I...)[blockindex.α...] = v
+    view(block_arr, block(blockindex))[blockindex.α...] = v
 @inline @propagate_inbounds Base.setindex!(block_arr::BlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
     block_arr[BlockIndex(blockindex)] = v
 

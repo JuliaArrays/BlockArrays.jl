@@ -264,11 +264,11 @@ end
         @test BA_1[Block(1)] == q
         if BlockType == PseudoBlockArray
             q2 = zero(q)
-            getblock!(q2, BA_1, 1)
+            copyto!(q2, view(BA_1, Block(1)))
             @test q2 == q
-            @test_throws DimensionMismatch getblock!(zeros(2), BA_1, 1)
+            @test_throws BoundsError copyto!(zeros(0), view(BA_1, Block(1)))
             fill!(q2, 0)
-            getblock!(q2, BA_1, 1)
+            copyto!(q2, view(BA_1, Block(1)))
             @test q2 == q
         end
         fill!(BA_1, 1.0)
@@ -297,9 +297,9 @@ end
         @test BA_2[Block(1,2)] == q
         if BlockType == PseudoBlockArray
             q2 = zero(q)
-            getblock!(q2, BA_2, 1, 2)
+            copyto!(q2, view(BA_2, Block(1, 2)))
             @test q2 == q
-            @test_throws DimensionMismatch getblock!(zeros(1,5), BA_2, 1, 2)
+            @test copyto!(zeros(1,5), view(BA_2, Block(1, 2))) == [BA_2[Block(1,2)] zeros(1,1)]
         end
         fill!(BA_2, 1.0)
         @test BA_2 == ones(size(BA_2))
@@ -326,9 +326,8 @@ end
         @test BA_3[Block(1,2,2)] == q
         if BlockType == PseudoBlockArray
             q3 = zero(q)
-            getblock!(q3, BA_3, 1, 2, 2)
+            copyto!(q3, view(BA_3, Block(1, 2, 2)))
             @test q3 == q
-            @test_throws DimensionMismatch getblock!(zeros(1,3,2), BA_3, 1, 2,2)
         end
         fill!(BA_3, 1.0)
         @test BA_3 == ones(size(BA_3))

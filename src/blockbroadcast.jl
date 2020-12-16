@@ -198,8 +198,7 @@ __bview(args::Tuple, K) = tuple(_bview(args[1],K), __bview(tail(args), K)...)
 
 function _fast_blockbradcast_copyto!(dest, bc)
     @inbounds for K in blockaxes(bc)[1]
-        KI = K[1:Int(K)]
-        broadcast!(bc.f, view(dest,KI), __bview(bc.args, KI)...)
+        broadcast!(bc.f, view(dest,K), __bview(bc.args, K)...)
     end
     dest
 end

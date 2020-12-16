@@ -2,7 +2,7 @@ using BlockArrays, Test, Base64
 
 @testset "Block Views" begin
     @testset "block slice" begin
-        A = BlockArray(1:6,1:3)
+        A = PseudoBlockArray(1:6,1:3)
         b = parentindices(view(A, Block(2)))[1] # A BlockSlice
 
         @test first(b) == 2
@@ -37,7 +37,7 @@ using BlockArrays, Test, Base64
         # backend tests
         @test_throws ArgumentError Base.to_index(A, Block(1))
 
-        A = BlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
+        A = PseudoBlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
         V = view(A, Block(2), Block(3))
         @test size(V) == (2, 5)
         V[1,1] = -1
@@ -50,7 +50,7 @@ using BlockArrays, Test, Base64
 
         # test mixed blocks and other indices
         @test view(A, Block(2), 2) == [8,9]
-        @test similar(A, (Base.OneTo(5), axes(A,2))) isa BlockArray{Int}
+        @test similar(A, (Base.OneTo(5), axes(A,2))) isa PseudoBlockArray{Int}
         @test view(A, Block(2), :) == A[2:3,:]
 
         @test view(A, 2, Block(1)) == [2,8,14]
@@ -62,7 +62,7 @@ using BlockArrays, Test, Base64
         @test_throws BlockBoundsError view(V, Block(2,1))
 
 
-        A = BlockArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)
+        A = PseudoBlockArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)
         V = view(A, Block(2), Block(3), Block(1))
         @test size(V) == (2, 3, 1)
         V[1,1,1] = -3

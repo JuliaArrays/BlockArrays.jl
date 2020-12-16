@@ -20,7 +20,7 @@ end
     @test size(blocks(vb)) == (2,)
     blocks(vb)[1] = [123]
     @test v0[1] == 123
-    @test parent(blocks(vb)[1]) === v0
+    @test parent(blocks(vb)[1]) === vb
 
     # toplevel = true:
     str = sprint(show, "text/plain", blocks(vb))
@@ -38,7 +38,7 @@ end
     blocks(mb)[1, 1] = [123 456]
     @test m0[1, 1] == 123
     @test m0[1, 2] == 456
-    @test parent(blocks(mb)[1, 1]) === m0
+    @test parent(blocks(mb)[1, 1]) === mb
 
     # linear indexing
     @test blocks(mb)[1] == m0[1:1, 1:2]

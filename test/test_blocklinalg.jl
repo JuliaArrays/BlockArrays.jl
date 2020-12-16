@@ -101,10 +101,10 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
         @test MemoryLayout(A') isa BlockLayout{DenseRowMajor,DenseRowMajor}
         @test MemoryLayout(C') isa BlockLayout{DenseRowMajor,ConjLayout{DenseRowMajor}}
 
-        @test getblock(A', 2, 3) == getblock(A, 3,2)'
-        @test getblock(transpose(A), 2, 3) == transpose(getblock(A, 3,2))
-        @test getblock(C', 2, 3) == getblock(C, 3,2)'
-        @test getblock(transpose(C), 2, 3) == transpose(getblock(C, 3,2))
+        @test view(A', Block(2, 3)) == view(A, Block(3,2))'
+        @test view(transpose(A), Block(2, 3)) == transpose(view(A, Block(3,2)))
+        @test view(C', Block(2, 3)) == view(C, Block(3,2))'
+        @test view(transpose(C), Block(2, 3)) == transpose(view(C, Block(3,2)))
 
         V = view(A', Block(2,3))
         @test MemoryLayout(V) isa DenseRowMajor

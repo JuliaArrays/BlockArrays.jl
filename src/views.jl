@@ -67,7 +67,7 @@ _splatmap(f, t::Tuple) = (f(t[1])..., _splatmap(f, tail(t))...)
         A::BlockArray{<:Any, N},
         I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
     @_propagate_inbounds_meta
-    B = getblock(A, map(x -> Int(x.block.block), I)...)
+    B = view(A, map(block, I)...)
     return view(B, _splatmap(x -> x.block.indices, I)...)
 end
 
@@ -136,22 +136,15 @@ const BlockSlice1 = BlockSlice{Block{1,Int}}
 block(A::BlockSlice) = block(A.block)
 block(A::Block) = A
 
-getblock(A::SubArray{<:Any,N,<:Any,<:NTuple{N,BlockSlice1}}) where N =
-    getblock(parent(A), Int.(block.(parentindices(A)))...)
-getblock(A::Adjoint, k::Int, j::Int) = getblock(parent(A), j, k)'
-getblock(A::Transpose, k::Int, j::Int) = transpose(getblock(parent(A), j, k))
-
-strides(A::SubArray{<:Any,N,<:BlockArray,<:NTuple{N,BlockSlice1}}) where N =
-    strides(getblock(A))
-
-for Adj in (:Transpose, :Adjoint)
-    @eval strides(A::SubArray{<:Any,N,<:$Adj{<:Any,<:BlockArray},<:NTuple{N,BlockSlice1}}) where N =
-        strides(getblock(A))
+function Base.view(A::Adjoint{<:Any,<:BlockArray}, b::Block{2})
+    k, j = b.n
+    view(parent(A), Block(j), Block(k))'
+end
+function Base.view(A::Transpose{<:Any,<:BlockArray}, b::Block{2})
+    k, j = b.n
+    transpose(view(parent(A), Block(j), Block(k)))
 end
 
-
-unsafe_convert(::Type{Ptr{T}}, V::SubArray{T, N, <:Any, <:NTuple{N, BlockSlice1}}) where {T,N} =
-    unsafe_convert(Ptr{T}, getblock(parent(V), Int.(Block.(parentindices(V)))...))
 
 unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,PseudoBlockArray{T,N,AT},<:Tuple{Vararg{BlockOrRangeIndex}}}) where {T,N,AT} =
     unsafe_convert(Ptr{T}, V.parent) + (Base.first_index(V)-1)*sizeof(T)
@@ -178,17 +171,3 @@ function hasmatchingblocks(V::SubArray{<:Any,2,<:Any,<:NTuple{2,BlockSlice{<:Blo
     end
     true
 end
-
-
-####
-# sub_materialize
-# 
-# needed to get special typing
-####
-
-# TODO: remove when `getblock` is replaced with `view`
-
-sub_materialize(_, V::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}, _) where N =
-    parent(V)[block.(parentindices(V))...]
-sub_materialize(::AbstractFillLayout, V::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}, _) where N =
-    parent(V)[block.(parentindices(V))...]    

@@ -161,6 +161,7 @@ using BlockArrays, FillArrays, LazyArrays, Test
 
     @testset "type inferrence" begin
         u = BlockArray(randn(5), [2,3]);
-        @code_warntype copyto!(similar(u), Base.broadcasted(exp, u))
+        @inferred(copyto!(similar(u), Base.broadcasted(exp, u)))
+        @test exp.(u) == exp.(Vector(u))
     end
 end

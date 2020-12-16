@@ -1,20 +1,5 @@
 using BlockArrays, LinearAlgebra, FillArrays, Base64
 
-struct PartiallyImplementedBlockVector <: AbstractBlockArray{Float64,1} end
-
-@testset "partially implemented block array" begin
-    # the error thrown before was incorrect
-    A = PartiallyImplementedBlockVector()
-    @test_throws(ErrorException("getblock for PartiallyImplementedBlockVector is not implemented"),
-                getblock(A, 1))
-    @test_throws(ErrorException("getblock! for PartiallyImplementedBlockVector is not implemented"),
-        getblock!(zeros(5), A, Block(1)))
-    @test_throws(ErrorException("setblock! for PartiallyImplementedBlockVector is not implemented"),
-        BlockArrays.setblock!(A, zeros(5), Block(1)))
-    @test_throws(ErrorException( "axes for PartiallyImplementedBlockVector is not implemented"),
-        BlockArrays.axes(A))
-end
-
 @testset "Array block interface" begin
     @test 1[Block()] == 1
 
@@ -119,11 +104,10 @@ end
 
 @testset "block Fill" begin
     A = Fill(2,(blockedrange([1,2,2]),))
-    @test A[Block(1)] ≡ [2]
+    @test A[Block(1)] ≡ Fill(2,1)
     @test A[Block.(1:2)] == [2,2,2]
-    @test A[Block(1)] isa Fill
     @test A[Block.(1:2)] isa Fill
-    @test_broken 2A ≡ Fill(4,axes(A))
+    @test 2A ≡ Fill(4,axes(A))
 
     F = Fill(2, (blockedrange([1,2,2]),blockedrange(1:3)))
     @test F[Block(2,2)] ≡ F[Block(2),Block(2)] ≡ Fill(2, 2,2)
