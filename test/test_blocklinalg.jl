@@ -39,7 +39,7 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
         V = view(A, Block.(2:3), Block.(1:2))
         @test MemoryLayout(V) isa BlockLayout{ColumnMajor,DenseColumnMajor}
         @test all(V*view(b,4:6) .=== V*b[4:6])
-        @test V*b[4:6] ≈ Matrix(V)*b[4:6]  
+        @test V*b[4:6] ≈ Matrix(V)*b[4:6]
 
         # checks incompatible blocks
         @test A^2 ≈ A*A ≈ Matrix(A)^2
@@ -74,24 +74,24 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
         V = view(A, Block.(2:3), Block.(1:2))
         @test MemoryLayout(V) isa ColumnMajor
         @test all(V*view(b,4:6) .=== V*b[4:6])
-        @test V*b[4:6] ≈ Matrix(V)*b[4:6]  
-        
+        @test V*b[4:6] ≈ Matrix(V)*b[4:6]
+
         # checks incompatible blocks
         @test A^2 ≈ A*A ≈ Matrix(A)^2
     end
 
-    @testset "matrix * matrix" begin 
+    @testset "matrix * matrix" begin
         A = BlockArray(randn(6,6), fill(2,3), 1:3)
         B = BlockArray(randn(6,3), 1:3, 1:2)
 
         @test A*B isa BlockMatrix
-        @test A*B ≈ Matrix(A)*B ≈ A*Matrix(B) ≈ Matrix(A)*Matrix(B) ≈ 
+        @test A*B ≈ Matrix(A)*B ≈ A*Matrix(B) ≈ Matrix(A)*Matrix(B) ≈
                 PseudoBlockArray(A)*B ≈ A*PseudoBlockArray(B)
 
         @test all(PseudoBlockArray(A)*PseudoBlockArray(B) .=== PseudoBlockArray(A)*Matrix(B) .===
                     Matrix(A)*PseudoBlockArray(B) .=== Matrix(A)*Matrix(B))
-    end    
-    
+    end
+
     @testset "adjoint" begin
         A = BlockArray(randn(6,6), fill(2,3), 1:3)
         B = BlockArray(randn(6,6), 1:3, 1:3)
@@ -133,15 +133,15 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
         @test A'*c ≈ Matrix(A)'*c
         @test all(transpose(A)*b .=== A'b)
         @test all(transpose(A)*c .=== A'c)
-        
+
         @test A'*B ≈ A'*Matrix(B) ≈ Matrix(A)'*B
         @test B'*A' ≈ Matrix(B)'*A' ≈ B'*Matrix(A)' ≈ Matrix(B')*Matrix(A')
         @test A'*A ≈ Matrix(A)'*Matrix(A)
     end
 
     @testset "triangular" begin
-        A = BlockArray(randn(6,6), 1:3, 1:3) 
-        B = BlockArray(randn(6,6), fill(2,3), 1:3) 
+        A = BlockArray(randn(6,6), 1:3, 1:3)
+        B = BlockArray(randn(6,6), fill(2,3), 1:3)
         b = randn(6)
         @test MemoryLayout(UpperTriangular(A)) isa TriangularLayout{'U','N',BlockLayout{DenseColumnMajor,DenseColumnMajor}}
         @test UpperTriangular(A) == UpperTriangular(Matrix(A))
@@ -151,7 +151,7 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
 
         @testset "bug in view pointer" begin
             b2 = PseudoBlockArray(b,(axes(A,1),))
-            @test Base.unsafe_convert(Ptr{Float64}, b) == Base.unsafe_convert(Ptr{Float64}, b2) == 
+            @test Base.unsafe_convert(Ptr{Float64}, b) == Base.unsafe_convert(Ptr{Float64}, b2) ==
                     Base.unsafe_convert(Ptr{Float64}, view(b2,Block(1)))
         end
 
@@ -200,6 +200,6 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
 
     @testset "Block Diagonal" begin
         D = mortar(Diagonal([randn(2,2),randn(2,2)]))
-        @test MemoryLayout(D) isa BlockLayout{DiagonalLayout{DenseColumnMajor},DenseColumnMajor} 
+        @test MemoryLayout(D) isa BlockLayout{DiagonalLayout{DenseColumnMajor},DenseColumnMajor}
     end
 end

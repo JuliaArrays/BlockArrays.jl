@@ -138,9 +138,10 @@ blockcheckbounds(A::AbstractVector{T}, i::Block{1}) where {T,N} = blockcheckboun
     block_arr
 end
 
-Base.view(block_arr::AbstractBlockVector, block::Block{1}) = Base.invoke(view, Tuple{AbstractArray, Any}, block_arr, block)
-@inline @propagate_inbounds Base.view(block_arr::AbstractBlockArray, block::Block{1}...) =
-    view(block_arr, Block(block))
+viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block_arr, block)
+@inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, block::Block{N}) where N = viewblock(block_arr, block)
+@inline Base.view(block_arr::AbstractBlockVector, block::Block{1}) = viewblock(block_arr, block)
+@inline @propagate_inbounds Base.view(block_arr::AbstractBlockArray, block::Block{1}...) = view(block_arr, Block(block))
 
 """
     eachblock(A::AbstractBlockArray)

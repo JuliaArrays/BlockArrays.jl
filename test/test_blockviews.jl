@@ -1,9 +1,12 @@
 using BlockArrays, Test, Base64
 
+# useds to force SubArray return
+bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
+
 @testset "Block Views" begin
     @testset "block slice" begin
         A = PseudoBlockArray(1:6,1:3)
-        b = parentindices(view(A, Block(2)))[1] # A BlockSlice
+        b = parentindices(bview(A, Block(2)))[1] # A BlockSlice
 
         @test first(b) == 2
         @test last(b) == 3

@@ -206,13 +206,16 @@ end
 _hasscalarlikevec() = false
 _hasscalarlikevec(a, b...) = _hasscalarlikevec(b...)
 _hasscalarlikevec(a::AbstractVector, b...) = size(a,1) == 1 || _hasscalarlikevec(b...)
+
+blockisequalorscalar(ax, ::Number) = true
+blockisequalorscalar(ax, a) = blockisequal(ax, axes(a,1))
     
 function copyto!(dest::AbstractVector,
         bc::Broadcasted{<:AbstractBlockStyle{1}, <:Any, <:Any, Args}) where {Args <: Tuple}
     _hasscalarlikevec(bc.args...) && return _generic_blockbroadcast_copyto!(dest, bc)
     ax = axes(dest,1)
     for a in bc.args
-        blockisequal(ax, axes(a,1)) || return _generic_blockbroadcast_copyto!(dest, bc)
+        blockisequalorscalar(ax, a) || return _generic_blockbroadcast_copyto!(dest, bc)
     end
     return _fast_blockbradcast_copyto!(dest, bc)
 end

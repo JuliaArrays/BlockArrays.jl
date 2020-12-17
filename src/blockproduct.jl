@@ -80,14 +80,14 @@ kron_getindex(args::Tuple, k::Integer) = kron_getindex(tuple(BlockKron(args[1:2]
 getindex(K::BlockKron{<:Any,1}, k::Integer) = kron_getindex(K.args, k)
 getindex(K::BlockKron{<:Any,2}, k::Integer, j::Integer) = kron_getindex(K.args, k, j)
 
-kron_getblock((a,b)::Tuple{Any,Any}, k::Integer) = a[k]*b
-kron_getblock(args, k::Integer) = args[1][k]*BlockKron(tail(args)...)
+kron_viewblock((a,b)::Tuple{Any,Any}, k::Integer) = a[k]*b
+kron_viewblock(args, k::Integer) = args[1][k]*BlockKron(tail(args)...)
 
-kron_getblock((a,b)::Tuple{Any,Any}, k::Integer, j::Integer) = a[k,j]*b
-kron_getblock(args, k::Integer, j::Integer) = args[1][k,j]*BlockKron(tail(args)...)
+kron_viewblock((a,b)::Tuple{Any,Any}, k::Integer, j::Integer) = a[k,j]*b
+kron_viewblock(args, k::Integer, j::Integer) = args[1][k,j]*BlockKron(tail(args)...)
 
-getblock(K::BlockKron{<:Any,1}, k::Integer) = kron_getblock(K.args, k)
-getblock(K::BlockKron{<:Any,2}, k::Integer, j::Integer) = kron_getblock(K.args, k, j)
+viewblock(K::BlockKron{<:Any,1}, k::Block{1}) = kron_viewblock(K.args, Int(k))
+viewblock(K::BlockKron{<:Any,2}, kj::Block{2}) = kron_viewblock(K.args, Int.(kj.n)...)
 
 # const SubKron{T,M1,M2,R1,R2} = SubArray{T,2,<:BlockKron{T,M1,M2},<:Tuple{<:BlockSlice{R1},<:BlockSlice{R2}}}
 

@@ -327,14 +327,11 @@ copy(A::BlockArray) = _BlockArray(map(copy,A.blocks), A.axes)
 ################################
 @inline axes(block_array::BlockArray) = block_array.axes
 
-function _getblock(block_arr::BlockArray, block)
+function viewblock(block_arr::BlockArray, block)
     blks = block.n
     @boundscheck blockcheckbounds(block_arr, blks...)
     block_arr.blocks[blks...]
 end
-
-@inline Base.view(block_arr::BlockArray{T,N}, block::Block{N}) where {T,N} = _getblock(block_arr, block)
-@inline Base.view(block_arr::BlockVector{T}, block::Block{1}) where T = _getblock(block_arr, block)
 
 
 @inline function _blockindex_getindex(block_arr, bi)

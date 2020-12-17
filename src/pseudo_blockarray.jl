@@ -186,6 +186,11 @@ end
 # Indexing #
 ############
 
+@inline function viewblock(block_arr::PseudoBlockArray, block)
+    range = getindex.(axes(block_arr), Block.(block.n))
+    return view(block_arr.blocks, range...)
+end
+
 @inline function _pseudoblockindex_getindex(block_arr, blockindex)
     I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
     @boundscheck checkbounds(block_arr.blocks, I...)

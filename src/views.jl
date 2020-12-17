@@ -145,9 +145,27 @@ function Base.view(A::Transpose{<:Any,<:BlockArray}, b::Block{2})
     transpose(view(parent(A), Block(j), Block(k)))
 end
 
+Base.view(A::AdjOrTrans{<:Any,<:BlockArray}, K::Block{1}, J::Block{1}) = view(A, Block(Int(K), Int(J)))
+
 
 unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,PseudoBlockArray{T,N,AT},<:Tuple{Vararg{BlockOrRangeIndex}}}) where {T,N,AT} =
     unsafe_convert(Ptr{T}, V.parent) + (Base.first_index(V)-1)*sizeof(T)
+
+# support for strided array interface for subblocks. Typically
+# these aren't needed as `view(A, Block(K))` will return the block itself,
+# not a `SubArray`, but currently `view(view(A, Block.(1:3)), Block(2))` does
+# not.
+
+strides(A::SubArray{<:Any,N,<:BlockArray,<:NTuple{N,BlockSlice1}}) where N =
+    strides(view(parent(A), block.(parentindices(A))...))
+
+for Adj in (:Transpose, :Adjoint)
+    @eval strides(A::SubArray{<:Any,N,<:$Adj{<:Any,<:BlockArray},<:NTuple{N,BlockSlice1}}) where N =
+        strides(view(parent(A), block.(parentindices(A))...))
+end
+
+unsafe_convert(::Type{Ptr{T}}, V::SubArray{T, N, <:BlockArray, <:NTuple{N, BlockSlice1}}) where {T,N} =
+    unsafe_convert(Ptr{T}, view(parent(V), block.(parentindices(V))...))
 
 
 # The default blocksize(V) is slow for views as it calls axes(V), which
