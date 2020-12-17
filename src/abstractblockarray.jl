@@ -47,17 +47,6 @@ Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 @inline axes(block_array::AbstractBlockArray) = throw(error("axes for ", typeof(block_array), " is not implemented"))
 
 
-# function getblock(A::AbstractBlockArray{T,N}, ::Vararg{Integer, N}) where {T,N}
-#     throw(error("getblock for ", typeof(A), " is not implemented"))
-# end
-
-# getblock!(X, A::AbstractBlockArray{T,N}, ::Vararg{Integer, N}) where {T,N} = throw(error("getblock! for ", typeof(A), " is not implemented"))
-
-
-
-# setblock!(A::AbstractBlockArray{T,N}, v, ::Vararg{Integer, N}) where {T,N} = throw(error("setblock! for ", typeof(A), " is not implemented"))
-
-
 """
     BlockBoundsError([A], [inds...])
 
