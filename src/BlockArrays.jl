@@ -56,13 +56,9 @@ include("show.jl")
 include("blockreduce.jl")
 include("blockdeque.jl")
 
-@deprecate getblock(A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} = view(A, Block(I))
-@deprecate getblock!(X, A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} = 
-    copyto!(X, view(A, Block(I)))
-@deprecate setblock!(A::AbstractBlockArray{T,N}, v, I::Vararg{Integer, N}) where {T,N} = 
-    copyto!(view(A, Block(I)), v)
-@deprecate setblock!(A::BlockArray{T,N}, v, I::Vararg{Integer, N}) where {T,N} = 
-    (A.blocks[I...] = v)
+@deprecate getblock(A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} view(A, Block(I))
+@deprecate getblock!(X, A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} copyto!(X, view(A, Block(I)))
+@deprecate setblock!(A::AbstractBlockArray{T,N}, v, I::Vararg{Integer, N}) where {T,N} (A[Block(I...)] = v)
 
 
 end # module
