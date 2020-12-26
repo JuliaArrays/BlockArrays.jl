@@ -333,6 +333,10 @@ function viewblock(block_arr::BlockArray, block)
     block_arr.blocks[blks...]
 end
 
+function Base.view(V::SubArray{<:Any,N,<:BlockArray,<:NTuple{N,BlockSlice{<:BlockRange{1}}}},
+                    block::Block{N}) where N
+    view(parent(V), getindex.(getproperty.(parentindices(V), :block), block.n)...)
+end
 
 @inline function _blockindex_getindex(block_arr, bi)
     @boundscheck blockcheckbounds(block_arr, Block(bi.I))
