@@ -136,6 +136,12 @@ const BlockSlice1 = BlockSlice{Block{1,Int}}
 block(A::BlockSlice) = block(A.block)
 block(A::Block) = A
 
+# unwind BLockSlice1 for AbstractBlockArray
+@inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, blocks::Vararg{BlockSlice1, N}) where N = 
+    view(block_arr, block.(blocks)...)
+Base.view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlice{<:BlockRange{1}}}}, block::Block{N}) where N =
+    view(parent(V), getindex.(getproperty.(parentindices(V), :block), block.n)...)
+
 function Base.view(A::Adjoint{<:Any,<:BlockArray}, b::Block{2})
     k, j = b.n
     view(parent(A), Block(j), Block(k))'
