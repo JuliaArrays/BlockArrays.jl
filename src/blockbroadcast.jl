@@ -15,10 +15,14 @@ BlockStyle(::Val{N}) where {N} = BlockStyle{N}()
 PseudoBlockStyle(::Val{N}) where {N} = PseudoBlockStyle{N}()
 BlockStyle{M}(::Val{N}) where {N,M} = BlockStyle{N}()
 PseudoBlockStyle{M}(::Val{N}) where {N,M} = PseudoBlockStyle{N}()
-blockbroadcaststyle(::AbstractArrayStyle{N}, _) where N = BlockStyle{N}()
-pseudoblockbroadcaststyle(::AbstractArrayStyle{N}, _) where N = PseudoBlockStyle{N}()
-BroadcastStyle(::Type{<:BlockArray{<:Any,N,Arr,Axes}}) where {N,Arr,Axes} = blockbroadcaststyle(BroadcastStyle(Arr), Axes)
-BroadcastStyle(::Type{<:PseudoBlockArray{<:Any,N,Arr,Axes}}) where {N,Arr,Axes} = pseudoblockbroadcaststyle(BroadcastStyle(Arr), Axes)
+BroadcastStyle(::Type{<:BlockArray{<:Any,N}}) where {N} = BlockStyle{N}()
+BroadcastStyle(::Type{<:PseudoBlockArray{<:Any,N}}) where {N} = PseudoBlockStyle{N}()
+BroadcastStyle(::Type{<:AdjOrTrans{<:Any,<:BlockArray{<:Any,N}}}) where {N} = BlockStyle{2}()
+BroadcastStyle(::Type{<:AdjOrTrans{<:Any,<:PseudoBlockArray{<:Any,N}}}) where {N} = PseudoBlockStyle{2}()
+
+# special cases
+BroadcastStyle(::Type{<:SubArray{<:Any,2,<:Any,<:Tuple{Any,BlockSlice}}}) = BlockStyle{2}()
+
 BroadcastStyle(::DefaultArrayStyle{N}, b::AbstractBlockStyle{M}) where {M,N} = typeof(b)(Val(max(M,N)))
 BroadcastStyle(a::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = typeof(a)(Val(max(M,N)))
 BroadcastStyle(::StructuredMatrixStyle, b::AbstractBlockStyle{M}) where {M} = typeof(b)(Val(max(M,2)))
