@@ -15,7 +15,7 @@
     @test_throws ArgumentError Block(1,1):Block(2,2)
     @test_throws ArgumentError Base.to_index(Block(1):Block(2))
 
-    A = BlockArray(collect(1:6), 1:3)
+    A = BlockArray(1:6, 1:3)
     @test view(A, Block.(1:2)) == [1,2,3]
     @test A[Block.(1:2)] == [1,2,3]
 
@@ -39,11 +39,8 @@
 
     ## views of views
     # here we want to ensure that the view collapses
-    A = BlockArray(collect(1:10), 1:4)
-    V = view(view(A, Block.(2:4)), Block(2))
-    @test parent(V) == A
-    @test parentindices(V)[1] isa BlockArrays.BlockSlice{Block{1,Int}}
-    @test V == view(A, Block.(2:4))[Block(2)] == [4,5,6]
+    A = BlockArray((1:10), 1:4)
+    @test view(view(A, Block.(2:4)), Block(2)) ≡ 4:6
 
     V = view(view(A, Block.(2:4)), Block.(1:2))
     @test parent(V) == A
@@ -63,6 +60,7 @@
     @test parent(V) == A
     @test all(ind -> ind isa BlockArrays.BlockSlice, parentindices(V))
     @test V ==  A[Block.(1:2), Block(3)]
+    @test blockisequal(axes(V,1), axes(A,1)[Block.(1:2)])
 
     V = view(view(A, Block.(1:3), Block.(2:3)), Block.(1:2), Block.(1:2))
     @test parent(V) == A

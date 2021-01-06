@@ -72,6 +72,9 @@ using BlockArrays, FillArrays, LazyArrays, Test
 
         A = BlockArray(randn(6,6), 1:3, 1:3)
         D = Diagonal(ones(6))
+        @testset "avoid stack overflow in _generic_block_broadcast" begin
+            @test Base.BroadcastStyle(typeof(view(D, Block(1)[1:2], Block(1)[1:2]))) isa Base.Broadcast.DefaultArrayStyle{2}
+        end
         @test blocksize(A + D) == blocksize(A)
         @test blocksize(B .+ D) == (3,1)
     end

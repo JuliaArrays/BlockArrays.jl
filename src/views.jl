@@ -101,15 +101,12 @@ function Base._maybe_reindex(V, I::Tuple{BlockSlice{<:BlockIndexRange{1}}, Varar
 end
 
 
-# The first argument for `reindex` is removed as of
-# https://github.com/JuliaLang/julia/pull/30789 in Julia `Base`.  So,
-# we define 2-arg `reindex` for Julia 1.2 and later.
 # BlockSlices map the blocks and the indices
 # this is loosely based on Slice reindex in subarray.jl
 reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
     (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
-                                            idxs[1].indices[subidxs[1].indices]),
+                                            idxs[1].indices[subidxs[1].block]),
                                 reindex(tail(idxs), tail(subidxs))...))
 
 reindex(idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{Any}},
