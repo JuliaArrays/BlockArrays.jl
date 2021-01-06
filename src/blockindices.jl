@@ -159,8 +159,8 @@ end
 
 @inline checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::Block{N}) where N = blockcheckbounds(Bool, A, I.n...)
 @inline function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndex{N}) where N
-    block = A[block(I)]
-    checkbounds(Bool, block, blockindex(I)...)
+    B = A[block(I)]
+    checkbounds(Bool, B, blockindex(I)...)
 end
 
 checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N = 
@@ -364,3 +364,9 @@ _in(b, ::Tuple{}, ::Tuple{}, ::Tuple{}) = b
 
 # We sometimes need intersection of BlockRange to return a BlockRange
 intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1], b.indices[1]))
+
+
+# needed for scalar-like broadcasting
+
+BlockSlice{BlockRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} = 
+    BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},RT}
