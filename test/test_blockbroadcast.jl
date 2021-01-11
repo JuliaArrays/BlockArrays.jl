@@ -174,7 +174,7 @@ using BlockArrays, FillArrays, LazyArrays, Test
     end
 
     @testset "adjtrans" begin
-        a = PseudoBlockArray(a, [2,3])
+        a = PseudoBlockArray(randn(6), [2,3])
         b = BlockArray(a)
         
         @test Base.BroadcastStyle(typeof(a')) isa BlockArrays.PseudoBlockStyle{2}
@@ -186,7 +186,7 @@ using BlockArrays, FillArrays, LazyArrays, Test
     end
 
     @testset "subarray" begin
-        a = PseudoBlockArray(a, [2,3])
+        a = PseudoBlockArray(randn(6), [2,3])
         b = BlockArray(a)
 
         v = view(a,Block.(1:2))
