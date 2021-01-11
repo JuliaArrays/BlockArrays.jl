@@ -186,17 +186,37 @@ using BlockArrays, FillArrays, LazyArrays, Test
     end
 
     @testset "subarray" begin
-        a = PseudoBlockArray(randn(6), [2,3])
-        b = BlockArray(a)
+        @testset "vector" begin
+            a = PseudoBlockArray(randn(6), [2,3])
+            b = BlockArray(a)
 
-        v = view(a,Block.(1:2))
-        w = view(b,Block.(1:2))
-        
-        @test Base.BroadcastStyle(typeof(v)) isa BlockArrays.PseudoBlockStyle{1}
-        @test Base.BroadcastStyle(typeof(w)) isa BlockArrays.BlockStyle{1}
+            v = view(a,Block.(1:2))
+            w = view(b,Block.(1:2))
+            
+            @test Base.BroadcastStyle(typeof(v)) isa BlockArrays.PseudoBlockStyle{1}
+            @test Base.BroadcastStyle(typeof(w)) isa BlockArrays.BlockStyle{1}
 
-        @test exp.(v) == exp.(w) == exp.(Vector(v))
-        @test exp.(v) isa PseudoBlockArray
-        @test exp.(w) isa BlockArray
+            @test exp.(v) == exp.(w) == exp.(Vector(v))
+            @test exp.(v) isa PseudoBlockArray
+            @test exp.(w) isa BlockArray
+        end
+
+        @testset "matrix" begin
+            A = PseudoBlockArray(randn(6,3), [2,3],[1,2])
+            B = BlockArray(A)
+
+            v = view(A,1:3,Block.(1:2))
+            w = view(B,1:3,Block.(1:2))
+            
+            @test Base.BroadcastStyle(typeof(v)) isa BlockArrays.PseudoBlockStyle{2}
+            @test Base.BroadcastStyle(typeof(w)) isa BlockArrays.BlockStyle{2}
+
+            @test exp.(v) == exp.(w) == exp.(Matrix(v))
+            @test exp.(v) isa PseudoBlockArray
+            @test exp.(w) isa BlockArray
+
+            @test Base.BroadcastStyle(typeof(view(A,Block.(1:2),Block.(1:2)))) isa BlockArrays.PseudoBlockStyle{2}
+            @test Base.BroadcastStyle(typeof(view(B,Block.(1:2),Block.(1:2)))) isa BlockArrays.BlockStyle{2}
+        end
     end
 end

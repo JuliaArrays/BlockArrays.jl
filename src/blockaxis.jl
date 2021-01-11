@@ -263,17 +263,24 @@ Base.BroadcastStyle(::Type{BlockedUnitRange{R}}) where R = Base.BroadcastStyle(R
 # We want to use lazy types when possible
 ###
 
-_blocklengths2blocklasts(blocks::AbstractRange) = ArrayLayouts.RangeCumsum(blocks)
+_blocklengths2blocklasts(blocks::AbstractRange) = RangeCumsum(blocks)
+function blockfirsts(a::BlockedUnitRange{Base.OneTo{Int}})
+    a.first == 1 || error("Offset axes not supported")
+    Base.OneTo{Int}(length(a.lasts))
+end
 function blocklengths(a::BlockedUnitRange{Base.OneTo{Int}})
-    @assert a.first == 1 # TODO: BlockedUnitRange -> OffsetBlockedUnitRange
+    a.first == 1 || error("Offset axes not supported")
     Ones{Int}(length(a.lasts))
+end
+function blockfirsts(a::BlockedUnitRange{<:AbstractRange})
+    st = step(a.lasts)
+    a.first == 1 || error("Offset axes not supported")
+    @assert first(a.lasts)-a.first+1 == st
+    range(1; step=st, length=length(a.lasts))
 end
 function blocklengths(a::BlockedUnitRange{<:AbstractRange})
     st = step(a.lasts)
-    @assert a.first == 1
-    @assert first(a.last)-a.first == st
+    a.first == 1 || error("Offset axes not supported")
+    @assert first(a.lasts)-a.first+1 == st
     Fill(st,length(a.lasts))
 end
-
-
-

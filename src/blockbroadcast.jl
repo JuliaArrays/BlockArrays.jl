@@ -266,9 +266,11 @@ BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice1},false}}) where 
 
 # special cases for SubArrays which we want to broadcast by Block
 BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
 BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
 
 BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
 BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
 
 

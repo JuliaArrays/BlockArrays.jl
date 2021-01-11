@@ -1,4 +1,4 @@
-using BlockArrays, FillArrays, OffsetArrays, Test, Base64, StaticArrays
+using BlockArrays, FillArrays, OffsetArrays, Test, Base64, StaticArrays, ArrayLayouts
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
 @testset "Blocks" begin
@@ -143,6 +143,18 @@ end
         @test blockfirsts(b) == [1,2,4]
         @test blocklasts(b) == [1,3,6]
         @test blocklengths(b) == [1,2,3]
+
+        o = blockedrange(Ones{Int}(10))
+        @test blocklasts(o) ≡ blockfirsts(o) ≡ Base.OneTo(10)
+        @test blocklengths(o) ≡ Ones{Int}(10)
+
+        f = blockedrange(Fill(2,5))
+        @test blockfirsts(f) ≡ 1:2:9
+        @test blocklasts(f) ≡ 2:2:10
+        @test blocklengths(f) ≡ Fill(2,5)
+
+        r = blockedrange(Base.OneTo(5))
+        @test blocklasts(r) ≡ ArrayLayouts.RangeCumsum(Base.OneTo(5))
     end
 
     @testset "convert" begin
