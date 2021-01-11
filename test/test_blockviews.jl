@@ -272,4 +272,23 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         v = view(a,Block.(1:2))
         @test a[Block(1)[1:3]] ≡ view(a,Block(1)[1:3]) ≡ view(v,Block(1)[1:3]) ≡ 7:9
     end
+
+    @testset "blockrange-of-blockreange" begin
+        a = mortar([7:9,5:6])
+        v = view(a,Block.(1:2))
+        @test view(v, Block(1)) ≡ 7:9
+        @test bview(v, Block(1)) == 7:9
+        @test view(v,Block.(1:2)) == v
+
+        A = BlockArray([1 2 3; 4 5 6; 7 8 9], 1:2, 1:2)
+        V = view(A, Block.(1:2), Block.(1:2))
+        @test view(V, Block(1,1)) ≡ view(A, Block(1,1))
+        @test bview(V, Block(1,1)) == view(A, Block(1,1))
+    end
+
+    @testset "view of BlockSlice unwinds" begin
+        a = mortar([7:9,5:6])
+        v = bview(a,Block(1))
+        @test view(a, parentindices(v)...) ≡ 7:9
+    end
 end

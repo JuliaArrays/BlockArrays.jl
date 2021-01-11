@@ -202,4 +202,9 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
         D = mortar(Diagonal([randn(2,2),randn(2,2)]))
         @test MemoryLayout(D) isa BlockLayout{DiagonalLayout{DenseColumnMajor},DenseColumnMajor}
     end
+
+    @testset "adjtrans block view strides" begin
+        A = BlockArray(randn(6,6), fill(2,3), 1:3)
+        @test strides(view(A', Block(1,2)))  == strides(bview(A', Block(1,2))) == (2,1)
+    end
 end

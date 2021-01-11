@@ -109,11 +109,6 @@ reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
                                             idxs[1].indices[subidxs[1].block]),
                                 reindex(tail(idxs), tail(subidxs))...))
 
-reindex(idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{Any}},
-        subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}}) =
-    (@_propagate_inbounds_meta; (BlockSlice(Block(idxs[1].block.indices[1][Int(subidxs[1].block)]),
-                                            idxs[1].indices[subidxs[1].indices]),
-                                reindex(tail(idxs), tail(subidxs))...))
 
 function reindex(idxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}})
