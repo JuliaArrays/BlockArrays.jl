@@ -1,4 +1,5 @@
 using BlockArrays, FillArrays, LazyArrays, Test
+import BlockArrays: SubBlockIterator, BlockIndexRange
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
@@ -136,9 +137,25 @@ using BlockArrays, FillArrays, LazyArrays, Test
     end
 
     @testset "Fill broadcast" begin
+        a = BlockArray(randn(6), Ones{Int}(6))
+        @test a .+ a == Vector(a) .+ a == Vector(a) .+ Vector(a)
+        @test axes(a) ≡ axes(a .+ a)
+
+        @test a .+ (1:6) == (1:6) .+ a
+        
+
+        b = BlockArray(randn(6), (BlockArrays._BlockedUnitRange(1, 2:6),))
+        @test b .+ b == Vector(b) .+ b == Vector(b) .+ Vector(b)
+        @test axes(b) ≡ axes(b .+ b)
+        @test axes(a .+ b,1) ≡ BlockArrays._BlockedUnitRange(1, 1:6)
+
+        @test a .+ PseudoBlockArray(b) == PseudoBlockArray(a) .+ b
+
         A = BlockArray(randn(6), 1:3)
         @test blockisequal(axes(A .* Zeros(6)), axes(A .* zeros(6)))
         @test blockisequal(axes(A .* Ones(6)), axes(A .* ones(6)))
+        @test blockisequal(axes(A .* Zeros(axes(A))), axes(Zeros(axes(A)) .* A), axes(A .* zeros(6)))
+        @test blockisequal(axes(A .* Ones(axes(A))), axes(Ones(axes(A)) .* A), axes(A .* ones(6)))
     end
 
     @testset "recurrences" begin
@@ -218,5 +235,24 @@ using BlockArrays, FillArrays, LazyArrays, Test
             @test Base.BroadcastStyle(typeof(view(A,Block.(1:2),Block.(1:2)))) isa BlockArrays.PseudoBlockStyle{2}
             @test Base.BroadcastStyle(typeof(view(B,Block.(1:2),Block.(1:2)))) isa BlockArrays.BlockStyle{2}
         end
+    end
+
+    @testset "SubBlockIterator" begin
+        A = BlockArray(1:6, 1:3);
+        subblock_lasts = axes(A, 1).lasts
+        @test subblock_lasts == [1, 3, 6]
+        block_lasts = [1, 3, 4, 6]
+
+        for idx in SubBlockIterator(subblock_lasts, block_lasts)
+           B = view(A, idx)
+           @test !(parent(B) isa BlockArray)
+           @test idx isa BlockIndexRange
+           @test idx.block isa Block{1}
+           @test idx.indices isa Tuple{UnitRange}
+        end
+
+        @test [idx.block.n[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)] == [1,2,3,3]
+
+        @test [idx.indices[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)] == [1:1,1:2,1:1,2:3]
     end
 end
