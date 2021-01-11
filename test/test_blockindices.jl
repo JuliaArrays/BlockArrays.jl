@@ -262,6 +262,10 @@ end
         @test checkindex(Bool, b, Block(1))
         @test checkindex(Bool, b, Block(3))
         @test !checkindex(Bool, b, Block(4))
+        @test checkbounds(Bool, b, Block(1)[1])
+        @test !checkbounds(Bool, b, Block(1)[2])
+        @test !checkbounds(Bool, b, Block(0)[1])
+        @test !checkbounds(Bool, b, Block(1)[0])
     end
 
     @testset "Slice" begin

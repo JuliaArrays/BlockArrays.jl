@@ -172,4 +172,31 @@ using BlockArrays, FillArrays, LazyArrays, Test
         @inferred(copyto!(similar(u), Base.broadcasted(exp, u)))
         @test exp.(u) == exp.(Vector(u))
     end
+
+    @testset "adjtrans" begin
+        a = PseudoBlockArray(a, [2,3])
+        b = BlockArray(a)
+        
+        @test Base.BroadcastStyle(typeof(a')) isa BlockArrays.PseudoBlockStyle{2}
+        @test Base.BroadcastStyle(typeof(b')) isa BlockArrays.BlockStyle{2}
+
+        @test exp.(a') == exp.(b') == exp.(Vector(a)')
+        @test exp.(a') isa PseudoBlockArray
+        @test exp.(b') isa BlockArray
+    end
+
+    @testset "subarray" begin
+        a = PseudoBlockArray(a, [2,3])
+        b = BlockArray(a)
+
+        v = view(a,Block.(1:2))
+        w = view(b,Block.(1:2))
+        
+        @test Base.BroadcastStyle(typeof(v)) isa BlockArrays.PseudoBlockStyle{1}
+        @test Base.BroadcastStyle(typeof(w)) isa BlockArrays.BlockStyle{1}
+
+        @test exp.(v) == exp.(w) == exp.(Vector(v))
+        @test exp.(v) isa PseudoBlockArray
+        @test exp.(w) isa BlockArray
+    end
 end

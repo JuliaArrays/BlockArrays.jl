@@ -159,7 +159,9 @@ end
 
 @inline checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::Block{N}) where N = blockcheckbounds(Bool, A, I.n...)
 @inline function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndex{N}) where N
-    B = A[block(I)]
+    bl = block(I)
+    checkbounds(Bool, A, bl) || return false
+    B = A[bl]
     checkbounds(Bool, B, blockindex(I)...)
 end
 

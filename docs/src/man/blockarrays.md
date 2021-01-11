@@ -87,8 +87,7 @@ julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])
     
 ## [Setting and getting blocks and values](@id setting_and_getting)
 
-A block can be set by `setblock!(block_array, v, i...)` where `v` is the array to set and `i` is the block index.
-An alternative syntax for this is `block_array[Block(i...)] = v` or
+A block can be set by  `block_array[Block(i...)] = v` or
 `block_array[Block.(i)...]`.
 
 ```jldoctest block_array
@@ -99,14 +98,14 @@ julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
  #undef  #undef  │  #undef  #undef
  #undef  #undef  │  #undef  #undef
 
-julia> setblock!(block_array, rand(2,2), 2, 1)
+julia> block_array[Block(2,1)] = rand(2,2)
 2×2-blocked 3×4 BlockArray{Float64,2}:
  #undef      #undef      │  #undef  #undef
  ────────────────────────┼────────────────
    0.590845    0.566237  │  #undef  #undef
    0.766797    0.460085  │  #undef  #undef
 
-julia> block_array[Block(1, 1)] = [1 2];
+julia> block_array[Block(1),Block(1)] = [1 2];
 
 julia> block_array
 2×2-blocked 3×4 BlockArray{Float64,2}:
@@ -118,10 +117,15 @@ julia> block_array
 
 Note that this will "take ownership" of the passed in array, that is, no copy is made.
 
-A block can be retrieved with `getblock(block_array, i...)` or `block_array[Block(i...)]`:
+A block can be retrieved with `view(block_array, Block(i...))`, 
+or if a copy is desired, `block_array[Block(i...)]`:
 
 ```jldoctest block_array
-julia> block_array[Block(1, 1)]
+julia> view(block_array, Block(1, 1))
+1×2 Array{Float64,2}:
+ 1.0  2.0
+
+julia> block_array[Block(1, 1)] # makes a copy
 1×2 Array{Float64,2}:
  1.0  2.0
 
@@ -129,8 +133,6 @@ julia> block_array[Block(1), Block(1)]  # equivalent to above
 1×2 Array{Float64,2}:
  1.0  2.0
 ```
-
-Similarly to `setblock!` this does not copy the returned array.
 
 For setting and getting a single scalar element, the usual `setindex!` and `getindex` are available.
 
@@ -141,17 +143,23 @@ julia> block_array[1, 2]
 
 ## Views of blocks
 
-We can also view and modify views of blocks of `BlockArray` using the `view` syntax:
+To view and modify blocks of `BlockArray` use the `view` syntax.
 ```jldoctest
 julia> A = BlockArray(ones(6), 1:3);
 
 julia> view(A, Block(2))
-2-element view(::BlockArray{Float64,1,Array{Array{Float64,1},1},Tuple{BlockedUnitRange{Array{Int64,1}}}}, BlockSlice(Block(2),2:3)) with eltype Float64:
+2-element Array{Float64,1}:
  1.0
  1.0
 
 julia> view(A, Block(2)) .= [3,4]; A[Block(2)]
 2-element Array{Float64,1}:
+ 3.0
+ 4.0
+
+julia> view(A, Block.(1:2))
+3-element view(::BlockArray{Float64,1,Array{Array{Float64,1},1},Tuple{BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64,UnitRange{Int64}}}}}, BlockSlice(Block{1,Int64}[Block(1), Block(2)],1:1:3)) with eltype Float64 with indices 1:1:3:
+ 1.0
  3.0
  4.0
 ```

@@ -15,7 +15,7 @@ it can just return the wrapped array.
 
 When iteratively solving a set of equations with a gradient method the Jacobian typically has a block structure. It can be convenient
 to use a `PseudoBlockArray` to build up the Jacobian block by block and then pass the resulting matrix to
-a direct solver using `full`.
+a direct solver using `Matrix`.
 
 ## Creating PseudoBlockArrays
 
@@ -50,7 +50,8 @@ We can also any other user defined array type that supports `similar`.
 ## Setting and getting blocks and values
 
 Setting and getting blocks uses the same API as `BlockArrays`. The difference here is that setting a block will update the block in place and getting a block
-will extract a copy of the block and return it. For `PseudoBlockArrays` there is a mutating block getter called `getblock!` which updates a passed in array to avoid a copy:
+will extract a copy of the block and return it. Note to update a passed in array without allocating
+one can use views:
 
 ```jldoctest A
 julia> A = zeros(2,2)
@@ -58,7 +59,7 @@ julia> A = zeros(2,2)
  0.0  0.0
  0.0  0.0
 
-julia> getblock!(A, pseudo, 2, 1);
+julia> copyto!(A, view(pseudo, Block(2, 1)));
 
 julia> A
 2×2 Array{Float64,2}:
@@ -83,7 +84,7 @@ We can also view and modify views of blocks of `PseudoBlockArray` using the `vie
 julia> A = PseudoBlockArray(ones(6), 1:3);
 
 julia> view(A, Block(2))
-2-element view(::PseudoBlockArray{Float64,1,Array{Float64,1},Tuple{BlockedUnitRange{Array{Int64,1}}}}, BlockSlice(Block(2),2:3)) with eltype Float64:
+2-element view(::Array{Float64,1}, 2:3) with eltype Float64:
  1.0
  1.0
 
@@ -93,4 +94,4 @@ julia> view(A, Block(2)) .= [3,4]; A[Block(2)]
  4.0
 ```
 Note that, in memory, each block is in a BLAS-Level 3 compatible format, so
-that, in the future, algebra with blocks will be highly efficient.
+that algebra with blocks is highly efficient.

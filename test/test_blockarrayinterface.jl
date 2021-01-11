@@ -1,4 +1,6 @@
-using BlockArrays, LinearAlgebra, FillArrays, Base64
+using BlockArrays, LinearAlgebra, FillArrays, Base64, Test
+
+bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
 @testset "Array block interface" begin
     @test 1[Block()] == 1
@@ -12,6 +14,10 @@ using BlockArrays, LinearAlgebra, FillArrays, Base64
 
     A = randn(5,5)
     @test A[Block(1,1)] == A
+
+    @test similar(BlockArray{Float64,1}, Base.OneTo(5)) isa Vector{Float64}
+    @test similar(BlockArray{Float64,1}, 5) isa Vector{Float64}
+    @test similar(BlockArray{Float64,1}, (5,)) isa Vector{Float64}
 end
 
 @testset "Triangular/Symmetric/Hermitian block arrays" begin
@@ -145,4 +151,13 @@ end
     @test stringmime("text/plain", A) == "5-element Fill{Int64,1,Tuple{BlockedUnitRange{Array{Int64,1}}}} with indices 1:1:5: entries equal to 2"
     @test stringmime("text/plain", B) == "3×3 Diagonal{Float64,Ones{Float64,1,Tuple{BlockedUnitRange{Array{Int64,1}}}}} with indices 1:1:3×1:1:3"
     @test stringmime("text/plain", U) == "3×3 UpperTriangular{Float64,Ones{Float64,2,Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}}} with indices 1:1:3×1:1:3:\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
+
+    @testset "views" begin
+        # This in theory can be dropped because `view` returns the block, but we keep in case needed
+        a = BlockArray(randn(6), 1:3)
+        fill!(bview(a, Block(2)), 2)
+        @test view(a, Block(2)) == [2,2]
+        f = mortar([Fill(1,2), Fill(2,3)])
+        @test FillArrays.getindex_value(bview(f, Block(2))) == 2
+    end
 end

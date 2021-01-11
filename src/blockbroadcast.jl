@@ -20,10 +20,6 @@ BroadcastStyle(::Type{<:PseudoBlockArray{<:Any,N}}) where {N} = PseudoBlockStyle
 BroadcastStyle(::Type{<:AdjOrTrans{<:Any,<:BlockArray{<:Any,N}}}) where {N} = BlockStyle{2}()
 BroadcastStyle(::Type{<:AdjOrTrans{<:Any,<:PseudoBlockArray{<:Any,N}}}) where {N} = PseudoBlockStyle{2}()
 
-# special cases for SubArrays which we want to broadcast by Block
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
-
 BroadcastStyle(::DefaultArrayStyle{N}, b::AbstractBlockStyle{M}) where {M,N} = typeof(b)(Val(max(M,N)))
 BroadcastStyle(a::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = typeof(a)(Val(max(M,N)))
 BroadcastStyle(::StructuredMatrixStyle, b::AbstractBlockStyle{M}) where {M} = typeof(b)(Val(max(M,2)))
@@ -266,8 +262,15 @@ _blocktype(::Type{<:BlockArray{<:Any,N,<:AbstractArray{R,N}}}) where {N,R} = R
 
 BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice1},false}}) where {T,N,Arr<:BlockArray} = 
     BroadcastStyle(_blocktype(Arr))
-BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice{BlockRange{1,Tuple{II}}}},false}}) where {T,N,Arr<:BlockArray,II} = 
-    BlockStyle{N}()
+
+
+# special cases for SubArrays which we want to broadcast by Block
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
+
 
 
 ###

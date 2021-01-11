@@ -40,9 +40,7 @@ It is possible to override additional functions to improve speed, however.
 | Methods to implement    | Brief description |
 | :---------------------- | :---------------- |
 | **Optional methods**    |           
-| `view(A, i::Block)`     | `X[Block(i...)]`, blocked indexing  |
-| `setblock!(A, v, i...)` | `X[Block(i...)] = v`, blocked index assignment |
-| `getblock!(x, A, i)`    | `X[i]`, blocked index assignment with in place storage in `x` |
+| `BlockArrays.viewblock(A, i::Block)`     | Specialised non-allocating `X[Block(i...)]`, blocked indexing  |
 
 For a more thorough description of the methods see the public interface documentation.
 
