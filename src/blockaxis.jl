@@ -7,9 +7,9 @@
 @inline getindex(b::AbstractArray, K::BlockIndex{1}, J::BlockIndex{1}...) =
     b[BlockIndex(tuple(K, J...))]
 
-@inline getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = 
-    b[block(K)][K.indices...]    
-
+@inline getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
+@inline getindex(b::LayoutArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
+@inline getindex(b::LayoutArray{T,1}, K::BlockIndexRange{1}) where {T} = b[block(K)][K.indices...]
 
 function findblockindex(b::AbstractVector, k::Integer)
     K = findblock(b, k)
@@ -39,7 +39,7 @@ julia> blockedrange([2,2,3])
  6
  7
 ```
-"""    
+"""
 struct BlockedUnitRange{CS} <: AbstractUnitRange{Int}
     first::Int
     lasts::CS
@@ -85,7 +85,7 @@ Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where C
 """
     blockaxes(A)
 
-Return the tuple of valid block indices for array `A`. 
+Return the tuple of valid block indices for array `A`.
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray([1,2,3],[2,1])
 2-blocked 3-element BlockArray{Int64,1}:
@@ -119,7 +119,7 @@ julia> blockaxes(A,1)
 2-element BlockRange{1,Tuple{UnitRange{Int64}}}:
  Block(1)
  Block(2)
-```    
+```
 """
 function blockaxes(A::AbstractArray{T,N}, d) where {T,N}
     @_inline_meta
@@ -259,7 +259,7 @@ Base.BroadcastStyle(::Type{BlockedUnitRange{R}}) where R = Base.BroadcastStyle(R
 
 ###
 # Special Fill/Range cases
-# 
+#
 # We want to use lazy types when possible
 ###
 

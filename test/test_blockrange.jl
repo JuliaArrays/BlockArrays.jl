@@ -1,3 +1,5 @@
+using BlockArrays, Test
+
 @testset "block range" begin
     # test backend code
     @test BlockRange((1:3),) == BlockRange{1,Tuple{UnitRange{Int}}}((1:3,))
@@ -66,6 +68,12 @@
     @test parent(V) == A
     @test all(ind -> ind isa BlockArrays.BlockSlice, parentindices(V))
     @test V ==  A[Block.(1:2), Block.(2:3)]
+
+    @testset "iterator" begin
+        @test BlockRange()[] == collect(BlockRange())[] == Block()
+        @test BlockRange(1:3) == collect(BlockRange(1:3)) == [Block(1),Block(2),Block(3)]
+        @test BlockRange(1:3,1:2) == collect(BlockRange(1:3,1:2))
+    end
 end
 
 @testset "block index range" begin
@@ -82,4 +90,15 @@ end
     A = PseudoBlockArray(rand(4,4), [1,3],[2,2])
 	@test A[Bi,Block(1)] == A[3:4,1:2]
     @test A[Bi,Block(1)[2:2]] == A[3:4,2:2]
+
+    @testset "iterate" begin
+        bi = Block(2)[2:3]
+        @test bi == collect(bi) == [Block(2)[2], Block(2)[3]]
+        @test length(bi) == 2
+        @test first(bi) == Block(2)[2]
+        @test last(bi) == Block(2)[3]
+        bi = Block(1,2)[1:2,2:3]
+        @test bi == collect(bi)
+        @test size(bi) == (2,2)
+    end
 end

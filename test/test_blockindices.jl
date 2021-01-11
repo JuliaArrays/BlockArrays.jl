@@ -299,6 +299,7 @@ end
     b = BlockSlice(Block(5),1:3)
     @test b[Base.Slice(1:3)] ≡ b
     @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
+    @test Block(b) ≡ Block(5)
 end
 
 #=
