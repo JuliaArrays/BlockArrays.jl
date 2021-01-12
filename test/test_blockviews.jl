@@ -1,9 +1,12 @@
 using BlockArrays, Test, Base64
 
+# useds to force SubArray return
+bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
+
 @testset "Block Views" begin
     @testset "block slice" begin
-        A = BlockArray(1:6,1:3)
-        b = parentindices(view(A, Block(2)))[1] # A BlockSlice
+        A = PseudoBlockArray(1:6,1:3)
+        b = parentindices(bview(A, Block(2)))[1] # A BlockSlice
 
         @test first(b) == 2
         @test last(b) == 3
@@ -37,7 +40,7 @@ using BlockArrays, Test, Base64
         # backend tests
         @test_throws ArgumentError Base.to_index(A, Block(1))
 
-        A = BlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
+        A = PseudoBlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
         V = view(A, Block(2), Block(3))
         @test size(V) == (2, 5)
         V[1,1] = -1
@@ -50,7 +53,7 @@ using BlockArrays, Test, Base64
 
         # test mixed blocks and other indices
         @test view(A, Block(2), 2) == [8,9]
-        @test similar(A, (Base.OneTo(5), axes(A,2))) isa BlockArray{Int}
+        @test similar(A, (Base.OneTo(5), axes(A,2))) isa PseudoBlockArray{Int}
         @test view(A, Block(2), :) == A[2:3,:]
 
         @test view(A, 2, Block(1)) == [2,8,14]
@@ -62,7 +65,7 @@ using BlockArrays, Test, Base64
         @test_throws BlockBoundsError view(V, Block(2,1))
 
 
-        A = BlockArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)
+        A = PseudoBlockArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)
         V = view(A, Block(2), Block(3), Block(1))
         @test size(V) == (2, 3, 1)
         V[1,1,1] = -3
@@ -160,10 +163,8 @@ using BlockArrays, Test, Base64
         W = view(A,Block.(1:2),Block(1))
         @test blocks(V) == blocks(A)[1:1,1:2]
         @test blocks(W) == blocks(A)[1:2,1:1]
-        if VERSION ≥ v"1.2"
-            @test stringmime("text/plain", V) == "1×3 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},Tuple{BlockedUnitRange{Array{$Int,1}},BlockedUnitRange{Array{$Int,1}}}}, BlockSlice(Block(1),1:1), BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3)) with eltype $Int with indices Base.OneTo(1)×1:1:3:\n 1  │  2  3"
-            @test stringmime("text/plain", W) == "3×1 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},Tuple{BlockedUnitRange{Array{$Int,1}},BlockedUnitRange{Array{$Int,1}}}}, BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3), BlockSlice(Block(1),1:1)) with eltype $Int with indices 1:1:3×Base.OneTo(1):\n 1\n ─\n 4\n 7"
-        end
+        @test stringmime("text/plain", V) == "1×3 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},$(typeof(axes(A)))}, BlockSlice(Block(1),1:1), BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3)) with eltype $Int with indices Base.OneTo(1)×1:1:3:\n 1  │  2  3"
+        @test stringmime("text/plain", W) == "3×1 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},$(typeof(axes(A)))}, BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3), BlockSlice(Block(1),1:1)) with eltype $Int with indices 1:1:3×Base.OneTo(1):\n 1\n ─\n 4\n 7"
     end
 
     @testset "getindex with BlockRange" begin
@@ -237,15 +238,15 @@ using BlockArrays, Test, Base64
         @test B[Block.(1:2),1:3] isa PseudoBlockArray
         @test A[1:3,Block.(1:2)] isa PseudoBlockArray
         @test B[1:3,Block.(1:2)] isa PseudoBlockArray
-        @test A[Block.(1:2),:] isa PseudoBlockArray
+        @test A[Block.(1:2),:] isa BlockArray
         @test B[Block.(1:2),:] isa PseudoBlockArray
         @test blockisequal(axes(A,2),axes(A[Block.(1:2),:],2))
         @test blockisequal(axes(B,2),axes(B[Block.(1:2),:],2))
-        @test A[:,Block.(1:2)] isa PseudoBlockArray
+        @test A[:,Block.(1:2)] isa BlockArray
         @test B[:,Block.(1:2)] isa PseudoBlockArray
         @test blockisequal(axes(A,1),axes(A[:,Block.(1:2)],1))
         @test blockisequal(axes(B,1),axes(B[:,Block.(1:2)],1))
-        @test A[:,:] isa PseudoBlockArray
+        @test A[:,:] isa BlockArray
         @test B[:,:] isa PseudoBlockArray
         @test blockisequal(axes(A),axes(A[:,:]))
         @test blockisequal(axes(B),axes(B[:,:]))
@@ -264,5 +265,30 @@ using BlockArrays, Test, Base64
         v = view(a, Block(3)[1:2])
         v[1] = 5
         @test a[4] == 5
+    end
+
+    @testset "types with custom views" begin
+        a = mortar([7:9,5:6])
+        v = view(a,Block.(1:2))
+        @test a[Block(1)[1:3]] ≡ view(a,Block(1)[1:3]) ≡ view(v,Block(1)[1:3]) ≡ 7:9
+    end
+
+    @testset "blockrange-of-blockreange" begin
+        a = mortar([7:9,5:6])
+        v = view(a,Block.(1:2))
+        @test view(v, Block(1)) ≡ 7:9
+        @test bview(v, Block(1)) == 7:9
+        @test view(v,Block.(1:2)) == v
+
+        A = BlockArray([1 2 3; 4 5 6; 7 8 9], 1:2, 1:2)
+        V = view(A, Block.(1:2), Block.(1:2))
+        @test view(V, Block(1,1)) ≡ view(A, Block(1,1))
+        @test bview(V, Block(1,1)) == view(A, Block(1,1))
+    end
+
+    @testset "view of BlockSlice unwinds" begin
+        a = mortar([7:9,5:6])
+        v = bview(a,Block(1))
+        @test view(a, parentindices(v)...) ≡ 7:9
     end
 end

@@ -45,8 +45,7 @@ julia> a  # in-place mutation is reflected to the block array
    3.0    3.0    3.0  │  4.0  4.0
 ```
 """
-blocks(a::AbstractArray) = blocks(PseudoBlockArray(a, axes(a)))
-blocks(a::AbstractBlockArray) = BlocksView(a)
+blocks(a::AbstractArray) = BlocksView(a)
 blocks(a::BlockArray) = a.blocks
 blocks(A::Adjoint) = adjoint(blocks(parent(A)))
 blocks(A::Transpose) = transpose(blocks(parent(A)))
@@ -64,12 +63,12 @@ struct BlocksView{
     S,                            # eltype(eltype(BlocksView(...)))
     N,                            # ndims
     T<:AbstractArray{S,N},        # eltype(BlocksView(...)), i.e., block type
-    B<:AbstractBlockArray{S,N},   # array to be wrapped
+    B<:AbstractArray{S,N},   # array to be wrapped
 } <: AbstractArray{T,N}
     array::B
 end
 
-BlocksView(a::AbstractBlockArray{S,N}) where {S,N} =
+BlocksView(a::AbstractArray{S,N}) where {S,N} =
     BlocksView{S,N,AbstractArray{eltype(a),N},typeof(a)}(a)
 # Note: deciding concrete eltype of `BlocksView` requires some extra
 # interface for `AbstractBlockArray`.
@@ -88,7 +87,7 @@ This is broken for now. See: https://github.com/JuliaArrays/BlockArrays.jl/issue
 
 # IndexCartesian implementations
 @propagate_inbounds Base.getindex(a::BlocksView{T,N}, i::Vararg{Int,N}) where {T,N} =
-    getblock(a.array, i...)
+    view(a.array, Block.(i)...)
 @propagate_inbounds Base.setindex!(a::BlocksView{T,N}, b, i::Vararg{Int,N}) where {T,N} =
     copyto!(a[i...], b)
 

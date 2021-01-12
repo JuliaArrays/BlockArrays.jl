@@ -101,7 +101,7 @@ end
     @testset "similar" begin
         ret = BlockArray{Float64}(undef, 1:3)
         @test similar(typeof(ret), axes(ret)) isa BlockArray
-        @test similar(typeof(ret), (Base.OneTo(6),)) isa BlockArray
+        @test similar(typeof(ret), (Base.OneTo(6),)) isa Array
         @test similar(Array{Float64}, axes(ret)) isa PseudoBlockArray
         @test similar(Vector{Float64}, axes(ret)) isa PseudoBlockArray
         @test similar(randn(5,5), Float64, axes(ret)) isa PseudoBlockArray
@@ -264,11 +264,11 @@ end
         @test BA_1[Block(1)] == q
         if BlockType == PseudoBlockArray
             q2 = zero(q)
-            getblock!(q2, BA_1, 1)
+            copyto!(q2, view(BA_1, Block(1)))
             @test q2 == q
-            @test_throws DimensionMismatch getblock!(zeros(2), BA_1, 1)
+            @test_throws BoundsError copyto!(zeros(0), view(BA_1, Block(1)))
             fill!(q2, 0)
-            getblock!(q2, BA_1, 1)
+            copyto!(q2, view(BA_1, Block(1)))
             @test q2 == q
         end
         fill!(BA_1, 1.0)
@@ -297,9 +297,9 @@ end
         @test BA_2[Block(1,2)] == q
         if BlockType == PseudoBlockArray
             q2 = zero(q)
-            getblock!(q2, BA_2, 1, 2)
+            copyto!(q2, view(BA_2, Block(1, 2)))
             @test q2 == q
-            @test_throws DimensionMismatch getblock!(zeros(1,5), BA_2, 1, 2)
+            @test copyto!(zeros(1,5), view(BA_2, Block(1, 2))) == [BA_2[Block(1,2)] zeros(1,1)]
         end
         fill!(BA_2, 1.0)
         @test BA_2 == ones(size(BA_2))
@@ -326,9 +326,8 @@ end
         @test BA_3[Block(1,2,2)] == q
         if BlockType == PseudoBlockArray
             q3 = zero(q)
-            getblock!(q3, BA_3, 1, 2, 2)
+            copyto!(q3, view(BA_3, Block(1, 2, 2)))
             @test q3 == q
-            @test_throws DimensionMismatch getblock!(zeros(1,3,2), BA_3, 1, 2,2)
         end
         fill!(BA_3, 1.0)
         @test BA_3 == ones(size(BA_3))
@@ -398,6 +397,8 @@ end
     @test stringmime("text/plain",A) == "1×2-blocked 6×9 BlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
     A = PseudoBlockArray(design,[6],[4,5])
     @test stringmime("text/plain",A) == "1×2-blocked 6×9 PseudoBlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+    D = PseudoBlockArray(Diagonal(1:3), [1,2], [2,1])
+    @test stringmime("text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockArray{Int,2,Diagonal{Int,UnitRange{Int}},Tuple{BlockedUnitRange{Array{Int,1}},BlockedUnitRange{Array{Int,1}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
 end
 
 @testset "AbstractVector{Int} blocks" begin
@@ -498,7 +499,7 @@ end
 
 @testset "reshape" begin
     A = BlockArray(1:6, 1:3)
-    @test reshape(A, Val(2)) isa PseudoBlockArray{Int64,2,Array{Int64,2},Tuple{BlockedUnitRange{Array{Int64,1}},Base.OneTo{Int64}}}
+    @test reshape(A, Val(2)) isa PseudoBlockArray{Int,2,Array{Int,2},Tuple{typeof(axes(A,1)),Base.OneTo{Int}}}
     @test reshape(A, Val(2)) == PseudoBlockArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
     @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
     @test reshape(A, 2, 3) == reshape(A, Base.OneTo(2), 3) == reshape(Vector(A), 2, 3)

@@ -47,17 +47,24 @@ end
 similar(M::MulAdd{<:AbstractBlockLayout,<:AbstractBlockLayout}, ::Type{T}, axes) where {T,N} =
     similar(BlockArray{T}, axes)
 
-MemoryLayout(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = MemoryLayout(R)
-MemoryLayout(::Type{<:BlockArray{T,N,R}}) where {T,N,D,R<:AbstractArray{D,N}} =
+@inline MemoryLayout(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = MemoryLayout(R)
+@inline MemoryLayout(::Type{<:BlockArray{T,N,R}}) where {T,N,D,R<:AbstractArray{D,N}} =
     BlockLayout{typeof(MemoryLayout(R)),typeof(MemoryLayout(D))}()
 
-sublayout(::BlockLayout{MLAY,BLAY}, ::Type{NTuple{N,BlockSlice1}}) where {MLAY,BLAY,N} = BLAY()
+sublayout(::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,BlockSlice1}}) where {MLAY,BLAY,N} = BLAY()
 sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:BlockSlice{BlockRange{1,Tuple{II}}}}}) where {N,MLAY,BLAY,II} =
     BlockLayout{typeof(sublayout(MLAY(),NTuple{N,II})), BLAY}()
 sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{BlockSlice1,<:BlockSlice{BlockRange{1,Tuple{II}}}}}) where {MLAY,BLAY,II} =
     BlockLayout{typeof(sublayout(MLAY(),Tuple{Int,II})), BLAY}()
-sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{<:BlockSlice{BlockRange{1,Tuple{II}}},BlockSlice1}}) where {MLAY,BLAY,II} =
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{BlockSlice{BlockRange{1,Tuple{II}}},BlockSlice1}}) where {MLAY,BLAY,II} =
     BlockLayout{typeof(sublayout(MLAY(),Tuple{II,Int})), BLAY}()
+# This might need modification: no guarantee axes(BL,1) == axes(MLAY,1) so Slice might not be right here
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{Sl,<:BlockSlice{BlockRange{1,Tuple{II}}}}}) where {MLAY,BLAY,Sl<:Slice,II} =
+    BlockLayout{typeof(sublayout(MLAY(),Tuple{Sl,II})), BLAY}()
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{<:BlockSlice{BlockRange{1,Tuple{II}}},Sl}}) where {MLAY,BLAY,Sl<:Slice,II} =
+    BlockLayout{typeof(sublayout(MLAY(),Tuple{II,Sl})), BLAY}()
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{Sl1,Sl2}}) where {MLAY,BLAY,Sl1<:Slice,Sl2<:Slice,II} =
+    BlockLayout{typeof(sublayout(MLAY(),Tuple{Sl1,Sl2})), BLAY}()    
 
 # materialize views, used for `getindex`
 sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
@@ -73,6 +80,14 @@ sub_materialize(_, V, ::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) = PseudoB
 sub_materialize(_, V, ::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) = PseudoBlockArray(V)
 
 # Special for FillArrays.jl
+
+# special case for fill blocks
+LinearAlgebra.fill!(V::SubArray{T,1,<:BlockArray,<:Tuple{BlockSlice1}}, x) where T =
+    fill!(view(parent(V), parentindices(V)[1].block), x)
+
+FillArrays.getindex_value(V::SubArray{T,1,<:BlockArray,<:Tuple{BlockSlice1}}) where T =
+    FillArrays.getindex_value(view(parent(V), block(parentindices(V)[1])))
+
 sub_materialize(::ArrayLayouts.AbstractFillLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
     Fill(FillArrays.getindex_value(V), ax)
 sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
@@ -91,6 +106,36 @@ conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Real,MLAY,BLAY} = Bloc
 
 transposelayout(::BlockLayout{MLAY,BLAY}) where {MLAY,BLAY} =
     BlockLayout{typeof(transposelayout(MLAY())),typeof(transposelayout(BLAY()))}()
+
+#############
+# copyto!
+#############
+
+function _copyto!(_, ::AbstractBlockLayout, dest::AbstractVector, src::AbstractVector)
+    if !blockisequal(axes(dest), axes(src))
+        # impose block structure
+        copyto!(PseudoBlockArray(dest, axes(src)), src)
+        return dest
+    end
+
+    @inbounds for K = blockaxes(src,1)
+        copyto!(view(dest,K), view(src,K))
+    end
+    dest
+end
+
+function _copyto!(_, ::AbstractBlockLayout, dest::AbstractMatrix, src::AbstractMatrix)
+    if !blockisequal(axes(dest), axes(src))
+        # impose block structure
+        copyto!(PseudoBlockArray(dest, axes(src)), src)
+        return dest
+    end
+
+    @inbounds for J = blockaxes(src,2),K = blockaxes(src,1)
+        copyto!(view(dest,K,J), view(src,K,J))
+    end
+    dest
+end
 
 #############
 # BLAS overrides

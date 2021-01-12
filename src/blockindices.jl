@@ -31,9 +31,8 @@ Block{1}(n::Tuple{T}) where {T} = Block{1, T}(n)
 Block{N}(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
 Block(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
 
-@inline function Block(blocks::NTuple{N, Block{1, T}}) where {N,T}
-    Block{N, T}(ntuple(i -> blocks[i].n[1], Val(N)))
-end
+@inline Block(blocks::NTuple{N, Block{1, T}}) where {N,T} = Block{N, T}(ntuple(i -> blocks[i].n[1], Val(N)))
+@inline Block(::Tuple{}) = Block{0,Int}(())
 
 # iterate and broadcast like Number
 length(b::Block) = 1
@@ -159,15 +158,16 @@ end
 
 @inline checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::Block{N}) where N = blockcheckbounds(Bool, A, I.n...)
 @inline function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndex{N}) where N
-    checkbounds(Bool, A, Block(I.I)) || return false
-    @inbounds block = getblock(A, I.I...)
-    checkbounds(Bool, block, I.α...)
+    bl = block(I)
+    checkbounds(Bool, A, bl) || return false
+    B = A[bl]
+    checkbounds(Bool, B, blockindex(I)...)
 end
 
 checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N = 
     all(checkbounds.(Bool, Ref(A), I))
 
-struct BlockIndexRange{N,R<:NTuple{N,AbstractUnitRange{Int}}}
+struct BlockIndexRange{N,R<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractArray{BlockIndex{N},N}
     block::Block{N,Int}
     indices::R
 end
@@ -192,6 +192,7 @@ getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
 getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{Int}) = BlockIndexRange(B.block, B.indices[1][kr])
+getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))
 eltype(::Type{BlockIndexRange{N}}) where {N} = BlockIndex{N}
@@ -270,8 +271,6 @@ getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
 getindex(S::BlockSlice{<:Block}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
 getindex(S::BlockSlice{<:BlockIndexRange}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
-next(S::BlockSlice, s) = next(S.indices, s)
-done(S::BlockSlice, s) = done(S.indices, s)
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
@@ -365,3 +364,9 @@ _in(b, ::Tuple{}, ::Tuple{}, ::Tuple{}) = b
 
 # We sometimes need intersection of BlockRange to return a BlockRange
 intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1], b.indices[1]))
+
+
+# needed for scalar-like broadcasting
+
+BlockSlice{BlockRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} = 
+    BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},RT}

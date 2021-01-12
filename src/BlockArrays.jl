@@ -28,7 +28,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             RangeIndex, Int, Integer, Number,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
             BroadcastStyle, checkbounds, throw_boundserror, 
-            ones, zeros, intersect
+            ones, zeros, intersect, Slice
 using Base: ReshapedArray, dataids
 
 
@@ -40,10 +40,6 @@ import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdi
                         materialize!, MemoryLayout, sublayout, transposelayout, conjlayout, 
                         triangularlayout, triangulardata, _inv, _copyto!, axes_print_matrix_row,
                         colsupport, rowsupport, sub_materialize
-
-if !@isdefined(only)
-    using Compat: only
-end
 
 include("blockindices.jl")                        
 include("blockaxis.jl")
@@ -59,5 +55,10 @@ include("blockproduct.jl")
 include("show.jl")
 include("blockreduce.jl")
 include("blockdeque.jl")
+
+@deprecate getblock(A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} view(A, Block(I))
+@deprecate getblock!(X, A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} copyto!(X, view(A, Block(I)))
+@deprecate setblock!(A::AbstractBlockArray{T,N}, v, I::Vararg{Integer, N}) where {T,N} (A[Block(I...)] = v)
+
 
 end # module

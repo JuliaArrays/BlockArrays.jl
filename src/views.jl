@@ -44,21 +44,17 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
 @inline to_indices(A, I::Tuple{Block, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{BlockRange, Vararg{Any}}) = to_indices(A, axes(A), I)
 
-if VERSION >= v"1.2-"  # See also `reindex` definitions in views.jl
-    reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
-                                                                subidxs[1].block.indices),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                    reindex(tail(idxs), tail(subidxs))...))
-else  # if VERSION >= v"1.2-"
-    reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
-                                                                subidxs[1].block.indices),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                        reindex(V, tail(idxs), tail(subidxs))...))
-end  # if VERSION >= v"1.2-"
+reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
+                                                            subidxs[1].block.indices),
+                                            idxs[1].indices[subidxs[1].indices]),
+                                reindex(tail(idxs), tail(subidxs))...))
+reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:Block}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(idxs[1].block[Int(subidxs[1].block)],
+                                            idxs[1].indices[subidxs[1].indices]),
+                                reindex(tail(idxs), tail(subidxs))...))
 
 
 # _splatmap taken from Base:
@@ -71,7 +67,7 @@ _splatmap(f, t::Tuple) = (f(t[1])..., _splatmap(f, tail(t))...)
         A::BlockArray{<:Any, N},
         I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
     @_propagate_inbounds_meta
-    B = getblock(A, map(x -> Int(x.block.block), I)...)
+    B = view(A, map(block, I)...)
     return view(B, _splatmap(x -> x.block.indices, I)...)
 end
 
@@ -97,48 +93,27 @@ end
     return view(A, map(x -> x.indices, I)...)
 end
 
+# make sure we reindex correctrly
+function Base._maybe_reindex(V, I::Tuple{BlockSlice{<:BlockIndexRange{1}}, Vararg{Any}}, ::Tuple{})
+    @_inline_meta
+    @inbounds idxs = to_indices(V.parent, reindex(V.indices, I))
+    view(V.parent, idxs...)
+end
 
-# The first argument for `reindex` is removed as of
-# https://github.com/JuliaLang/julia/pull/30789 in Julia `Base`.  So,
-# we define 2-arg `reindex` for Julia 1.2 and later.
-if VERSION >= v"1.2-"
-    # BlockSlices map the blocks and the indices
-    # this is loosely based on Slice reindex in subarray.jl
-    reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                    reindex(tail(idxs), tail(subidxs))...))
 
-    reindex(idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(Block(idxs[1].block.indices[1][Int(subidxs[1].block)]),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                    reindex(tail(idxs), tail(subidxs))...))
+# BlockSlices map the blocks and the indices
+# this is loosely based on Slice reindex in subarray.jl
+reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
+                                            idxs[1].indices[subidxs[1].block]),
+                                reindex(tail(idxs), tail(subidxs))...))
 
-    function reindex(idxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}})
-            (idxs[1], reindex(tail(idxs), tail(subidxs))...)
-    end
-else  # if VERSION >= v"1.2-"
-    reindex(V, idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                        reindex(V, tail(idxs), tail(subidxs))...))
 
-    reindex(V, idxs::Tuple{BlockSlice{BlockRange{1,Tuple{UnitRange{Int}}}}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}}) =
-        (@_propagate_inbounds_meta; (BlockSlice(Block(idxs[1].block.indices[1][Int(subidxs[1].block)]),
-                                                idxs[1].indices[subidxs[1].indices]),
-                                        reindex(V, tail(idxs), tail(subidxs))...))
-
-    function reindex(V, idxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}},
-            subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}})
-        subidxs[1].block == Block(1) || throw(BoundsError(V, subidxs[1].block))
-        (idxs[1], reindex(V, tail(idxs), tail(subidxs))...)
-    end
-end  # if VERSION >= v"1.2-"
+function reindex(idxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{Block{1,Int}}, Vararg{Any}})
+        (idxs[1], reindex(tail(idxs), tail(subidxs))...)
+end
 
 
 #################
@@ -148,30 +123,48 @@ end  # if VERSION >= v"1.2-"
 const BlockOrRangeIndex = Union{RangeIndex, BlockSlice}
 
 ## BlockSlice1 is a convenience for views
-const BlockSlice1 = BlockSlice{Block{1,Int},UnitRange{Int}}
+const BlockSlice1 = BlockSlice{Block{1,Int}}
 
 block(A::BlockSlice) = block(A.block)
 block(A::Block) = A
 
-getblock(A::SubArray{<:Any,N,<:Any,NTuple{N,BlockSlice1}}) where N =
-    getblock(parent(A), Int.(block.(parentindices(A)))...)
-getblock(A::Adjoint, k::Int, j::Int) = getblock(parent(A), j, k)'
-getblock(A::Transpose, k::Int, j::Int) = transpose(getblock(parent(A), j, k))
+# unwind BLockSlice1 for AbstractBlockArray
+@inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, blocks::Vararg{BlockSlice1, N}) where N = 
+    view(block_arr, map(block,blocks)...)
 
-strides(A::SubArray{<:Any,N,<:BlockArray,NTuple{N,BlockSlice1}}) where N =
-    strides(getblock(A))
+@inline Base.view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlice{<:BlockRange{1}}}}, block::Block{N}) where N =
+    view(parent(V), map((b, i) -> b.block[i], parentindices(V), block.n)...)
 
-for Adj in (:Transpose, :Adjoint)
-    @eval strides(A::SubArray{<:Any,N,<:$Adj{<:Any,<:BlockArray},NTuple{N,BlockSlice1}}) where N =
-        strides(getblock(A))
+function Base.view(A::Adjoint{<:Any,<:BlockArray}, b::Block{2})
+    k, j = b.n
+    view(parent(A), Block(j), Block(k))'
+end
+function Base.view(A::Transpose{<:Any,<:BlockArray}, b::Block{2})
+    k, j = b.n
+    transpose(view(parent(A), Block(j), Block(k)))
 end
 
+Base.view(A::AdjOrTrans{<:Any,<:BlockArray}, K::Block{1}, J::Block{1}) = view(A, Block(Int(K), Int(J)))
 
-unsafe_convert(::Type{Ptr{T}}, V::SubArray{T, N, <:Any, <:NTuple{N, BlockSlice1}}) where {T,N} =
-    unsafe_convert(Ptr{T}, getblock(parent(V), Int.(Block.(parentindices(V)))...))
 
 unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,PseudoBlockArray{T,N,AT},<:Tuple{Vararg{BlockOrRangeIndex}}}) where {T,N,AT} =
     unsafe_convert(Ptr{T}, V.parent) + (Base.first_index(V)-1)*sizeof(T)
+
+# support for strided array interface for subblocks. Typically
+# these aren't needed as `view(A, Block(K))` will return the block itself,
+# not a `SubArray`, but currently `view(view(A, Block.(1:3)), Block(2))` does
+# not.
+
+strides(A::SubArray{<:Any,N,<:BlockArray,<:NTuple{N,BlockSlice1}}) where N =
+    strides(view(parent(A), block.(parentindices(A))...))
+
+for Adj in (:Transpose, :Adjoint)
+    @eval strides(A::SubArray{<:Any,N,<:$Adj{<:Any,<:BlockArray},<:NTuple{N,BlockSlice1}}) where N =
+        strides(view(parent(A), block.(parentindices(A))...))
+end
+
+unsafe_convert(::Type{Ptr{T}}, V::SubArray{T, N, <:BlockArray, <:NTuple{N, BlockSlice1}}) where {T,N} =
+    unsafe_convert(Ptr{T}, view(parent(V), block.(parentindices(V))...))
 
 
 # The default blocksize(V) is slow for views as it calls axes(V), which

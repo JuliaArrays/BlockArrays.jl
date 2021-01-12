@@ -186,6 +186,11 @@ end
 # Indexing #
 ############
 
+@inline function viewblock(block_arr::PseudoBlockArray, block)
+    range = getindex.(axes(block_arr), Block.(block.n))
+    return view(block_arr.blocks, range...)
+end
+
 @inline function _pseudoblockindex_getindex(block_arr, blockindex)
     I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
     @boundscheck checkbounds(block_arr.blocks, I...)
@@ -200,35 +205,6 @@ end
 @inline Base.getindex(block_arr::PseudoBlockVector{T}, blockindex::BlockIndex{1}) where T =
     _pseudoblockindex_getindex(block_arr, blockindex)
 
-@inline function getblock(block_arr::PseudoBlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
-    range = getindex.(axes(block_arr), Block.(block))
-    return view(block_arr.blocks, range...)
-end
-
-@inline function _check_getblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Integer}) where {T,N}
-    for i in 1:N
-        if size(x, i) != length(blockrange[i])
-            throw(DimensionMismatch(string("tried to assign ", length.(getindex.(axes(block_arr), block)), " block to $(size(x)) array")))
-        end
-    end
-end
-
-
-@generated function getblock!(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
-    return quote
-        blockrange = getindex.(axes(block_arr), Block.(block))
-        @boundscheck _check_getblock!(blockrange, x, block_arr, block)
-
-        arr = block_arr.blocks
-        @nexprs $N d -> k_d = 1
-        @inbounds begin
-            @nloops $N i (d->(blockrange[d])) (d-> k_{d-1}=1) (d-> k_d+=1) begin
-                (@nref $N x k) = (@nref $N arr i)
-            end
-        end
-        return x
-    end
-end
 
 @inline function Base.setindex!(block_arr::PseudoBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N}
     I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
@@ -236,30 +212,6 @@ end
     @inbounds block_arr.blocks[I...] = v
     return block_arr
 end
-
-@inline function _check_setblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Integer}) where {T,N}
-    blocksizes =  length.(getindex.(axes(block_arr), Block.(block)))
-    for i in 1:N
-        if size(x, i) != blocksizes[i]
-            throw(DimensionMismatch(string("tried to assign $(size(x)) array to ", blocksizes, " block")))
-        end
-    end
-end
-
-@generated function setblock!(block_arr::PseudoBlockArray{T, N}, x, block::Vararg{Integer, N}) where {T,N}
-    return quote
-        blockrange = getindex.(axes(block_arr), Block.(block))
-        @boundscheck _check_setblock!(blockrange, x, block_arr, block)
-        arr = block_arr.blocks
-        @nexprs $N d -> k_d = 1
-        @inbounds begin
-            @nloops $N i (d->(blockrange[d])) (d-> k_{d-1}=1) (d-> k_d+=1) begin
-                (@nref $N arr i) = (@nref $N x k)
-            end
-        end
-    end
-end
-
 
 ########
 # Misc #
@@ -321,10 +273,7 @@ end
 Base.strides(A::PseudoBlockArray) = strides(A.blocks)
 Base.stride(A::PseudoBlockArray, i::Integer) = stride(A.blocks, i)
 Base.unsafe_convert(::Type{Ptr{T}}, A::PseudoBlockArray) where T = Base.unsafe_convert(Ptr{T}, A.blocks)
-
-if VERSION ≥ v"1.5"
-    Base.elsize(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = Base.elsize(R)
-end
+Base.elsize(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = Base.elsize(R)
 
 ###
 # col/rowsupport
@@ -340,3 +289,6 @@ rowsupport(A::PseudoBlockArray, j) = rowsupport(A.blocks, j)
 for op in (:zeros, :ones)
     @eval $op(::Type{T}, axs::Tuple{BlockedUnitRange,Vararg{Any}}) where T = PseudoBlockArray($op(T, map(length,axs)...), axs)
 end
+
+Base.replace_in_print_matrix(f::PseudoBlockVecOrMat, i::Integer, j::Integer, s::AbstractString) =
+    Base.replace_in_print_matrix(f.blocks, i, j, s)

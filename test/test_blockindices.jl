@@ -1,4 +1,4 @@
-using BlockArrays, FillArrays, OffsetArrays, Test, Base64
+using BlockArrays, FillArrays, OffsetArrays, Test, Base64, StaticArrays, ArrayLayouts
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
 @testset "Blocks" begin
@@ -143,6 +143,18 @@ end
         @test blockfirsts(b) == [1,2,4]
         @test blocklasts(b) == [1,3,6]
         @test blocklengths(b) == [1,2,3]
+
+        o = blockedrange(Ones{Int}(10))
+        @test blocklasts(o) ≡ blockfirsts(o) ≡ Base.OneTo(10)
+        @test blocklengths(o) ≡ Ones{Int}(10)
+
+        f = blockedrange(Fill(2,5))
+        @test blockfirsts(f) ≡ 1:2:9
+        @test blocklasts(f) ≡ 2:2:10
+        @test blocklengths(f) ≡ Fill(2,5)
+
+        r = blockedrange(Base.OneTo(5))
+        @test blocklasts(r) ≡ ArrayLayouts.RangeCumsum(Base.OneTo(5))
     end
 
     @testset "convert" begin
@@ -262,6 +274,10 @@ end
         @test checkindex(Bool, b, Block(1))
         @test checkindex(Bool, b, Block(3))
         @test !checkindex(Bool, b, Block(4))
+        @test checkbounds(Bool, b, Block(1)[1])
+        @test !checkbounds(Bool, b, Block(1)[2])
+        @test !checkbounds(Bool, b, Block(0)[1])
+        @test !checkbounds(Bool, b, Block(1)[0])
     end
 
     @testset "Slice" begin
@@ -272,12 +288,18 @@ end
         @test S[Block.(1:2)] == 1:3
         @test axes(S) == axes(b)
     end
+
+    @testset "StaticArrays" begin
+        @test blockisequal(blockedrange(SVector(1,2,3)), blockedrange([1,2,3]))
+        @test @allocated(blockedrange(SVector(1,2,3))) == 0
+    end
 end
 
 @testset "BlockSlice" begin
     b = BlockSlice(Block(5),1:3)
     @test b[Base.Slice(1:3)] ≡ b
     @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
+    @test Block(b) ≡ Block(5)
 end
 
 #=

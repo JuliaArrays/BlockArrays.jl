@@ -7,9 +7,9 @@
 @inline getindex(b::AbstractArray, K::BlockIndex{1}, J::BlockIndex{1}...) =
     b[BlockIndex(tuple(K, J...))]
 
-@inline getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = 
-    b[block(K)][K.indices...]    
-
+@inline getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
+@inline getindex(b::LayoutArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
+@inline getindex(b::LayoutArray{T,1}, K::BlockIndexRange{1}) where {T} = b[block(K)][K.indices...]
 
 function findblockindex(b::AbstractVector, k::Integer)
     K = findblock(b, k)
@@ -39,7 +39,7 @@ julia> blockedrange([2,2,3])
  6
  7
 ```
-"""    
+"""
 struct BlockedUnitRange{CS} <: AbstractUnitRange{Int}
     first::Int
     lasts::CS
@@ -65,6 +65,7 @@ _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changin
 returns true if a and b have the same block structure.
 """
 blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int}) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
+blockisequal(a, b, c, d...) = blockisequal(a,b) && blockisequal(b,c,d...)
 """
    blockisequal(a::Tuple, b::Tuple)
 
@@ -84,7 +85,7 @@ Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where C
 """
     blockaxes(A)
 
-Return the tuple of valid block indices for array `A`. 
+Return the tuple of valid block indices for array `A`.
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray([1,2,3],[2,1])
 2-blocked 3-element BlockArray{Int64,1}:
@@ -118,7 +119,7 @@ julia> blockaxes(A,1)
 2-element BlockRange{1,Tuple{UnitRange{Int64}}}:
  Block(1)
  Block(2)
-```    
+```
 """
 function blockaxes(A::AbstractArray{T,N}, d) where {T,N}
     @_inline_meta
@@ -174,6 +175,16 @@ function getindex(b::BlockedUnitRange, KR::BlockRange{1})
     @boundscheck J in bax || throw(BlockBoundsError(b,J))
     K == first(bax) && return _BlockedUnitRange(first(b),cs[k:j])
     _BlockedUnitRange(cs[k-1]+1,cs[k:j])
+end
+
+function getindex(b::BlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
+    cs = blocklasts(b)
+    isempty(KR) && return _BlockedUnitRange(1,cs[Base.OneTo(0)])
+    J = last(KR)
+    j = Int(J)
+    bax = blockaxes(b,1)
+    @boundscheck J in bax || throw(BlockBoundsError(b,J))
+    _BlockedUnitRange(first(b),cs[Base.OneTo(j)])
 end
 
 function findblock(b::BlockedUnitRange, k::Integer)
@@ -240,3 +251,36 @@ Base.axes1(S::Base.Slice{<:BlockedUnitRange}) = S.indices
 blockaxes(S::Base.Slice) = blockaxes(S.indices)
 getindex(S::Base.Slice, b::Block{1}) = S.indices[b]
 getindex(S::Base.Slice, b::BlockRange{1}) = S.indices[b]
+
+
+# This supports broadcasting with infinite block arrays
+Base.BroadcastStyle(::Type{BlockedUnitRange{R}}) where R = Base.BroadcastStyle(R)
+
+
+###
+# Special Fill/Range cases
+#
+# We want to use lazy types when possible
+###
+
+_blocklengths2blocklasts(blocks::AbstractRange) = RangeCumsum(blocks)
+function blockfirsts(a::BlockedUnitRange{Base.OneTo{Int}})
+    a.first == 1 || error("Offset axes not supported")
+    Base.OneTo{Int}(length(a.lasts))
+end
+function blocklengths(a::BlockedUnitRange{Base.OneTo{Int}})
+    a.first == 1 || error("Offset axes not supported")
+    Ones{Int}(length(a.lasts))
+end
+function blockfirsts(a::BlockedUnitRange{<:AbstractRange})
+    st = step(a.lasts)
+    a.first == 1 || error("Offset axes not supported")
+    @assert first(a.lasts)-a.first+1 == st
+    range(1; step=st, length=length(a.lasts))
+end
+function blocklengths(a::BlockedUnitRange{<:AbstractRange})
+    st = step(a.lasts)
+    a.first == 1 || error("Offset axes not supported")
+    @assert first(a.lasts)-a.first+1 == st
+    Fill(st,length(a.lasts))
+end
