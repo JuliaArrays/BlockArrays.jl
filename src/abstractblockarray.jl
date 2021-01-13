@@ -114,11 +114,9 @@ blockcheckbounds(A::AbstractArray{T, N}, i::Vararg{Block{1},N}) where {T,N} = bl
 blockcheckbounds(A::AbstractVector{T}, i::Block{1}) where {T,N} = blockcheckbounds(A, Int(i))
 
 # Convert to @generated...
-@propagate_inbounds Base.getindex( block_arr::AbstractBlockArray{T,N}, block::Block{N}) where {T,N} = copy(view(block_arr, block))
-@propagate_inbounds Base.getindex( block_arr::AbstractBlockVector{T}, block::Block{1}) where {T} = copy(view(block_arr, block))
+
 @propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Block{N}) where {T,N} =
     setindex!(block_arr, v, Block.(block.n)...)
-@inline @propagate_inbounds Base.getindex(block_arr::AbstractBlockArray{T,N}, block::Vararg{Block{1}, N}) where {T,N} =  block_arr[Block(block)]
 @inline @propagate_inbounds function Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N}
     blockcheckbounds(block_arr, block...)
     dest = view(block_arr, block...)
