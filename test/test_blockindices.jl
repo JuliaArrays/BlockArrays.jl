@@ -303,7 +303,7 @@ end
 
     @testset "OneTo converts" begin
         for b in (BlockSlice(Block(1), 1:1), BlockSlice(Block.(1:1), 1:1), BlockSlice(Block(1)[1:1], 1:1))
-            convert(typeof(b), Base.OneTo(1)) ≡ b
+            @test convert(typeof(b), Base.OneTo(1)) ≡ b
         end
     end
 end
