@@ -382,11 +382,19 @@ end
     A = BlockArray(rand(4, 5), [1,3], [2,3]);
     buf = IOBuffer()
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}} at block index [3,2]"
+    if VERSION < v"1.6-"
+        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArray{Float64,2,Array{Array{Float64,2},2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}} at block index [3,2]"
+    else
+        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}} at block index [3,2]"
+    end
 
     A = PseudoBlockArray(rand(4, 5), [1,3], [2,3]);
     Base.showerror(buf, BlockBoundsError(A, (3,2)))
-    @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}} at block index [3,2]"
+    if VERSION < v"1.6-"
+        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockArray{Float64,2,Array{Float64,2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}} at block index [3,2]"
+    else
+        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockMatrix{Float64, Matrix{Float64}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}} at block index [3,2]"
+    end
 end
 
 @testset "replstring" begin
@@ -398,7 +406,11 @@ end
     A = PseudoBlockArray(design,[6],[4,5])
     @test stringmime("text/plain",A) == "1×2-blocked 6×9 PseudoBlockArray{Int16,2}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
     D = PseudoBlockArray(Diagonal(1:3), [1,2], [2,1])
-    @test stringmime("text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockArray{Int,2,Diagonal{Int,UnitRange{Int}},Tuple{BlockedUnitRange{Array{Int,1}},BlockedUnitRange{Array{Int,1}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
+    if VERSION < v"1.6-"
+        @test stringmime("text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockArray{Int,2,Diagonal{Int,UnitRange{Int}},Tuple{BlockedUnitRange{Array{Int,1}},BlockedUnitRange{Array{Int,1}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
+    else
+        @test stringmime("text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockMatrix{Int, Diagonal{Int, UnitRange{Int}}, Tuple{BlockedUnitRange{Vector{Int}}, BlockedUnitRange{Vector{Int}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
+    end
 end
 
 @testset "AbstractVector{Int} blocks" begin

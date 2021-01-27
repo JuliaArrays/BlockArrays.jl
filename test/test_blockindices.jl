@@ -243,7 +243,11 @@ end
         @test Base.dataids(b) == Base.dataids(blocklasts(b))
         @test_throws ArgumentError BlockedUnitRange(b)
 
-        @test summary(b) == "3-blocked 6-element BlockedUnitRange{Array{$Int,1}}"
+        if VERSION < v"1.6-"
+            @test summary(b) == "3-blocked 6-element BlockedUnitRange{Array{$Int,1}}"
+        else
+            @test summary(b) == "3-blocked 6-element BlockedUnitRange{Vector{$Int}}"
+        end
     end
 
     @testset "OneTo interface" begin
@@ -261,7 +265,11 @@ end
         @test findblock(b,1) == Block(1)
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
-        @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Array{Int64,1}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        if VERSION < v"1.6-"
+            @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Array{Int64,1}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        else
+            @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{Int64}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        end
     end
 
     @testset "BlockIndex type piracy (#108)" begin
