@@ -103,6 +103,11 @@ end
     @test A[Block(1,2)] == [0 0]
     @test_throws BlockBoundsError A[Block(1,3)]
     @test A == [1 2 0 0; 0 0 1 2]
+
+    N = 3
+    D = Diagonal(mortar(Fill.(-(0:N)-(0:N).^2, 1:2:2N+1)))
+    @test blockisequal(axes(D,1), axes(parent(D),1))
+    @test D == Diagonal(Vector(parent(D)))
 end
 
 @testset "non-standard block axes" begin
