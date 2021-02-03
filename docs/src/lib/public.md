@@ -66,3 +66,12 @@ Base.popfirst!
 ```@docs
 PseudoBlockArray
 ```
+
+
+## Kronecker products
+```@docs
+blockkron
+BlockKron
+blockvec
+khatri_rao
+```
