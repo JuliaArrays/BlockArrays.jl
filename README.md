@@ -1,6 +1,7 @@
 # BlockArrays.jl
 
-[![Build Status](https://travis-ci.org/JuliaArrays/BlockArrays.jl.svg?branch=master)](https://travis-ci.org/JuliaArrays/BlockArrays.jl) [![codecov](https://codecov.io/gh/JuliaArrays/BlockArrays.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaArrays/BlockArrays.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaArrays.github.io/BlockArrays.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaArrays.github.io/BlockArrays.jl/latest)
+[![Build Status](https://github.com/JuliaArrays/BlockArrays.jl/workflows/CI/badge.svg)](https://github.com/JuliaArrays/BlockArrays.jl/actions)
+ [![codecov](https://codecov.io/gh/JuliaArrays/BlockArrays.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaArrays/BlockArrays.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaArrays.github.io/BlockArrays.jl/stable) [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaArrays.github.io/BlockArrays.jl/latest)
 
 
 A block array is a partition of an array into blocks or subarrays, see [wikipedia](https://en.wikipedia.org/wiki/Block_matrix) for a more extensive description. This package has two purposes. Firstly, it defines an interface for an `AbstractBlockArray` block arrays that can be shared among types representing different types of block arrays. The advantage to this is that it provides a consistent API for block arrays.
