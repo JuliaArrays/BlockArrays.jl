@@ -15,6 +15,7 @@ function axes(D::Diagonal{<:Any,<:AbstractBlockVector})
     a = axes(parent(D),1)
     (a,a)
 end
+ArrayLayouts.diagonallayout(lay::AbstractBlockLayout) = DiagonalLayout{typeof(lay)}()
 
 blocksize(A::AbstractTriangular) = blocksize(parent(A))
 blocksize(A::AbstractTriangular, i::Int) = blocksize(parent(A), i)
