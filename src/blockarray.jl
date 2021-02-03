@@ -102,12 +102,12 @@ Constructs a `BlockArray` with uninitialized blocks from a block type `R` with s
 ```jldoctest; setup = quote using BlockArrays end
 julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
 2×2-blocked 4×4 BlockArray{Float64,2}:
- #undef  │  #undef  #undef  #undef  │
- --------┼--------------------------┼
- #undef  │  #undef  #undef  #undef  │
- #undef  │  #undef  #undef  #undef  │
- --------┼--------------------------┼
- #undef  │  #undef  #undef  #undef  │
+ #undef  │  #undef  #undef  #undef
+ --------┼------------------------
+ #undef  │  #undef  #undef  #undef
+ #undef  │  #undef  #undef  #undef
+ --------┼------------------------
+ #undef  │  #undef  #undef  #undef
 ```
 """
 @inline BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{T,N}} =

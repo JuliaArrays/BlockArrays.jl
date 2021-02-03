@@ -81,10 +81,10 @@ julia> for idx in SubBlockIterator(subblock_lasts, block_lasts)
            idx.block :: Block{1}
            idx.indices :: Tuple{UnitRange}
        end
-view(A, idx) = [1]
-view(A, idx) = [2, 3]
-view(A, idx) = [4]
-view(A, idx) = [5, 6]
+view(A, idx) = 1:1
+view(A, idx) = 2:3
+view(A, idx) = 4:4
+view(A, idx) = 5:6
 
 julia> [idx.block.n[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)]
 4-element Array{Int64,1}:
