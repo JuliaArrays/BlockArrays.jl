@@ -99,11 +99,9 @@ julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
  #undef  #undef  │  #undef  #undef
 
 julia> block_array[Block(2,1)] = rand(2,2)
-2×2-blocked 3×4 BlockArray{Float64,2}:
- #undef      #undef      │  #undef  #undef
- ────────────────────────┼────────────────
-   0.590845    0.566237  │  #undef  #undef
-   0.766797    0.460085  │  #undef  #undef
+2×2 Array{Float64,2}:
+ 0.590845  0.566237
+ 0.766797  0.460085
 
 julia> block_array[Block(1),Block(1)] = [1 2];
 
