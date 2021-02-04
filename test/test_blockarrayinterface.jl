@@ -1,5 +1,6 @@
 using BlockArrays, LinearAlgebra, FillArrays, Base64, Test
 
+# avoid fast-paths for view
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
 @testset "Array block interface" begin
@@ -103,6 +104,13 @@ end
     @test A[Block(1,2)] == [0 0]
     @test_throws BlockBoundsError A[Block(1,3)]
     @test A == [1 2 0 0; 0 0 1 2]
+
+    N = 3
+    D = Diagonal(mortar(Fill.(-(0:N)-(0:N).^2, 1:2:2N+1)))
+    @test axes(D) isa NTuple{2,BlockedUnitRange}
+    @test blockisequal(axes(D,1), axes(parent(D),1))
+    @test D == Diagonal(Vector(parent(D)))
+    @test MemoryLayout(D) isa BlockArrays.DiagonalLayout{<:BlockArrays.BlockLayout}
 end
 
 @testset "non-standard block axes" begin
