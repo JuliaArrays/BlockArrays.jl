@@ -1,5 +1,5 @@
 using BlockArrays, FillArrays, LazyArrays, Test
-import BlockArrays: SubBlockIterator, BlockIndexRange
+import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
