@@ -209,7 +209,7 @@ _hasscalarlikevec(a, b...) = _hasscalarlikevec(b...)
 _hasscalarlikevec(a::AbstractVector, b...) = size(a,1) == 1 || _hasscalarlikevec(b...)
 
 blockisequalorscalar(ax, ::Number) = true
-blockisequalorscalar(ax, a) = blockisequal(ax, axes(a,1))
+blockisequalorscalar(ax, a) = blockisequal(ax, Base.axes1(a))
     
 function copyto!(dest::AbstractVector,
         bc::Broadcasted{<:AbstractBlockStyle{1}, <:Any, <:Any, Args}) where {Args <: Tuple}
