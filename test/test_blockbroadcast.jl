@@ -115,6 +115,19 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test broadcast(*, 2, v) == 2Vector(v)
     end
 
+    @testset "BlockVector broadcast" begin
+        a = BlockArray(randn(3),[1,2])
+        b = broadcast(+, Ref(1), a)
+        @test b isa BlockArray{eltype(a),1}
+        @test Base.axes1(a) == Base.axes1(b)
+        @test Vector(b) == broadcast(+, Ref(1), Vector(a))
+        a = BlockArray(randn(16),[1,3,5,7])
+        b = broadcast(+, Ref(1), a)
+        @test b isa BlockArray{eltype(a),1}
+        @test Base.axes1(a) == Base.axes1(b)
+        @test Vector(b) == broadcast(+, Ref(1), Vector(a))
+    end
+
     @testset "special axes" begin
         A = BlockArray(randn(6), Ones{Int}(6))
         B = BlockArray(randn(6), Ones{Int}(6))
