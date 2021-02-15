@@ -8,7 +8,7 @@ FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]
-ArrayLayouts = "0.5"
+ArrayLayouts = "0.5, 0.6"
 FillArrays = "0.11"
 julia = "1.5"
 
