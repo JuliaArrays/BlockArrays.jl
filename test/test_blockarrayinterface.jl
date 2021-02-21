@@ -22,8 +22,6 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
     @test similar(BlockArray{Float64,1}, Base.OneTo(5)) isa Vector{Float64}
     @test similar(BlockArray{Float64,1}, 5) isa Vector{Float64}
     @test similar(BlockArray{Float64,1}, (5,)) isa Vector{Float64}
-    
-    @test blo
 end
 
 @testset "Triangular/Symmetric/Hermitian block arrays" begin
