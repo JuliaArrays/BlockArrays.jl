@@ -135,7 +135,7 @@ end
     blocksize(A)
 
 Return the tuple of the number of blocks along each
-dimension.
+dimension. See also blocksizes.
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
 2×3-blocked 3×3 BlockArray{Float64,2}:
@@ -151,6 +151,25 @@ julia> blocksize(A)
 blocksize(A) = map(length, blockaxes(A))
 blocksize(A,i) = length(blockaxes(A,i))
 blocklength(t) = (@_inline_meta; prod(blocksize(t)))
+
+"""
+    blocksizes(A)
+
+Return the tuple of the sizes of blocks along each
+dimension. See also blocksize.
+```jldoctest; setup = quote using BlockArrays end
+julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
+2×3-blocked 3×3 BlockArray{Float64,2}:
+ 1.0  │  1.0  │  1.0
+ 1.0  │  1.0  │  1.0
+ ─────┼───────┼─────
+ 1.0  │  1.0  │  1.0
+
+julia> blocksizes(A)
+([2, 1], [1, 1, 1])
+```
+"""
+blocksizes(A) = blocklengths.(axes(A))
 
 axes(b::BlockedUnitRange) = (_BlockedUnitRange(blocklasts(b) .- (first(b)-1)),)
 unsafe_indices(b::BlockedUnitRange) = axes(b)
