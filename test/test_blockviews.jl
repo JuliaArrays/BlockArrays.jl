@@ -46,6 +46,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         V[1,1] = -1
         @test A[2,8] == -1
         @test A[Block(4)] == A[Block(1),Block(2)]
+        @test_throws BlockBoundsError A[Block(10)]
 
         V = view(A, Block(3, 2))
         @test size(V) == (3, 4)
