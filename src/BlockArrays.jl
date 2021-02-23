@@ -6,7 +6,7 @@ using LinearAlgebra, ArrayLayouts, FillArrays
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
 export Block, getblock, getblock!, setblock!, eachblock, blocks
 export blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, BlockIndex
-export blocklengths, blocklasts, blockfirsts, blockisequal
+export blocksizes, blocklengths, blocklasts, blockfirsts, blockisequal
 export BlockRange, blockedrange, BlockedUnitRange
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar

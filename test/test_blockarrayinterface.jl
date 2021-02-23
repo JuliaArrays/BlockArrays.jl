@@ -8,6 +8,9 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
     A = randn(5)
     @test blocksize(A) == (1,)
+    @test blocksize(A,1) == 1
+    @test blocksizes(A) == ([5],)
+    @test blocksizes(A,1) == [5]
     @test A[Block(1)] == A
     view(A,Block(1))[1] = 2
     @test A[1] == 2
