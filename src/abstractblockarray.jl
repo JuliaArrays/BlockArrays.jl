@@ -123,6 +123,13 @@ blockcheckbounds(A::AbstractVector{T}, i::Block{1}) where {T,N} = blockcheckboun
     block_arr
 end
 
+@inline @propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N} =
+    view(block_arr, block(blockindex))[blockindex.α...] = v
+@inline @propagate_inbounds Base.setindex!(block_arr::AbstractBlockVector{T}, v, blockindex::BlockIndex{1}) where {T} =
+    view(block_arr, block(blockindex))[blockindex.α...] = v
+@inline @propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
+    block_arr[BlockIndex(blockindex)] = v
+
 viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block_arr, block)
 @inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, block::Block{N}) where N = viewblock(block_arr, block)
 @inline Base.view(block_arr::AbstractBlockVector, block::Block{1}) = viewblock(block_arr, block)
