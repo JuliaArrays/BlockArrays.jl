@@ -408,13 +408,6 @@ end
     return block_arr
 end
 
-@inline @propagate_inbounds Base.setindex!(block_arr::BlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N} =
-    view(block_arr, block(blockindex))[blockindex.α...] = v
-@inline @propagate_inbounds Base.setindex!(block_arr::BlockVector{T}, v, blockindex::BlockIndex{1}) where {T} =
-    view(block_arr, block(blockindex))[blockindex.α...] = v
-@inline @propagate_inbounds Base.setindex!(block_arr::BlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
-    block_arr[BlockIndex(blockindex)] = v
-
 Base.dataids(arr::BlockArray) = (dataids(arr.blocks)..., dataids(arr.axes)...)
 # This is not entirely valid.  In principle, we have to concatenate
 # all dataids of all blocks.  However, it makes `dataids` non-inferable.
