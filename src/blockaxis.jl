@@ -296,4 +296,4 @@ end
 ###
 # Concatenation
 ###
-Base.vcat(rs::BlockedUnitRange{T}...) where T = blockedrange(vcat(map(blocklengths,rs)...)) # kind of lazy, not optimised
+Base.vcat(a::BlockedUnitRange{T}...) where T = blockedrange(vcat(map(blocklengths,a)...)) # kind of lazy, not optimised
