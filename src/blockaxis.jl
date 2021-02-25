@@ -135,9 +135,10 @@ end
 
 """
     blocksize(A)
+    blocksize(A,i)
 
 Return the tuple of the number of blocks along each
-dimension.
+dimension. See also size and blocksizes.
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
 2×3-blocked 3×3 BlockArray{Float64,2}:
@@ -148,11 +149,41 @@ julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
 
 julia> blocksize(A)
 (2, 3)
+
+julia> blocksize(A,2)
+3
 ```
 """
 blocksize(A) = map(length, blockaxes(A))
 blocksize(A,i) = length(blockaxes(A,i))
 blocklength(t) = (@_inline_meta; prod(blocksize(t)))
+
+"""
+    blocksizes(A)
+    blocksizes(A,i)
+
+Return the tuple of the sizes of blocks along each
+dimension. See also size and blocksize.
+```jldoctest; setup = quote using BlockArrays end
+julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
+2×3-blocked 3×3 BlockArray{Float64,2}:
+ 1.0  │  1.0  │  1.0
+ 1.0  │  1.0  │  1.0
+ ─────┼───────┼─────
+ 1.0  │  1.0  │  1.0
+
+julia> blocksizes(A)
+([2, 1], [1, 1, 1])
+
+julia> blocksizes(A,2)
+3-element Array{Int64,1}:
+ 1
+ 1
+ 1
+```
+"""
+blocksizes(A) = map(blocklengths, axes(A))
+blocksizes(A,i) = blocklengths(axes(A,i))
 
 axes(b::BlockedUnitRange) = (_BlockedUnitRange(blocklasts(b) .- (first(b)-1)),)
 unsafe_indices(b::BlockedUnitRange) = axes(b)

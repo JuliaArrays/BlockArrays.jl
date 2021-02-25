@@ -205,14 +205,6 @@ end
 @inline Base.getindex(block_arr::PseudoBlockVector{T}, blockindex::BlockIndex{1}) where T =
     _pseudoblockindex_getindex(block_arr, blockindex)
 
-
-@inline function Base.setindex!(block_arr::PseudoBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N}
-    I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
-    @boundscheck checkbounds(block_arr.blocks, I...)
-    @inbounds block_arr.blocks[I...] = v
-    return block_arr
-end
-
 ########
 # Misc #
 ########
