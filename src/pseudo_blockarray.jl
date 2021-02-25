@@ -257,6 +257,20 @@ function Base.showarg(io::IO, A::PseudoBlockArray, toplevel::Bool)
     end
 end
 
+function Base.cat(A::PseudoBlockArray...; dims)
+    for a in A
+        for k=1:length(size(A[1]))
+            if k!=dims && a.axes[k]!=A[1].axes[k]
+                throw(DimensionMismatch("mismatch in dimension $k (expected $(A[1].axes[k]) got $(a.axes[k]))"))
+            end
+        end
+    end
+    d=[k for k in A[1].axes]
+    d[dims]=vcat(map(a->a.axes[dims],A)...)
+    return PseudoBlockArray(cat(map(a->a.blocks,A)...,dims=dims),tuple(d...))
+end
+Base.vcat(A::PseudoBlockArray...)=cat(A...,dims=1)
+Base.hcat(A::PseudoBlockArray...)=cat(A...,dims=2)
 
 ###########################
 # Strided Array interface #
