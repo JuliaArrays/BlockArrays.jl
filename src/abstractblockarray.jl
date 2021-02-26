@@ -176,3 +176,22 @@ end
 @inline Base.getindex(A::AbstractArray{T,N}, kr::Block{1}, jrs...) where {T,N} = ArrayLayouts.layout_getindex(A, kr, jrs...)
 @inline Base.getindex(A::AbstractArray{T,N}, block::Block{N}) where {T,N} = ArrayLayouts.layout_getindex(A, block)
 @inline Base.getindex(A::AbstractMatrix, kr::AbstractVector, jr::Block) = ArrayLayouts.layout_getindex(A, kr, jr)
+
+# Concatenation
+function blockcat_check(A::AbstractBlockArray...; dims)
+    for a in A
+        for k=1:length(size(A[1]))
+            if k!=dims && axes(a)[k]!=axes(A[1])[k]
+                throw(DimensionMismatch("mismatch in dimension $k (expected $(A[1].axes[k]) got $(a.axes[k]))"))
+            end
+        end
+    end
+end
+function blockcat_shape(A::AbstractBlockArray...; dims)
+    blockcat_check(A...,dims=dims)
+    d=[k for k in A[1].axes]
+    d[dims]=vcat(map(a->axes(a)[dims],A)...)
+    return tuple(d...)
+end
+Base.vcat(A::AbstractBlockArray...)=cat(A...,dims=1)
+Base.hcat(A::AbstractBlockArray...)=cat(A...,dims=2)
