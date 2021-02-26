@@ -451,6 +451,8 @@ function rmul!(block_array::BlockArray, α::Number)
     block_array
 end
 
+Base.cat(A::BlockArray...; dims) = _BlockArray(cat(map(a->a.blocks,A)...,dims=dims),blockcat_shape(A...,dims=dims))
+
 # Temporary work around
 Base.reshape(block_array::BlockArray, axes::NTuple{N,AbstractUnitRange{Int}}) where N =
     reshape(PseudoBlockArray(block_array), axes)
