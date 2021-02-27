@@ -40,6 +40,8 @@ blocksizes
 blocks
 eachblock
 blockcheckbounds
+blockvcat
+blockhcat
 ```
 
 ## BlockArray
@@ -54,6 +56,7 @@ blockpush!
 blockpushfirst!
 blockpop!
 blockpopfirst!
+blockcat
 Base.append!
 Base.push!
 Base.pushfirst!
@@ -66,6 +69,7 @@ Base.popfirst!
 
 ```@docs
 PseudoBlockArray
+blockcat
 ```
 
 
