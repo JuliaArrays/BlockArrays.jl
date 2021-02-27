@@ -27,4 +27,6 @@ BlockIndexRange
 BlockSlice
 unblock
 SubBlockIterator
+blockcat_check
+blockcat_shape
 ```
