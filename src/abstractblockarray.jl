@@ -193,5 +193,5 @@ function blockcat_shape(A::AbstractBlockArray...; dims)
     d[dims]=vcat(map(a->axes(a)[dims],A)...)
     return tuple(d...)
 end
-Base.blockvcat(A::AbstractBlockArray...)=blockcat(A...,dims=1)
-Base.blockhcat(A::AbstractBlockArray...)=blockcat(A...,dims=2)
+blockvcat(A::AbstractBlockArray...)=blockcat(A...,dims=1)
+blockhcat(A::AbstractBlockArray...)=blockcat(A...,dims=2)
