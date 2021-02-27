@@ -178,6 +178,11 @@ end
 @inline Base.getindex(A::AbstractMatrix, kr::AbstractVector, jr::Block) = ArrayLayouts.layout_getindex(A, kr, jr)
 
 # Concatenation
+"""
+    blockcat_check(A::AbstractBlockArray...; dims)
+
+Check if block dimensions match in `blockcat(A...,dims=dims)`
+"""
 function blockcat_check(A::AbstractBlockArray...; dims)
     for a in A
         for k=1:length(size(A[1]))
@@ -187,11 +192,26 @@ function blockcat_check(A::AbstractBlockArray...; dims)
         end
     end
 end
+
+"""
+    blockcat_shape(A::AbstractBlockArray...; dims)
+
+Calculate the block structure of `blockcat(A...,dims=dims)`
+"""
 function blockcat_shape(A::AbstractBlockArray...; dims)
     blockcat_check(A...,dims=dims)
     d=[k for k in A[1].axes]
     d[dims]=vcat(map(a->axes(a)[dims],A)...)
     return tuple(d...)
 end
+
+"""
+    blockvcat, blockhcat
+
+```julia
+blockvcat(A::AbstractBlockArray...)=blockcat(A...,dims=1)
+blockhcat(A::AbstractBlockArray...)=blockcat(A...,dims=2)
+```
+"""
 blockvcat(A::AbstractBlockArray...)=blockcat(A...,dims=1)
 blockhcat(A::AbstractBlockArray...)=blockcat(A...,dims=2)
