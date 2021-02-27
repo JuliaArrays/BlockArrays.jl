@@ -257,7 +257,7 @@ function Base.showarg(io::IO, A::PseudoBlockArray, toplevel::Bool)
     end
 end
 
-Base.blockcat(A::PseudoBlockArray...; dims) = PseudoBlockArray(cat(map(a->a.blocks,A)...,dims=dims),blockcat_shape(A...,dims=dims))
+blockcat(A::PseudoBlockArray...; dims) = PseudoBlockArray(cat(map(a->a.blocks,A)...,dims=dims),blockcat_shape(A...,dims=dims))
 
 ###########################
 # Strided Array interface #
