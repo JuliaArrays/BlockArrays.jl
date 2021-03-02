@@ -22,9 +22,5 @@ Possible ways of contributing to this package include:
 * Implement different reductions functionalities, (`sum` and co.).
 * Audit the performance and make improvements as needed.
 
-## Author
-
-Kristoffer Carlsson - [@KristofferC](https://github.com/KristofferC)
-
 [docs-latest-url]: https://JuliaArrays.github.io/BlockArrays.jl/latest/
 [docs-stable-url]: https://JuliaArrays.github.io/BlockArrays.jl/stable
