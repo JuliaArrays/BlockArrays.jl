@@ -43,8 +43,10 @@ julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
 struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{T, N}
     blocks::R
     axes::BS
-    PseudoBlockArray{T,N,R,BS}(blocks::R, axes::BS) where {T,N,R,BS<:NTuple{N,AbstractUnitRange{Int}}} =
-        new{T,N,R,BS}(blocks, axes)
+    function PseudoBlockArray{T,N,R,BS}(blocks::R, axes::BS) where {T,N,R,BS<:NTuple{N,AbstractUnitRange{Int}}}
+        checkbounds(blocks,axes...)
+        return new{T,N,R,BS}(blocks, axes)
+    end
 end
 
 const PseudoBlockMatrix{T} = PseudoBlockArray{T, 2}
