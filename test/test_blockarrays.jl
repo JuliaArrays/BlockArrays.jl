@@ -93,9 +93,11 @@ end
         @test Matrix(ret) == zeros(6,6)
 
         A = [1,2,3,4,5,6]
+        PseudoBlockArray(A,100000000:100000010)
         @test A == PseudoBlockArray(A, 1:3) == PseudoBlockArray{Int}(A, 1:3) == 
             PseudoBlockArray(A, (blockedrange(1:3),)) == PseudoBlockArray{Int}(A, (blockedrange(1:3),)) ==
             PseudoBlockArray{Float64}(A, 1:3)
+        
     end
 
     @testset "similar" begin
