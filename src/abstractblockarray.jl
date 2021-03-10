@@ -178,3 +178,14 @@ end
 @inline Base.getindex(A::AbstractArray{T,N}, kr::Block{1}, jrs...) where {T,N} = ArrayLayouts.layout_getindex(A, kr, jrs...)
 @inline Base.getindex(A::AbstractArray{T,N}, block::Block{N}) where {T,N} = ArrayLayouts.layout_getindex(A, block)
 @inline Base.getindex(A::AbstractMatrix, kr::AbstractVector, jr::Block) = ArrayLayouts.layout_getindex(A, kr, jr)
+
+###
+# permutedims
+#
+# just use transpose for now
+###
+
+Base.permutedims(A::AbstractBlockVector{<:Number}) = transpose(A)
+Base.permutedims(A::AbstractBlockMatrix{<:Number}) = transpose(A)
+
+
