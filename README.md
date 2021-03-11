@@ -8,6 +8,27 @@ A block array is a partition of an array into blocks or subarrays, see [wikipedi
 
 Secondly, it also implements two different type of block arrays that follow the `AbstractBlockArray` interface. The type `BlockArray` stores each block contiguously while the type `PseudoBlockArray` stores the full matrix contiguously. This means that `BlockArray` supports fast non copying extraction and insertion of blocks while `PseudoBlockArray` supports fast access to the full matrix to use in in for example a linear solver.
 
+A simple way to produce `BlockArray`s is via `mortar`, which combines an array of arrays into a `BlockArray`:
+```julia
+julia> mortar([randn(3), randn(4)])
+2-blocked 7-element BlockArray{Float64,1}:
+ -0.19808699390960527 
+  0.04711385377738941 
+ -0.6308529482215658  
+ ─────────────────────
+ -0.021279626465135287
+ -1.0991149020591062  
+  1.0817971931026398  
+ -0.012442892450142308
+
+julia> mortar(reshape([randn(2,2), randn(1,2), randn(2,3), randn(1,3)],2,2))
+2×2-blocked 3×5 BlockArray{Float64,2}:
+ -1.17797    0.359738   │   0.87676    -2.06495    1.74256 
+  1.54787    1.64133    │  -0.0416484  -2.00241   -0.522441
+ ───────────────────────┼──────────────────────────────────
+  0.430093  -0.0263753  │  -1.31275     0.278447  -0.139579
+```
+
 ## Documentation
 
 - [**STABLE**][docs-stable-url] &mdash; **most recently tagged version of the documentation.**
