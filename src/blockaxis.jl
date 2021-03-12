@@ -53,11 +53,14 @@ const DefaultBlockAxis = BlockedUnitRange{Vector{Int}}
 
 BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
 _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
-@inline blockedrange(blocks::AbstractVector{Int}) = _BlockedUnitRange(_blocklengths2blocklasts(blocks))
+@inline blockedrange(blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(_blocklengths2blocklasts(blocks))
 
-@inline blockfirsts(a::BlockedUnitRange) = [a.first; @view(a.lasts[1:end-1]) .+ 1]
+@inline blockfirsts(a::BlockedUnitRange) = [a.first; @views(a.lasts[1:end-1]) .+ 1]
 @inline blocklasts(a::BlockedUnitRange) = a.lasts
-@inline blocklengths(a::BlockedUnitRange) = [first(a.lasts)-a.first+1; diff(a.lasts)]
+
+_diff(a::AbstractVector) = diff(a)
+_diff(a::Tuple) = diff(collect(a))
+@inline blocklengths(a::BlockedUnitRange) = [first(a.lasts)-a.first+1; _diff(a.lasts)]
 
 """
    blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
@@ -105,7 +108,9 @@ julia> blockaxes(A)[1]
  Block(2)
 ```
 """
-blockaxes(b::BlockedUnitRange) = (Block.(axes(b.lasts,1)),)
+blockaxes(b::BlockedUnitRange) = _blockaxes(b.lasts)
+_blockaxes(b::AbstractVector) = (Block.(axes(b,1)),)
+_blockaxes(b::Tuple) = (Block.(Base.OneTo(length(b))),)
 blockaxes(b) = blockaxes.(axes(b), 1)
 
 """
@@ -186,10 +191,7 @@ blocksizes(A,i) = blocklengths(axes(A,i))
 axes(b::BlockedUnitRange) = (_BlockedUnitRange(blocklasts(b) .- (first(b)-1)),)
 unsafe_indices(b::BlockedUnitRange) = axes(b)
 first(b::BlockedUnitRange) = b.first
-_last(b::BlockedUnitRange, _) = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
-last(b::BlockedUnitRange) = _last(b, axes(blocklasts(b),1))
-_length(b::BlockedUnitRange, _) = Base.invoke(length, Tuple{AbstractUnitRange{Int}}, b)
-length(b::BlockedUnitRange) = _length(b, axes(blocklasts(b),1))
+last(b::BlockedUnitRange) = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
 
 function getindex(b::BlockedUnitRange, K::Block{1})
     k = Integer(K)
@@ -223,9 +225,16 @@ function getindex(b::BlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
     _BlockedUnitRange(first(b),cs[Base.OneTo(j)])
 end
 
+_searchsortedfirst(a::AbstractVector, k) = searchsortedfirst(a, k)
+function _searchsortedfirst(a::Tuple, k)
+    k ≤ first(a) && return 1
+    1+_searchsortedfirst(tail(a), k)
+end
+_searchsortedfirst(a::Tuple{}, k) = 1
+
 function findblock(b::BlockedUnitRange, k::Integer)
     @boundscheck k in b || throw(BoundsError(b,k))
-    Block(searchsortedfirst(blocklasts(b), k))
+    Block(_searchsortedfirst(blocklasts(b), k))
 end
 
 Base.dataids(b::BlockedUnitRange) = Base.dataids(blocklasts(b))
