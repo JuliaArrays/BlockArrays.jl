@@ -62,6 +62,8 @@ _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
 @inline blocklengths(a::BlockedUnitRange) = [first(a.lasts)-a.first+1; _diff(a.lasts)]
 
+length(a::BlockedUnitRange) = Integer(last(blocklasts(a)))
+
 """
    blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
 
@@ -329,3 +331,9 @@ function blocklengths(a::BlockedUnitRange{<:AbstractRange})
     @assert first(a.lasts)-a.first+1 == st
     Fill(st,length(a.lasts))
 end
+
+
+# TODO: Remove
+
+function _last end
+function _length end
