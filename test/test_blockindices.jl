@@ -301,6 +301,16 @@ end
         @test blockisequal(blockedrange(SVector(1,2,3)), blockedrange([1,2,3]))
         @test @allocated(blockedrange(SVector(1,2,3))) == 0
     end
+
+    @testset "Tuples" begin
+        # we support Tuples in addition to SVectors for InfiniteArrays.jl, which has
+        # infinite block sizes
+        s = blockedrange((5,big(100_000_000)^2))
+        @test blocklengths(s) == [5,big(100_000_000)^2]
+        @test blockaxes(s) == (Block.(1:2),)
+        @test findblock(s,3) == Block(1)
+        @test findblock(s,big(100_000_000)) == Block(2)
+    end
 end
 
 @testset "BlockSlice" begin

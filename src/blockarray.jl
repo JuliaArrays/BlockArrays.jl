@@ -67,13 +67,13 @@ struct BlockArray{T, N, R <: AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N
 end
 
 # Auxilary outer constructors
-@inline _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
+@inline _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     _BlockArray(blocks, map(blockedrange, block_sizes))
 
 # support non-concrete eltypes in blocks
 _BlockArray(blocks::R, block_axes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
     _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_axes)
-_BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}} =
+_BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}} =
     _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_sizes...)
 
 const BlockMatrix{T, R <: AbstractMatrix{<:AbstractMatrix{T}}} = BlockArray{T, 2, R}
@@ -84,7 +84,7 @@ const BlockVecOrMat{T, R} = Union{BlockMatrix{T, R}, BlockVector{T, R}}
 # Constructors #
 ################
 
-@inline _BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
+@inline _BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     _BlockArray(R, map(blockedrange,block_sizes))
 
 function _BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}}
@@ -93,7 +93,7 @@ function _BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {
     _BlockArray(blocks, baxes)
 end
 
-@inline undef_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
+@inline undef_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     _BlockArray(R, block_sizes...)
 
 """
@@ -109,16 +109,16 @@ julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
  #undef  #undef  │  #undef  #undef
 ```
 """
-@inline BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{T,N}} =
+@inline BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{T,N}} =
     undef_blocks_BlockArray(Array{R,N}, block_sizes...)
 
-@inline BlockArray{T}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
+@inline BlockArray{T}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     BlockArray(undef_blocks, Array{T,N}, block_sizes...)
 
-@inline BlockArray{T,N}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
+@inline BlockArray{T,N}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     BlockArray(undef_blocks, Array{T,N}, block_sizes...)
 
-@inline BlockArray{T,N,R}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
+@inline BlockArray{T,N,R}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     undef_blocks_BlockArray(R, block_sizes...)
 
 @generated function initialized_blocks_BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where R<:AbstractArray{V,N} where {T,N,V<:AbstractArray{T,N}}
@@ -134,7 +134,7 @@ julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
 end
 
 
-initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
+initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     initialized_blocks_BlockArray(R, map(blockedrange,block_sizes))
 
 @inline BlockArray{T}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N} =
@@ -149,20 +149,20 @@ initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{Int}
 @inline BlockArray{T,N,R,BS}(::UndefInitializer, baxes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
     initialized_blocks_BlockArray(R, baxes)
 
-@inline BlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
+@inline BlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, block_sizes...)
 
-@inline BlockArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
+@inline BlockArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, block_sizes...)
 
-@inline BlockArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
+@inline BlockArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     initialized_blocks_BlockArray(R, block_sizes...)
 
 
 @inline BlockArray{T,N,R,BS}(::UndefInitializer, sizes::NTuple{N,Int}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
     BlockArray{T,N,R,BS}(undef, convert(BS, map(Base.OneTo, sizes)))
 
-function BlockArray{T}(arr::AbstractArray{V, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,V,N}
+function BlockArray{T}(arr::AbstractArray{V, N}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T,V,N}
     for i in 1:N
         if sum(block_sizes[i]) != size(arr, i)
             throw(DimensionMismatch("block size for dimension $i: $(block_sizes[i]) does not sum to the array size: $(size(arr, i))"))
@@ -171,7 +171,7 @@ function BlockArray{T}(arr::AbstractArray{V, N}, block_sizes::Vararg{AbstractVec
     BlockArray{T}(arr, map(blockedrange,block_sizes))
 end
 
-BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T,N} =
+BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T,N} =
     BlockArray{T}(arr, block_sizes...)
 
 @generated function BlockArray{T}(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
@@ -194,18 +194,18 @@ BlockArray(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) wh
     BlockArray{T}(arr, baxes)
 
 BlockVector(blocks::AbstractVector, baxes::Tuple{AbstractUnitRange{Int}}) = BlockArray(blocks, baxes)
-BlockVector(blocks::AbstractVector, block_sizes::AbstractVector{Int}) = BlockArray(blocks, block_sizes)
+BlockVector(blocks::AbstractVector, block_sizes::AbstractVector{<:Integer}) = BlockArray(blocks, block_sizes)
 BlockMatrix(blocks::AbstractMatrix, baxes::NTuple{2,AbstractUnitRange{Int}}) = BlockArray(blocks, baxes)
-BlockMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{Int},2}) = BlockArray(blocks, block_sizes...)
+BlockMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{<:Integer},2}) = BlockArray(blocks, block_sizes...)
 
 BlockArray{T}(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = BlockArray{T}(Matrix(λ, map(length,baxes)...), baxes)
-BlockArray{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int}, 2}) where T = BlockArray{T}(λ, map(blockedrange,block_sizes))
-BlockArray(λ::UniformScaling{T}, block_sizes::Vararg{AbstractVector{Int}, 2}) where T = BlockArray{T}(λ, block_sizes...)
+BlockArray{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockArray{T}(λ, map(blockedrange,block_sizes))
+BlockArray(λ::UniformScaling{T}, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockArray{T}(λ, block_sizes...)
 BlockArray(λ::UniformScaling{T}, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = BlockArray{T}(λ, baxes)
 BlockMatrix(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) = BlockArray(λ, baxes)
-BlockMatrix(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) = BlockArray(λ, block_sizes...)
+BlockMatrix(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer},2}) = BlockArray(λ, block_sizes...)
 BlockMatrix{T}(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = BlockArray{T}(λ, baxes)
-BlockMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) where T = BlockArray{T}(λ, block_sizes...)
+BlockMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer},2}) where T = BlockArray{T}(λ, block_sizes...)
 
 """
     mortar(blocks::AbstractArray)
@@ -244,7 +244,7 @@ true
 mortar(blocks::AbstractArray{R, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {R, N} =
     _BlockArray(blocks, baxes)
 
-mortar(blocks::AbstractArray{R, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {R, N} =
+mortar(blocks::AbstractArray{R, N}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {R, N} =
     _BlockArray(blocks, block_sizes...)
 
 mortar(blocks::AbstractArray) = mortar(blocks, sizes_from_blocks(blocks)...)
