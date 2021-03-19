@@ -224,17 +224,23 @@ end
     end
 
     @testset "BlockIndex indexing" begin
-       b = blockedrange([1,2,3])
-       @test b[Block(3)[2]] == b[Block(3)][2] == 5
-       @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
+        b = blockedrange([1,2,3])
+        @test b[Block(3)[2]] == b[Block(3)][2] == 5
+        @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
     end
 
     @testset "BlockRange indexing" begin
-       b = blockedrange([1,2,3])
-       @test b[Block.(1:2)] == blockedrange([1,2])
-       @test b[Block.(1:3)] == b
-       @test_throws BlockBoundsError b[Block.(0:2)]
-       @test_throws BlockBoundsError b[Block.(1:4)]
+        b = blockedrange([1,2,3])
+        @test b[Block.(1:2)] == blockedrange([1,2])
+        @test b[Block.(1:3)] == b
+        @test_throws BlockBoundsError b[Block.(0:2)]
+        @test_throws BlockBoundsError b[Block.(1:4)]
+ 
+        @testset "bug" begin
+            b = blockedrange(1:4)
+            @test b[Block.(2:4)] == 2:10
+            @test length(b[Block.(2:4)]) == 9
+        end
     end
 
     @testset "misc" begin

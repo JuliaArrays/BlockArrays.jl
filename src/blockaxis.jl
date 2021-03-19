@@ -62,7 +62,7 @@ _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
 @inline blocklengths(a::BlockedUnitRange) = [first(a.lasts)-a.first+1; _diff(a.lasts)]
 
-length(a::BlockedUnitRange) = isempty(a.lasts) ? 0 : Integer(last(a.lasts))
+length(a::BlockedUnitRange) = isempty(a.lasts) ? 0 : Integer(last(a.lasts)-a.first+1)
 
 """
    blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
