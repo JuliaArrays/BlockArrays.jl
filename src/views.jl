@@ -18,26 +18,37 @@ to_index(::BlockIndex) = throw(ArgumentError("BlockIndex must be converted by to
 to_index(::BlockIndexRange) = throw(ArgumentError("BlockIndexRange must be converted by to_indices(...)"))
 to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to_indices(...)"))
 
+const BlockIndexingTypes = Union{<:Block,<:BlockRange,<:BlockIndex,<:BlockIndexRange}
 
-@inline to_indices(A, inds, I::Tuple{Block{1}, Vararg{Any}}) =
+@inline to_indices(A, inds, I::Tuple{BlockIndexingTypes,Vararg{Any}}) =
+    block_to_indices(A, inds, I)
+
+# Support linear indexing
+@inline block_to_indices(A::AbstractArray{<:Any,N}, inds::NTuple{N,Any}, I::Tuple{Block{1}}) where N =
+    block_to_indices(A, inds, (Block(ntuple(one,Val{N}())),))
+@inline block_to_indices(A::AbstractVector, inds::Tuple{Any}, I::Tuple{Block{1}}) =
+    (unblock(A, inds, I),)
+
+@inline block_to_indices(A, inds, I::Tuple{Block{1}, Vararg{Any}}) =
     (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
-@inline to_indices(A, inds, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where R =
+@inline block_to_indices(A, inds, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where R =
     (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
-@inline to_indices(A, inds, I::Tuple{BlockIndex{1}, Vararg{Any}}) where R =
+@inline block_to_indices(A, inds, I::Tuple{BlockIndex{1}, Vararg{Any}}) where R =
     (inds[1][I[1]], to_indices(A, _maybetail(inds), tail(I))...)
-@inline to_indices(A, inds, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where R =
+@inline block_to_indices(A, inds, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where R =
     (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+
 
 # splat out higher dimensional blocks
 # this mimics view of a CartesianIndex
-@inline to_indices(A, inds, I::Tuple{Block, Vararg{Any}}) =
-    to_indices(A, inds, (Block.(I[1].n)..., tail(I)...))
-@inline to_indices(A, inds, I::Tuple{BlockIndex, Vararg{Any}}) =
-    to_indices(A, inds, (BlockIndex.(I[1].I, I[1].α)..., tail(I)...))
-@inline to_indices(A, inds, I::Tuple{BlockIndexRange, Vararg{Any}}) =
-    to_indices(A, inds, (BlockIndexRange.(Block.(I[1].block.n), tuple.(I[1].indices))..., tail(I)...))
-@inline to_indices(A, inds, I::Tuple{BlockRange, Vararg{Any}}) =
-    to_indices(A, inds, (BlockRange.(tuple.(I[1].indices))..., tail(I)...))
+@inline block_to_indices(A, inds, I::Tuple{Block, Vararg{Any}}) =
+    block_to_indices(A, inds, (Block.(I[1].n)..., tail(I)...))
+@inline block_to_indices(A, inds, I::Tuple{BlockIndex, Vararg{Any}}) =
+    block_to_indices(A, inds, (BlockIndex.(I[1].I, I[1].α)..., tail(I)...))
+@inline block_to_indices(A, inds, I::Tuple{BlockIndexRange, Vararg{Any}}) =
+    block_to_indices(A, inds, (BlockIndexRange.(Block.(I[1].block.n), tuple.(I[1].indices))..., tail(I)...))
+@inline block_to_indices(A, inds, I::Tuple{BlockRange, Vararg{Any}}) =
+    block_to_indices(A, inds, (BlockRange.(tuple.(I[1].indices))..., tail(I)...))
 
 # In 0.7, we need to override to_indices to avoid calling linearindices
 @inline to_indices(A, I::Tuple{BlockIndexRange, Vararg{Any}}) = to_indices(A, axes(A), I)
@@ -129,7 +140,7 @@ block(A::BlockSlice) = block(A.block)
 block(A::Block) = A
 
 # unwind BLockSlice1 for AbstractBlockArray
-@inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, blocks::Vararg{BlockSlice1, N}) where N = 
+@inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, blocks::Vararg{BlockSlice1, N}) where N =
     view(block_arr, map(block,blocks)...)
 
 @inline Base.view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlice{<:BlockRange{1}}}}, block::Block{N}) where N =

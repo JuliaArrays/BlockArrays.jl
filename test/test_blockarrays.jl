@@ -263,6 +263,7 @@ end
         @test BA_3[BlockIndex(2,1)] == BA_3[Block(2)][1] == A[2,1]
         @test BA_3[BlockIndex(4,1)] == BA_3[Block(4)][1] == A[2,2]
         @test_throws BoundsError BA_3[BlockIndex(4,2)]
+        @test view(A, Block(1)) == A
     end
 
     @testset "misc block tests" begin
