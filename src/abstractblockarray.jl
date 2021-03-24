@@ -180,6 +180,10 @@ end
 @inline Base.getindex(A::AbstractMatrix, kr::AbstractVector, jr::Block) = ArrayLayouts.layout_getindex(A, kr, jr)
 @inline Base.getindex(A::AbstractMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
 @inline Base.getindex(A::LayoutMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
+# Treat the case of linear indexing of blocks
+@inline Base.getindex(A::AbstractVector{T}, kr::Block{1}) where {T} = ArrayLayouts.layout_getindex(A, kr)
+@inline Base.getindex(A::AbstractArray{T,N}, kr::Block{1}) where {T,N} =
+    A[Block(Base._ind2sub(blocksize(A), kr.n[1]))]
 
 ###
 # permutedims
@@ -189,5 +193,3 @@ end
 
 Base.permutedims(A::AbstractBlockVector{<:Number}) = transpose(A)
 Base.permutedims(A::AbstractBlockMatrix{<:Number}) = transpose(A)
-
-

@@ -250,8 +250,19 @@ end
         @test BA_2[1,5] == a_2[2]
         @test_throws DimensionMismatch BA_2[Block(1,2)] = rand(1,5)
 
-        # throw error when a BlockIndex{1} is used for an AbstractArray{2}
-        @test_throws DimensionMismatch BA_2[BlockIndex(1,2)]
+        # Test a BlockIndex with dimension N=1 for an array with dimension N=2
+        A = [1 2; 3 4]
+        @test A[Block(1)] == A
+        @test A[Block(1,1)] == A
+        @test A[BlockIndex(1,1)] == A[Block(1)][1] == A[1,1]
+        @test A[BlockIndex(1,4)] == A[Block(1)][4] == A[2,2]
+        @test_throws BlockBoundsError A[Block(2)]
+        @test_throws BlockBoundsError A[BlockIndex(2,1)]
+        BA_3 = BlockArray(A, [1,1],[1,1])
+        @test BA_3[BlockIndex(1,1)] == BA_3[Block(1)][1] == A[1,1]
+        @test BA_3[BlockIndex(2,1)] == BA_3[Block(2)][1] == A[2,1]
+        @test BA_3[BlockIndex(4,1)] == BA_3[Block(4)][1] == A[2,2]
+        @test_throws BoundsError BA_3[BlockIndex(4,2)]
     end
 
     @testset "misc block tests" begin
