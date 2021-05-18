@@ -71,7 +71,7 @@ end
             @test Matrix(ret) == zeros(6,6)
 
             A = [1,2,3,4,5,6]
-            @test A == BlockArray(A, 1:3) == BlockArray{Int}(A, 1:3) == 
+            @test A == BlockArray(A, 1:3) == BlockArray{Int}(A, 1:3) ==
                 BlockArray(A, (blockedrange(1:3),)) == BlockArray{Int}(A, (blockedrange(1:3),)) ==
                 BlockArray{Float64}(A, 1:3)
         end
@@ -94,7 +94,7 @@ end
             @test Matrix(ret) == zeros(6,6)
 
             A = [1,2,3,4,5,6]
-            @test A == PseudoBlockArray(A, 1:3) == PseudoBlockArray{Int}(A, 1:3) == 
+            @test A == PseudoBlockArray(A, 1:3) == PseudoBlockArray{Int}(A, 1:3) ==
                 PseudoBlockArray(A, (blockedrange(1:3),)) == PseudoBlockArray{Int}(A, (blockedrange(1:3),)) ==
                 PseudoBlockArray{Float64}(A, 1:3)
         end
@@ -154,7 +154,7 @@ end
                 )
             end
         end
-        
+
         @testset "BlockVector" begin
             a_data = [1,2,3]
             a = BlockVector(a_data,[1,2])
@@ -199,29 +199,29 @@ end
             B = BlockArray(I, fill(2,4), fill(2,5))
             @test B isa BlockMatrix{Bool}
             @test B == BlockMatrix(I, fill(2,4), fill(2,5)) ==
-                        BlockArray(I, blockedrange.((fill(2,4), fill(2,5)))) == 
-                        BlockMatrix(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                        BlockArray(I, blockedrange.((fill(2,4), fill(2,5)))) ==
+                        BlockMatrix(I, blockedrange.((fill(2,4), fill(2,5)))) ==
                         Matrix(I, 8, 10)
-            
+
             B = BlockArray{Float64}(I, fill(2,4), fill(2,5))
             @test B isa BlockMatrix{Float64}
             @test B == BlockMatrix{Float64}(I, fill(2,4), fill(2,5)) ==
-                        BlockArray{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
-                        BlockMatrix{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                        BlockArray{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) ==
+                        BlockMatrix{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) ==
                         Matrix(I, 8, 10)
 
             B = PseudoBlockArray(I, fill(2,4), fill(2,5))
             @test B isa PseudoBlockMatrix{Bool}
             @test B == PseudoBlockMatrix(I, fill(2,4), fill(2,5)) ==
-                        PseudoBlockArray(I, blockedrange.((fill(2,4), fill(2,5)))) == 
-                        PseudoBlockMatrix(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                        PseudoBlockArray(I, blockedrange.((fill(2,4), fill(2,5)))) ==
+                        PseudoBlockMatrix(I, blockedrange.((fill(2,4), fill(2,5)))) ==
                         Matrix(I, 8, 10)
-            
+
             B = PseudoBlockArray{Float64}(I, fill(2,4), fill(2,5))
             @test B isa PseudoBlockMatrix{Float64}
             @test B == PseudoBlockMatrix{Float64}(I, fill(2,4), fill(2,5)) ==
-                        PseudoBlockArray{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
-                        PseudoBlockMatrix{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                        PseudoBlockArray{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) ==
+                        PseudoBlockMatrix{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) ==
                         Matrix(I, 8, 10)
         end
     end
@@ -249,6 +249,21 @@ end
 
         @test BA_2[1,5] == a_2[2]
         @test_throws DimensionMismatch BA_2[Block(1,2)] = rand(1,5)
+
+        # Test a BlockIndex with dimension N=1 for an array with dimension N=2
+        A = [1 2; 3 4]
+        @test A[Block(1)] == A
+        @test A[Block(1,1)] == A
+        @test A[BlockIndex(1,1)] == A[Block(1)][1] == A[1,1]
+        @test A[BlockIndex(1,4)] == A[Block(1)][4] == A[2,2]
+        @test_throws BlockBoundsError A[Block(2)]
+        @test_throws BlockBoundsError A[BlockIndex(2,1)]
+        BA_3 = BlockArray(A, [1,1],[1,1])
+        @test BA_3[BlockIndex(1,1)] == BA_3[Block(1)][1] == A[1,1]
+        @test BA_3[BlockIndex(2,1)] == BA_3[Block(2)][1] == A[2,1]
+        @test BA_3[BlockIndex(4,1)] == BA_3[Block(4)][1] == A[2,2]
+        @test_throws BoundsError BA_3[BlockIndex(4,2)]
+        @test view(A, Block(1)) == A
     end
 
     @testset "misc block tests" begin
@@ -355,9 +370,9 @@ end
 
         Ã = PseudoBlockArray(rand(2,3), Fill(1,2), [2,1])
         @test convert(typeof(A), Ã) == Ã
-        
+
         @test PseudoBlockArray(A, axes(Ã)) isa typeof(Ã)
-        @test PseudoBlockArray(A, axes(Ã)) == A    
+        @test PseudoBlockArray(A, axes(Ã)) == A
 
 
         A = BlockArray(rand(2,3), [1,1], [2,1])
@@ -532,7 +547,7 @@ end
         b = randn(6)
         @test A*b isa PseudoBlockVector{Float64}
         @test Ã*b isa PseudoBlockVector{Float64}
-        @test A*b ≈ Ã*b ≈ Matrix(A)*b 
+        @test A*b ≈ Ã*b ≈ Matrix(A)*b
     end
 
     @testset "Blockindex" begin
@@ -542,8 +557,8 @@ end
         A = PseudoBlockArray(randn(3,3), [1,2], [1,2])
         @test A[Block(1)[1], Block(1)[1]] == A[Block(1,1)[1,1]] == A[1,1]
         @test A[Block(1)[1:1], Block(1)[1:1]] == A[Block(1,1)[1:1,1:1]] == A[1:1,1:1]
-        @test A[Block(1)[1:1], Block(1)[1]] == BlockArray(A)[Block(1)[1:1], Block(1)[1]] == A[1:1,1] 
-        @test A[Block(1)[1], Block(1)[1:1]] == BlockArray(A)[Block(1)[1], Block(1)[1:1]] == A[1,1:1] 
+        @test A[Block(1)[1:1], Block(1)[1]] == BlockArray(A)[Block(1)[1:1], Block(1)[1]] == A[1:1,1]
+        @test A[Block(1)[1], Block(1)[1:1]] == BlockArray(A)[Block(1)[1], Block(1)[1:1]] == A[1,1:1]
     end
 
     @testset "permutedims" begin

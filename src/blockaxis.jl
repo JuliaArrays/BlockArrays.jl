@@ -6,6 +6,8 @@
     b[block(K)][K.α...]
 @inline getindex(b::AbstractArray, K::BlockIndex{1}, J::BlockIndex{1}...) =
     b[BlockIndex(tuple(K, J...))]
+@inline getindex(b::AbstractArray{T,N}, K::BlockIndex{1}) where {T,N} =
+    b[Block(K.I[1])][K.α[1]]
 
 @inline getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
 @inline getindex(b::LayoutArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
