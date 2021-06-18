@@ -207,4 +207,19 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
         A = BlockArray(randn(6,6), fill(2,3), 1:3)
         @test strides(view(A', Block(1,2)))  == strides(bview(A', Block(1,2))) == (2,1)
     end
+
+    @testset "mul! with adj" begin
+        N = 10000
+        M = 10
+        A = mortar((randn(N, M), randn(N, M), randn(N, M)))
+
+        X,Y = A',A
+        Z = zeros(eltype(X), size(X, 1), size(Y, 2))
+        mul!(Z, X, Y)
+        @test Z ≈ X*Y
+
+        Z = zeros(eltype(X), size(X, 1), size(Y, 2))
+        mul!(Z, copy(X), Y)
+        @test Z ≈ X*Y
+    end
 end
