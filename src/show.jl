@@ -1,4 +1,3 @@
-
 import Base.alignment
 
 # A bit of a mess but does the job...
@@ -139,7 +138,7 @@ function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,Defaul
     Base.show_type_name(io, typeof(a).name)
     print(io, '{')
     show(io, T)
-    print(io, ',')
+    print(io, ", ")
     show(io, N)
     print(io, '}')
 end
