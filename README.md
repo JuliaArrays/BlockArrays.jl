@@ -11,7 +11,7 @@ Secondly, it also implements two different type of block arrays that follow the 
 A simple way to produce `BlockArray`s is via `mortar`, which combines an array of arrays into a `BlockArray`:
 ```julia
 julia> mortar([randn(3), randn(4)])
-2-blocked 7-element BlockArray{Float64,1}:
+2-blocked 7-element BlockVector{Float64}:
  -0.19808699390960527 
   0.04711385377738941 
  -0.6308529482215658  
@@ -22,7 +22,7 @@ julia> mortar([randn(3), randn(4)])
  -0.012442892450142308
 
 julia> mortar(reshape([randn(2,2), randn(1,2), randn(2,3), randn(1,3)],2,2))
-2×2-blocked 3×5 BlockArray{Float64,2}:
+2×2-blocked 3×5 BlockMatrix{Float64}:
  -1.17797    0.359738   │   0.87676    -2.06495    1.74256 
   1.54787    1.64133    │  -0.0416484  -2.00241   -0.522441
  ───────────────────────┼──────────────────────────────────

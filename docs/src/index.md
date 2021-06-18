@@ -14,7 +14,7 @@ Secondly, it also implements two concrete types of block arrays that follow the 
 We talk about an “a×b-blocked m×n block array”, if we have ``m \times n`` values arranged in ``a \times b`` blocks, like in the following example:
 
 ```julia
-2×3-blocked 4×4 BlockArray{Float64,2}:
+2×3-blocked 4×4 BlockMatrix{Float64}:
  0.56609   │  0.95429   │  0.0688403  0.980771 
  0.203829  │  0.138667  │  0.0200418  0.0515364
  ──────────┼────────────┼──────────────────────
@@ -25,7 +25,7 @@ We talk about an “a×b-blocked m×n block array”, if we have ``m \times n`` 
 The dimension of arrays works the same as with standard Julia arrays; for example the following is a ``2 \times 2`` block vector:
 
 ```julia
-2-blocked 4-element BlockArray{Float64,1}:
+2-blocked 4-element BlockVector{Float64}:
  0.35609231970760424
  0.7732179994849591 
  ───────────────────

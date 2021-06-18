@@ -272,7 +272,7 @@ end
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
         if VERSION < v"1.6-"
-            @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Array{Int64,1}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+            @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{Int64}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
         else
             @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{Int64}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
         end

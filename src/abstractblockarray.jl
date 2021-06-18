@@ -86,7 +86,7 @@ specialize this method if they need to provide custom block bounds checking beha
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Array{Float64,2},2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}} at block index [3,2]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}} at block index [3,2]
 [...]
 ```
 """
@@ -144,23 +144,23 @@ returning views.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> v = Array(reshape(1:6, (2, 3)))
-2×3 Array{Int64,2}:
+2×3 Matrix{Int64}:
  1  3  5
  2  4  6
 
 julia> A = BlockArray(v, [1,1], [2,1])
-2×2-blocked 2×3 BlockArray{Int64,2}:
+2×2-blocked 2×3 BlockMatrix{Int64}:
  1  3  │  5
  ──────┼───
  2  4  │  6
 
 julia> Matrix.(collect(eachblock(A)))
-2×2 Array{Array{Int64,2},2}:
+2×2 Matrix{Matrix{Int64}}:
  [1 3]  [5]
  [2 4]  [6]
 
 julia> sum.(eachblock(A))
-2×2 Array{Int64,2}:
+2×2 Matrix{Int64}:
  4  5
  6  6
 ```

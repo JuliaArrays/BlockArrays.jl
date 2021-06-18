@@ -17,7 +17,7 @@ For example, the result of `blockappend!(x, x)` is undefined.
 julia> using BlockArrays
 
 julia> blockappend!(mortar([[1], [2, 3]]), mortar([[4, 5]]))
-3-blocked 5-element BlockArray{Int64,1}:
+3-blocked 5-element BlockVector{Int64}:
  1
  ─
  2
@@ -74,7 +74,7 @@ of `dest` if the length of `blocks` are changed.
 julia> using BlockArrays
 
 julia> blockpush!(mortar([[1], [2, 3]]), [4, 5], [6])
-4-blocked 6-element BlockArray{Int64,1}:
+4-blocked 6-element BlockVector{Int64}:
  1
  ─
  2
@@ -121,7 +121,7 @@ of `dest` if the length of `blocks` are changed.
 julia> using BlockArrays
 
 julia> blockpushfirst!(mortar([[1], [2, 3]]), [4, 5], [6])
-4-blocked 6-element BlockArray{Int64,1}:
+4-blocked 6-element BlockVector{Int64}:
  4
  5
  ─
@@ -161,12 +161,12 @@ julia> using BlockArrays
 julia> A = mortar([[1], [2, 3]]);
 
 julia> blockpop!(A)
-2-element Array{Int64,1}:
+2-element Vector{Int64}:
  2
  3
 
 julia> A
-1-blocked 1-element BlockArray{Int64,1}:
+1-blocked 1-element BlockVector{Int64}:
  1
 ```
 """
@@ -188,11 +188,11 @@ julia> using BlockArrays
 julia> A = mortar([[1], [2, 3]]);
 
 julia> blockpopfirst!(A)
-1-element Array{Int64,1}:
+1-element Vector{Int64}:
  1
 
 julia> A
-1-blocked 2-element BlockArray{Int64,1}:
+1-blocked 2-element BlockVector{Int64}:
  2
  3
 ```
@@ -217,7 +217,7 @@ For example, the result of `append!(x, x)` is undefined.
 julia> using BlockArrays
 
 julia> append!(mortar([[1], [2, 3]]), mortar([[4], [5]]))
-2-blocked 5-element BlockArray{Int64,1}:
+2-blocked 5-element BlockVector{Int64}:
  1
  ─
  2

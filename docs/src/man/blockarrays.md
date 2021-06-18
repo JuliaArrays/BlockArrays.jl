@@ -14,7 +14,7 @@ An `AbstractArray` can be repacked into a `BlockArray` with `BlockArray(array, b
 
 ```julia
 julia> BlockArray(rand(4, 4), [2,2], [1,1,2])
-2×3-blocked 4×4 BlockArray{Float64,2}:
+2×3-blocked 4×4 BlockMatrix{Float64}:
  0.70393   │  0.568703  │  0.0137366  0.953038
  0.24957   │  0.145924  │  0.884324   0.134155
  ──────────┼────────────┼─────────────────────
@@ -22,7 +22,7 @@ julia> BlockArray(rand(4, 4), [2,2], [1,1,2])
  0.844314  │  0.794279  │  0.0421491  0.683791
 
 julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
-2×2-blocked 4×5 BlockArray{Float64,2,Array{SparseMatrixCSC{Float64,Int64},2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}}:
+2×2-blocked 4×5 BlockMatrix{Float64, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
  0.0341601  0.374187  │  0.0118196  0.299058  0.0     
  ---------------------┼-------------------------------
  0.0945445  0.931115  │  0.0460428  0.0       0.0     
@@ -38,7 +38,7 @@ A block array can be created with uninitialized values (but initialized blocks) 
 
 ```julia
 julia> BlockArray{Float32}(undef, [1,2,1], [1,1,1])
-3×3-blocked 4×3 BlockArray{Float32,2}:
+3×3-blocked 4×3 BlockMatrix{Float32}:
  -2.15145e-35  │   1.4013e-45   │  -1.77199e-35
  ──────────────┼────────────────┼──────────────
   1.4013e-45   │  -1.77199e-35  │  -1.72473e-34
@@ -56,7 +56,7 @@ A `BlockArray` can be created with the blocks left uninitialized using the `Bloc
 
 ```jldoctest
 julia> BlockArray{Float32}(undef_blocks, [1,2], [3,2])
-2×2-blocked 3×5 BlockArray{Float32,2}:
+2×2-blocked 3×5 BlockMatrix{Float32}:
  #undef  #undef  #undef  │  #undef  #undef
  ────────────────────────┼────────────────
  #undef  #undef  #undef  │  #undef  #undef
@@ -67,7 +67,7 @@ The `block_type` should be an array type.  It specifies the internal block type,
 
 ```julia
 julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])
-2-blocked 3-element BlockArray{Float64,1,Array{SparseVector{Float64,Int64},1},Tuple{BlockedUnitRange{Array{Int64,1}}}}:
+2-blocked 3-element BlockVector{Float64, Vector{SparseVector{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}}}:
  #undef
  ------
  #undef
@@ -92,21 +92,21 @@ A block can be set by  `block_array[Block(i...)] = v` or
 
 ```jldoctest block_array
 julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
-2×2-blocked 3×4 BlockArray{Float64,2}:
+2×2-blocked 3×4 BlockMatrix{Float64}:
  #undef  #undef  │  #undef  #undef
  ────────────────┼────────────────
  #undef  #undef  │  #undef  #undef
  #undef  #undef  │  #undef  #undef
 
 julia> block_array[Block(2,1)] = rand(2,2)
-2×2 Array{Float64,2}:
+2×2 Matrix{Float64}:
  0.590845  0.566237
  0.766797  0.460085
 
 julia> block_array[Block(1),Block(1)] = [1 2];
 
 julia> block_array
-2×2-blocked 3×4 BlockArray{Float64,2}:
+2×2-blocked 3×4 BlockMatrix{Float64}:
  1.0       2.0       │  #undef  #undef
  ────────────────────┼────────────────
  0.590845  0.566237  │  #undef  #undef
@@ -120,15 +120,15 @@ or if a copy is desired, `block_array[Block(i...)]`:
 
 ```jldoctest block_array
 julia> view(block_array, Block(1, 1))
-1×2 Array{Float64,2}:
+1×2 Matrix{Float64}:
  1.0  2.0
 
 julia> block_array[Block(1, 1)] # makes a copy
-1×2 Array{Float64,2}:
+1×2 Matrix{Float64}:
  1.0  2.0
 
 julia> block_array[Block(1), Block(1)]  # equivalent to above
-1×2 Array{Float64,2}:
+1×2 Matrix{Float64}:
  1.0  2.0
 ```
 
@@ -146,17 +146,17 @@ To view and modify blocks of `BlockArray` use the `view` syntax.
 julia> A = BlockArray(ones(6), 1:3);
 
 julia> view(A, Block(2))
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.0
  1.0
 
 julia> view(A, Block(2)) .= [3,4]; A[Block(2)]
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  3.0
  4.0
 
 julia> view(A, Block.(1:2))
-3-element view(::BlockArray{Float64,1,Array{Array{Float64,1},1},Tuple{BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64,UnitRange{Int64}}}}}, BlockSlice(Block{1,Int64}[Block(1), Block(2)],1:1:3)) with eltype Float64 with indices 1:1:3:
+3-element view(::BlockVector{Float64, Vector{Vector{Float64}}, Tuple{BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}}}, BlockSlice(Block{1, Int64}[Block(1), Block(2)],1:1:3)) with eltype Float64 with indices 1:1:3:
  1.0
  3.0
  4.0
@@ -170,7 +170,7 @@ An array can be repacked into a `BlockArray` with `BlockArray(array, block_sizes
 
 ```jl
 julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
-2×2-blocked 4×5 BlockArray{Float64,2,Array{SparseMatrixCSC{Float64,Int64},2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}}:
+2×2-blocked 4×5 BlockArray{Float64, 2, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
  0.0341601  0.374187  │  0.0118196  0.299058  0.0     
  ---------------------┼-------------------------------
  0.0945445  0.931115  │  0.0460428  0.0       0.0     

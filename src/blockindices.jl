@@ -7,13 +7,13 @@ a single element.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
-2×2-blocked 2×3 BlockArray{Float64,2}:
+2×2-blocked 2×3 BlockMatrix{Float64}:
  1.0  1.0  │  1.0
  ──────────┼─────
  1.0  1.0  │  1.0
 
 julia> A[Block(1, 1)]
-1×2 Array{Float64,2}:
+1×2 Matrix{Float64}:
  1.0  1.0
 ```
 """
@@ -99,7 +99,7 @@ It can be used to index into `BlockArrays` in the following manner:
 julia> arr = Array(reshape(1:25, (5,5)));
 
 julia> a = PseudoBlockArray(arr, [3,2], [1,4])
-2×2-blocked 5×5 PseudoBlockArray{Int64,2}:
+2×2-blocked 5×5 PseudoBlockMatrix{Int64}:
  1  │   6  11  16  21
  2  │   7  12  17  22
  3  │   8  13  18  23

@@ -87,7 +87,7 @@ view(A, idx) = 4:4
 view(A, idx) = 5:6
 
 julia> [idx.block.n[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)]
-4-element Array{Int64,1}:
+4-element Vector{Int64}:
  1
  2
  3
