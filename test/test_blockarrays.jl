@@ -85,15 +85,12 @@ end
             fill!(ret, 0)
             @test Array(ret)  == zeros(6)
 
-            ret = PseudoBlockArray{Float64,1,Vector{Float64}}(undef, 1:3)
-            fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
-
             ret = PseudoBlockArray{Float64}(undef, 1:3, 1:3)
             fill!(ret, 0)
             @test Matrix(ret) == zeros(6,6)
 
             A = [1,2,3,4,5,6]
+            @test_throws BoundsError PseudoBlockArray(A,10:20)
             @test A == PseudoBlockArray(A, 1:3) == PseudoBlockArray{Int}(A, 1:3) == 
                 PseudoBlockArray(A, (blockedrange(1:3),)) == PseudoBlockArray{Int}(A, (blockedrange(1:3),)) ==
                 PseudoBlockArray{Float64}(A, 1:3)
