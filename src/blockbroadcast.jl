@@ -94,7 +94,7 @@ julia> [idx.block.n[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)]
  3
 
 julia> [idx.indices[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)]
-4-element Array{UnitRange{Int64},1}:
+4-element Vector{UnitRange{Int64}}:
  1:1
  1:2
  1:1

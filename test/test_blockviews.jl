@@ -165,10 +165,8 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         W = view(A,Block.(1:2),Block(1))
         @test blocks(V) == blocks(A)[1:1,1:2]
         @test blocks(W) == blocks(A)[1:2,1:1]
-        if VERSION ≥ v"1.6-"
-            @test stringmime("text/plain", V) == "1×3 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}, $(typeof(axes(A)))}, BlockSlice(Block(1),1:1), BlockSlice(Block{1, $Int}[Block(1), Block(2)],1:1:3)) with eltype $Int with indices Base.OneTo(1)×1:1:3:\n 1  │  2  3"
-            @test stringmime("text/plain", W) == "3×1 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}, $(typeof(axes(A)))}, BlockSlice(Block{1, $Int}[Block(1), Block(2)],1:1:3), BlockSlice(Block(1),1:1)) with eltype $Int with indices 1:1:3×Base.OneTo(1):\n 1\n ─\n 4\n 7"
-        end
+        @test stringmime("text/plain", V) == "1×3 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}, $(typeof(axes(A)))}, BlockSlice(Block(1),1:1), BlockSlice(Block{1, $Int}[Block(1), Block(2)],1:1:3)) with eltype $Int with indices Base.OneTo(1)×1:1:3:\n 1  │  2  3"
+        @test stringmime("text/plain", W) == "3×1 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}, $(typeof(axes(A)))}, BlockSlice(Block{1, $Int}[Block(1), Block(2)],1:1:3), BlockSlice(Block(1),1:1)) with eltype $Int with indices 1:1:3×Base.OneTo(1):\n 1\n ─\n 4\n 7"
     end
 
     @testset "getindex with BlockRange" begin

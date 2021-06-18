@@ -87,9 +87,8 @@ Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange{CS}) where CS 
 Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange) where CS = _BlockedUnitRange(first(axis), convert(CS, blocklasts(axis)))
 Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(BlockedUnitRange{CS}, convert(BlockedUnitRange, axis))
 
-if VERSION ≥ v"1.6-"
-    Base.unitrange(b::BlockedUnitRange) = first(b):last(b)
-end
+Base.unitrange(b::BlockedUnitRange) = first(b):last(b)
+
 
 
 """
