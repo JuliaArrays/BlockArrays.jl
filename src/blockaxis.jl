@@ -104,7 +104,7 @@ julia> A = BlockArray([1,2,3],[2,1])
  3
 
 julia> blockaxes(A)[1]
-2-element BlockRange{1,Tuple{Base.OneTo{Int64}}}:
+2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
  Block(1)
  Block(2)
 ```
@@ -127,7 +127,7 @@ julia> A = BlockArray([1,2,3],[2,1])
  3
 
 julia> blockaxes(A,1)
-2-element BlockRange{1,Tuple{Base.OneTo{Int64}}}:
+2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
  Block(1)
  Block(2)
 ```
