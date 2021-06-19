@@ -28,7 +28,7 @@ Construction is typically via `blockrange` which converts
 a vector of block lengths to a `BlockedUnitRange`.
 ```jldoctest; setup = quote using BlockArrays end
 julia> blockedrange([2,2,3])
-3-blocked 7-element BlockedUnitRange{Array{Int64,1}}:
+3-blocked 7-element BlockedUnitRange{Vector{Int64}}:
  1
  2
  ─
@@ -87,9 +87,8 @@ Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange{CS}) where CS 
 Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange) where CS = _BlockedUnitRange(first(axis), convert(CS, blocklasts(axis)))
 Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(BlockedUnitRange{CS}, convert(BlockedUnitRange, axis))
 
-if VERSION ≥ v"1.6-"
-    Base.unitrange(b::BlockedUnitRange) = first(b):last(b)
-end
+Base.unitrange(b::BlockedUnitRange) = first(b):last(b)
+
 
 
 """
@@ -98,14 +97,14 @@ end
 Return the tuple of valid block indices for array `A`.
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray([1,2,3],[2,1])
-2-blocked 3-element BlockArray{Int64,1}:
+2-blocked 3-element BlockVector{Int64}:
  1
  2
  ─
  3
 
 julia> blockaxes(A)[1]
-2-element BlockRange{1,Tuple{Base.OneTo{Int64}}}:
+2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
  Block(1)
  Block(2)
 ```
@@ -121,14 +120,14 @@ blockaxes(b) = blockaxes.(axes(b), 1)
 Return the valid range of block indices for array `A` along dimension `d`.
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray([1,2,3],[2,1])
-2-blocked 3-element BlockArray{Int64,1}:
+2-blocked 3-element BlockVector{Int64}:
  1
  2
  ─
  3
 
 julia> blockaxes(A,1)
-2-element BlockRange{1,Tuple{Base.OneTo{Int64}}}:
+2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
  Block(1)
  Block(2)
 ```
@@ -146,7 +145,7 @@ Return the tuple of the number of blocks along each
 dimension. See also size and blocksizes.
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
-2×3-blocked 3×3 BlockArray{Float64,2}:
+2×3-blocked 3×3 BlockMatrix{Float64}:
  1.0  │  1.0  │  1.0
  1.0  │  1.0  │  1.0
  ─────┼───────┼─────
@@ -171,7 +170,7 @@ Return the tuple of the sizes of blocks along each
 dimension. See also size and blocksize.
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
-2×3-blocked 3×3 BlockArray{Float64,2}:
+2×3-blocked 3×3 BlockMatrix{Float64}:
  1.0  │  1.0  │  1.0
  1.0  │  1.0  │  1.0
  ─────┼───────┼─────
@@ -181,7 +180,7 @@ julia> blocksizes(A)
 ([2, 1], [1, 1, 1])
 
 julia> blocksizes(A,2)
-3-element Array{Int64,1}:
+3-element Vector{Int64}:
  1
  1
  1

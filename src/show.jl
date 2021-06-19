@@ -1,4 +1,3 @@
-
 import Base.alignment
 
 # A bit of a mess but does the job...
@@ -88,11 +87,23 @@ function _blockarray_print_matrix_row(io::IO,
     end
 end
 
+function _show_typeof(io::IO, a::BlockVector{T,Vector{Vector{T}},Tuple{DefaultBlockAxis}}) where T
+    print(io, "BlockVector{")
+    show(io, T)
+    print(io, '}')
+end
+
+function _show_typeof(io::IO, a::BlockMatrix{T,Matrix{Matrix{T}},NTuple{2,DefaultBlockAxis}}) where T
+    print(io, "BlockMatrix{")
+    show(io, T)
+    print(io, '}')
+end
+
 function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},NTuple{N,DefaultBlockAxis}}) where {T,N}
     Base.show_type_name(io, typeof(a).name)
     print(io, '{')
     show(io, T)
-    print(io, ',')
+    print(io, ", ")
     show(io, N)
     print(io, '}')
 end
@@ -111,11 +122,23 @@ axes_print_matrix_row(::Tuple{BlockedUnitRange,AbstractUnitRange}, io, X, A, i, 
 Base.print_matrix_row(io::IO, X::BlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
+function _show_typeof(io::IO, a::PseudoBlockVector{T,Vector{T},Tuple{DefaultBlockAxis}}) where T
+    print(io, "PseudoBlockVector{")
+    show(io, T)
+    print(io, '}')
+end
+
+function _show_typeof(io::IO, a::PseudoBlockMatrix{T,Matrix{T},NTuple{2,DefaultBlockAxis}}) where T
+    print(io, "PseudoBlockMatrix{")
+    show(io, T)
+    print(io, '}')
+end
+
 function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,DefaultBlockAxis}}) where {T,N}
     Base.show_type_name(io, typeof(a).name)
     print(io, '{')
     show(io, T)
-    print(io, ',')
+    print(io, ", ")
     show(io, N)
     print(io, '}')
 end

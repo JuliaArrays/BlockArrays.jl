@@ -185,7 +185,7 @@ end
 
 function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractColumnMajor})
     α, A, X, β, Y_in = M.α, M.A, M.B, M.β, M.C
-    Y = PseudoBlockArray(Y_in, (axes(A,1), axes(Y_in,2)))
+    Y = PseudoBlockArray(Y_in, (axes(A,1), axes(X,2)))
     _block_muladd!(α, A, X, β, Y)
     Y_in
 end
