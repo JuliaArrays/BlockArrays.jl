@@ -192,18 +192,16 @@ end
 
 function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractColumnMajor,<:AbstractColumnMajor})
     α, A, X_in, β, Y_in = M.α, M.A, M.B, M.β, M.C
-    _fill_lmul!(β, Y_in)
     X = PseudoBlockArray(X_in, (axes(A,2), axes(X_in,2)))
-    Y = PseudoBlockArray(Y_in, (axes(A,1), axes(Y_in,2)))
+    Y = PseudoBlockArray(Y_in, (axes(A,1), axes(X_in,2)))
     _block_muladd!(α, A, X, β, Y)
     Y_in
 end
 
 function materialize!(M::MatMulMatAdd{<:AbstractColumnMajor,<:AbstractBlockLayout,<:AbstractColumnMajor})
     α, A_in, X, β, Y_in = M.α, M.A, M.B, M.β, M.C
-    _fill_lmul!(β, Y_in)
     A = PseudoBlockArray(A_in, (axes(A_in,1),axes(X,1)))
-    Y = PseudoBlockArray(Y_in, (axes(Y_in,1),axes(X,2)))
+    Y = PseudoBlockArray(Y_in, (axes(A,1),axes(X,2)))
     _block_muladd!(α, A, X, β, Y)
     Y_in
 end

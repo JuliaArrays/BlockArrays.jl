@@ -222,4 +222,16 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
         mul!(Z, copy(X), Y)
         @test Z ≈ X*Y
     end
+
+    @testset "5-arg mul! (#174)" begin
+        A = BlockArray(rand(4, 5), [1,3], [2,3])
+        Ã = PseudoBlockArray(A)
+        B = BlockArray(rand(5, 3), [2,3], [1,1,1])
+        B̃ = PseudoBlockArray(B)
+        C = randn(4,3)
+        @test mul!(view(copy(C),:,1:3), A, B, 1, 2) ≈ A*B + 2C
+        @test mul!(view(copy(C),:,1:3), A, B̃, 1, 2) ≈ A*B + 2C
+        @test mul!(view(copy(C),:,1:3), Ã, B, 1, 2) ≈ A*B + 2C
+        @test mul!(view(copy(C),:,1:3), Ã, B̃, 1, 2) ≈ A*B + 2C
+    end
 end
