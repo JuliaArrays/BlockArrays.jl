@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Public Documentation · BlockArrays.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">BlockArrays.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../../man/abstractblockarrayinterface/">The block axis interface</a></li><li><a class="tocitem" href="../../man/blockarrays/">BlockArrays</a></li><li><a class="tocitem" href="../../man/pseudoblockarrays/">PseudoBlockArrays</a></li></ul></li><li><span class="tocitem">API</span><ul><li class="is-active"><a class="tocitem" href>Public Documentation</a><ul class="internal"><li><a class="tocitem" href="#Contents"><span>Contents</span></a></li><li><a class="tocitem" href="#Index"><span>Index</span></a></li><li><a class="tocitem" href="#AbstractBlockArray-interface"><span>AbstractBlockArray interface</span></a></li><li><a class="tocitem" href="#BlockArray"><span>BlockArray</span></a></li><li><a class="tocitem" href="#PseudoBlockArray"><span>PseudoBlockArray</span></a></li><li><a class="tocitem" href="#Kronecker-products"><span>Kronecker products</span></a></li></ul></li><li><a class="tocitem" href="../internals/">Internal Documentation</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">API</a></li><li class="is-active"><a href>Public Documentation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Public Documentation</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/master/docs/src/lib/public.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Public-Documentation"><a class="docs-heading-anchor" href="#Public-Documentation">Public Documentation</a><a id="Public-Documentation-1"></a><a class="docs-heading-anchor-permalink" href="#Public-Documentation" title="Permalink"></a></h1><p>Documentation for <code>BlockArrays.jl</code>&#39;s public interface.</p><p>See <a href="../internals/#Internal-Documentation">Internal Documentation</a> for internal package docs covering all submodules.</p><h2 id="Contents"><a class="docs-heading-anchor" href="#Contents">Contents</a><a id="Contents-1"></a><a class="docs-heading-anchor-permalink" href="#Contents" title="Permalink"></a></h2><ul><li><a href="#Public-Documentation">Public Documentation</a></li><ul><li><a href="#Contents">Contents</a></li><li><a href="#Index">Index</a></li><li><a href="#AbstractBlockArray-interface">AbstractBlockArray interface</a></li><li><a href="#BlockArray">BlockArray</a></li><li><a href="#PseudoBlockArray">PseudoBlockArray</a></li><li><a href="#Kronecker-products">Kronecker products</a></li></ul></ul><h2 id="Index"><a class="docs-heading-anchor" href="#Index">Index</a><a id="Index-1"></a><a class="docs-heading-anchor-permalink" href="#Index" title="Permalink"></a></h2><ul><li><a href="#BlockArrays.undef_blocks"><code>BlockArrays.undef_blocks</code></a></li><li><a href="#BlockArrays.AbstractBlockArray"><code>BlockArrays.AbstractBlockArray</code></a></li><li><a href="#BlockArrays.Block"><code>BlockArrays.Block</code></a></li><li><a href="#BlockArrays.BlockArray"><code>BlockArrays.BlockArray</code></a></li><li><a href="#BlockArrays.BlockBoundsError"><code>BlockArrays.BlockBoundsError</code></a></li><li><a href="#BlockArrays.BlockIndex"><code>BlockArrays.BlockIndex</code></a></li><li><a href="#BlockArrays.BlockKron"><code>BlockArrays.BlockKron</code></a></li><li><a href="#BlockArrays.PseudoBlockArray"><code>BlockArrays.PseudoBlockArray</code></a></li><li><a href="#BlockArrays.UndefBlocksInitializer"><code>BlockArrays.UndefBlocksInitializer</code></a></li><li><a href="#Base.append!"><code>Base.append!</code></a></li><li><a href="#Base.pop!"><code>Base.pop!</code></a></li><li><a href="#Base.popfirst!"><code>Base.popfirst!</code></a></li><li><a href="#Base.push!"><code>Base.push!</code></a></li><li><a href="#Base.pushfirst!"><code>Base.pushfirst!</code></a></li><li><a href="#BlockArrays.blockappend!"><code>BlockArrays.blockappend!</code></a></li><li><a href="#BlockArrays.blockaxes"><code>BlockArrays.blockaxes</code></a></li><li><a href="#BlockArrays.blockcheckbounds"><code>BlockArrays.blockcheckbounds</code></a></li><li><a href="#BlockArrays.blockfirsts"><code>BlockArrays.blockfirsts</code></a></li><li><a href="#BlockArrays.blockisequal"><code>BlockArrays.blockisequal</code></a></li><li><a href="#BlockArrays.blockkron"><code>BlockArrays.blockkron</code></a></li><li><a href="#BlockArrays.blocklasts"><code>BlockArrays.blocklasts</code></a></li><li><a href="#BlockArrays.blocklengths"><code>BlockArrays.blocklengths</code></a></li><li><a href="#BlockArrays.blockpop!"><code>BlockArrays.blockpop!</code></a></li><li><a href="#BlockArrays.blockpopfirst!"><code>BlockArrays.blockpopfirst!</code></a></li><li><a href="#BlockArrays.blockpush!"><code>BlockArrays.blockpush!</code></a></li><li><a href="#BlockArrays.blockpushfirst!"><code>BlockArrays.blockpushfirst!</code></a></li><li><a href="#BlockArrays.blocks"><code>BlockArrays.blocks</code></a></li><li><a href="#BlockArrays.blocksize"><code>BlockArrays.blocksize</code></a></li><li><a href="#BlockArrays.blocksizes"><code>BlockArrays.blocksizes</code></a></li><li><a href="#BlockArrays.blockvec"><code>BlockArrays.blockvec</code></a></li><li><a href="#BlockArrays.eachblock"><code>BlockArrays.eachblock</code></a></li><li><a href="#BlockArrays.khatri_rao"><code>BlockArrays.khatri_rao</code></a></li><li><a href="#BlockArrays.mortar"><code>BlockArrays.mortar</code></a></li></ul><h2 id="AbstractBlockArray-interface"><a class="docs-heading-anchor" href="#AbstractBlockArray-interface">AbstractBlockArray interface</a><a id="AbstractBlockArray-interface-1"></a><a class="docs-heading-anchor-permalink" href="#AbstractBlockArray-interface" title="Permalink"></a></h2><p>This sections defines the functions a subtype of <code>AbstractBlockArray</code> should define to be a part of the <code>AbstractBlockArray</code> interface. An <code>AbstractBlockArray{T, N}</code> is a subtype of <code>AbstractArray{T,N}</code> and should therefore also fulfill the <a href="http://docs.julialang.org/en/latest/manual/interfaces/#abstract-arrays"><code>AbstractArray</code> interface</a>.</p><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.AbstractBlockArray" href="#BlockArrays.AbstractBlockArray"><code>BlockArrays.AbstractBlockArray</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">abstract AbstractBlockArray{T, N} &lt;: AbstractArray{T, N}</code></pre><p>The abstract type that represents a blocked array. Types that implement the <code>AbstractBlockArray</code> interface should subtype from this type.</p><p>** Typealiases **</p><ul><li><p><code>AbstractBlockMatrix{T}</code> -&gt; <code>AbstractBlockArray{T, 2}</code></p></li><li><p><code>AbstractBlockVector{T}</code> -&gt; <code>AbstractBlockArray{T, 1}</code></p></li><li><p><code>AbstractBlockVecOrMat{T}</code> -&gt; <code>Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}</code></p></li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/abstractblockarray.jl#L5-L18">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.BlockBoundsError" href="#BlockArrays.BlockBoundsError"><code>BlockArrays.BlockBoundsError</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">BlockBoundsError([A], [inds...])</code></pre><p>Thrown when a block indexing operation into a block array, <code>A</code>, tried to access an out-of-bounds block, <code>inds</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/abstractblockarray.jl#L50-L54">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.Block" href="#BlockArrays.Block"><code>BlockArrays.Block</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">Block(inds...)</code></pre><p>A <code>Block</code> is simply a wrapper around a set of indices or enums so that it can be used to dispatch on. By indexing a <code>AbstractBlockArray</code> with a <code>Block</code> the a block at that block index will be returned instead of a single element.</p><pre><code class="language-julia-repl">julia&gt; A = BlockArray(ones(2,3), [1, 1], [2, 1])
+2×2-blocked 2×3 BlockMatrix{Float64}:
+ 1.0  1.0  │  1.0
+ ──────────┼─────
+ 1.0  1.0  │  1.0
+
+julia&gt; A[Block(1, 1)]
+1×2 Matrix{Float64}:
+ 1.0  1.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockindices.jl#L1-L19">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.BlockIndex" href="#BlockArrays.BlockIndex"><code>BlockArrays.BlockIndex</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">BlockIndex{N}</code></pre><p>A <code>BlockIndex</code> is an index which stores a global index in two parts: the block and the offset index into the block.</p><p>It can be used to index into <code>BlockArrays</code> in the following manner:</p><pre><code class="language-julia-repl">julia&gt; arr = Array(reshape(1:25, (5,5)));
+
+julia&gt; a = PseudoBlockArray(arr, [3,2], [1,4])
+2×2-blocked 5×5 PseudoBlockMatrix{Int64}:
+ 1  │   6  11  16  21
+ 2  │   7  12  17  22
+ 3  │   8  13  18  23
+ ───┼────────────────
+ 4  │   9  14  19  24
+ 5  │  10  15  20  25
+
+julia&gt; a[BlockIndex((1,2), (1,2))]
+11
+
+julia&gt; a[BlockIndex((2,2), (2,3))]
+20</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockindices.jl#L90-L116">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockaxes" href="#BlockArrays.blockaxes"><code>BlockArrays.blockaxes</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blockaxes(A)</code></pre><p>Return the tuple of valid block indices for array <code>A</code>.</p><pre><code class="language-julia-repl">julia&gt; A = BlockArray([1,2,3],[2,1])
+2-blocked 3-element BlockVector{Int64}:
+ 1
+ 2
+ ─
+ 3
+
+julia&gt; blockaxes(A)[1]
+2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
+ Block(1)
+ Block(2)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockaxis.jl#L94-L111">source</a></section><section><div><pre><code class="language-none">blockaxes(A, d)</code></pre><p>Return the valid range of block indices for array <code>A</code> along dimension <code>d</code>.</p><pre><code class="language-julia-repl">julia&gt; A = BlockArray([1,2,3],[2,1])
+2-blocked 3-element BlockVector{Int64}:
+ 1
+ 2
+ ─
+ 3
+
+julia&gt; blockaxes(A,1)
+2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
+ Block(1)
+ Block(2)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockaxis.jl#L117-L134">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockisequal" href="#BlockArrays.blockisequal"><code>BlockArrays.blockisequal</code></a> — <span class="docstring-category">Function</span></header><section><div><p>blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})</p><p>returns true if a and b have the same block structure.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockaxis.jl#L67-L71">source</a></section><section><div><p>blockisequal(a::Tuple, b::Tuple)</p><p>returns true if <code>all(blockisequal.(a,b))</code>` is true.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockaxis.jl#L74-L78">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blocksize" href="#BlockArrays.blocksize"><code>BlockArrays.blocksize</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blocksize(A)
+blocksize(A,i)</code></pre><p>Return the tuple of the number of blocks along each dimension. See also size and blocksizes.</p><pre><code class="language-julia-repl">julia&gt; A = BlockArray(ones(3,3),[2,1],[1,1,1])
+2×3-blocked 3×3 BlockMatrix{Float64}:
+ 1.0  │  1.0  │  1.0
+ 1.0  │  1.0  │  1.0
+ ─────┼───────┼─────
+ 1.0  │  1.0  │  1.0
+
+julia&gt; blocksize(A)
+(2, 3)
+
+julia&gt; blocksize(A,2)
+3</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockaxis.jl#L140-L160">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockfirsts" href="#BlockArrays.blockfirsts"><code>BlockArrays.blockfirsts</code></a> — <span class="docstring-category">Function</span></header><section><div><p>blockfirsts(a::AbstractUnitRange{Int})</p><p>returns the first index of each block of <code>a</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockaxis.jl#L267-L271">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blocklasts" href="#BlockArrays.blocklasts"><code>BlockArrays.blocklasts</code></a> — <span class="docstring-category">Function</span></header><section><div><p>blocklasts(a::AbstractUnitRange{Int})</p><p>returns the last index of each block of <code>a</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockaxis.jl#L273-L277">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blocklengths" href="#BlockArrays.blocklengths"><code>BlockArrays.blocklengths</code></a> — <span class="docstring-category">Function</span></header><section><div><p>blocklengths(a::AbstractUnitRange{Int})</p><p>returns the length of each block of <code>a</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockaxis.jl#L279-L283">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blocksizes" href="#BlockArrays.blocksizes"><code>BlockArrays.blocksizes</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blocksizes(A)
+blocksizes(A,i)</code></pre><p>Return the tuple of the sizes of blocks along each dimension. See also size and blocksize.</p><pre><code class="language-julia-repl">julia&gt; A = BlockArray(ones(3,3),[2,1],[1,1,1])
+2×3-blocked 3×3 BlockMatrix{Float64}:
+ 1.0  │  1.0  │  1.0
+ 1.0  │  1.0  │  1.0
+ ─────┼───────┼─────
+ 1.0  │  1.0  │  1.0
+
+julia&gt; blocksizes(A)
+([2, 1], [1, 1, 1])
+
+julia&gt; blocksizes(A,2)
+3-element Vector{Int64}:
+ 1
+ 1
+ 1</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockaxis.jl#L165-L188">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blocks" href="#BlockArrays.blocks"><code>BlockArrays.blocks</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blocks(a::AbstractArray{T,N}) :: AbstractArray{&lt;:AbstractArray{T,N},N}</code></pre><p>Return the array-of-arrays view to <code>a</code> such that</p><pre><code class="language-none">blocks(a)[i₁, i₂, ..., iₙ] == a[Block(i₁), Block(i₂), ..., Block(iₙ)]</code></pre><p>This function does not copy the blocks and give a mutable viwe to the original array.  This is an &quot;inverse&quot; of <a href="#BlockArrays.mortar"><code>mortar</code></a>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; bs1 = permutedims(reshape([
+               1ones(1, 3), 2ones(1, 2),
+               3ones(2, 3), 4ones(2, 2),
+           ], (2, 2)))
+2×2 Matrix{Matrix{Float64}}:
+ [1.0 1.0 1.0]               [2.0 2.0]
+ [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
+
+julia&gt; a = mortar(bs1)
+2×2-blocked 3×5 BlockMatrix{Float64}:
+ 1.0  1.0  1.0  │  2.0  2.0
+ ───────────────┼──────────
+ 3.0  3.0  3.0  │  4.0  4.0
+ 3.0  3.0  3.0  │  4.0  4.0
+
+julia&gt; bs2 = blocks(a)
+2×2 Matrix{Matrix{Float64}}:
+ [1.0 1.0 1.0]               [2.0 2.0]
+ [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
+
+julia&gt; bs1 == bs2
+true
+
+julia&gt; bs2[1, 1] .*= 100;
+
+julia&gt; a  # in-place mutation is reflected to the block array
+2×2-blocked 3×5 BlockMatrix{Float64}:
+ 100.0  100.0  100.0  │  2.0  2.0
+ ─────────────────────┼──────────
+   3.0    3.0    3.0  │  4.0  4.0
+   3.0    3.0    3.0  │  4.0  4.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blocks.jl#L1-L47">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.eachblock" href="#BlockArrays.eachblock"><code>BlockArrays.eachblock</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">eachblock(A::AbstractBlockArray)</code></pre><p>Create a generator that iterates over each block of an <code>AbstractBlockArray</code> returning views.</p><pre><code class="language-julia-repl">julia&gt; v = Array(reshape(1:6, (2, 3)))
+2×3 Matrix{Int64}:
+ 1  3  5
+ 2  4  6
+
+julia&gt; A = BlockArray(v, [1,1], [2,1])
+2×2-blocked 2×3 BlockMatrix{Int64}:
+ 1  3  │  5
+ ──────┼───
+ 2  4  │  6
+
+julia&gt; Matrix.(collect(eachblock(A)))
+2×2 Matrix{Matrix{Int64}}:
+ [1 3]  [5]
+ [2 4]  [6]
+
+julia&gt; sum.(eachblock(A))
+2×2 Matrix{Int64}:
+ 4  5
+ 6  6</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/abstractblockarray.jl#L139-L167">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockcheckbounds" href="#BlockArrays.blockcheckbounds"><code>BlockArrays.blockcheckbounds</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blockcheckbounds(A, inds...)</code></pre><p>Throw a <code>BlockBoundsError</code> if the specified block indexes are not in bounds for the given block array. Subtypes of <code>AbstractBlockArray</code> should specialize this method if they need to provide custom block bounds checking behaviors.</p><pre><code class="language-julia-repl">julia&gt; A = BlockArray(rand(2,3), [1,1], [2,1]);
+
+julia&gt; blockcheckbounds(A, 3, 2)
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}} at block index [3,2]
+[...]</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/abstractblockarray.jl#L78-L92">source</a></section></article><h2 id="BlockArray"><a class="docs-heading-anchor" href="#BlockArray">BlockArray</a><a id="BlockArray-1"></a><a class="docs-heading-anchor-permalink" href="#BlockArray" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.BlockArray" href="#BlockArrays.BlockArray"><code>BlockArrays.BlockArray</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">BlockArray{T, N, R&lt;:AbstractArray{&lt;:AbstractArray{T,N},N}, BS&lt;:NTuple{N,AbstractUnitRange{Int}}} &lt;: AbstractBlockArray{T, N}</code></pre><p>A <code>BlockArray</code> is an array where each block is stored contiguously. This means that insertions and retrieval of blocks can be very fast and non allocating since no copying of data is needed.</p><p>In the type definition, <code>R</code> defines the array type that holds the blocks, for example <code>Matrix{Matrix{Float64}}</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockarray.jl#L53-L60">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.undef_blocks" href="#BlockArrays.undef_blocks"><code>BlockArrays.undef_blocks</code></a> — <span class="docstring-category">Constant</span></header><section><div><pre><code class="language-julia">undef_blocks</code></pre><p>Alias for UndefBlocksInitializer(), which constructs an instance of the singleton type UndefBlocksInitializer (@ref), used in block array initialization to indicate the array-constructor-caller would like an uninitialized block array.</p><p><strong>Examples</strong></p><pre><code class="language-julia">julia&gt; BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
+2×2-blocked 3×5 BlockMatrix{Float32}:
+ #undef  #undef  #undef  │  #undef  #undef
+ ------------------------┼----------------
+ #undef  #undef  #undef  │  #undef  #undef
+ #undef  #undef  #undef  │  #undef  #undef</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockarray.jl#L28-L44">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.UndefBlocksInitializer" href="#BlockArrays.UndefBlocksInitializer"><code>BlockArrays.UndefBlocksInitializer</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">UndefBlocksInitializer</code></pre><p>Singleton type used in block array initialization, indicating the array-constructor-caller would like an uninitialized block array. See also undef_blocks (@ref), an alias for UndefBlocksInitializer().</p><p><strong>Examples</strong></p><pre><code class="language-julia">julia&gt; BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
+2×2-blocked 3×5 BlockMatrix{Float32}:
+ #undef  #undef  #undef  │  #undef  #undef
+ ────────────────────────┼────────────────
+ #undef  #undef  #undef  │  #undef  #undef
+ #undef  #undef  #undef  │  #undef  #undef</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockarray.jl#L9-L25">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.mortar" href="#BlockArrays.mortar"><code>BlockArrays.mortar</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">mortar(blocks::AbstractArray)
+mortar(blocks::AbstractArray{R, N}, sizes_1, sizes_2, ..., sizes_N)
+mortar(blocks::AbstractArray{R, N}, block_sizes::NTuple{N,AbstractUnitRange{Int}})</code></pre><p>Construct a <code>BlockArray</code> from <code>blocks</code>.  <code>block_sizes</code> is computed from <code>blocks</code> if it is not given.</p><p>This is an &quot;inverse&quot; of <a href="#BlockArrays.blocks"><code>blocks</code></a>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; arrays = permutedims(reshape([
+                  1ones(1, 3), 2ones(1, 2),
+                  3ones(2, 3), 4ones(2, 2),
+              ], (2, 2)))
+2×2 Matrix{Matrix{Float64}}:
+ [1.0 1.0 1.0]               [2.0 2.0]
+ [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
+
+julia&gt; mortar(arrays)
+2×2-blocked 3×5 BlockMatrix{Float64}:
+ 1.0  1.0  1.0  │  2.0  2.0
+ ───────────────┼──────────
+ 3.0  3.0  3.0  │  4.0  4.0
+ 3.0  3.0  3.0  │  4.0  4.0
+
+julia&gt; ans == mortar(
+                  (1ones(1, 3), 2ones(1, 2)),
+                  (3ones(2, 3), 4ones(2, 2)),
+              )
+true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockarray.jl#L210-L243">source</a></section><section><div><pre><code class="language-none">mortar((block_11, ..., block_1m), ... (block_n1, ..., block_nm))</code></pre><p>Construct a <code>BlockMatrix</code> with <code>n * m</code>  blocks.  Each <code>block_ij</code> must be an <code>AbstractMatrix</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockarray.jl#L293-L298">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockappend!" href="#BlockArrays.blockappend!"><code>BlockArrays.blockappend!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blockappend!(dest::BlockVector, sources...) -&gt; dest</code></pre><p>Append blocks from <code>sources</code> to <code>dest</code>.  The number of blocks in <code>dest</code> are increased by <code>sum(blocklength, sources)</code>.</p><p>This function avoids copying the elements of the blocks in <code>sources</code> when these blocks are compatible with <code>dest</code>.  Importantly, this means that mutating <code>sources</code> afterwards alters the items in <code>dest</code> and it may even break the invariance of <code>dest</code> if the length of <code>sources</code> are changed.</p><p>The blocks in <code>dest</code> must not alias with <code>sources</code> or components of them. For example, the result of <code>blockappend!(x, x)</code> is undefined.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using BlockArrays
+
+julia&gt; blockappend!(mortar([[1], [2, 3]]), mortar([[4, 5]]))
+3-blocked 5-element BlockVector{Int64}:
+ 1
+ ─
+ 2
+ 3
+ ─
+ 4
+ 5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockdeque.jl#L1-L29">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockpush!" href="#BlockArrays.blockpush!"><code>BlockArrays.blockpush!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blockpush!(dest::BlockVector, blocks...) -&gt; dest</code></pre><p>Push <code>blocks</code> to the end of <code>dest</code>.</p><p>This function avoids copying the elements of the <code>blocks</code> when these blocks are compatible with <code>dest</code>.  Importantly, this means that mutating <code>blocks</code> afterwards alters the items in <code>dest</code> and it may even break the invariance of <code>dest</code> if the length of <code>blocks</code> are changed.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using BlockArrays
+
+julia&gt; blockpush!(mortar([[1], [2, 3]]), [4, 5], [6])
+4-blocked 6-element BlockVector{Int64}:
+ 1
+ ─
+ 2
+ 3
+ ─
+ 4
+ 5
+ ─
+ 6</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockdeque.jl#L62-L88">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockpushfirst!" href="#BlockArrays.blockpushfirst!"><code>BlockArrays.blockpushfirst!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blockpushfirst!(dest::BlockVector, blocks...) -&gt; dest</code></pre><p>Push <code>blocks</code> to the beginning of <code>dest</code>.  See also <a href="#BlockArrays.blockpush!"><code>blockpush!</code></a>.</p><p>This function avoids copying the elements of the <code>blocks</code> when these blocks are compatible with <code>dest</code>.  Importantly, this means that mutating <code>blocks</code> afterwards alters the items in <code>dest</code> and it may even break the invariance of <code>dest</code> if the length of <code>blocks</code> are changed.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using BlockArrays
+
+julia&gt; blockpushfirst!(mortar([[1], [2, 3]]), [4, 5], [6])
+4-blocked 6-element BlockVector{Int64}:
+ 4
+ 5
+ ─
+ 6
+ ─
+ 1
+ ─
+ 2
+ 3</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockdeque.jl#L109-L135">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockpop!" href="#BlockArrays.blockpop!"><code>BlockArrays.blockpop!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blockpop!(A::BlockVector) -&gt; block</code></pre><p>Pop a <code>block</code> from the end of <code>dest</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using BlockArrays
+
+julia&gt; A = mortar([[1], [2, 3]]);
+
+julia&gt; blockpop!(A)
+2-element Vector{Int64}:
+ 2
+ 3
+
+julia&gt; A
+1-blocked 1-element BlockVector{Int64}:
+ 1</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockdeque.jl#L152-L172">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockpopfirst!" href="#BlockArrays.blockpopfirst!"><code>BlockArrays.blockpopfirst!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blockpopfirst!(dest::BlockVector) -&gt; block</code></pre><p>Pop a <code>block</code> from the beginning of <code>dest</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using BlockArrays
+
+julia&gt; A = mortar([[1], [2, 3]]);
+
+julia&gt; blockpopfirst!(A)
+1-element Vector{Int64}:
+ 1
+
+julia&gt; A
+1-blocked 2-element BlockVector{Int64}:
+ 2
+ 3</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockdeque.jl#L179-L199">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.append!" href="#Base.append!"><code>Base.append!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">append!(dest::BlockVector, sources...)</code></pre><p>Append items from <code>sources</code> to the last block of <code>dest</code>.</p><p>The blocks in <code>dest</code> must not alias with <code>sources</code> or components of them. For example, the result of <code>append!(x, x)</code> is undefined.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using BlockArrays
+
+julia&gt; append!(mortar([[1], [2, 3]]), mortar([[4], [5]]))
+2-blocked 5-element BlockVector{Int64}:
+ 1
+ ─
+ 2
+ 3
+ 4
+ 5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockdeque.jl#L207-L228">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.push!" href="#Base.push!"><code>Base.push!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">push!(dest::BlockVector, items...)</code></pre><p>Push items to the end of the last block.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockdeque.jl#L317-L321">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.pushfirst!" href="#Base.pushfirst!"><code>Base.pushfirst!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">pushfirst!(A::BlockVector, items...)</code></pre><p>Push items to the beginning of the first block.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockdeque.jl#L324-L328">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.pop!" href="#Base.pop!"><code>Base.pop!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">pop!(A::BlockVector)</code></pre><p>Pop the last element from the last non-empty block.  Remove all empty blocks at the end.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockdeque.jl#L277-L282">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.popfirst!" href="#Base.popfirst!"><code>Base.popfirst!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">popfirst!(A::BlockVector)</code></pre><p>Pop the first element from the first non-empty block.  Remove all empty blocks at the beginning.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockdeque.jl#L297-L302">source</a></section></article><h2 id="PseudoBlockArray"><a class="docs-heading-anchor" href="#PseudoBlockArray">PseudoBlockArray</a><a id="PseudoBlockArray-1"></a><a class="docs-heading-anchor-permalink" href="#PseudoBlockArray" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.PseudoBlockArray" href="#BlockArrays.PseudoBlockArray"><code>BlockArrays.PseudoBlockArray</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">PseudoBlockArray{T, N, R} &lt;: AbstractBlockArray{T, N}</code></pre><p>A <code>PseudoBlockArray</code> is similar to a <a href="#BlockArrays.BlockArray"><code>BlockArray</code></a> except the full array is stored contiguously instead of block by block. This means that is not possible to insert and retrieve blocks without copying data. On the other hand <code>Array</code> on a <code>PseudoBlockArray</code> is instead instant since it just returns the wrapped array.</p><p>When iteratively solving a set of equations with a gradient method the Jacobian typically has a block structure. It can be convenient to use a <code>PseudoBlockArray</code> to build up the Jacobian block by block and then pass the resulting matrix to a direct solver using <code>Array</code>.</p><pre><code class="language-julia-repl">julia&gt; using BlockArrays, Random, SparseArrays
+
+julia&gt; Random.seed!(12345);
+
+julia&gt; A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
+2×2-blocked 2×3 PseudoBlockMatrix{Float64}:
+ 0.562714  0.371605  │  0.381128
+ ────────────────────┼──────────
+ 0.849939  0.283365  │  0.365801
+
+julia&gt; A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
+3-blocked 6-element PseudoBlockVector{Float64, SparseVector{Float64, Int64}, Tuple{BlockedUnitRange{Vector{Int64}}}}:
+ 0.0
+ 0.5865981007905481
+ 0.0
+ ───────────────────
+ 0.05016684053503706
+ 0.0
+ ───────────────────
+ 0.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/pseudo_blockarray.jl#L8-L42">source</a></section></article><h2 id="Kronecker-products"><a class="docs-heading-anchor" href="#Kronecker-products">Kronecker products</a><a id="Kronecker-products-1"></a><a class="docs-heading-anchor-permalink" href="#Kronecker-products" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockkron" href="#BlockArrays.blockkron"><code>BlockArrays.blockkron</code></a> — <span class="docstring-category">Function</span></header><section><div><p>&quot;     blockkron(A...)</p><p>creates a blocked version of kron(A...) with the natural block-structure imposed.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockproduct.jl#L103-L109">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.BlockKron" href="#BlockArrays.BlockKron"><code>BlockArrays.BlockKron</code></a> — <span class="docstring-category">Type</span></header><section><div><p>&quot;     BlockKron(A...)</p><p>creates a lazy representation of kron(A...) with the natural block-structure imposed. This is a component in <code>blockkron(A...)</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockproduct.jl#L32-L38">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.blockvec" href="#BlockArrays.blockvec"><code>BlockArrays.blockvec</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">blockvec(A::AbstractMatrix)</code></pre><p>creates a blocked version of <code>vec(A)</code>, with the block structure used to represent the columns.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockproduct.jl#L111-L115">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="BlockArrays.khatri_rao" href="#BlockArrays.khatri_rao"><code>BlockArrays.khatri_rao</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">khatri_rao(A, B)</code></pre><p>References</p><ul><li>Liu, Shuangzhe, and Gõtz Trenkler (2008) Hadamard, Khatri-Rao, Kronecker and Other Matrix Products. International J. Information and Systems Sciences 4, 160–177.</li><li>Khatri, C. G., and Rao, C. Radhakrishna (1968) Solutions to Some Functional Equations and Their Applications to Characterization of Probability Distributions. Sankhya: Indian J. Statistics, Series A 30, 167–180.</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaArrays/BlockArrays.jl/blob/e7c625a5fe01a57be82e28753077ce5bde95f5ac/src/blockproduct.jl#L1-L7">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../man/pseudoblockarrays/">« PseudoBlockArrays</a><a class="docs-footer-nextpage" href="../internals/">Internal Documentation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 21 June 2021 10:11">Monday 21 June 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
