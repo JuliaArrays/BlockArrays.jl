@@ -137,6 +137,28 @@ function _copyto!(_, ::AbstractBlockLayout, dest::AbstractMatrix, src::AbstractM
     dest
 end
 
+
+####
+# l/rmul!
+#####
+
+
+function materialize!(L::Lmul{ScalarLayout,<:AbstractBlockLayout})
+    α, block_array = L.A, L.B
+    for block in blocks(block_array)
+        lmul!(α, block)
+    end
+    block_array
+end
+
+function materialize!(L::Rmul{<:AbstractBlockLayout,ScalarLayout})
+    α, block_array = L.A, L.B
+    for block in block_array.blocks
+        rmul!(block, α)
+    end
+    block_array
+end
+
 #############
 # BLAS overrides
 #############

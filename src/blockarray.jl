@@ -437,20 +437,6 @@ function Base.fill!(block_array::BlockArray, v)
     block_array
 end
 
-function lmul!(α::Number, block_array::BlockArray)
-    for block in block_array.blocks
-        lmul!(α, block)
-    end
-    block_array
-end
-
-function rmul!(block_array::BlockArray, α::Number)
-    for block in block_array.blocks
-        rmul!(block, α)
-    end
-    block_array
-end
-
 # Temporary work around
 Base.reshape(block_array::BlockArray, axes::NTuple{N,AbstractUnitRange{Int}}) where N =
     reshape(PseudoBlockArray(block_array), axes)
