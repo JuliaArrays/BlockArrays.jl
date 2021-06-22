@@ -152,7 +152,7 @@ function materialize!(L::Lmul{ScalarLayout,<:AbstractBlockLayout})
 end
 
 function materialize!(L::Rmul{<:AbstractBlockLayout,ScalarLayout})
-    α, block_array = L.A, L.B
+    block_array, α = L.A, L.B
     for block in block_array.blocks
         rmul!(block, α)
     end
