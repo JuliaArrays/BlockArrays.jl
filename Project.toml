@@ -1,6 +1,6 @@
 name = "BlockArrays"
 uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
-version = "0.16.2"
+version = "0.16.3"
 
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
@@ -15,11 +15,10 @@ julia = "1.6"
 [extras]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
-LazyArrays = "5078a376-72f3-5289-bfd5-ec5146d43c02"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Base64", "FillArrays", "LazyArrays", "OffsetArrays", "SparseArrays", "StaticArrays", "Test"]
+test = ["Base64", "FillArrays", "OffsetArrays", "SparseArrays", "StaticArrays", "Test"]
