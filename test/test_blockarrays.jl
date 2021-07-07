@@ -380,21 +380,21 @@ end
         A = BlockArray(rand(4, 5), [1,3], [2,3]);
         buf = IOBuffer()
         Base.showerror(buf, BlockBoundsError(A, (3,2)))
-        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}} at block index [3,2]"
+        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}} at block index [3,2]"
         
 
         A = PseudoBlockArray(rand(4, 5), [1,3], [2,3]);
         Base.showerror(buf, BlockBoundsError(A, (3,2)))
-        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockMatrix{Float64, Matrix{Float64}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}} at block index [3,2]"
+        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockMatrix{Float64, Matrix{Float64}, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}} at block index [3,2]"
     end
 
     @testset "replstring" begin
-        @test stringmime("text/plain",BlockArray(collect(1:4), [1,3])) == "2-blocked 4-element BlockVector{Int64}:\n 1\n ─\n 2\n 3\n 4"
-        @test stringmime("text/plain",PseudoBlockArray(collect(1:4), [1,3])) == "2-blocked 4-element PseudoBlockVector{Int64}:\n 1\n ─\n 2\n 3\n 4"
-        @test stringmime("text/plain",BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockMatrix{Int64}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-        @test stringmime("text/plain",PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 PseudoBlockMatrix{Int64}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-        @test stringmime("text/plain",BlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 BlockArray{Int64, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
-        @test stringmime("text/plain",PseudoBlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 PseudoBlockArray{Int64, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
+        @test stringmime("text/plain",BlockArray(collect(1:4), [1,3])) == "2-blocked 4-element BlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
+        @test stringmime("text/plain",PseudoBlockArray(collect(1:4), [1,3])) == "2-blocked 4-element PseudoBlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
+        @test stringmime("text/plain",BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+        @test stringmime("text/plain",PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 PseudoBlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+        @test stringmime("text/plain",BlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 BlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
+        @test stringmime("text/plain",PseudoBlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 PseudoBlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
         design = zeros(Int16,6,9);
         A = BlockArray(design,[6],[4,5])
         @test stringmime("text/plain",A) == "1×2-blocked 6×9 BlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"

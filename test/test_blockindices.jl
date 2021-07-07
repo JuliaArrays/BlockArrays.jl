@@ -267,7 +267,7 @@ end
         @test findblock(b,1) == Block(1)
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
-        @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{Int64}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
     end
 
     @testset "BlockIndex type piracy (#108)" begin

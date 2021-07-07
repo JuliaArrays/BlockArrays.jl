@@ -114,9 +114,9 @@ end
 
 @testset "non-standard block axes" begin
     A = BlockArray([1 2; 3 4], Fill(1,2),Fill(1,2))
-    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},NTuple{2,BlockedUnitRange{StepRange{Int64,Int64}}}}
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},NTuple{2,BlockedUnitRange{StepRange{Int,Int}}}}
     A = BlockArray([1 2; 3 4], Fill(1,2),[1,1])
-    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},Tuple{BlockedUnitRange{StepRange{Int64,Int64}},BlockedUnitRange{Vector{Int}}}}
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},Tuple{BlockedUnitRange{StepRange{Int,Int}},BlockedUnitRange{Vector{Int}}}}
 end
 
 @testset "block Fill" begin
@@ -158,9 +158,9 @@ end
 
     U = UpperTriangular(Ones((blockedrange([1,2]),blockedrange([2,1]))))
 
-    @test stringmime("text/plain", A) == "5-element Fill{Int64, 1, Tuple{BlockedUnitRange{Vector{Int64}}}} with indices 1:1:5: entries equal to 2"
-    @test stringmime("text/plain", B) == "3×3 Diagonal{Float64, Ones{Float64, 1, Tuple{BlockedUnitRange{Vector{Int64}}}}} with indices 1:1:3×1:1:3"
-    @test stringmime("text/plain", U) == "3×3 UpperTriangular{Float64, Ones{Float64, 2, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}} with indices 1:1:3×1:1:3:\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
+    @test stringmime("text/plain", A) == "5-element Fill{$Int, 1, Tuple{BlockedUnitRange{Vector{$Int}}}} with indices 1:1:5, entries equal to 2"
+    @test stringmime("text/plain", B) == "3×3 Diagonal{Float64, Ones{Float64, 1, Tuple{BlockedUnitRange{Vector{$Int}}}}} with indices 1:1:3×1:1:3"
+    @test stringmime("text/plain", U) == "3×3 UpperTriangular{Float64, Ones{Float64, 2, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}}} with indices 1:1:3×1:1:3:\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
 
     @testset "views" begin
         # This in theory can be dropped because `view` returns the block, but we keep in case needed
