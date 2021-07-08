@@ -111,7 +111,7 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test broadcast(-, v) == -v == -Vector(v)
         @test broadcast(+, v, 1) isa BlockVector{Int,Vector{UnitRange{Int}}}
         @test broadcast(+, v, 1) == Vector(v).+1
-        @test broadcast(*, 2, v) isa BlockVector{Int,Vector{StepRange{Int,Int}}}
+        @test broadcast(*, 2, v) isa BlockVector{Int,<:Vector{<:AbstractRange{Int}}}
         @test broadcast(*, 2, v) == 2Vector(v)
     end
 
