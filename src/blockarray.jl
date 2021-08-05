@@ -357,6 +357,8 @@ end
     BlockArray{T}(undef, axes)
 @inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{Int,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
+    similar(block_array, T, (Base.OneTo(axes[1]), tail(axes)...))
 
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
     BlockArray{T}(undef, axes)
