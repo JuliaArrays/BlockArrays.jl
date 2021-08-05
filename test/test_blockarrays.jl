@@ -547,4 +547,9 @@ end
             blockisequal(axes(permutedims(A)), axes(A))
         end
     end
+
+    @testset "adjoint getindex" begin
+        a = BlockVector(1:5, [2,1,1,1])
+        @test (a')[:,Block.(1:2)] == transpose(a)[:,Block.(1:2)] == [1 2 3]
+    end
 end
