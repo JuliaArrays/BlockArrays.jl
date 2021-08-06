@@ -64,8 +64,6 @@ _diff(a::Tuple) = diff(collect(a))
 
 length(a::BlockedUnitRange) = isempty(a.lasts) ? 0 : Integer(last(a.lasts)-a.first+1)
 
-blockisequal(a) = true
-
 """
    blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
 
