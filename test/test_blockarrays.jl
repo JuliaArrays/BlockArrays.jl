@@ -555,4 +555,9 @@ end
         @test (a')[:,Block.(1:2)] isa Adjoint
         @test transpose(a)[:,Block.(1:2)] isa Transpose
     end
+
+    @testset "empty blocklengths" begin
+        A = BlockVector{Float64}(undef,Int[])
+        @test @inferred(isempty(blocklengths(axes(A,1))))
+    end
 end
