@@ -269,13 +269,13 @@ end
 
 returns the first index of each block of `a`.
 """
-blockfirsts(a::AbstractUnitRange{Int}) = [1]
+blockfirsts(a::AbstractUnitRange{Int}) = Ones{Int}(1)
 """
    blocklasts(a::AbstractUnitRange{Int})
 
 returns the last index of each block of `a`.
 """
-blocklasts(a::AbstractUnitRange{Int}) = [length(a)]
+blocklasts(a::AbstractUnitRange{Int}) = Fill(length(a),1)
 """
    blocklengths(a::AbstractUnitRange{Int})
 
