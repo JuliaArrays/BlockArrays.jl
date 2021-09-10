@@ -414,6 +414,23 @@ Base.dataids(arr::BlockArray) = (dataids(arr.blocks)..., dataids(arr.axes)...)
 # This is not entirely valid.  In principle, we have to concatenate
 # all dataids of all blocks.  However, it makes `dataids` non-inferable.
 
+# Pretty-printing for sparse arrays
+function _replace_in_print_matrix_inds(block_arr, i...)
+    J = findblockindex.(axes(block_arr), i)
+    blind = map(block, J)
+    bl = block_arr[blind...]
+    inds = map(blockindex, J)
+    bl, inds
+end
+function Base.replace_in_print_matrix(block_arr::BlockArray{<:Any,2}, i::Integer, j::Integer, s::AbstractString)
+    bl, inds = _replace_in_print_matrix_inds(block_arr, i, j)
+    Base.replace_in_print_matrix(bl, inds..., s)
+end
+function Base.replace_in_print_matrix(block_arr::BlockArray{<:Any,1}, i::Integer, j::Integer, s::AbstractString)
+    bl, inds = _replace_in_print_matrix_inds(block_arr, i)
+    Base.replace_in_print_matrix(bl, inds..., j, s)
+end
+
 ########
 # Misc #
 ########
