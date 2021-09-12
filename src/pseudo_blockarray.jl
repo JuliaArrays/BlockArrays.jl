@@ -286,3 +286,6 @@ end
 
 Base.replace_in_print_matrix(f::PseudoBlockVecOrMat, i::Integer, j::Integer, s::AbstractString) =
     Base.replace_in_print_matrix(f.blocks, i, j, s)
+
+
+LinearAlgebra.norm(A::PseudoBlockArray, p::Real=2) = norm(A.blocks, p)

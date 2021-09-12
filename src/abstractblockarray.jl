@@ -180,6 +180,7 @@ end
 @inline Base.getindex(A::AbstractMatrix, kr::AbstractVector, jr::Block) = ArrayLayouts.layout_getindex(A, kr, jr)
 @inline Base.getindex(A::AbstractMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
 @inline Base.getindex(A::LayoutMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline Base.getindex(A::AbstractTriangular{<:Any,<:LayoutMatrix}, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
 
 ###
 # permutedims

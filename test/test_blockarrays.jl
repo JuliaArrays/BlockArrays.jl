@@ -402,6 +402,11 @@ end
         @test stringmime("text/plain",A) == "1×2-blocked 6×9 PseudoBlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
         D = PseudoBlockArray(Diagonal(1:3), [1,2], [2,1])
         @test stringmime("text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockMatrix{Int, Diagonal{Int, UnitRange{Int}}, Tuple{BlockedUnitRange{Vector{Int}}, BlockedUnitRange{Vector{Int}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
+
+        a = BlockArray{Int}(undef_blocks, [1,2])
+        @test stringmime("text/plain", a) == "2-blocked 3-element BlockVector{Int64}:\n #undef\n ──────\n #undef\n #undef"
+        B = BlockArray{Int}(undef_blocks, [1,2], [1,1])
+        @test stringmime("text/plain", B) == "2×2-blocked 3×2 BlockMatrix{Int64}:\n #undef  │  #undef\n ────────┼────────\n #undef  │  #undef\n #undef  │  #undef"
     end
 
     @testset "AbstractVector{Int} blocks" begin
