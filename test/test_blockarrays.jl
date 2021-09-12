@@ -71,7 +71,7 @@ end
             @test Matrix(ret) == zeros(6,6)
 
             A = [1,2,3,4,5,6]
-            @test A == BlockArray(A, 1:3) == BlockArray{Int}(A, 1:3) == 
+            @test A == BlockArray(A, 1:3) == BlockArray{Int}(A, 1:3) ==
                 BlockArray(A, (blockedrange(1:3),)) == BlockArray{Int}(A, (blockedrange(1:3),)) ==
                 BlockArray{Float64}(A, 1:3)
         end
@@ -91,7 +91,7 @@ end
 
             A = [1,2,3,4,5,6]
             @test_throws BoundsError PseudoBlockArray(A,10:20)
-            @test A == PseudoBlockArray(A, 1:3) == PseudoBlockArray{Int}(A, 1:3) == 
+            @test A == PseudoBlockArray(A, 1:3) == PseudoBlockArray{Int}(A, 1:3) ==
                 PseudoBlockArray(A, (blockedrange(1:3),)) == PseudoBlockArray{Int}(A, (blockedrange(1:3),)) ==
                 PseudoBlockArray{Float64}(A, 1:3)
         end
@@ -151,7 +151,7 @@ end
                 )
             end
         end
-        
+
         @testset "BlockVector" begin
             a_data = [1,2,3]
             a = BlockVector(a_data,[1,2])
@@ -196,29 +196,29 @@ end
             B = BlockArray(I, fill(2,4), fill(2,5))
             @test B isa BlockMatrix{Bool}
             @test B == BlockMatrix(I, fill(2,4), fill(2,5)) ==
-                        BlockArray(I, blockedrange.((fill(2,4), fill(2,5)))) == 
-                        BlockMatrix(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                        BlockArray(I, blockedrange.((fill(2,4), fill(2,5)))) ==
+                        BlockMatrix(I, blockedrange.((fill(2,4), fill(2,5)))) ==
                         Matrix(I, 8, 10)
-            
+
             B = BlockArray{Float64}(I, fill(2,4), fill(2,5))
             @test B isa BlockMatrix{Float64}
             @test B == BlockMatrix{Float64}(I, fill(2,4), fill(2,5)) ==
-                        BlockArray{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
-                        BlockMatrix{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                        BlockArray{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) ==
+                        BlockMatrix{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) ==
                         Matrix(I, 8, 10)
 
             B = PseudoBlockArray(I, fill(2,4), fill(2,5))
             @test B isa PseudoBlockMatrix{Bool}
             @test B == PseudoBlockMatrix(I, fill(2,4), fill(2,5)) ==
-                        PseudoBlockArray(I, blockedrange.((fill(2,4), fill(2,5)))) == 
-                        PseudoBlockMatrix(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                        PseudoBlockArray(I, blockedrange.((fill(2,4), fill(2,5)))) ==
+                        PseudoBlockMatrix(I, blockedrange.((fill(2,4), fill(2,5)))) ==
                         Matrix(I, 8, 10)
-            
+
             B = PseudoBlockArray{Float64}(I, fill(2,4), fill(2,5))
             @test B isa PseudoBlockMatrix{Float64}
             @test B == PseudoBlockMatrix{Float64}(I, fill(2,4), fill(2,5)) ==
-                        PseudoBlockArray{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
-                        PseudoBlockMatrix{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) == 
+                        PseudoBlockArray{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) ==
+                        PseudoBlockMatrix{Float64}(I, blockedrange.((fill(2,4), fill(2,5)))) ==
                         Matrix(I, 8, 10)
         end
     end
@@ -352,9 +352,9 @@ end
 
         Ã = PseudoBlockArray(rand(2,3), Fill(1,2), [2,1])
         @test convert(typeof(A), Ã) == Ã
-        
+
         @test PseudoBlockArray(A, axes(Ã)) isa typeof(Ã)
-        @test PseudoBlockArray(A, axes(Ã)) == A    
+        @test PseudoBlockArray(A, axes(Ã)) == A
 
 
         A = BlockArray(rand(2,3), [1,1], [2,1])
@@ -381,7 +381,7 @@ end
         buf = IOBuffer()
         Base.showerror(buf, BlockBoundsError(A, (3,2)))
         @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}} at block index [3,2]"
-        
+
 
         A = PseudoBlockArray(rand(4, 5), [1,3], [2,3]);
         Base.showerror(buf, BlockBoundsError(A, (3,2)))
@@ -522,7 +522,7 @@ end
         b = randn(6)
         @test A*b isa PseudoBlockVector{Float64}
         @test Ã*b isa PseudoBlockVector{Float64}
-        @test A*b ≈ Ã*b ≈ Matrix(A)*b 
+        @test A*b ≈ Ã*b ≈ Matrix(A)*b
     end
 
     @testset "Blockindex" begin
@@ -532,8 +532,8 @@ end
         A = PseudoBlockArray(randn(3,3), [1,2], [1,2])
         @test A[Block(1)[1], Block(1)[1]] == A[Block(1,1)[1,1]] == A[1,1]
         @test A[Block(1)[1:1], Block(1)[1:1]] == A[Block(1,1)[1:1,1:1]] == A[1:1,1:1]
-        @test A[Block(1)[1:1], Block(1)[1]] == BlockArray(A)[Block(1)[1:1], Block(1)[1]] == A[1:1,1] 
-        @test A[Block(1)[1], Block(1)[1:1]] == BlockArray(A)[Block(1)[1], Block(1)[1:1]] == A[1,1:1] 
+        @test A[Block(1)[1:1], Block(1)[1]] == BlockArray(A)[Block(1)[1:1], Block(1)[1]] == A[1:1,1]
+        @test A[Block(1)[1], Block(1)[1:1]] == BlockArray(A)[Block(1)[1], Block(1)[1:1]] == A[1,1:1]
     end
 
     @testset "permutedims" begin
@@ -559,5 +559,24 @@ end
     @testset "empty blocklengths" begin
         A = BlockVector{Float64}(undef,Int[])
         @test @inferred(isempty(blocklengths(axes(A,1))))
+    end
+
+    @testset "pretty-printing" begin
+        v = Zeros(3)
+        m = mortar([v])
+        io = IOBuffer()
+        Base.print_array(io, m)
+        s1 = String(take!(io))
+        Base.print_array(io, v)
+        s2 = String(take!(io))
+        @test s1 == s2
+
+        d = Diagonal(Ones(2,2))
+        m = mortar(reshape([d], 1, 1))
+        Base.print_array(io, m)
+        s1 = String(take!(io))
+        Base.print_array(io, d)
+        s2 = String(take!(io))
+        @test s1 == s2
     end
 end
