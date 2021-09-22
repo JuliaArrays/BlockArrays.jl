@@ -95,6 +95,12 @@ end
 
     @test BlockArray(A') == A'
     @test BlockArray(transpose(A)) == transpose(A)
+
+    @test A'[Block.(1:2),Block.(1:3)] == A[Block.(1:3),Block.(1:2)]'
+    @test transpose(A)[Block.(1:2),Block.(1:3)] == transpose(A[Block.(1:3),Block.(1:2)])
+
+    @test A'[Block.(1:2),Block(1)] == A[Block(1),Block.(1:2)]'
+    @test A'[Block.(1),Block.(1:3)] == A[Block.(1:3),Block.(1)]'
 end
 
 @testset "Diagonal BlockArray" begin
