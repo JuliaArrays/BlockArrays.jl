@@ -220,11 +220,15 @@ function copyto!(dest::AbstractVector,
     end
     return _fast_blockbradcast_copyto!(dest, bc)
 end
-@inline function Broadcast.instantiate(bc::Broadcasted{Style}) where {Style <:AbstractBlockStyle}
+@inline function Broadcast.instantiate(bc::Broadcasted{Style}) where {Style <:BlockStyle}
     bcf = Broadcast.instantiate(Broadcast.flatten(Broadcasted{Nothing}(bc.f, bc.args, bc.axes)))
     return Broadcasted{Style}(bcf.f, bcf.args, bcf.axes)
 end
 
+_removeblocks(a::Broadcasted) = broadcasted(a.f, map(_removeblocks,a.args)...)
+_removeblocks(a::PseudoBlockArray) = a.blocks
+_removeblocks(a) = a
+copy(bc::Broadcasted{PseudoBlockStyle{N}}) where N = PseudoBlockArray(copy(_removeblocks(bc)), axes(bc))
 
 for op in (:+, :-, :*)
     @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:AbstractArray{<:Number,N}}}) where N

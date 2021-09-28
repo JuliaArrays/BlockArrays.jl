@@ -50,6 +50,13 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test axes(B .+ 1) == axes(B)
         @test axes(A .+ 1 .+ B) == axes(B)
         @test A .+ 1 .+ B == Vector(A) .+ 1 .+ B == Vector(A) .+ 1 .+ Matrix(B)
+
+        @testset "preserve structure" begin
+             x = PseudoBlockArray(1:6, Fill(3,2))
+             @test x + x isa PseudoBlockVector{Int,StepRange{Int,Int}}
+             @test 2x + x isa PseudoBlockVector{Int,StepRange{Int,Int}}
+             @test 2 .* (x .+ 1) isa PseudoBlockVector{Int,StepRange{Int,Int}}
+        end
     end
 
     @testset "Mixed" begin
