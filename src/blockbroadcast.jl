@@ -227,6 +227,8 @@ end
 
 _removeblocks(a::Broadcasted) = broadcasted(a.f, map(_removeblocks,a.args)...)
 _removeblocks(a::PseudoBlockArray) = a.blocks
+_removeblocks(a::BlockSlice) = a.indices
+_removeblocks(a::SubArray{<:Any,N,<:PseudoBlockArray}) where N = view(_removeblocks(parent(a)), map(_removeblocks, parentindices(a))...)
 _removeblocks(a) = a
 copy(bc::Broadcasted{PseudoBlockStyle{N}}) where N = PseudoBlockArray(copy(_removeblocks(bc)), axes(bc))
 
