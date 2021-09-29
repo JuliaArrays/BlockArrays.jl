@@ -53,9 +53,9 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
         @testset "preserve structure" begin
              x = PseudoBlockArray(1:6, Fill(3,2))
-             @test x + x isa PseudoBlockVector{Int,StepRange{Int,Int}}
-             @test 2x + x isa PseudoBlockVector{Int,StepRange{Int,Int}}
-             @test 2 .* (x .+ 1) isa PseudoBlockVector{Int,StepRange{Int,Int}}
+             @test x + x isa PseudoBlockVector{Int,<:AbstractRange}
+             @test 2x + x isa PseudoBlockVector{Int,<:AbstractRange}
+             @test 2 .* (x .+ 1) isa PseudoBlockVector{Int,<:AbstractRange}
         end
     end
 
