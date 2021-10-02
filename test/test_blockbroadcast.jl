@@ -191,9 +191,11 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test Base.BroadcastStyle(typeof(a')) isa BlockArrays.PseudoBlockStyle{2}
         @test Base.BroadcastStyle(typeof(b')) isa BlockArrays.BlockStyle{2}
 
-        @test exp.(a') == exp.(b') == exp.(Vector(a)')
+        @test exp.(a') == exp.(b') == exp.(transpose(a)) == exp.(transpose(b)) == exp.(Vector(a)')
         @test exp.(a') isa PseudoBlockArray
+        @test exp.(transpose(a)) isa PseudoBlockArray
         @test exp.(b') isa BlockArray
+        @test exp.(transpose(b)) isa BlockArray
     end
 
     @testset "subarray" begin
