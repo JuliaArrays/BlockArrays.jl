@@ -50,6 +50,13 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test axes(B .+ 1) == axes(B)
         @test axes(A .+ 1 .+ B) == axes(B)
         @test A .+ 1 .+ B == Vector(A) .+ 1 .+ B == Vector(A) .+ 1 .+ Matrix(B)
+
+        @testset "preserve structure" begin
+             x = PseudoBlockArray(1:6, Fill(3,2))
+             @test x + x isa PseudoBlockVector{Int,<:AbstractRange}
+             @test 2x + x isa PseudoBlockVector{Int,<:AbstractRange}
+             @test 2 .* (x .+ 1) isa PseudoBlockVector{Int,<:AbstractRange}
+        end
     end
 
     @testset "Mixed" begin
@@ -184,9 +191,11 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test Base.BroadcastStyle(typeof(a')) isa BlockArrays.PseudoBlockStyle{2}
         @test Base.BroadcastStyle(typeof(b')) isa BlockArrays.BlockStyle{2}
 
-        @test exp.(a') == exp.(b') == exp.(Vector(a)')
+        @test exp.(a') == exp.(b') == exp.(transpose(a)) == exp.(transpose(b)) == exp.(Vector(a)')
         @test exp.(a') isa PseudoBlockArray
+        @test exp.(transpose(a)) isa PseudoBlockArray
         @test exp.(b') isa BlockArray
+        @test exp.(transpose(b)) isa BlockArray
     end
 
     @testset "subarray" begin
