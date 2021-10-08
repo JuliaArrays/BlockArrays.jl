@@ -169,18 +169,8 @@ to_axes(n::Integer) = Base.oneto(n)
 @inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
     PseudoBlockArray{T}(undef, map(to_axes,axes))
 
-@inline function Base.getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
-    @boundscheck checkbounds(block_arr, i...)
-    @inbounds v = block_arr.blocks[i...]
-    return v
-end
-
-
-@inline function Base.setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
-    @boundscheck checkbounds(block_arr, i...)
-    @inbounds block_arr.blocks[i...] = v
-    return block_arr
-end
+@inline Base.@propagate_inbounds Base.getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N} = block_arr.blocks[i...]
+@inline Base.@propagate_inbounds Base.setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N} = setindex!(block_arr.blocks, v, i...)
 
 ################################
 # AbstractBlockArray Interface #
@@ -196,11 +186,9 @@ end
     return view(block_arr.blocks, range...)
 end
 
-@inline function _pseudoblockindex_getindex(block_arr, blockindex)
+@inline Base.@propagate_inbounds function _pseudoblockindex_getindex(block_arr, blockindex)
     I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
-    @boundscheck checkbounds(block_arr.blocks, I...)
-    @inbounds v = block_arr.blocks[I...]
-    return v
+    block_arr.blocks[I...]
 end
 
 @inline Base.getindex(block_arr::PseudoBlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
@@ -260,6 +248,17 @@ function Base.showarg(io::IO, A::PseudoBlockArray, toplevel::Bool)
         Base.showarg(io, A.blocks, false)
         print(io, '}')
     end
+end
+"""
+resize!(a::PseudoBlockVector, N::Block) -> PseudoBlockVector
+
+Resize `a` to contain the first `N` blocks, returning a new `PseudoBlockVector` sharing
+memory with `a`. If `N` is smaller than the current
+collection block length, the first `N` blocks will be retained. `N` is not allowed to be larger.
+"""
+function resize!(a::PseudoBlockVector, N::Block{1})
+    ax = axes(a,1)
+    PseudoBlockVector(resize!(a.blocks, last(ax[N])), (ax[Block.(Base.OneTo(Int(N)))],))
 end
 
 

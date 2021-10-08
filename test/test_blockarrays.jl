@@ -596,4 +596,11 @@ end
         @test A[:,blockedrange(1:2)] isa PseudoBlockMatrix
         @test A[blockedrange(1:3),blockedrange(1:2)] isa PseudoBlockMatrix
     end
+
+    @testset "resize!" begin
+        a = PseudoBlockVector(collect(1:6), 1:3)
+        b = resize!(a,Block(2))
+        @test b == 1:3
+        @test_throws BoundsError a[4] # length of a.blocks has changed
+    end
 end
