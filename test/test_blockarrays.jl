@@ -98,12 +98,16 @@ end
 
         @testset "similar" begin
             ret = BlockArray{Float64}(undef, 1:3)
+            @test similar(ret, Float64, (3,)) isa Vector
             @test similar(typeof(ret), axes(ret)) isa BlockArray
             @test similar(typeof(ret), (Base.OneTo(6),)) isa Array
             @test similar(Array{Float64}, axes(ret)) isa PseudoBlockArray
             @test similar(Vector{Float64}, axes(ret)) isa PseudoBlockArray
             @test similar(randn(5,5), Float64, axes(ret)) isa PseudoBlockArray
             @test similar(ret, Float64, (Base.IdentityUnitRange(1:3),)) isa BlockArray
+
+            ret = PseudoBlockArray{Float64}(undef, 1:3)
+            @test similar(ret, Float64, (blockedrange(1:3),)) isa PseudoBlockArray
 
             ret = BlockArray{Float64}(undef, 1:3, 1:3)
             @test similar(typeof(ret), axes(ret)) isa BlockArray
