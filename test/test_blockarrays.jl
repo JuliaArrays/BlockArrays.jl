@@ -113,6 +113,9 @@ end
             @test similar(Array{Float64}, (Base.OneTo(5), axes(ret,2))) isa PseudoBlockArray
             @test similar(randn(5,5), Float64, axes(ret)) isa PseudoBlockArray
             @test similar(randn(5,5), Float64, (Base.OneTo(5), axes(ret,2))) isa PseudoBlockArray
+
+            @test similar(randn(6,5), Float64, (blockedrange(1:3),3)) isa PseudoBlockMatrix
+            @test similar(randn(6,5), Float64, (3,blockedrange(1:3))) isa PseudoBlockMatrix
         end
 
         @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])
@@ -583,5 +586,14 @@ end
         Base.print_array(io, d)
         s2 = String(take!(io))
         @test s1 == s2
+    end
+
+    @testset "Array indexing" begin
+        a = randn(6)
+        A = randn(6,3)
+        @test a[blockedrange(1:3)] isa PseudoBlockVector
+        @test A[blockedrange(1:3),:] isa PseudoBlockMatrix
+        @test A[:,blockedrange(1:2)] isa PseudoBlockMatrix
+        @test A[blockedrange(1:3),blockedrange(1:2)] isa PseudoBlockMatrix
     end
 end
