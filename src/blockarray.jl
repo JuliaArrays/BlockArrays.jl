@@ -351,21 +351,19 @@ end
 ###########################
 
 
-@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)
-@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)
-@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)
-@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{Int,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    similar(block_array, T, (Base.OneTo(axes[1]), tail(axes)...))
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+    BlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+    BlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{Union{AbstractUnitRange{Int},Integer},BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+    BlockArray{T}(undef, map(to_axes,axes))
 
-@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)
-@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)
-@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    BlockArray{T}(undef, axes)
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+    BlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+    BlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{Union{AbstractUnitRange{Int},Integer},BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+    BlockArray{T}(undef, map(to_axes,axes))
 
 const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
 
@@ -373,9 +371,9 @@ const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
 @inline Base.similar(block_array::BlockArray, ::Type{T}, dims::NTuple{N,Int}) where {T,N} =
     Array{T}(undef, dims)
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{OffsetAxis,Vararg{OffsetAxis}}) where T =
-    BlockArray{T}(undef, axes)
+    BlockArray{T}(undef, map(to_axes,axes))
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{Base.OneTo{Int},Vararg{Base.OneTo{Int}}}) where T =
-    BlockArray{T}(undef, axes)
+    BlockArray{T}(undef, map(to_axes,axes))
 
 @inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)

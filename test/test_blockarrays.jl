@@ -98,12 +98,16 @@ end
 
         @testset "similar" begin
             ret = BlockArray{Float64}(undef, 1:3)
+            @test similar(ret, Float64, (3,)) isa Vector
             @test similar(typeof(ret), axes(ret)) isa BlockArray
             @test similar(typeof(ret), (Base.OneTo(6),)) isa Array
             @test similar(Array{Float64}, axes(ret)) isa PseudoBlockArray
             @test similar(Vector{Float64}, axes(ret)) isa PseudoBlockArray
             @test similar(randn(5,5), Float64, axes(ret)) isa PseudoBlockArray
             @test similar(ret, Float64, (Base.IdentityUnitRange(1:3),)) isa BlockArray
+
+            ret = PseudoBlockArray{Float64}(undef, 1:3)
+            @test similar(ret, Float64, (blockedrange(1:3),)) isa PseudoBlockArray
 
             ret = BlockArray{Float64}(undef, 1:3, 1:3)
             @test similar(typeof(ret), axes(ret)) isa BlockArray
@@ -113,6 +117,9 @@ end
             @test similar(Array{Float64}, (Base.OneTo(5), axes(ret,2))) isa PseudoBlockArray
             @test similar(randn(5,5), Float64, axes(ret)) isa PseudoBlockArray
             @test similar(randn(5,5), Float64, (Base.OneTo(5), axes(ret,2))) isa PseudoBlockArray
+
+            @test similar(randn(6,5), Float64, (blockedrange(1:3),3)) isa PseudoBlockMatrix
+            @test similar(randn(6,5), Float64, (3,blockedrange(1:3))) isa PseudoBlockMatrix
         end
 
         @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])
@@ -583,5 +590,21 @@ end
         Base.print_array(io, d)
         s2 = String(take!(io))
         @test s1 == s2
+    end
+
+    @testset "Array indexing" begin
+        a = randn(6)
+        A = randn(6,3)
+        @test a[blockedrange(1:3)] isa PseudoBlockVector
+        @test A[blockedrange(1:3),:] isa PseudoBlockMatrix
+        @test A[:,blockedrange(1:2)] isa PseudoBlockMatrix
+        @test A[blockedrange(1:3),blockedrange(1:2)] isa PseudoBlockMatrix
+    end
+
+    @testset "resize!" begin
+        a = PseudoBlockVector(collect(1:6), 1:3)
+        b = resize!(a,Block(2))
+        @test b == 1:3
+        @test_throws BoundsError a[4] # length of a.blocks has changed
     end
 end
