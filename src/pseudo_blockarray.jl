@@ -24,18 +24,18 @@ julia> Random.seed!(12345);
 
 julia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
 2×2-blocked 2×3 PseudoBlockMatrix{Float64}:
- 0.562714  0.371605  │  0.381128
+ 0.944791  0.339612  │  0.322501
  ────────────────────┼──────────
- 0.849939  0.283365  │  0.365801
+ 0.866895  0.136117  │  0.252549
 
 julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
 3-blocked 6-element PseudoBlockVector{Float64, SparseVector{Float64, Int64}, Tuple{BlockedUnitRange{Vector{Int64}}}}:
  0.0
- 0.5865981007905481
  0.0
+ 0.26755021483368013
  ───────────────────
- 0.05016684053503706
  0.0
+ 0.11848853125656122
  ───────────────────
  0.0
 ```

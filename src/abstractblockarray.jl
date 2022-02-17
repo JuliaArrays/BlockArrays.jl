@@ -156,8 +156,8 @@ julia> A = BlockArray(v, [1,1], [2,1])
 
 julia> Matrix.(collect(eachblock(A)))
 2×2 Matrix{Matrix{Int64}}:
- [1 3]  [5]
- [2 4]  [6]
+ [1 3]  [5;;]
+ [2 4]  [6;;]
 
 julia> sum.(eachblock(A))
 2×2 Matrix{Int64}:
