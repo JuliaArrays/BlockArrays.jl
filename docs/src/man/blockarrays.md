@@ -100,8 +100,8 @@ julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
 
 julia> block_array[Block(2,1)] = rand(2,2)
 2×2 Matrix{Float64}:
- 0.590845  0.566237
- 0.766797  0.460085
+ 0.325977  0.218587
+ 0.549051  0.894245
 
 julia> block_array[Block(1),Block(1)] = [1 2];
 
@@ -109,8 +109,8 @@ julia> block_array
 2×2-blocked 3×4 BlockMatrix{Float64}:
  1.0       2.0       │  #undef  #undef
  ────────────────────┼────────────────
- 0.590845  0.566237  │  #undef  #undef
- 0.766797  0.460085  │  #undef  #undef
+ 0.325977  0.218587  │  #undef  #undef
+ 0.549051  0.894245  │  #undef  #undef
 ```
 
 Note that this will "take ownership" of the passed in array, that is, no copy is made.
