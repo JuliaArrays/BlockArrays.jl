@@ -67,7 +67,16 @@ getindex(B::Block, ::CartesianIndex{0}) = B
 @inline (*)(index::Block, a::Integer) = *(a,index)
 
 # comparison
-@inline isless(I1::Block{N}, I2::Block{N}) where {N} = Base.IteratorsMD._isless(0, I1.n, I2.n)
+# _isless copied from Base in Julia 1.7 since it was removed in 1.8.
+@inline function _isless(ret, I1::Tuple{Int,Vararg{Int,N}}, I2::Tuple{Int,Vararg{Int,N}}) where {N}
+    newret = ifelse(ret==0, icmp(last(I1), last(I2)), ret)
+    t1, t2 = Base.front(I1), Base.front(I2)
+    # avoid dynamic dispatch by telling the compiler relational invariants
+    return isa(t1, Tuple{}) ? _isless(newret, (), ()) : _isless(newret, t1, t2::Tuple{Int,Vararg{Int}})
+end
+_isless(ret, ::Tuple{}, ::Tuple{}) = ifelse(ret==1, true, false)
+icmp(a, b) = ifelse(isless(a,b), 1, ifelse(a==b, 0, -1))
+@inline isless(I1::Block{N}, I2::Block{N}) where {N} = _isless(0, I1.n, I2.n)
 
 # conversions
 convert(::Type{T}, index::Block{1}) where {T<:Number} = convert(T, index.n[1])
