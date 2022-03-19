@@ -180,6 +180,8 @@ end
 
 unsafe_convert(::Type{Ptr{T}}, V::SubArray{T, N, <:BlockArray, <:NTuple{N, BlockSlice1}}) where {T,N} =
     unsafe_convert(Ptr{T}, view(parent(V), block.(parentindices(V))...))
+Base.elsize(::Type{<:SubArray{T, N, <:BlockArray{T, N, <:AbstractArray{Block}}, <:NTuple{N, BlockSlice1}}}) where {T,N,Block} =
+    Base.elsize(Block)
 
 
 # The default blocksize(V) is slow for views as it calls axes(V), which
