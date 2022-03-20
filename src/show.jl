@@ -119,7 +119,7 @@ axes_print_matrix_row(::Tuple{BlockedUnitRange,AbstractUnitRange}, io, X, A, i, 
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
 # Need to handled BlockedUnitRange, which is not a LayoutVector
-Base.print_matrix_row(io::IO, X::BlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString) =
+Base.print_matrix_row(io::IO, X::BlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString, idxlast::Integer=last(axes(X, 2))) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
 function _show_typeof(io::IO, a::PseudoBlockVector{T,Vector{T},Tuple{DefaultBlockAxis}}) where T
