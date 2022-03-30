@@ -64,7 +64,7 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{Sl,<:BlockSlice{BlockRange{
 sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{<:BlockSlice{BlockRange{1,Tuple{II}}},Sl}}) where {MLAY,BLAY,Sl<:Slice,II} =
     BlockLayout{typeof(sublayout(MLAY(),Tuple{II,Sl})), BLAY}()
 sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{Sl1,Sl2}}) where {MLAY,BLAY,Sl1<:Slice,Sl2<:Slice,II} =
-    BlockLayout{typeof(sublayout(MLAY(),Tuple{Sl1,Sl2})), BLAY}()    
+    BlockLayout{typeof(sublayout(MLAY(),Tuple{Sl1,Sl2})), BLAY}()
 
 # materialize views, used for `getindex`
 sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
@@ -100,6 +100,9 @@ sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:AbstractUnitRange,<:Bl
     Ones{eltype(V)}(ax)
 sub_materialize(::ArrayLayouts.ZerosLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
     Zeros{eltype(V)}(ax)
+
+Base.@propagate_inbounds view(A::FillArrays.AbstractFill{<:Any,N}, I::Vararg{Block, N}) where N =
+    FillArrays._fill_getindex(A, Base.to_indices(A,I)...)
 
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Complex,MLAY,BLAY} = BlockLayout{MLAY,typeof(conjlayout(T,BLAY()))}()
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Real,MLAY,BLAY} = BlockLayout{MLAY,BLAY}()
