@@ -106,6 +106,9 @@ end
         @inbounds _i = i[idx]
         Block(_i) in n[k] || return false
     end
+    for idx = N+1:length(i)
+        isone(i[idx]) || return false
+    end
     return true
 end
 

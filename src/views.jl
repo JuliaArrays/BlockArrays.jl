@@ -148,13 +148,24 @@ _block_reindex(b::Slice, i::Block{1}) = i
 
 
 
-function Base.view(A::Adjoint{<:Any,<:BlockArray}, b::Block{2})
+function Base.view(A::Adjoint{<:Any,<:BlockMatrix}, b::Block{2})
     k, j = b.n
     view(parent(A), Block(j), Block(k))'
 end
-function Base.view(A::Transpose{<:Any,<:BlockArray}, b::Block{2})
+function Base.view(A::Transpose{<:Any,<:BlockMatrix}, b::Block{2})
     k, j = b.n
     transpose(view(parent(A), Block(j), Block(k)))
+end
+
+function Base.view(A::Adjoint{<:Any,<:BlockVector}, b::Block{2})
+    @boundscheck blockcheckbounds(A, b)
+    k, j = b.n
+    view(parent(A), Block(j))'
+end
+function Base.view(A::Transpose{<:Any,<:BlockVector}, b::Block{2})
+    @boundscheck blockcheckbounds(A, b)
+    k, j = b.n
+    transpose(view(parent(A), Block(j)))
 end
 
 Base.view(A::AdjOrTrans{<:Any,<:BlockArray}, K::Block{1}, J::Block{1}) = view(A, Block(Int(K), Int(J)))

@@ -291,4 +291,18 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         v = bview(a,Block(1))
         @test view(a, parentindices(v)...) ≡ 7:9
     end
+
+    @testset "BlockVector' view" begin
+        v = BlockArray(randn(3),1:2)
+        @test view(v',Block(1,2)) === view(v,Block(2))'
+        @test view(transpose(v),Block(1,2)) === transpose(view(v,Block(2)))
+
+        @test_throws BlockBoundsError v'[Block(2,2)]
+        @test_throws BlockBoundsError transpose(v)[Block(2,2)]
+    end
+
+    @testset "array indexing past ndims" begin
+        v = BlockArray(randn(3),1:2)
+        @test_broken @test_throws BlockBoundsError v[Block(1,2)]
+    end
 end
