@@ -303,6 +303,6 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
     @testset "array indexing past ndims" begin
         v = BlockArray(randn(3),1:2)
-        @test_broken @test_throws BlockBoundsError v[Block(1,2)]
+        @test_skip @test_throws BlockBoundsError v[Block(1,2)]
     end
 end
