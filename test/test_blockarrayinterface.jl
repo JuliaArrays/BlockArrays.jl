@@ -127,15 +127,16 @@ end
 
 @testset "block Fill" begin
     A = Fill(2,(blockedrange([1,2,2]),))
-    @test A[Block(1)] ≡ Fill(2,1)
+    @test A[Block(1)] ≡ view(A,Block(1)) ≡ Fill(2,1)
     @test A[Block.(1:2)] == [2,2,2]
     @test A[Block.(1:2)] isa Fill
+    @test view(A,Block.(1:2)) isa Fill
     @test 2A ≡ Fill(4,axes(A))
 
     F = Fill(2, (blockedrange([1,2,2]),blockedrange(1:3)))
-    @test F[Block(2,2)] ≡ F[Block(2),Block(2)] ≡ Fill(2, 2,2)
-    @test F[Block(2),1:5] ≡ Fill(2, 2,5)
-    @test F[1:5,Block(2)] ≡ Fill(2, 5,2)
+    @test F[Block(2,2)] ≡ view(F,Block(2,2)) ≡ view(F,Block(2),Block(2)) ≡ F[Block(2),Block(2)] ≡ Fill(2, 2,2)
+    @test F[Block(2),1:5] ≡ view(F,Block(2),1:5) ≡ Fill(2, 2,5)
+    @test F[1:5,Block(2)] ≡ view(F,1:5,Block(2)) ≡ Fill(2, 5,2)
     @test F[:,Block(2)] ≡ Fill(2, (axes(F,1),Base.OneTo(2)))
     @test F[Block(2),:] ≡ Fill(2, (Base.OneTo(2),axes(F,2)))
     @test F[Block.(1:2),Block.(1:2)] == Fill(2, (blockedrange([1,2]),blockedrange(1:2)))
