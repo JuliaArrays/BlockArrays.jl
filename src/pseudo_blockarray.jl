@@ -122,6 +122,12 @@ convert(::Type{PseudoBlockArray}, A::PseudoBlockArray) = A
 convert(::Type{PseudoBlockArray{T,N,R,BS}}, A::PseudoBlockArray) where {T,N,R,BS} =
     PseudoBlockArray{T,N,R,BS}(convert(R, A.blocks), convert(BS, A.axes))
 
+convert(::Type{AbstractArray{T,N}}, A::PseudoBlockArray{T,N}) where {T,N} = A
+convert(::Type{AbstractArray{V,N} where V}, A::PseudoBlockArray{T,N}) where {T,N} = A
+convert(::Type{AbstractArray{T}}, A::PseudoBlockArray{T}) where {T} = A
+convert(::Type{AbstractArray}, A::PseudoBlockArray) = A
+
+
 
 PseudoBlockArray{T, N}(A::AbstractArray{T2, N}) where {T,T2,N} =
     PseudoBlockArray(Array{T, N}(A), axes(A))
@@ -134,6 +140,9 @@ convert(::Type{PseudoBlockArray{T1}}, A::AbstractArray{T2, N}) where {T1,T2,N} =
     convert(PseudoBlockArray{T1, N}, A)
 convert(::Type{PseudoBlockArray}, A::AbstractArray{T, N}) where {T,N} =
     convert(PseudoBlockArray{T, N}, A)
+
+AbstractArray{T}(A::PseudoBlockArray) where T = PseudoBlockArray(AbstractArray{T}(A.blocks), A.axes)
+AbstractArray{T,N}(A::PseudoBlockArray) where {T,N} = PseudoBlockArray(AbstractArray{T,N}(A.blocks), A.axes)
 
 copy(A::PseudoBlockArray) = PseudoBlockArray(copy(A.blocks), A.axes)
 

@@ -30,6 +30,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             BroadcastStyle, checkbounds, throw_boundserror, 
             ones, zeros, intersect, Slice, resize!
 using Base: ReshapedArray, dataids
+import Base: AbstractArray
 
 
 import Base: (:), IteratorSize, iterate, axes1, strides, isempty
