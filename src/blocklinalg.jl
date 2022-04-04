@@ -273,7 +273,7 @@ function _matchingblocks_triangular_mul!(::Val{'L'}, UNIT, A::AbstractMatrix{T},
         b_2 = view(b, Block(K))
         L̃ = _triangular_matrix(Val('L'), UNIT, view(A, Block(K,K)))
         materialize!(Lmul(L̃, b_2))
-        JR = blockrowstart(A,K):Block(K-1)
+        JR = blockrowstart(A,Block(K)):Block(K-1)
         if !isempty(JR)
             muladd!(one(T), view(A, Block(K), JR), view(b,JR), one(T), b_2)
         end
