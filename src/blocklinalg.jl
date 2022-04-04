@@ -22,10 +22,6 @@ blockcolstop(A...) = last(blockcolsupport(A...))
 blockrowstart(A...) = first(blockrowsupport(A...))
 blockrowstop(A...) = last(blockrowsupport(A...))
 
-for Func in (:blockcolstart, :blockcolstop, :blockrowstart, :blockrowstop)
-    @eval $Func(A, i::Block{1}) = $Func(A, Int(i))
-end
-
 
 abstract type AbstractBlockLayout <: MemoryLayout end
 struct BlockLayout{ArrLay,BlockLay} <: AbstractBlockLayout end
@@ -327,7 +323,7 @@ for UNIT in ('U', 'N')
                 materialize!(Ldiv(Ũ, b_2))
 
                 if K ≥ 2
-                    KR = blockcolstart(A, K):Block(K-1)
+                    KR = blockcolstart(A, Block(K)):Block(K-1)
                     V_12 = view(A, KR, Block(K))
                     b̃_1 = view(b, KR)
                     muladd!(-one(T), V_12, b_2, one(T), b̃_1)
@@ -361,7 +357,7 @@ for UNIT in ('U', 'N')
                 materialize!(Ldiv(L̃, b_2))
 
                 if K < N
-                    KR = Block(K+1):blockcolstop(A, K)
+                    KR = Block(K+1):blockcolstop(A, Block(K))
                     V_12 = view(A, KR, Block(K))
                     b̃_1 = view(b, KR)
                     muladd!(-one(T), V_12, b_2, one(T), b̃_1)
