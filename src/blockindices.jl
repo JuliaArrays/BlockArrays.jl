@@ -77,6 +77,7 @@ end
 _isless(ret, ::Tuple{}, ::Tuple{}) = ifelse(ret==1, true, false)
 icmp(a, b) = ifelse(isless(a,b), 1, ifelse(a==b, 0, -1))
 @inline isless(I1::Block{N}, I2::Block{N}) where {N} = _isless(0, I1.n, I2.n)
+@inline isless(I1::Block{1}, I2::Block{1}) = isless(Integer(I1), Integer(I2))
 
 # conversions
 convert(::Type{T}, index::Block{1}) where {T<:Number} = convert(T, index.n[1])
