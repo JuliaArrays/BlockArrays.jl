@@ -258,8 +258,13 @@ collection block length, the first `N` blocks will be retained. `N` is not allow
 """
 function resize!(a::PseudoBlockVector, N::Block{1})
     ax = axes(a,1)
-    PseudoBlockVector(resize!(a.blocks, last(ax[N])), (ax[Block.(Base.OneTo(Int(N)))],))
+    if iszero(Int(N))
+        PseudoBlockVector(resize!(a.blocks, 0), (ax[Block.(Base.OneTo(0))],))
+    else
+        PseudoBlockVector(resize!(a.blocks, last(ax[N])), (ax[Block.(Base.OneTo(Int(N)))],))
+    end
 end
+
 
 
 ###########################
