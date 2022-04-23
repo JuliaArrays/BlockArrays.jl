@@ -20,12 +20,15 @@ julia> A[Block(1, 1)]
 struct Block{N, T}
     n::NTuple{N, T}
     Block{N, T}(n::NTuple{N, T}) where {N, T} = new{N, T}(n)
+    Block{1, T}(n::Tuple{T}) where T = new{1, T}(n)
 end
 
-
-Block{N, T}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
+Block{N, T}(n::Tuple{Vararg{Any, N}}) where {N,T} = Block{N, T}(convert(NTuple{N,T}, n))
+Block{N, T}(n::Vararg{Any, N}) where {N,T} = Block{N, T}(n)
 Block{N}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
-Block() = Block{0,Int}()
+Block{1, T}(n::Tuple{Any}) where {N,T} = Block{1, T}(convert(Tuple{T}, n))
+Block{0}() = Block{0,Int}()
+Block() = Block{0}()
 Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
 Block{1}(n::Tuple{T}) where {T} = Block{1, T}(n)
 Block{N}(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
@@ -77,6 +80,7 @@ end
 _isless(ret, ::Tuple{}, ::Tuple{}) = ifelse(ret==1, true, false)
 icmp(a, b) = ifelse(isless(a,b), 1, ifelse(a==b, 0, -1))
 @inline isless(I1::Block{N}, I2::Block{N}) where {N} = _isless(0, I1.n, I2.n)
+@inline isless(I1::Block{1}, I2::Block{1}) = isless(Integer(I1), Integer(I2))
 
 # conversions
 convert(::Type{T}, index::Block{1}) where {T<:Number} = convert(T, index.n[1])
