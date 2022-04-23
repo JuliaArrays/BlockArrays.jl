@@ -91,6 +91,19 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
         @test intersect(Block.(2:5), Block.(3:6)) ≡ Block.(3:5)
     end
+
+    @testset "print" begin
+        @test stringmime("text/plain", Block()) == "Block()"
+        @test stringmime("text/plain", Block(1)) == "Block(1)"
+        @test stringmime("text/plain", Block(1,2)) == "Block(1, 2)"
+        @test stringmime("text/plain", Block{0}()) == "Block()"
+        @test stringmime("text/plain", Block{1}(1)) == "Block(1)"
+        @test stringmime("text/plain", Block{2}(1,2)) == "Block(1, 2)"
+
+        @test stringmime("text/plain", Block{0,BigInt}()) == "Block{0, BigInt}(())"
+        @test stringmime("text/plain", Block{1,BigInt}(1)) == "Block{1, BigInt}((1,))"
+        @test stringmime("text/plain", Block{2}(1,2)) == "Block(1, 2)"
+    end
 end
 
 @testset "BlockedUnitRange" begin
