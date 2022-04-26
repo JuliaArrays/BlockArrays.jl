@@ -18,6 +18,8 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
     A = randn(5, 5)
     @test A[Block(1, 1)] == A
+    @test A[BlockIndex((1,1), (1,2))] == A[1,2]
+    @test_throws BoundsError A[BlockIndex((1,1), (1,6))]
 
     @test similar(BlockVector{Float64}, Base.OneTo(5)) isa Vector{Float64}
     @test similar(BlockVector{Float64}, 5) isa Vector{Float64}

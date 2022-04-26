@@ -345,6 +345,12 @@ end
     @testset "convert" begin
         # Could probably be DRY'd.
         A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
+
+        @test convert(AbstractMatrix{Float64}, A) ≡ convert(AbstractMatrix, A) ≡ A
+        @test convert(AbstractArray{Float64}, A) ≡ convert(AbstractArray, A) ≡ A
+        @test convert(AbstractMatrix{Float32}, A) == AbstractMatrix{Float32}(A)
+        @test convert(AbstractArray{Float32}, A) == AbstractArray{Float32}(A)
+
         C = convert(BlockArray, A)
         @test C == A == BlockArray(A)
         @test eltype(C) == eltype(A)
@@ -365,6 +371,12 @@ end
 
 
         A = BlockArray(rand(2,3), [1,1], [2,1])
+
+        @test convert(AbstractMatrix{Float64}, A) ≡ convert(AbstractMatrix, A) ≡ A
+        @test convert(AbstractArray{Float64}, A) ≡ convert(AbstractArray, A) ≡ A
+        @test convert(AbstractMatrix{Float32}, A) == AbstractMatrix{Float32}(A)
+        @test convert(AbstractArray{Float32}, A) == AbstractArray{Float32}(A)
+
         C = convert(PseudoBlockArray, A)
         @test C == A == PseudoBlockArray(A)
         @test eltype(C) == eltype(A)
