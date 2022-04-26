@@ -23,6 +23,10 @@ blockrowstart(A...) = first(blockrowsupport(A...))
 blockrowstop(A...) = last(blockrowsupport(A...))
 
 
+for Func in (:blockcolstart, :blockcolstop, :blockrowstart, :blockrowstop)
+    @eval @deprecate $Func(A, i::Integer) $Func(A, Block(i))
+end
+
 abstract type AbstractBlockLayout <: MemoryLayout end
 struct BlockLayout{ArrLay,BlockLay} <: AbstractBlockLayout end
 
