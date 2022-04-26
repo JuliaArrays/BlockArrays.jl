@@ -606,5 +606,14 @@ end
         b = resize!(a,Block(2))
         @test b == 1:3
         @test_throws BoundsError a[4] # length of a.blocks has changed
+        c = resize!(b,Block(0))
+        @test isempty(c)
+
+        a = BlockVector(collect(1:6), 1:3)
+        b = resize!(a,Block(2))
+        @test b == 1:3
+        @test_throws BoundsError a[4] # length of a.blocks has changed
+        c = resize!(b,Block(0))
+        @test isempty(c)
     end
 end

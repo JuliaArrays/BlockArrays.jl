@@ -20,12 +20,15 @@ julia> A[Block(1, 1)]
 struct Block{N, T}
     n::NTuple{N, T}
     Block{N, T}(n::NTuple{N, T}) where {N, T} = new{N, T}(n)
+    Block{1, T}(n::Tuple{T}) where T = new{1, T}(n)
 end
 
-
-Block{N, T}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
+Block{N, T}(n::Tuple{Vararg{Any, N}}) where {N,T} = Block{N, T}(convert(NTuple{N,T}, n))
+Block{N, T}(n::Vararg{Any, N}) where {N,T} = Block{N, T}(n)
 Block{N}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
-Block() = Block{0,Int}()
+Block{1, T}(n::Tuple{Any}) where {N,T} = Block{1, T}(convert(Tuple{T}, n))
+Block{0}() = Block{0,Int}()
+Block() = Block{0}()
 Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
 Block{1}(n::Tuple{T}) where {T} = Block{1, T}(n)
 Block{N}(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
@@ -77,7 +80,7 @@ end
 _isless(ret, ::Tuple{}, ::Tuple{}) = ifelse(ret==1, true, false)
 icmp(a, b) = ifelse(isless(a,b), 1, ifelse(a==b, 0, -1))
 @inline isless(I1::Block{N}, I2::Block{N}) where {N} = _isless(0, I1.n, I2.n)
-@inline isless(I1::Block{1}, I2::Block{1}) = isless(I1.n[1], I2.n[1])
+@inline isless(I1::Block{1}, I2::Block{1}) = isless(Integer(I1), Integer(I2))
 
 # conversions
 convert(::Type{T}, index::Block{1}) where {T<:Number} = convert(T, index.n[1])
@@ -89,7 +92,7 @@ Number(index::Block{1}) = index.n[1]
 
 # print
 Base.show(io::IO, B::Block{0,Int}) = print(io, "Block()")
-function Base.show(io::IO, B::Block{N,Int}) where N 
+function Base.show(io::IO, B::Block{N,Int}) where N
     print(io, "Block($(B.n[1])")
     for n in Base.tail(B.n)
         print(io, ", $n")
@@ -174,7 +177,7 @@ end
     checkbounds(Bool, B, blockindex(I)...)
 end
 
-checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N = 
+checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N =
     all(checkbounds.(Bool, Ref(A), I))
 
 struct BlockIndexRange{N,R<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractArray{BlockIndex{N},N}
@@ -378,9 +381,9 @@ intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1
 
 # needed for scalar-like broadcasting
 
-BlockSlice{Block{1,BT},RT}(a::Base.OneTo) where {BT,RT<:AbstractUnitRange} = 
+BlockSlice{Block{1,BT},RT}(a::Base.OneTo) where {BT,RT<:AbstractUnitRange} =
     BlockSlice(Block(convert(BT, 1)), convert(RT, a))::BlockSlice{Block{1,BT},RT}
-BlockSlice{BlockRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} = 
+BlockSlice{BlockRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} =
     BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},RT}
-BlockSlice{BlockIndexRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} = 
+BlockSlice{BlockIndexRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} =
     BlockSlice(BlockIndexRange(Block(1), convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockIndexRange{1,Tuple{BT}},RT}

@@ -471,3 +471,17 @@ Base.reshape(block_array::BlockArray, axes::Tuple{Union{Integer,Base.OneTo}, Var
     reshape(PseudoBlockArray(block_array), axes)
 Base.reshape(block_array::BlockArray, dims::Tuple{Vararg{Union{Int,Colon}}}) =
     reshape(PseudoBlockArray(block_array), dims)
+
+"""
+resize!(a::BlockVector, N::Block) -> PseudoBlockVector
+
+Resize `a` to contain the first `N` blocks, returning a new `BlockVector` sharing
+memory with `a`. If `N` is smaller than the current
+collection block length, the first `N` blocks will be retained. `N` is not allowed to be larger.
+"""
+function resize!(a::BlockVector, N::Block{1})
+    ax = axes(a,1)
+    Ni = Int(N)
+    _BlockArray(resize!(a.blocks, Ni), (ax[Block.(Base.OneTo(Ni))],))
+end
+
