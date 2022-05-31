@@ -266,8 +266,10 @@ function sizes_from_blocks(blocks::AbstractArray{<:Any, N}, _) where N
         error("All blocks must have ndims consistent with ndims = $N of `blocks` array.")
     end
     fullsizes = map!(size, Array{NTuple{N,Int}, N}(undef, size(blocks)), blocks)
-    block_sizes = ntuple(ndims(blocks)) do i
-        [s[i] for s in view(fullsizes, ntuple(j -> j == i ? (:) : 1, ndims(blocks))...)]
+    fR = reinterpret(reshape, Int, fullsizes)
+    stfR = strides(fR)
+    block_sizes = ntuple(N) do i
+        fR[range(i, step = stfR[i+1], length=size(fullsizes, i))]
     end
     checksizes(fullsizes, block_sizes)
     return block_sizes
