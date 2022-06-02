@@ -125,17 +125,22 @@ end
         @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])
 
         @testset "mortar" begin
-            @testset for sizes in [(1:3,), (1:3, 1:3), (1:3, 1:3, 1:3)]
+            @testset for sizes in [(1:3,), (1:3, 1:4), (1:3, 1:4, 1:2)]
                 dims = sum.(sizes)
-                A = BlockArray(copy(reshape(1:prod(dims), dims)), sizes...)
-                @test mortar(A.blocks) == A
+                A = @inferred BlockArray(copy(reshape(1:prod(dims), dims)), sizes...)
+                @test @inferred mortar(A.blocks) == A
+                if length(dims) == 2
+                    # compare with hvcat
+                    rows = ntuple(_->length(sizes[2]), length(sizes[1]))
+                    @test mortar(A.blocks) == hvcat(rows, permutedims(A.blocks)...)
+                end
             end
 
-            ret = mortar([spzeros(2), spzeros(3)])
+            ret = @inferred mortar([spzeros(2), spzeros(3)])
             @test eltype(ret.blocks) <: SparseVector
             @test axes(ret) == (blockedrange([2, 3]),)
 
-            ret = mortar(
+            ret = @inferred mortar(
                 (spzeros(1, 3), spzeros(1, 4)),
                 (spzeros(2, 3), spzeros(2, 4)),
                 (spzeros(5, 3), spzeros(5, 4)),
@@ -156,6 +161,17 @@ end
                     (zeros(1, 3), zeros(1, 4)),
                     (zeros(2, 3), zeros(111, 222)),
                 )
+            end
+
+            @testset "sizes_from_blocks" begin
+                blocks = reshape([rand(2,2), zeros(1,2),
+                                  zeros(2,3), rand(1,3)], 2, 2);
+                @test @inferred BlockArrays.sizes_from_blocks(blocks) == ([2,1], [2,3])
+                blocks = reshape(
+                    [rand(2,2), zeros(1,2), zeros(4,2),
+                     zeros(2,3), rand(1,3), zeros(4,3),
+                     zeros(2,1), zeros(1,1), rand(4,1)], 3, 3);
+                @test @inferred BlockArrays.sizes_from_blocks(blocks) == ([2, 1, 4], [2, 3, 1])
             end
         end
 
