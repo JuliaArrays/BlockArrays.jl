@@ -128,6 +128,17 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         V = view(A, Block.(2:3))
         @test V == 2:6
         @test view(V, Block(2)[1:2]) == [4,5]
+
+        A3 = mortar(reshape([rand(5, 4, 1), rand(5, 4, 1), rand(5, 4, 1)], 1, 1, 3))
+        Aodd = A3[:,:,1:2:end]
+        axs = axes(Aodd)
+        axsp = promote(axs...)
+        @test !all(ax -> typeof(ax) === typeof(axs[1]), axs)
+        @test  all(ax -> typeof(ax) === typeof(axsp[1]), axsp)
+        axs = (axs[1], 1:5)
+        axsp = promote(axs...)
+        @test !all(ax -> typeof(ax) === typeof(axs[1]), axs)
+        @test  all(ax -> typeof(ax) === typeof(axsp[1]), axsp)
     end
 
     @testset "subarray implements block interface" begin

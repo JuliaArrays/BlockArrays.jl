@@ -89,7 +89,8 @@ Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where C
 
 Base.unitrange(b::BlockedUnitRange) = first(b):last(b)
 
-
+Base.promote_rule(::Type{BlockedUnitRange{CS}}, ::Type{UnitRange{Int}}) where CS = UnitRange{Int}
+Base.promote_rule(::Type{BlockedUnitRange{CS}}, ::Type{Base.OneTo{Int}}) where CS = UnitRange{Int}
 
 """
     blockaxes(A)
