@@ -36,7 +36,7 @@ import Base: AbstractArray
 import Base: (:), IteratorSize, iterate, axes1, strides, isempty
 import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, broadcastable
 import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
-                        StructuredMatrixStyle, cholesky, cholesky!, cholcopy
+                        StructuredMatrixStyle, cholesky, cholesky!, cholcopy, RealHermSymComplexHerm
 import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdivVec,
                         materialize!, MemoryLayout, sublayout, transposelayout, conjlayout,
                         triangularlayout, triangulardata, _inv, _copyto!, axes_print_matrix_row,
@@ -64,6 +64,5 @@ include("blockarrayinterface.jl")
 @deprecate setblock!(A::AbstractBlockArray{T,N}, v, I::Vararg{Integer, N}) where {T,N} (A[Block(I...)] = v)
 
 
-include("blockbandedcholesky.jl")
 
 end # module

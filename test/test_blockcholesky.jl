@@ -1,15 +1,16 @@
-using BlockArrays, Test, LinearAlgebra
+using BlockArrays, Test, LinearAlgebra, Random
 
 
+Random.seed!(0)
 
 @testset "Block cholesky" begin
 
     # Generating random positive definite and symmetric matrices
-    A = BlockArray{Float32}(randn(9,9)+100I, fill(3,3), fill(3,3)); A = Symmetric(A)
-    B = BlockArray{Float32}(randn(55,55)+100I, 1:10, 1:10); B = Symmetric(B)
-    C = BlockArray{Float32}(randn(9,9)+100I, fill(3,3), fill(3,3)); C = Symmetric(C, :L)
-    D = BlockArray{Float32}(randn(55,55)+100I, 1:10, 1:10); D = Symmetric(D, :L)
-    E = BlockArray{Float32}(randn(9,9)+100I, fill(3,3), fill(3,3)); E = Symmetric(E)
+    A = BlockArray{Float32}(rand(9,9)+100I, fill(3,3), fill(3,3)); A = Symmetric(A)
+    B = BlockArray{Float32}(rand(55,55)+100I, 1:10, 1:10); B = Symmetric(B)
+    C = BlockArray{Float32}(rand(9,9)+100I, fill(3,3), fill(3,3)); C = Symmetric(C, :L)
+    D = BlockArray{Float32}(rand(55,55)+100I, 1:10, 1:10); D = Symmetric(D, :L)
+    E = BlockArray{Float32}(rand(9,9)+100I, fill(3,3), fill(3,3)); E = Symmetric(E)
     E2 = copy(E); E2[2,2] = 0
     E5 = copy(E); E5[5,5] = 0
     E8 = copy(E); E8[8,8] = 0
@@ -40,9 +41,12 @@ using BlockArrays, Test, LinearAlgebra
     @test cholesky(D).L*cholesky(D).L' ≈ D
 
     #Tests on non-PD matrices
-    @test cholesky(E2).info == 2
-    @test cholesky(E5).info == 5
-    @test cholesky(E8).info == 8
+    @test_throws PosDefException cholesky(E2)
+    @test_throws PosDefException cholesky(E5)
+    @test_throws PosDefException cholesky(E8)
 
+    @test cholesky(E2; check=false).info == 2
+    @test cholesky(E5; check=false).info == 5
+    @test cholesky(E8; check=false).info == 8
 end
 

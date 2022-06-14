@@ -4,9 +4,6 @@
 ##########################################
 
 
-cholesky(A::Symmetric{<:Real,<:AbstractArray},
-    ::Val{false}=Val(false); check::Bool = true) = cholesky!(cholcopy(A); check = check)
-
 function _diag_chol!(A::AbstractArray{T}, i::Int, ::Type{UpperTriangular}) where T<:Real
     Pii = view(A,Block(i,i))
     for k = 1:i-1
@@ -90,7 +87,9 @@ function _block_chol!(A::AbstractArray{T}, ::Type{LowerTriangular}) where T<:Rea
     return LowerTriangular(transpose(A)), 0
 end
 
-function cholesky!(A::Symmetric{<:Real,<:AbstractArray}, ::Val{false}=Val(false); check::Bool = true)
+function ArrayLayouts._cholesky!(layout, ::NTuple{2,BlockedUnitRange}, A::RealHermSymComplexHerm, ::ArrayLayouts.CNoPivot; check::Bool = true)
     C, info = _block_chol!(A.data, A.uplo == 'U' ? UpperTriangular : LowerTriangular)
+    check && LinearAlgebra.checkpositivedefinite(info)
     return Cholesky(C.data, A.uplo, info)
 end
+
