@@ -1,3 +1,5 @@
+using BlockArrays, Test
+
 @testset "block range" begin
     # test backend code
     @test BlockRange((1:3),) == BlockRange{1,Tuple{UnitRange{Int}}}((1:3,))
@@ -15,7 +17,7 @@
     @test_throws ArgumentError Block(1,1):Block(2,2)
     @test_throws ArgumentError Base.to_index(Block(1):Block(2))
 
-    A = BlockArray(collect(1:6), 1:3)
+    A = BlockArray(1:6, 1:3)
     @test view(A, Block.(1:2)) == [1,2,3]
     @test A[Block.(1:2)] == [1,2,3]
 
@@ -39,11 +41,8 @@
 
     ## views of views
     # here we want to ensure that the view collapses
-    A = BlockArray(collect(1:10), 1:4)
-    V = view(view(A, Block.(2:4)), Block(2))
-    @test parent(V) == A
-    @test parentindices(V)[1] isa BlockArrays.BlockSlice{Block{1,Int}}
-    @test V == view(A, Block.(2:4))[Block(2)] == [4,5,6]
+    A = BlockArray((1:10), 1:4)
+    @test view(view(A, Block.(2:4)), Block(2)) ≡ 4:6
 
     V = view(view(A, Block.(2:4)), Block.(1:2))
     @test parent(V) == A
@@ -52,10 +51,7 @@
 
     A = BlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
     V = view(view(A, Block.(2:3), Block.(1:3)), Block(2), Block(2))
-    @test parent(V) == A
-    @test parentindices(V)[1] isa BlockArrays.BlockSlice{Block{1,Int}}
-    @test parentindices(V)[1].block == Block(3)
-    @test all(ind -> ind isa BlockArrays.BlockSlice, parentindices(V))
+    @test V ≡ view(A, Block(3,2))
     @test V == view(A, Block.(2:3), Block.(1:3))[Block(2,2)] ==  A[Block(3, 2)]
 
 
@@ -63,11 +59,18 @@
     @test parent(V) == A
     @test all(ind -> ind isa BlockArrays.BlockSlice, parentindices(V))
     @test V ==  A[Block.(1:2), Block(3)]
+    @test blockisequal(axes(V,1), axes(A,1)[Block.(1:2)])
 
     V = view(view(A, Block.(1:3), Block.(2:3)), Block.(1:2), Block.(1:2))
     @test parent(V) == A
     @test all(ind -> ind isa BlockArrays.BlockSlice, parentindices(V))
     @test V ==  A[Block.(1:2), Block.(2:3)]
+
+    @testset "iterator" begin
+        @test BlockRange()[] == collect(BlockRange())[] == Block()
+        @test BlockRange(1:3) == collect(BlockRange(1:3)) == [Block(1),Block(2),Block(3)]
+        @test BlockRange(1:3,1:2) == collect(BlockRange(1:3,1:2))
+    end
 end
 
 @testset "block index range" begin
@@ -84,4 +87,15 @@ end
     A = PseudoBlockArray(rand(4,4), [1,3],[2,2])
 	@test A[Bi,Block(1)] == A[3:4,1:2]
     @test A[Bi,Block(1)[2:2]] == A[3:4,2:2]
+
+    @testset "iterate" begin
+        bi = Block(2)[2:3]
+        @test bi == collect(bi) == [Block(2)[2], Block(2)[3]]
+        @test length(bi) == 2
+        @test first(bi) == Block(2)[2]
+        @test last(bi) == Block(2)[3]
+        bi = Block(1,2)[1:2,2:3]
+        @test bi == collect(bi)
+        @test size(bi) == (2,2)
+    end
 end

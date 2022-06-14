@@ -7,33 +7,35 @@ a single element.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
-2×2-blocked 2×3 BlockArray{Float64,2}:
+2×2-blocked 2×3 BlockMatrix{Float64}:
  1.0  1.0  │  1.0
  ──────────┼─────
  1.0  1.0  │  1.0
 
 julia> A[Block(1, 1)]
-1×2 Array{Float64,2}:
+1×2 Matrix{Float64}:
  1.0  1.0
 ```
 """
 struct Block{N, T}
     n::NTuple{N, T}
     Block{N, T}(n::NTuple{N, T}) where {N, T} = new{N, T}(n)
+    Block{1, T}(n::Tuple{T}) where T = new{1, T}(n)
 end
 
-
-Block{N, T}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
+Block{N, T}(n::Tuple{Vararg{Any, N}}) where {N,T} = Block{N, T}(convert(NTuple{N,T}, n))
+Block{N, T}(n::Vararg{Any, N}) where {N,T} = Block{N, T}(n)
 Block{N}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
-Block() = Block{0,Int}()
+Block{1, T}(n::Tuple{Any}) where {N,T} = Block{1, T}(convert(Tuple{T}, n))
+Block{0}() = Block{0,Int}()
+Block() = Block{0}()
 Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
 Block{1}(n::Tuple{T}) where {T} = Block{1, T}(n)
 Block{N}(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
 Block(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
 
-@inline function Block(blocks::NTuple{N, Block{1, T}}) where {N,T}
-    Block{N, T}(ntuple(i -> blocks[i].n[1], Val(N)))
-end
+@inline Block(blocks::NTuple{N, Block{1, T}}) where {N,T} = Block{N, T}(ntuple(i -> blocks[i].n[1], Val(N)))
+@inline Block(::Tuple{}) = Block{0,Int}(())
 
 # iterate and broadcast like Number
 length(b::Block) = 1
@@ -68,7 +70,17 @@ getindex(B::Block, ::CartesianIndex{0}) = B
 @inline (*)(index::Block, a::Integer) = *(a,index)
 
 # comparison
-@inline isless(I1::Block{N}, I2::Block{N}) where {N} = Base.IteratorsMD._isless(0, I1.n, I2.n)
+# _isless copied from Base in Julia 1.7 since it was removed in 1.8.
+@inline function _isless(ret, I1::Tuple{Int,Vararg{Int,N}}, I2::Tuple{Int,Vararg{Int,N}}) where {N}
+    newret = ifelse(ret==0, icmp(last(I1), last(I2)), ret)
+    t1, t2 = Base.front(I1), Base.front(I2)
+    # avoid dynamic dispatch by telling the compiler relational invariants
+    return isa(t1, Tuple{}) ? _isless(newret, (), ()) : _isless(newret, t1, t2::Tuple{Int,Vararg{Int}})
+end
+_isless(ret, ::Tuple{}, ::Tuple{}) = ifelse(ret==1, true, false)
+icmp(a, b) = ifelse(isless(a,b), 1, ifelse(a==b, 0, -1))
+@inline isless(I1::Block{N}, I2::Block{N}) where {N} = _isless(0, I1.n, I2.n)
+@inline isless(I1::Block{1}, I2::Block{1}) = isless(Integer(I1), Integer(I2))
 
 # conversions
 convert(::Type{T}, index::Block{1}) where {T<:Number} = convert(T, index.n[1])
@@ -80,7 +92,7 @@ Number(index::Block{1}) = index.n[1]
 
 # print
 Base.show(io::IO, B::Block{0,Int}) = print(io, "Block()")
-function Base.show(io::IO, B::Block{N,Int}) where N 
+function Base.show(io::IO, B::Block{N,Int}) where N
     print(io, "Block($(B.n[1])")
     for n in Base.tail(B.n)
         print(io, ", $n")
@@ -100,7 +112,7 @@ It can be used to index into `BlockArrays` in the following manner:
 julia> arr = Array(reshape(1:25, (5,5)));
 
 julia> a = PseudoBlockArray(arr, [3,2], [1,4])
-2×2-blocked 5×5 PseudoBlockArray{Int64,2}:
+2×2-blocked 5×5 PseudoBlockMatrix{Int64}:
  1  │   6  11  16  21
  2  │   7  12  17  22
  3  │   8  13  18  23
@@ -159,15 +171,16 @@ end
 
 @inline checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::Block{N}) where N = blockcheckbounds(Bool, A, I.n...)
 @inline function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndex{N}) where N
-    checkbounds(Bool, A, Block(I.I)) || return false
-    @inbounds block = getblock(A, I.I...)
-    checkbounds(Bool, block, I.α...)
+    bl = block(I)
+    checkbounds(Bool, A, bl) || return false
+    B = A[bl]
+    checkbounds(Bool, B, blockindex(I)...)
 end
 
-checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N = 
+checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N =
     all(checkbounds.(Bool, Ref(A), I))
 
-struct BlockIndexRange{N,R<:NTuple{N,AbstractUnitRange{Int}}}
+struct BlockIndexRange{N,R<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractArray{BlockIndex{N},N}
     block::Block{N,Int}
     indices::R
 end
@@ -192,6 +205,7 @@ getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
 getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{Int}) = BlockIndexRange(B.block, B.indices[1][kr])
+getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))
 eltype(::Type{BlockIndexRange{N}}) where {N} = BlockIndex{N}
@@ -270,8 +284,6 @@ getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
 getindex(S::BlockSlice{<:Block}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
 getindex(S::BlockSlice{<:BlockIndexRange}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
-next(S::BlockSlice, s) = next(S.indices, s)
-done(S::BlockSlice, s) = done(S.indices, s)
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
@@ -304,7 +316,7 @@ BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
 (:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
 (:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
 Base.BroadcastStyle(::Type{<:BlockRange{1}}) = DefaultArrayStyle{1}()
-broadcasted(::DefaultArrayStyle{1}, ::Type{Block}, r::AbstractUnitRange) = Block(first(r)):Block(last(r))
+broadcasted(::DefaultArrayStyle{1}, ::Type{Block}, r::AbstractUnitRange) = BlockRange((r,))
 broadcasted(::DefaultArrayStyle{1}, ::Type{Int}, block_range::BlockRange{1}) = first(block_range.indices)
 broadcasted(::DefaultArrayStyle{0}, ::Type{Int}, block::Block{1}) = Int(block)
 
@@ -365,3 +377,13 @@ _in(b, ::Tuple{}, ::Tuple{}, ::Tuple{}) = b
 
 # We sometimes need intersection of BlockRange to return a BlockRange
 intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1], b.indices[1]))
+
+
+# needed for scalar-like broadcasting
+
+BlockSlice{Block{1,BT},RT}(a::Base.OneTo) where {BT,RT<:AbstractUnitRange} =
+    BlockSlice(Block(convert(BT, 1)), convert(RT, a))::BlockSlice{Block{1,BT},RT}
+BlockSlice{BlockRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} =
+    BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},RT}
+BlockSlice{BlockIndexRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} =
+    BlockSlice(BlockIndexRange(Block(1), convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockIndexRange{1,Tuple{BT}},RT}

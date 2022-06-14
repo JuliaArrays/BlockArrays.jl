@@ -15,10 +15,11 @@ BlockStyle(::Val{N}) where {N} = BlockStyle{N}()
 PseudoBlockStyle(::Val{N}) where {N} = PseudoBlockStyle{N}()
 BlockStyle{M}(::Val{N}) where {N,M} = BlockStyle{N}()
 PseudoBlockStyle{M}(::Val{N}) where {N,M} = PseudoBlockStyle{N}()
-blockbroadcaststyle(::AbstractArrayStyle{N}) where N = BlockStyle{N}()
-pseudoblockbroadcaststyle(::AbstractArrayStyle{N}) where N = PseudoBlockStyle{N}()
-BroadcastStyle(::Type{<:BlockArray{<:Any,N,Arr}}) where {N,Arr} = blockbroadcaststyle(BroadcastStyle(Arr))
-BroadcastStyle(::Type{<:PseudoBlockArray{<:Any,N,Arr}}) where {N,Arr} = pseudoblockbroadcaststyle(BroadcastStyle(Arr))
+BroadcastStyle(::Type{<:BlockArray{<:Any,N}}) where {N} = BlockStyle{N}()
+BroadcastStyle(::Type{<:PseudoBlockArray{<:Any,N}}) where {N} = PseudoBlockStyle{N}()
+BroadcastStyle(::Type{<:AdjOrTrans{<:Any,<:BlockArray{<:Any,N}}}) where {N} = BlockStyle{2}()
+BroadcastStyle(::Type{<:AdjOrTrans{<:Any,<:PseudoBlockArray{<:Any,N}}}) where {N} = PseudoBlockStyle{2}()
+
 BroadcastStyle(::DefaultArrayStyle{N}, b::AbstractBlockStyle{M}) where {M,N} = typeof(b)(Val(max(M,N)))
 BroadcastStyle(a::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = typeof(a)(Val(max(M,N)))
 BroadcastStyle(::StructuredMatrixStyle, b::AbstractBlockStyle{M}) where {M} = typeof(b)(Val(max(M,2)))
@@ -80,20 +81,20 @@ julia> for idx in SubBlockIterator(subblock_lasts, block_lasts)
            idx.block :: Block{1}
            idx.indices :: Tuple{UnitRange}
        end
-view(A, idx) = [1]
-view(A, idx) = [2, 3]
-view(A, idx) = [4]
-view(A, idx) = [5, 6]
+view(A, idx) = 1:1
+view(A, idx) = 2:3
+view(A, idx) = 4:4
+view(A, idx) = 5:6
 
 julia> [idx.block.n[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)]
-4-element Array{Int64,1}:
+4-element Vector{Int64}:
  1
  2
  3
  3
 
 julia> [idx.indices[1] for idx in SubBlockIterator(subblock_lasts, block_lasts)]
-4-element Array{UnitRange{Int64},1}:
+4-element Vector{UnitRange{Int64}}:
  1:1
  1:2
  1:1
@@ -147,7 +148,7 @@ end
     return copyto!(dest, Base.Broadcast.instantiate(Base.Broadcast.Broadcasted{BS}(bc.f, bc.args, combine_blockaxes.(axes(dest),axes(bc)))))
 end
 
-@generated function copyto!(dest::AbstractArray,
+@generated function _generic_blockbroadcast_copyto!(dest::AbstractArray,
                             bc::Broadcasted{<:AbstractBlockStyle{NDims}, <:Any, <:Any, Args}) where {NDims, Args <: Tuple}
 
     NArgs = length(Args.parameters)
@@ -188,11 +189,50 @@ end
     end
 end
 
-@inline function Broadcast.instantiate(bc::Broadcasted{Style}) where {Style <:AbstractBlockStyle}
+copyto!(dest::AbstractArray,
+        bc::Broadcasted{<:AbstractBlockStyle{NDims}, <:Any, <:Any, Args}) where {NDims, Args <: Tuple} =
+    _generic_blockbroadcast_copyto!(dest, bc)
+
+# type-stable version of _bview.(args, K)
+__bview(args::Tuple{}, K) = ()
+__bview(args::Tuple, K) = tuple(_bview(args[1],K), __bview(tail(args), K)...)
+
+function _fast_blockbradcast_copyto!(dest, bc)
+    @inbounds for K in blockaxes(bc)[1]
+        broadcast!(bc.f, view(dest,K), __bview(bc.args, K)...)
+    end
+    dest
+end
+
+_hasscalarlikevec() = false
+_hasscalarlikevec(a, b...) = _hasscalarlikevec(b...)
+_hasscalarlikevec(a::AbstractVector, b...) = size(a,1) == 1 || _hasscalarlikevec(b...)
+
+blockisequalorscalar(ax, ::Number) = true
+blockisequalorscalar(ax, a) = blockisequal(ax, Base.axes1(a))
+    
+function copyto!(dest::AbstractVector,
+        bc::Broadcasted{<:AbstractBlockStyle{1}, <:Any, <:Any, Args}) where {Args <: Tuple}
+    _hasscalarlikevec(bc.args...) && return _generic_blockbroadcast_copyto!(dest, bc)
+    ax = axes(dest,1)
+    for a in bc.args
+        blockisequalorscalar(ax, a) || return _generic_blockbroadcast_copyto!(dest, bc)
+    end
+    return _fast_blockbradcast_copyto!(dest, bc)
+end
+@inline function Broadcast.instantiate(bc::Broadcasted{Style}) where {Style <:BlockStyle}
     bcf = Broadcast.instantiate(Broadcast.flatten(Broadcasted{Nothing}(bc.f, bc.args, bc.axes)))
     return Broadcasted{Style}(bcf.f, bcf.args, bcf.axes)
 end
 
+_removeblocks(a::Broadcasted) = broadcasted(a.f, map(_removeblocks,a.args)...)
+_removeblocks(a::PseudoBlockArray) = a.blocks
+_removeblocks(a::BlockSlice) = a.indices
+_removeblocks(a::Adjoint) = _removeblocks(parent(a))'
+_removeblocks(a::Transpose) = transpose(_removeblocks(parent(a)))
+_removeblocks(a::SubArray{<:Any,N,<:PseudoBlockArray}) where N = view(_removeblocks(parent(a)), map(_removeblocks, parentindices(a))...)
+_removeblocks(a) = a
+copy(bc::Broadcasted{PseudoBlockStyle{N}}) where N = PseudoBlockArray(materialize(_removeblocks(bc)), axes(bc))
 
 for op in (:+, :-, :*)
     @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:AbstractArray{<:Number,N}}}) where N
@@ -230,5 +270,33 @@ _blocktype(::Type{<:BlockArray{<:Any,N,<:AbstractArray{R,N}}}) where {N,R} = R
 
 BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice1},false}}) where {T,N,Arr<:BlockArray} = 
     BroadcastStyle(_blocktype(Arr))
-BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice{BlockRange{1,Tuple{II}}}},false}}) where {T,N,Arr<:BlockArray,II} = 
-    BroadcastStyle(Arr)
+
+
+# special cases for SubArrays which we want to broadcast by Block
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
+
+
+
+###
+# Fill
+###
+
+for op in (:*, :/)
+    @eval begin
+        broadcasted(::AbstractBlockStyle, ::typeof($op), a::Zeros, b::AbstractArray) = FillArrays._broadcasted_zeros(a, b)
+        broadcasted(::AbstractBlockStyle, ::typeof($op), a::Ones{T}, b::AbstractArray{V}) where {T,V} = LinearAlgebra.copy_oftype(b, Base.promote_op(*, T, V))
+    end
+end
+
+for op in (:*, :\)
+    @eval begin
+        broadcasted(::AbstractBlockStyle, ::typeof($op), a::AbstractArray, b::Zeros) = FillArrays._broadcasted_zeros(a, b)
+        broadcasted(::AbstractBlockStyle, ::typeof($op), a::AbstractArray{T}, b::Ones{V}) where {T,V} = LinearAlgebra.copy_oftype(a, Base.promote_op(*, T, V))
+    end
+end

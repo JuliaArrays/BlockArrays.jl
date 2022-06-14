@@ -36,11 +36,9 @@ blocksize
 blockfirsts
 blocklasts
 blocklengths
+blocksizes
 blocks
 eachblock
-getblock
-getblock!
-setblock!
 blockcheckbounds
 ```
 
@@ -68,4 +66,14 @@ Base.popfirst!
 
 ```@docs
 PseudoBlockArray
+Base.resize!
+```
+
+
+## Kronecker products
+```@docs
+blockkron
+BlockKron
+blockvec
+khatri_rao
 ```

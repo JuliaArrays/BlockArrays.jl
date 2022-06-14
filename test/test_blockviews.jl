@@ -1,18 +1,19 @@
 using BlockArrays, Test, Base64
 
+# useds to force SubArray return
+bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
+
 @testset "Block Views" begin
     @testset "block slice" begin
-        A = BlockArray(1:6,1:3)
-        b = parentindices(view(A, Block(2)))[1] # A BlockSlice
+        A = PseudoBlockArray(1:6,1:3)
+        b = parentindices(bview(A, Block(2)))[1] # A BlockSlice
 
         @test first(b) == 2
         @test last(b) == 3
         @test length(b) == 2
         @test step(b) == 1
-        @test Base.unsafe_length(b) == 2
         @test axes(b) == (Base.OneTo(2),)
         @test Base.axes1(b) == Base.OneTo(2)
-        @test Base.unsafe_indices(b) == (Base.OneTo(2),)
         @test size(b) == (2,)
         @test collect(b) == [2,3]
         @test b[1] == 2
@@ -37,11 +38,13 @@ using BlockArrays, Test, Base64
         # backend tests
         @test_throws ArgumentError Base.to_index(A, Block(1))
 
-        A = BlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
+        A = PseudoBlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
         V = view(A, Block(2), Block(3))
         @test size(V) == (2, 5)
         V[1,1] = -1
         @test A[2,8] == -1
+        @test A[Block(4)] == A[Block(1),Block(2)]
+        @test_throws BlockBoundsError A[Block(10)]
 
         V = view(A, Block(3, 2))
         @test size(V) == (3, 4)
@@ -50,7 +53,7 @@ using BlockArrays, Test, Base64
 
         # test mixed blocks and other indices
         @test view(A, Block(2), 2) == [8,9]
-        @test similar(A, (Base.OneTo(5), axes(A,2))) isa BlockArray{Int}
+        @test similar(A, (Base.OneTo(5), axes(A,2))) isa PseudoBlockArray{Int}
         @test view(A, Block(2), :) == A[2:3,:]
 
         @test view(A, 2, Block(1)) == [2,8,14]
@@ -62,7 +65,7 @@ using BlockArrays, Test, Base64
         @test_throws BlockBoundsError view(V, Block(2,1))
 
 
-        A = BlockArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)
+        A = PseudoBlockArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)
         V = view(A, Block(2), Block(3), Block(1))
         @test size(V) == (2, 3, 1)
         V[1,1,1] = -3
@@ -125,6 +128,17 @@ using BlockArrays, Test, Base64
         V = view(A, Block.(2:3))
         @test V == 2:6
         @test view(V, Block(2)[1:2]) == [4,5]
+
+        A3 = mortar(reshape([rand(5, 4, 1), rand(5, 4, 1), rand(5, 4, 1)], 1, 1, 3))
+        Aodd = A3[:,:,1:2:end]
+        axs = axes(Aodd)
+        axsp = promote(axs...)
+        @test !all(ax -> typeof(ax) === typeof(axs[1]), axs)
+        @test  all(ax -> typeof(ax) === typeof(axsp[1]), axsp)
+        axs = (axs[1], 1:5)
+        axsp = promote(axs...)
+        @test !all(ax -> typeof(ax) === typeof(axs[1]), axs)
+        @test  all(ax -> typeof(ax) === typeof(axsp[1]), axsp)
     end
 
     @testset "subarray implements block interface" begin
@@ -160,10 +174,8 @@ using BlockArrays, Test, Base64
         W = view(A,Block.(1:2),Block(1))
         @test blocks(V) == blocks(A)[1:1,1:2]
         @test blocks(W) == blocks(A)[1:2,1:1]
-        if VERSION ≥ v"1.2"
-            @test stringmime("text/plain", V) == "1×3 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},Tuple{BlockedUnitRange{Array{$Int,1}},BlockedUnitRange{Array{$Int,1}}}}, BlockSlice(Block(1),1:1), BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3)) with eltype $Int with indices Base.OneTo(1)×1:1:3:\n 1  │  2  3"
-            @test stringmime("text/plain", W) == "3×1 view(::BlockArray{$Int,2,Array{Array{$Int,2},2},Tuple{BlockedUnitRange{Array{$Int,1}},BlockedUnitRange{Array{$Int,1}}}}, BlockSlice(Block{1,$Int}[Block(1), Block(2)],1:1:3), BlockSlice(Block(1),1:1)) with eltype $Int with indices 1:1:3×Base.OneTo(1):\n 1\n ─\n 4\n 7"
-        end
+        @test stringmime("text/plain", V) == "1×3 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}, $(typeof(axes(A)))}, BlockSlice(Block(1),1:1), BlockSlice(Block{1, $Int}[Block(1), Block(2)],1:1:3)) with eltype $Int with indices Base.OneTo(1)×1:1:3:\n 1  │  2  3"
+        @test stringmime("text/plain", W) == "3×1 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}, $(typeof(axes(A)))}, BlockSlice(Block{1, $Int}[Block(1), Block(2)],1:1:3), BlockSlice(Block(1),1:1)) with eltype $Int with indices 1:1:3×Base.OneTo(1):\n 1\n ─\n 4\n 7"
     end
 
     @testset "getindex with BlockRange" begin
@@ -220,5 +232,88 @@ using BlockArrays, Test, Base64
         @test !BlockArrays.hasmatchingblocks(view(A,Block.(1:2),Block.(2:3)))
 
         @test BlockArrays.hasmatchingblocks(view(B,Block.(3:3),Block.(2:2)))
+    end
+
+    @testset "sub_materialize cases" begin
+        a = BlockArray(randn(6), 1:3)
+        b = PseudoBlockArray(randn(6), 1:3)
+        @test a[Block.(1:2)] isa BlockArray
+        @test b[Block.(1:2)] isa PseudoBlockArray
+        @test a[1:3] isa Array
+        @test b[1:3] isa Array
+        A = BlockArray(randn(6,6), 1:3, fill(3,2))
+        B = PseudoBlockArray(randn(6,6), 1:3, fill(3,2))
+        @test A[Block.(1:2),Block.(1:2)] isa BlockArray
+        @test B[Block.(1:2),Block.(1:2)] isa PseudoBlockArray
+        @test A[Block.(1:2),1:3] isa PseudoBlockArray
+        @test B[Block.(1:2),1:3] isa PseudoBlockArray
+        @test A[1:3,Block.(1:2)] isa PseudoBlockArray
+        @test B[1:3,Block.(1:2)] isa PseudoBlockArray
+        @test A[Block.(1:2),:] isa BlockArray
+        @test B[Block.(1:2),:] isa PseudoBlockArray
+        @test blockisequal(axes(A,2),axes(A[Block.(1:2),:],2))
+        @test blockisequal(axes(B,2),axes(B[Block.(1:2),:],2))
+        @test A[:,Block.(1:2)] isa BlockArray
+        @test B[:,Block.(1:2)] isa PseudoBlockArray
+        @test blockisequal(axes(A,1),axes(A[:,Block.(1:2)],1))
+        @test blockisequal(axes(B,1),axes(B[:,Block.(1:2)],1))
+        @test A[:,:] isa BlockArray
+        @test B[:,:] isa PseudoBlockArray
+        @test blockisequal(axes(A),axes(A[:,:]))
+        @test blockisequal(axes(B),axes(B[:,:]))
+        @test A[1:3,1:3] isa Array
+        @test B[1:3,1:3] isa Array
+        A = BlockArray(randn(6,6,6), 1:3, fill(3,2),1:3)
+        B = PseudoBlockArray(randn(6,6,6), 1:3, fill(3,2),1:3)
+        @test A[Block.(1:2),Block.(1:2),Block.(1:2)] isa BlockArray
+        @test B[Block.(1:2),Block.(1:2),Block.(1:2)] isa PseudoBlockArray
+        @test A[1:3,Block.(1:2),1:3] isa BlockArray
+        @test B[1:3,Block.(1:2),1:3] isa PseudoBlockArray
+    end
+
+    @testset "BlockArray BlockRange view" begin
+        a = BlockArray(randn(6), 1:3)
+        v = view(a, Block(3)[1:2])
+        v[1] = 5
+        @test a[4] == 5
+    end
+
+    @testset "types with custom views" begin
+        a = mortar([7:9,5:6])
+        v = view(a,Block.(1:2))
+        @test a[Block(1)[1:3]] ≡ view(a,Block(1)[1:3]) ≡ view(v,Block(1)[1:3]) ≡ 7:9
+    end
+
+    @testset "blockrange-of-blockreange" begin
+        a = mortar([7:9,5:6])
+        v = view(a,Block.(1:2))
+        @test view(v, Block(1)) ≡ 7:9
+        @test bview(v, Block(1)) == 7:9
+        @test view(v,Block.(1:2)) == v
+
+        A = BlockArray([1 2 3; 4 5 6; 7 8 9], 1:2, 1:2)
+        V = view(A, Block.(1:2), Block.(1:2))
+        @test view(V, Block(1,1)) ≡ view(A, Block(1,1))
+        @test bview(V, Block(1,1)) == view(A, Block(1,1))
+    end
+
+    @testset "view of BlockSlice unwinds" begin
+        a = mortar([7:9,5:6])
+        v = bview(a,Block(1))
+        @test view(a, parentindices(v)...) ≡ 7:9
+    end
+
+    @testset "BlockVector' view" begin
+        v = BlockArray(randn(3),1:2)
+        @test view(v',Block(1,2)) === view(v,Block(2))'
+        @test view(transpose(v),Block(1,2)) === transpose(view(v,Block(2)))
+
+        @test_throws BlockBoundsError v'[Block(2,2)]
+        @test_throws BlockBoundsError transpose(v)[Block(2,2)]
+    end
+
+    @testset "array indexing past ndims" begin
+        v = BlockArray(randn(3),1:2)
+        @test_skip @test_throws BlockBoundsError v[Block(1,2)]
     end
 end

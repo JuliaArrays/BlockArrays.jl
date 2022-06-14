@@ -20,7 +20,7 @@ An arrays block structure is inferred from an axes, and therefore every array
 is in some sense already a block array:
 ```julia
 julia> A = randn(5,5)
-5×5 Array{Float64,2}:
+5×5 Matrix{Float64}:
   0.452801   -0.416508   1.17406    1.52575     3.1574  
   0.413142   -1.34722   -1.28597    0.637721    0.30655 
   0.34907    -0.887615   0.284972  -0.0212884  -0.225832
@@ -28,7 +28,7 @@ julia> A = randn(5,5)
  -0.0971956  -1.7664    -0.592629  -1.48947     1.53418 
 
 julia> A[Block(1,1)]
-5×5 Array{Float64,2}:
+5×5 Matrix{Float64}:
   0.452801   -0.416508   1.17406    1.52575     3.1574  
   0.413142   -1.34722   -1.28597    0.637721    0.30655 
   0.34907    -0.887615   0.284972  -0.0212884  -0.225832
@@ -40,9 +40,7 @@ It is possible to override additional functions to improve speed, however.
 | Methods to implement    | Brief description |
 | :---------------------- | :---------------- |
 | **Optional methods**    |           
-| `getblock(A, i...)`     | `X[Block(i...)]`, blocked indexing  |
-| `setblock!(A, v, i...)` | `X[Block(i...)] = v`, blocked index assignment |
-| `getblock!(x, A, i)`    | `X[i]`, blocked index assignment with in place storage in `x` |
+| `BlockArrays.viewblock(A, i::Block)`     | Specialised non-allocating `X[Block(i...)]`, blocked indexing  |
 
 For a more thorough description of the methods see the public interface documentation.
 
@@ -52,7 +50,7 @@ that are subtypes of `AbstractBlockArray`:
 * A pretty printing `show` function that uses unicode lines to split up the blocks:
 ```
 julia> A = BlockArray(rand(4, 5), [1,3], [2,3])
-2×2-blocked 4×5 BlockArray{Float64,2}:
+2×2-blocked 4×5 BlockMatrix{Float64}:
 0.61179   0.965631  │  0.696476   0.392796  0.712462
 --------------------┼-------------------------------
 0.620099  0.364706  │  0.0311643  0.27895   0.73477
@@ -64,7 +62,7 @@ julia> A = BlockArray(rand(4, 5), [1,3], [2,3])
 
 ```
 julia> blockcheckbounds(A, 5, 3)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockArrays.BlockArray{Float64,2,Array{Float64,2}} at block index [5,3]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockMatrix{Float64, Matrix{Float64}} at block index [5,3]
 ```
 
 * Happy users who know how to use your new block array :)

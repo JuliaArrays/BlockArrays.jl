@@ -23,19 +23,19 @@ julia> using BlockArrays, Random, SparseArrays
 julia> Random.seed!(12345);
 
 julia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
-2×2-blocked 2×3 PseudoBlockArray{Float64,2}:
- 0.562714  0.371605  │  0.381128
+2×2-blocked 2×3 PseudoBlockMatrix{Float64}:
+ 0.944791  0.339612  │  0.322501
  ────────────────────┼──────────
- 0.849939  0.283365  │  0.365801
+ 0.866895  0.136117  │  0.252549
 
 julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
-3-blocked 6-element PseudoBlockArray{Float64,1,SparseVector{Float64,Int64},Tuple{BlockedUnitRange{Array{Int64,1}}}}:
+3-blocked 6-element PseudoBlockVector{Float64, SparseVector{Float64, Int64}, Tuple{BlockedUnitRange{Vector{Int64}}}}:
  0.0
- 0.5865981007905481
  0.0
+ 0.26755021483368013
  ───────────────────
- 0.05016684053503706
  0.0
+ 0.11848853125656122
  ───────────────────
  0.0
 ```
@@ -43,8 +43,10 @@ julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
 struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{T, N}
     blocks::R
     axes::BS
-    PseudoBlockArray{T,N,R,BS}(blocks::R, axes::BS) where {T,N,R,BS<:NTuple{N,AbstractUnitRange{Int}}} =
-        new{T,N,R,BS}(blocks, axes)
+    function PseudoBlockArray{T,N,R,BS}(blocks::R, axes::BS) where {T,N,R,BS<:NTuple{N,AbstractUnitRange{Int}}}
+        checkbounds(blocks,axes...)
+        return new{T,N,R,BS}(blocks, axes)
+    end
 end
 
 const PseudoBlockMatrix{T} = PseudoBlockArray{T, 2}
@@ -120,6 +122,12 @@ convert(::Type{PseudoBlockArray}, A::PseudoBlockArray) = A
 convert(::Type{PseudoBlockArray{T,N,R,BS}}, A::PseudoBlockArray) where {T,N,R,BS} =
     PseudoBlockArray{T,N,R,BS}(convert(R, A.blocks), convert(BS, A.axes))
 
+convert(::Type{AbstractArray{T,N}}, A::PseudoBlockArray{T,N}) where {T,N} = A
+convert(::Type{AbstractArray{V,N} where V}, A::PseudoBlockArray{T,N}) where {T,N} = A
+convert(::Type{AbstractArray{T}}, A::PseudoBlockArray{T}) where {T} = A
+convert(::Type{AbstractArray}, A::PseudoBlockArray) = A
+
+
 
 PseudoBlockArray{T, N}(A::AbstractArray{T2, N}) where {T,T2,N} =
     PseudoBlockArray(Array{T, N}(A), axes(A))
@@ -133,6 +141,9 @@ convert(::Type{PseudoBlockArray{T1}}, A::AbstractArray{T2, N}) where {T1,T2,N} =
 convert(::Type{PseudoBlockArray}, A::AbstractArray{T, N}) where {T,N} =
     convert(PseudoBlockArray{T, N}, A)
 
+AbstractArray{T}(A::PseudoBlockArray) where T = PseudoBlockArray(AbstractArray{T}(A.blocks), A.axes)
+AbstractArray{T,N}(A::PseudoBlockArray) where {T,N} = PseudoBlockArray(AbstractArray{T,N}(A.blocks), A.axes)
+
 copy(A::PseudoBlockArray) = PseudoBlockArray(copy(A.blocks), A.axes)
 
 ###########################
@@ -143,39 +154,32 @@ function Base.similar(block_array::PseudoBlockArray{T,N}, ::Type{T2}) where {T,N
     PseudoBlockArray(similar(block_array.blocks, T2), axes(block_array))
 end
 
-@inline Base.similar(block_array::Type{<:Array{T}}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    PseudoBlockArray{T}(undef, axes)
-@inline Base.similar(block_array::Type{<:Array{T}}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    PseudoBlockArray{T}(undef, axes)
-@inline Base.similar(block_array::Type{<:Array{T}}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    PseudoBlockArray{T}(undef, axes)
+to_axes(r::AbstractUnitRange) = r
+to_axes(n::Integer) = Base.oneto(n)
 
-@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    PseudoBlockArray{T}(undef, axes)
-@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    PseudoBlockArray{T}(undef, axes)
-@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    PseudoBlockArray{T}(undef, axes)
+@inline Base.similar(block_array::Type{<:Array{T}}, axes::Tuple{BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::Type{<:Array{T}}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::Type{<:Array{T}}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
 
-@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    PseudoBlockArray{T}(undef, axes)
-@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    PseudoBlockArray{T}(undef, axes)
-@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{AbstractUnitRange{Int},BlockedUnitRange,Vararg{AbstractUnitRange{Int}}}) where T =
-    PseudoBlockArray{T}(undef, axes)
+@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::Array, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
 
-@inline function Base.getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
-    @boundscheck checkbounds(block_arr, i...)
-    @inbounds v = block_arr.blocks[i...]
-    return v
-end
+@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
 
-
-@inline function Base.setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
-    @boundscheck checkbounds(block_arr, i...)
-    @inbounds block_arr.blocks[i...] = v
-    return block_arr
-end
+@inline Base.@propagate_inbounds Base.getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N} = block_arr.blocks[i...]
+@inline Base.@propagate_inbounds Base.setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N} = setindex!(block_arr.blocks, v, i...)
 
 ################################
 # AbstractBlockArray Interface #
@@ -186,11 +190,14 @@ end
 # Indexing #
 ############
 
-@inline function _pseudoblockindex_getindex(block_arr, blockindex)
+@inline function viewblock(block_arr::PseudoBlockArray, block)
+    range = getindex.(axes(block_arr), Block.(block.n))
+    return view(block_arr.blocks, range...)
+end
+
+@inline Base.@propagate_inbounds function _pseudoblockindex_getindex(block_arr, blockindex)
     I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
-    @boundscheck checkbounds(block_arr.blocks, I...)
-    @inbounds v = block_arr.blocks[I...]
-    return v
+    block_arr.blocks[I...]
 end
 
 @inline Base.getindex(block_arr::PseudoBlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
@@ -199,67 +206,6 @@ end
 
 @inline Base.getindex(block_arr::PseudoBlockVector{T}, blockindex::BlockIndex{1}) where T =
     _pseudoblockindex_getindex(block_arr, blockindex)
-
-@inline function getblock(block_arr::PseudoBlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
-    range = getindex.(axes(block_arr), Block.(block))
-    return view(block_arr.blocks, range...)
-end
-
-@inline function _check_getblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Integer}) where {T,N}
-    for i in 1:N
-        if size(x, i) != length(blockrange[i])
-            throw(DimensionMismatch(string("tried to assign ", length.(getindex.(axes(block_arr), block)), " block to $(size(x)) array")))
-        end
-    end
-end
-
-
-@generated function getblock!(x, block_arr::PseudoBlockArray{T,N}, block::Vararg{Integer, N}) where {T,N}
-    return quote
-        blockrange = getindex.(axes(block_arr), Block.(block))
-        @boundscheck _check_getblock!(blockrange, x, block_arr, block)
-
-        arr = block_arr.blocks
-        @nexprs $N d -> k_d = 1
-        @inbounds begin
-            @nloops $N i (d->(blockrange[d])) (d-> k_{d-1}=1) (d-> k_d+=1) begin
-                (@nref $N x k) = (@nref $N arr i)
-            end
-        end
-        return x
-    end
-end
-
-@inline function Base.setindex!(block_arr::PseudoBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N}
-    I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
-    @boundscheck checkbounds(block_arr.blocks, I...)
-    @inbounds block_arr.blocks[I...] = v
-    return block_arr
-end
-
-@inline function _check_setblock!(blockrange, x, block_arr::PseudoBlockArray{T,N}, block::NTuple{N, Integer}) where {T,N}
-    blocksizes =  length.(getindex.(axes(block_arr), Block.(block)))
-    for i in 1:N
-        if size(x, i) != blocksizes[i]
-            throw(DimensionMismatch(string("tried to assign $(size(x)) array to ", blocksizes, " block")))
-        end
-    end
-end
-
-@generated function setblock!(block_arr::PseudoBlockArray{T, N}, x, block::Vararg{Integer, N}) where {T,N}
-    return quote
-        blockrange = getindex.(axes(block_arr), Block.(block))
-        @boundscheck _check_setblock!(blockrange, x, block_arr, block)
-        arr = block_arr.blocks
-        @nexprs $N d -> k_d = 1
-        @inbounds begin
-            @nloops $N i (d->(blockrange[d])) (d-> k_{d-1}=1) (d-> k_d+=1) begin
-                (@nref $N arr i) = (@nref $N x k)
-            end
-        end
-    end
-end
-
 
 ########
 # Misc #
@@ -284,12 +230,12 @@ function Base.fill!(block_array::PseudoBlockArray, v)
     block_array
 end
 
-function lmul!(α::Number, block_array::PseudoBlockArray)
+function ArrayLayouts.lmul!(α::Number, block_array::PseudoBlockArray)
     lmul!(α, block_array.blocks)
     block_array
 end
 
-function rmul!(block_array::PseudoBlockArray, α::Number)
+function ArrayLayouts.rmul!(block_array::PseudoBlockArray, α::Number)
     rmul!(block_array.blocks, α)
     block_array
 end
@@ -312,6 +258,22 @@ function Base.showarg(io::IO, A::PseudoBlockArray, toplevel::Bool)
         print(io, '}')
     end
 end
+"""
+resize!(a::PseudoBlockVector, N::Block) -> PseudoBlockVector
+
+Resize `a` to contain the first `N` blocks, returning a new `PseudoBlockVector` sharing
+memory with `a`. If `N` is smaller than the current
+collection block length, the first `N` blocks will be retained. `N` is not allowed to be larger.
+"""
+function resize!(a::PseudoBlockVector, N::Block{1})
+    ax = axes(a,1)
+    if iszero(Int(N))
+        PseudoBlockVector(resize!(a.blocks, 0), (ax[Block.(Base.OneTo(0))],))
+    else
+        PseudoBlockVector(resize!(a.blocks, last(ax[N])), (ax[Block.(Base.OneTo(Int(N)))],))
+    end
+end
+
 
 
 ###########################
@@ -321,7 +283,7 @@ end
 Base.strides(A::PseudoBlockArray) = strides(A.blocks)
 Base.stride(A::PseudoBlockArray, i::Integer) = stride(A.blocks, i)
 Base.unsafe_convert(::Type{Ptr{T}}, A::PseudoBlockArray) where T = Base.unsafe_convert(Ptr{T}, A.blocks)
-
+Base.elsize(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = Base.elsize(R)
 
 ###
 # col/rowsupport
@@ -337,3 +299,9 @@ rowsupport(A::PseudoBlockArray, j) = rowsupport(A.blocks, j)
 for op in (:zeros, :ones)
     @eval $op(::Type{T}, axs::Tuple{BlockedUnitRange,Vararg{Any}}) where T = PseudoBlockArray($op(T, map(length,axs)...), axs)
 end
+
+Base.replace_in_print_matrix(f::PseudoBlockVecOrMat, i::Integer, j::Integer, s::AbstractString) =
+    Base.replace_in_print_matrix(f.blocks, i, j, s)
+
+
+LinearAlgebra.norm(A::PseudoBlockArray, p::Real=2) = norm(A.blocks, p)

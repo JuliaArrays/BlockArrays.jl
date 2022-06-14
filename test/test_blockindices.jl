@@ -1,4 +1,4 @@
-using BlockArrays, FillArrays, OffsetArrays, Test, Base64
+using BlockArrays, FillArrays, OffsetArrays, Test, Base64, StaticArrays, ArrayLayouts
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
 @testset "Blocks" begin
@@ -91,6 +91,19 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
         @test intersect(Block.(2:5), Block.(3:6)) ≡ Block.(3:5)
     end
+
+    @testset "print" begin
+        @test stringmime("text/plain", Block()) == "Block()"
+        @test stringmime("text/plain", Block(1)) == "Block(1)"
+        @test stringmime("text/plain", Block(1,2)) == "Block(1, 2)"
+        @test stringmime("text/plain", Block{0}()) == "Block()"
+        @test stringmime("text/plain", Block{1}(1)) == "Block(1)"
+        @test stringmime("text/plain", Block{2}(1,2)) == "Block(1, 2)"
+
+        @test stringmime("text/plain", Block{0,BigInt}()) == "Block{0, BigInt}(())"
+        @test stringmime("text/plain", Block{1,BigInt}(1)) == "Block{1, BigInt}((1,))"
+        @test stringmime("text/plain", Block{2}(1,2)) == "Block(1, 2)"
+    end
 end
 
 @testset "BlockedUnitRange" begin
@@ -143,6 +156,18 @@ end
         @test blockfirsts(b) == [1,2,4]
         @test blocklasts(b) == [1,3,6]
         @test blocklengths(b) == [1,2,3]
+
+        o = blockedrange(Ones{Int}(10))
+        @test blocklasts(o) ≡ blockfirsts(o) ≡ Base.OneTo(10)
+        @test blocklengths(o) ≡ Ones{Int}(10)
+
+        f = blockedrange(Fill(2,5))
+        @test blockfirsts(f) ≡ 1:2:9
+        @test blocklasts(f) ≡ 2:2:10
+        @test blocklengths(f) ≡ Fill(2,5)
+
+        r = blockedrange(Base.OneTo(5))
+        @test blocklasts(r) ≡ ArrayLayouts.RangeCumsum(Base.OneTo(5))
     end
 
     @testset "convert" begin
@@ -212,17 +237,23 @@ end
     end
 
     @testset "BlockIndex indexing" begin
-       b = blockedrange([1,2,3])
-       @test b[Block(3)[2]] == b[Block(3)][2] == 5
-       @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
+        b = blockedrange([1,2,3])
+        @test b[Block(3)[2]] == b[Block(3)][2] == 5
+        @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
     end
 
     @testset "BlockRange indexing" begin
-       b = blockedrange([1,2,3])
-       @test b[Block.(1:2)] == blockedrange([1,2])
-       @test b[Block.(1:3)] == b
-       @test_throws BlockBoundsError b[Block.(0:2)]
-       @test_throws BlockBoundsError b[Block.(1:4)]
+        b = blockedrange([1,2,3])
+        @test b[Block.(1:2)] == blockedrange([1,2])
+        @test b[Block.(1:3)] == b
+        @test_throws BlockBoundsError b[Block.(0:2)]
+        @test_throws BlockBoundsError b[Block.(1:4)]
+ 
+        @testset "bug" begin
+            b = blockedrange(1:4)
+            @test b[Block.(2:4)] == 2:10
+            @test length(b[Block.(2:4)]) == 9
+        end
     end
 
     @testset "misc" begin
@@ -230,6 +261,8 @@ end
         @test axes(b) == Base.unsafe_indices(b) == (b,)
         @test Base.dataids(b) == Base.dataids(blocklasts(b))
         @test_throws ArgumentError BlockedUnitRange(b)
+
+        @test summary(b) == "3-blocked 6-element BlockedUnitRange{Vector{$Int}}"
     end
 
     @testset "OneTo interface" begin
@@ -247,7 +280,7 @@ end
         @test findblock(b,1) == Block(1)
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
-        @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Array{Int64,1}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
     end
 
     @testset "BlockIndex type piracy (#108)" begin
@@ -260,6 +293,34 @@ end
         @test checkindex(Bool, b, Block(1))
         @test checkindex(Bool, b, Block(3))
         @test !checkindex(Bool, b, Block(4))
+        @test checkbounds(Bool, b, Block(1)[1])
+        @test !checkbounds(Bool, b, Block(1)[2])
+        @test !checkbounds(Bool, b, Block(0)[1])
+        @test !checkbounds(Bool, b, Block(1)[0])
+    end
+
+    @testset "Slice" begin
+        b = blockedrange([1,2,3])
+        S = Base.Slice(b)
+        @test blockaxes(S) == blockaxes(b)
+        @test S[Block(2)] == 2:3
+        @test S[Block.(1:2)] == 1:3
+        @test axes(S) == axes(b)
+    end
+
+    @testset "StaticArrays" begin
+        @test blockisequal(blockedrange(SVector(1,2,3)), blockedrange([1,2,3]))
+        @test @allocated(blockedrange(SVector(1,2,3))) == 0
+    end
+
+    @testset "Tuples" begin
+        # we support Tuples in addition to SVectors for InfiniteArrays.jl, which has
+        # infinite block sizes
+        s = blockedrange((5,big(100_000_000)^2))
+        @test blocklengths(s) == [5,big(100_000_000)^2]
+        @test blockaxes(s) == (Block.(1:2),)
+        @test findblock(s,3) == Block(1)
+        @test findblock(s,big(100_000_000)) == Block(2)
     end
 end
 
@@ -267,6 +328,13 @@ end
     b = BlockSlice(Block(5),1:3)
     @test b[Base.Slice(1:3)] ≡ b
     @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
+    @test Block(b) ≡ Block(5)
+
+    @testset "OneTo converts" begin
+        for b in (BlockSlice(Block(1), 1:1), BlockSlice(Block.(1:1), 1:1), BlockSlice(Block(1)[1:1], 1:1))
+            @test convert(typeof(b), Base.OneTo(1)) ≡ b
+        end
+    end
 end
 
 #=

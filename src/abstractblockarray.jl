@@ -25,7 +25,7 @@ block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2st
 _block_summary(a) = string(block2string(blocksize(a), size(a)), " ", typeof(a))
 Base.summary(a::AbstractBlockArray) = _block_summary(a)
 _show_typeof(io, a) = show(io, typeof(a))
-function _block_summary(io, a)    
+function _block_summary(io, a)
     print(io, block2string(blocksize(a), size(a)))
     print(io, ' ')
     _show_typeof(io, a)
@@ -37,97 +37,14 @@ Base.similar(a::AbstractBlockArray{T}) where {T}                             = s
 Base.similar(a::AbstractBlockArray, ::Type{T}) where {T}                     = similar(a, T, axes(a))
 Base.similar(a::AbstractBlockArray{T}, dims::Tuple) where {T}                = similar(a, T, dims)
 
+# If all we know is size, just return an Array which conforms to BlockArray interface
+Base.similar(::Type{<:AbstractBlockArray{T,N}}, dims::Dims) where {T,N} = similar(Array{T,N}, dims)
+
 Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
 
 # need to overload axes to return BlockAxis
 @inline size(block_array::AbstractBlockArray) = map(length, axes(block_array))
 @inline axes(block_array::AbstractBlockArray) = throw(error("axes for ", typeof(block_array), " is not implemented"))
-
-"""
-    getblock(A, inds...)
-
-Returns the block at blockindex `inds...`. An alternative syntax is `A[Block(inds...)].
-Throws a `BlockBoundsError` if this block is out of bounds.
-
-```jldoctest; setup = quote using BlockArrays end
-julia> v = Array(reshape(1:6, (2, 3)))
-2×3 Array{Int64,2}:
- 1  3  5
- 2  4  6
-
-julia> A = BlockArray(v, [1,1], [2,1])
-2×2-blocked 2×3 BlockArray{Int64,2}:
- 1  3  │  5
- ──────┼───
- 2  4  │  6
-
-julia> getblock(A, 2, 1)
-1×2 Array{Int64,2}:
- 2  4
-
-julia> A[Block(1, 2)]
-1×1 Array{Int64,2}:
- 5
-```
-"""
-function getblock(A::AbstractBlockArray{T,N}, ::Vararg{Integer, N}) where {T,N}
-    throw(error("getblock for ", typeof(A), " is not implemented"))
-end
-
-
-"""
-    getblock!(X, A, inds...)
-
-Stores the block at blockindex `inds` in `X` and returns it. Throws a `BlockBoundsError` if the
-attempted assigned block is out of bounds.
-
-```jldoctest; setup = quote using BlockArrays end
-julia> A = PseudoBlockArray(ones(2, 3), [1, 1], [2, 1])
-2×2-blocked 2×3 PseudoBlockArray{Float64,2}:
- 1.0  1.0  │  1.0
- ──────────┼─────
- 1.0  1.0  │  1.0
-
-julia> x = zeros(1, 2);
-
-julia> getblock!(x, A, 2, 1);
-
-julia> x
-1×2 Array{Float64,2}:
- 1.0  1.0
-```
-"""
-getblock!(X, A::AbstractBlockArray{T,N}, ::Vararg{Integer, N}) where {T,N} = throw(error("getblock! for ", typeof(A), " is not implemented"))
-
-@inline getblock!(X, A::AbstractBlockArray{T,N}, block::Block{N}) where {T,N}             = getblock!(X, A, block.n...)
-@inline getblock!(X, A::AbstractBlockVector, block::Block{1})                       = getblock!(X, A, block.n[1])
-@inline getblock!(X, A::AbstractBlockArray{T, N}, block::Vararg{Block{1}, N}) where {T,N} = getblock!(X, A, (Block(block).n)...)
-
-"""
-    setblock!(A, v, inds...)
-
-Stores the block `v` in the block at block index `inds` in `A`. An alternative syntax is `A[Block(inds...)] = v`.
-Throws a `BlockBoundsError` if this block is out of bounds.
-
-```jldoctest; setup = quote using BlockArrays end
-julia> A = PseudoBlockArray(zeros(2, 3), [1, 1], [2, 1]);
-
-julia> setblock!(A, [1 2], 1, 1);
-
-julia> A[Block(2, 1)] = [3 4];
-
-julia> A
-2×2-blocked 2×3 PseudoBlockArray{Float64,2}:
- 1.0  2.0  │  0.0
- ──────────┼─────
- 3.0  4.0  │  0.0
-```
-"""
-setblock!(A::AbstractBlockArray{T,N}, v, ::Vararg{Integer, N}) where {T,N} = throw(error("setblock! for ", typeof(A), " is not implemented"))
-
-@inline setblock!(A::AbstractBlockArray{T, N}, v, block::Block{N}) where {T,N}      = setblock!(A, v, block.n...)
-@inline setblock!(A::AbstractBlockVector, v, block::Block{1})                       = setblock!(A, v, block.n[1])
-@inline setblock!(A::AbstractBlockArray{T, N}, v, block::Vararg{Block{1}, N}) where {T,N} = setblock!(A, v, (Block(block).n)...)
 
 
 """
@@ -169,7 +86,7 @@ specialize this method if they need to provide custom block bounds checking beha
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockArray{Float64,2,Array{Array{Float64,2},2},Tuple{BlockedUnitRange{Array{Int64,1}},BlockedUnitRange{Array{Int64,1}}}} at block index [3,2]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}} at block index [3,2]
 [...]
 ```
 """
@@ -189,18 +106,38 @@ end
         @inbounds _i = i[idx]
         Block(_i) in n[k] || return false
     end
+    for idx = N+1:length(i)
+        isone(i[idx]) || return false
+    end
     return true
 end
 
 blockcheckbounds(A::AbstractArray{T, N}, i::Block{N}) where {T,N} = blockcheckbounds(A, i.n...)
+blockcheckbounds(A::AbstractArray{T, N}, i::Vararg{Block{1},N}) where {T,N} = blockcheckbounds(A, Int.(i)...)
+blockcheckbounds(A::AbstractVector{T}, i::Block{1}) where {T,N} = blockcheckbounds(A, Int(i))
 
-# Convert to @generated...
-@propagate_inbounds Base.getindex( block_arr::AbstractBlockArray{T, N}, block::Block{N}) where {T,N}       =  getblock(block_arr, block.n...)
-@propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T, N}, v, block::Block{N}) where {T,N}    =  setblock!(block_arr, v, block.n...)
-@propagate_inbounds Base.getindex( block_arr::AbstractBlockVector, block::Block{1})                  =  getblock(block_arr, block.n[1])
-@propagate_inbounds Base.setindex!(block_arr::AbstractBlockVector, v, block::Block{1})               =  setblock!(block_arr, v, block.n[1])
-@inline Base.getindex(block_arr::AbstractBlockArray{T,N}, block::Vararg{Block{1}, N}) where {T,N}     =  getblock(block_arr, (Block(block).n)...)
-@inline Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N} =  setblock!(block_arr, v, (Block(block).n)...)
+@propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Block{N}) where {T,N} =
+    setindex!(block_arr, v, Block.(block.n)...)
+@inline @propagate_inbounds function Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N}
+    blockcheckbounds(block_arr, block...)
+    dest = view(block_arr, block...)
+    size(dest) == size(v) || throw(DimensionMismatch(string("tried to assign $(size(v)) array to $(size(dest)) block")))
+    copyto!(dest, v)
+    block_arr
+end
+
+@inline @propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N} =
+    view(block_arr, block(blockindex))[blockindex.α...] = v
+@inline @propagate_inbounds Base.setindex!(block_arr::AbstractBlockVector{T}, v, blockindex::BlockIndex{1}) where {T} =
+    view(block_arr, block(blockindex))[blockindex.α...] = v
+@inline @propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
+    block_arr[BlockIndex(blockindex)] = v
+
+viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block_arr, block)
+@inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, block::Block{N}) where N = viewblock(block_arr, block)
+@inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, block::Block{1}) where N = view(block_arr, Block(Base._ind2sub(map(Base.OneTo, blocksize(block_arr)), Int(block))...))
+@inline Base.view(block_arr::AbstractBlockVector, block::Block{1}) = viewblock(block_arr, block)
+@inline @propagate_inbounds Base.view(block_arr::AbstractBlockArray, block::Block{1}...) = view(block_arr, Block(block))
 
 """
     eachblock(A::AbstractBlockArray)
@@ -210,23 +147,23 @@ returning views.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> v = Array(reshape(1:6, (2, 3)))
-2×3 Array{Int64,2}:
+2×3 Matrix{Int64}:
  1  3  5
  2  4  6
 
 julia> A = BlockArray(v, [1,1], [2,1])
-2×2-blocked 2×3 BlockArray{Int64,2}:
+2×2-blocked 2×3 BlockMatrix{Int64}:
  1  3  │  5
  ──────┼───
  2  4  │  6
 
 julia> Matrix.(collect(eachblock(A)))
-2×2 Array{Array{Int64,2},2}:
- [1 3]  [5]
- [2 4]  [6]
+2×2 Matrix{Matrix{Int64}}:
+ [1 3]  [5;;]
+ [2 4]  [6;;]
 
 julia> sum.(eachblock(A))
-2×2 Array{Int64,2}:
+2×2 Matrix{Int64}:
  4  5
  6  6
 ```
@@ -236,3 +173,27 @@ function eachblock(A::AbstractBlockArray)
     blockinds = CartesianIndices(axes.(blocklasts.(axes(A)),1))
     (view(A, Block(Tuple(I))) for I in blockinds)
 end
+
+# Use memory laout for sub-blocks
+@inline Base.getindex(A::AbstractMatrix, kr::Colon, jr::Block{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline Base.getindex(A::AbstractMatrix, kr::Block{1}, jr::Colon) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline Base.getindex(A::AbstractMatrix, kr::Block{1}, jr::AbstractVector) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline Base.getindex(A::AbstractArray{T,N}, kr::Block{1}, jrs...) where {T,N} = ArrayLayouts.layout_getindex(A, kr, jrs...)
+@inline Base.getindex(A::AbstractArray{T,N}, block::Block{N}) where {T,N} = ArrayLayouts.layout_getindex(A, block)
+@inline Base.getindex(A::AbstractMatrix, kr::AbstractVector, jr::Block) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline Base.getindex(A::AbstractMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline Base.getindex(A::LayoutMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
+for Typ in (:AbstractTriangular, :Adjoint, :Transpose, :Symmetric, :Hermitian)
+    @eval @inline Base.getindex(A::$Typ{<:Any,<:LayoutMatrix}, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
+end
+
+###
+# permutedims
+#
+# just use transpose for now
+###
+
+Base.permutedims(A::AbstractBlockVector{<:Number}) = transpose(A)
+Base.permutedims(A::AbstractBlockMatrix{<:Number}) = transpose(A)
+
+
