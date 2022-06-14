@@ -6,7 +6,7 @@
 
 function _diag_chol!(A::AbstractArray{T}, i::Int, ::Type{UpperTriangular}) where T<:Real
     Pii = view(A,Block(i,i))
-    for k = 1:i-1
+    for k = Int(first(blockcolsupport(A,Block(i)))):i-1
         muladd!(-one(T), view(A,Block(k,i))', view(A,Block(k,i)), one(T), Pii)
     end
     return LAPACK.potrf!('U', Pii)
@@ -21,9 +21,9 @@ function _diag_chol!(A::AbstractArray{T}, i::Int, ::Type{LowerTriangular}) where
 end
 
 function _nondiag_chol!(A::AbstractArray{T}, i::Int, n::Int, ::Type{UpperTriangular}) where T<:Real
-    for j = intersect(convert(Array{Int,1},blockrowsupport(A,i)),i+1:n)
+    for j = i+1:Int(last(blockrowsupport(A,Block(i))))
         Pij = view(A,Block(i,j))
-        for k = 1:i-1
+        for k = Int(first(blockcolsupport(A,Block(j)))):i-1
             muladd!(-one(T), view(A,Block(k,i))', view(A,Block(k,j)), one(T), Pij)
         end
         ldiv!(transpose(UpperTriangular(view(A,Block(i,i)))), Pij)
