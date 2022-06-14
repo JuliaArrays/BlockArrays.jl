@@ -7,7 +7,7 @@
 function _diag_chol!(A::AbstractArray{T}, i::Int, ::Type{UpperTriangular}) where T<:Real
     Pii = view(A,Block(i,i))
     for k = 1:i-1
-        muladd!(-one(T), getblock(A,k,i)', getblock(A,k,i), one(T), Pii)
+        muladd!(-one(T), view(A,Block(k,i))', view(A,Block(k,i)), one(T), Pii)
     end
     return LAPACK.potrf!('U', Pii)
 end
@@ -15,7 +15,7 @@ end
 function _diag_chol!(A::AbstractArray{T}, i::Int, ::Type{LowerTriangular}) where T<:Real
     Pii = view(A,Block(i,i))
     for k = 1:i-1
-        muladd!(-one(T), getblock(A,k,i)', getblock(A,k,i), one(T), Pii)
+        muladd!(-one(T), view(A,Block(k,i))', view(A,Block(k,i)), one(T), Pii)
     end
     return LAPACK.potrf!('U', Pii)
 end
@@ -24,9 +24,9 @@ function _nondiag_chol!(A::AbstractArray{T}, i::Int, n::Int, ::Type{UpperTriangu
     for j = intersect(convert(Array{Int,1},blockrowsupport(A,i)),i+1:n)
         Pij = view(A,Block(i,j))
         for k = 1:i-1
-            muladd!(-one(T), getblock(A,k,i)', getblock(A,k,j), one(T), Pij)
+            muladd!(-one(T), view(A,Block(k,i))', view(A,Block(k,j)), one(T), Pij)
         end
-        ldiv!(transpose(UpperTriangular(getblock(A,i,i))), Pij)
+        ldiv!(transpose(UpperTriangular(view(A,Block(i,i)))), Pij)
     end
 end
 
@@ -34,9 +34,9 @@ function _nondiag_chol!(A::AbstractArray{T}, i::Int, n::Int, ::Type{LowerTriangu
     for j = intersect(convert(Array{Int,1},blockrowsupport(A,i)),i+1:n)
         Pij = view(A,Block(i,j))
         for k = 1:i-1
-            muladd!(-one(T), getblock(A,k,i)', getblock(A,k,j), one(T), Pij)
+            muladd!(-one(T), view(A,Block(k,i))', view(A,Block(k,j)), one(T), Pij)
         end
-        ldiv!(UpperTriangular(getblock(A,i,i))', Pij)
+        ldiv!(UpperTriangular(view(A,Block(i,i)))', Pij)
     end
 end
 
