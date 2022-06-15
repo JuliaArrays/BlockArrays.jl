@@ -19,7 +19,8 @@ function _nondiag_chol!(A::AbstractArray{T}, i::Int, n::Int, ::Type{UpperTriangu
         for k = Int(first(blockcolsupport(A,Block(j)))):i-1
             muladd!(-one(T), view(A,Block(k,i))', view(A,Block(k,j)), one(T), Pij)
         end
-        ldiv!(transpose(UpperTriangular(view(A,Block(i,i)))), Pij)
+        # use ArrayLayouts.ldiv! to take advantage of layout
+        ArrayLayouts.ldiv!(transpose(UpperTriangular(view(A,Block(i,i)))), Pij)
     end
 end
 
@@ -29,7 +30,7 @@ function _nondiag_chol!(A::AbstractArray{T}, i::Int, n::Int, ::Type{LowerTriangu
         for k = Int(first(blockcolsupport(A,Block(j)))):i-1
             muladd!(-one(T), view(A,Block(k,i))', view(A,Block(k,j)), one(T), Pij)
         end
-        ldiv!(UpperTriangular(view(A,Block(i,i)))', Pij)
+        ArrayLayouts.ldiv!(UpperTriangular(view(A,Block(i,i)))', Pij)
     end
 end
 
