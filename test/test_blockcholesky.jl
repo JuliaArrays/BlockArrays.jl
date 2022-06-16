@@ -11,6 +11,7 @@ Random.seed!(0)
     C = BlockArray{Float32}(rand(9,9)+100I, fill(3,3), fill(3,3)); C = Symmetric(C, :L)
     D = BlockArray{Float32}(rand(55,55)+100I, 1:10, 1:10); D = Symmetric(D, :L)
     E = BlockArray{Float32}(rand(9,9)+100I, fill(3,3), fill(3,3)); E = Symmetric(E)
+    D1 = copy(D); D1[1,1] = 0
     D2 = copy(D); D2[2,2] = 0
     E2 = copy(E); E2[2,2] = 0
     E5 = copy(E); E5[5,5] = 0
@@ -46,11 +47,13 @@ Random.seed!(0)
     @test cholesky(D).L*cholesky(D).L' ≈ D
 
     #Tests on non-PD matrices
+    @test_throws PosDefException cholesky(D1)
     @test_throws PosDefException cholesky(D2)
     @test_throws PosDefException cholesky(E2)
     @test_throws PosDefException cholesky(E5)
     @test_throws PosDefException cholesky(E8)
 
+    @test cholesky(D1; check=false).info == 1
     @test cholesky(D2; check=false).info == 2
     @test cholesky(E2; check=false).info == 2
     @test cholesky(E5; check=false).info == 5

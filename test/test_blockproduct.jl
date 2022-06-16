@@ -124,6 +124,8 @@ using BlockArrays, Test
         K̃ = BlockKron(A,B)
         @test K == K̃ == kron(A,B)
         @test blocksize(K) == blocksize(K̃) == size(A)
+        @test BlockArrays.blockcolsupport(K, Block(1)) == BlockArrays.blockcolsupport(K̃, Block(1)) == Block.(BlockArrays.colsupport(A,1))
+        @test BlockArrays.blockrowsupport(K, Block(1)) == BlockArrays.blockrowsupport(K̃, Block(1)) == Block.(BlockArrays.rowsupport(A,1))
         @test K[Block(1,1)] == K̃[Block(1),Block(1)] == A[1,1]*B
         @test K[Block(2,3)] == K̃[Block(2),Block(3)] == A[2,3]*B
         C = randn(2,5)
