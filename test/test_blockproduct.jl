@@ -128,14 +128,14 @@ using BlockArrays, Test
         @test K[Block(2,3)] == K̃[Block(2),Block(3)] == A[2,3]*B
         C = randn(2,5)
         K̄ = BlockKron(A,B,C)
-        @test K̄ == blockkron(A,B,C) == kron(A,B,C)
+        @test K̄ ≈ blockkron(A,B,C) ≈ kron(A,B,C)
         @test K̄[Block(1,1)][Block(1,1)] ≈ A[1,1]*B[1,1]*C
         @test K̄[Block(2,3)][Block(3,4)] ≈ A[2,3]*B[3,4]*C
 
         @test blockkron(a,B) == kron(a,B)
         @test blockkron(A,b) == kron(A,b)
-        @test blockkron(A,b,c) == kron(A,b,c)
-        @test blockkron(A,b,C) == kron(A,b,C)
+        @test blockkron(A,b,c) ≈ kron(A,b,c)
+        @test blockkron(A,b,C) ≈ kron(A,b,C)
 
         @test_throws MethodError BlockKron()
         @test_throws MethodError BlockKron(a)
