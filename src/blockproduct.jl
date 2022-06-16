@@ -89,6 +89,12 @@ kron_viewblock(args, k::Integer, j::Integer) = args[1][k,j]*BlockKron(tail(args)
 viewblock(K::BlockKron{<:Any,1}, k::Block{1}) = kron_viewblock(K.args, Int(k))
 viewblock(K::BlockKron{<:Any,2}, kj::Block{2}) = kron_viewblock(K.args, Int.(kj.n)...)
 
+# At the moment this only takes advantage of AbstractBlockLayout structure
+struct KronLayout <: AbstractBlockLayout end
+MemoryLayout(::Type{<:BlockKron}) = KronLayout()
+blockcolsupport(K::BlockKron, J) = Block.(colsupport(first(K.args), Int.(J)))
+blockrowsupport(K::BlockKron, J) = Block.(rowsupport(first(K.args), Int.(J)))
+
 # const SubKron{T,M1,M2,R1,R2} = SubArray{T,2,<:BlockKron{T,M1,M2},<:Tuple{<:BlockSlice{R1},<:BlockSlice{R2}}}
 
 

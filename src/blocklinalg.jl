@@ -138,7 +138,7 @@ function _copyto!(_, ::AbstractBlockLayout, dest::AbstractMatrix, src::AbstractM
         return dest
     end
 
-    @inbounds for J = blockaxes(src,2),K = blockaxes(src,1)
+    @inbounds for J = blockaxes(src,2),K = blockcolsupport(src,J)
         copyto!(view(dest,K,J), view(src,K,J))
     end
     dest

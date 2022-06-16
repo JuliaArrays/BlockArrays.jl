@@ -1,6 +1,7 @@
 using BlockArrays, LinearAlgebra, Test
 
 
+
 include("test_blockindices.jl")
 include("test_blockarrays.jl")
 include("test_blockviews.jl")
@@ -12,3 +13,4 @@ include("test_blocklinalg.jl")
 include("test_blockproduct.jl")
 include("test_blockreduce.jl")
 include("test_blockdeque.jl")
+include("test_blockcholesky.jl")
