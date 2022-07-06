@@ -40,6 +40,7 @@ Block(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
 # iterate and broadcast like Number
 length(b::Block) = 1
 size(b::Block) = ()
+last(b::Block) = b
 iterate(x::Block) = (x, nothing)
 iterate(x::Block, ::Any) = nothing
 isempty(x::Block) = false
