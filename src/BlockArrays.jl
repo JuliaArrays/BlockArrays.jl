@@ -24,7 +24,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             getindex, ndims, show,
             step,
             broadcast, eltype, convert, similar,
-            @_inline_meta, _maybetail, tail, @_propagate_inbounds_meta, reindex,
+            @_inline_meta, tail, @_propagate_inbounds_meta, reindex,
             RangeIndex, Int, Integer, Number,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
             BroadcastStyle, checkbounds, throw_boundserror,
@@ -32,6 +32,8 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
 using Base: ReshapedArray, dataids
 import Base: AbstractArray
 
+_maybetail(::Tuple{}) = ()
+_maybetail(t::Tuple) = tail(t)
 
 import Base: (:), IteratorSize, iterate, axes1, strides, isempty
 import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, broadcastable

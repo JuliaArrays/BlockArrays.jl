@@ -181,6 +181,7 @@ end
             a[1] = 2
             @test a == [2,2,3]
             @test a_data == [1,2,3]
+            @test a[Block(1), 1] == a[Block(1)] == [2]
             a = BlockVector(a_data,(blockedrange([1,2]),))
             a[1] = 2
             @test a == [2,2,3]
