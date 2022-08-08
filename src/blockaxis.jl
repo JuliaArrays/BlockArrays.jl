@@ -228,7 +228,7 @@ end
 
 _searchsortedfirst(a::AbstractVector, k) = searchsortedfirst(a, k)
 function _searchsortedfirst(a::Tuple, k)
-    k ≤ first(a) && return 1
+    k ≤ first(a) && return 1
     1+_searchsortedfirst(tail(a), k)
 end
 _searchsortedfirst(a::Tuple{}, k) = 1

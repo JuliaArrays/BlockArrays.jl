@@ -37,7 +37,7 @@ Base.similar(a::AbstractBlockArray{T}) where {T}                             = s
 Base.similar(a::AbstractBlockArray, ::Type{T}) where {T}                     = similar(a, T, axes(a))
 Base.similar(a::AbstractBlockArray{T}, dims::Tuple) where {T}                = similar(a, T, dims)
 
-# If all we know is size, just return an Array which conforms to BlockArray interface
+# If all we know is size, just return an Array which conforms to BlockArray interface
 Base.similar(::Type{<:AbstractBlockArray{T,N}}, dims::Dims) where {T,N} = similar(Array{T,N}, dims)
 
 Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()

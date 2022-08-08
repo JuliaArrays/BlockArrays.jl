@@ -2,7 +2,7 @@
 # Here we override broadcasting for banded matrices.
 # The design is to to exploit the broadcast machinery so that
 # banded matrices that conform to the banded matrix interface but are not
-# <: AbstractBandedMatrix can get access to fast copyto!, lmul!, rmul!, axpy!, etc.
+# <: AbstractBandedMatrix can get access to fast copyto!, lmul!, rmul!, axpy!, etc.
 # using broadcast variants (B .= A, B .= 2.0 .* A, etc.)
 
 
@@ -210,7 +210,7 @@ _hasscalarlikevec(a::AbstractVector, b...) = size(a,1) == 1 || _hasscalarlikevec
 
 blockisequalorscalar(ax, ::Number) = true
 blockisequalorscalar(ax, a) = blockisequal(ax, Base.axes1(a))
-    
+
 function copyto!(dest::AbstractVector,
         bc::Broadcasted{<:AbstractBlockStyle{1}, <:Any, <:Any, Args}) where {Args <: Tuple}
     _hasscalarlikevec(bc.args...) && return _generic_blockbroadcast_copyto!(dest, bc)
@@ -255,7 +255,7 @@ for op in (:+, :-, :*, :/, :\)
 end
 
 # exploit special cases for *, for example, *(::Number, ::Diagonal)
-for op in (:*, :/) 
+for op in (:*, :/)
     @eval @inline $op(A::BlockArray, x::Number) = _BlockArray($op(blocks(A),x), axes(A))
 end
 for op in (:*, :\)
@@ -268,7 +268,7 @@ end
 
 _blocktype(::Type{<:BlockArray{<:Any,N,<:AbstractArray{R,N}}}) where {N,R} = R
 
-BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice1},false}}) where {T,N,Arr<:BlockArray} = 
+BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice1},false}}) where {T,N,Arr<:BlockArray} =
     BroadcastStyle(_blocktype(Arr))
 
 

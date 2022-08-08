@@ -18,7 +18,7 @@ for n = (5,)
         g["getindex", BT.name.name, "vector", n] = @benchmarkable getindex($block_vec, 3)
         g["getindex", BT.name.name, "matrix", n] = @benchmarkable getindex($block_mat, 3, 2)
         g["getindex", BT.name.name, "rank3", n]  = @benchmarkable getindex($block_arr, 3, 2 ,3)
-        
+
         g["setindex!", BT.name.name, "vector", n] = @benchmarkable setindex!($block_vec, 3)
         g["setindex!", BT.name.name, "matrix", n] = @benchmarkable setindex!($block_mat, 3, 2)
         g["setindex!", BT.name.name, "rank3", n]  = @benchmarkable setindex!($block_arr, 3, 2 ,3)

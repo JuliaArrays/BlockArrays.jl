@@ -182,7 +182,7 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
     @testset "inv" begin
         A = PseudoBlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
         F = factorize(A)
-        
+
         B = randn(6,6)
         @test ldiv!(F, copy(B)) ≈ Matrix(A) \ B
         B̃ = PseudoBlockArray(copy(B),1:3,fill(2,3))

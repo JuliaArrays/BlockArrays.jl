@@ -248,7 +248,7 @@ end
         @test b[Block.(1:3)] == b
         @test_throws BlockBoundsError b[Block.(0:2)]
         @test_throws BlockBoundsError b[Block.(1:4)]
- 
+
         @testset "bug" begin
             b = blockedrange(1:4)
             @test b[Block.(2:4)] == 2:10

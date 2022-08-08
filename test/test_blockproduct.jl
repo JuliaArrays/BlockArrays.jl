@@ -12,7 +12,7 @@ using BlockArrays, Test
         #B size
         p = 8
         q = 7
-        
+
         #B block size
         pi = [5, 3]
         qi = [3, 2, 2]
@@ -26,7 +26,7 @@ using BlockArrays, Test
         B = BlockArray(ones(p, q), pi, qi)
 
         AB = khatri_rao(A, B)
-        
+
         @test blocksize(AB) == blocksize(A)
         @test blocksize(AB) == blocksize(B)
 
@@ -49,7 +49,7 @@ using BlockArrays, Test
         #B size
         p = 8
         q = 7
-        
+
         #B block size
         pi = [5, 3]
         qi = [3, 2, 2]

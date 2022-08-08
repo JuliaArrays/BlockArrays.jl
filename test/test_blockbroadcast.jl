@@ -162,7 +162,7 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test axes(a) ≡ axes(a .+ a)
 
         @test a .+ (1:6) == (1:6) .+ a
-        
+
 
         b = BlockArray(randn(6), (BlockArrays._BlockedUnitRange(1, 2:6),))
         @test b .+ b == Vector(b) .+ b == Vector(b) .+ Vector(b)
@@ -187,7 +187,7 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
     @testset "adjtrans" begin
         a = PseudoBlockArray(randn(6), [2,3])
         b = BlockArray(a)
-        
+
         @test Base.BroadcastStyle(typeof(a')) isa BlockArrays.PseudoBlockStyle{2}
         @test Base.BroadcastStyle(typeof(b')) isa BlockArrays.BlockStyle{2}
 
@@ -205,7 +205,7 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
             v = view(a,Block.(1:2))
             w = view(b,Block.(1:2))
-            
+
             @test Base.BroadcastStyle(typeof(v)) isa BlockArrays.PseudoBlockStyle{1}
             @test Base.BroadcastStyle(typeof(w)) isa BlockArrays.BlockStyle{1}
 
@@ -220,7 +220,7 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
             v = view(A,1:3,Block.(1:2))
             w = view(B,1:3,Block.(1:2))
-            
+
             @test Base.BroadcastStyle(typeof(v)) isa BlockArrays.PseudoBlockStyle{2}
             @test Base.BroadcastStyle(typeof(w)) isa BlockArrays.BlockStyle{2}
 

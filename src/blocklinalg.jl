@@ -120,7 +120,7 @@ transposelayout(::BlockLayout{MLAY,BLAY}) where {MLAY,BLAY} =
 
 function _copyto!(_, ::AbstractBlockLayout, dest::AbstractVector, src::AbstractVector)
     if !blockisequal(axes(dest), axes(src))
-        # impose block structure
+        # impose block structure
         copyto!(PseudoBlockArray(dest, axes(src)), src)
         return dest
     end
@@ -133,7 +133,7 @@ end
 
 function _copyto!(_, ::AbstractBlockLayout, dest::AbstractMatrix, src::AbstractMatrix)
     if !blockisequal(axes(dest), axes(src))
-        # impose block structure
+        # impose block structure
         copyto!(PseudoBlockArray(dest, axes(src)), src)
         return dest
     end
@@ -326,7 +326,7 @@ for UNIT in ('U', 'N')
                 Ũ = _triangular_matrix(Val('U'), Val($UNIT), view(A, Block(K,K)))
                 materialize!(Ldiv(Ũ, b_2))
 
-                if K ≥ 2
+                if K ≥ 2
                     KR = blockcolstart(A, Block(K)):Block(K-1)
                     V_12 = view(A, KR, Block(K))
                     b̃_1 = view(b, KR)
