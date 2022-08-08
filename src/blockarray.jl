@@ -249,7 +249,7 @@ mortar(blocks::AbstractArray{R, N}, block_sizes::Vararg{AbstractVector{<:Integer
 
 mortar(blocks::AbstractArray) = mortar(blocks, sizes_from_blocks(blocks)...)
 
-sizes_from_blocks(blocks) = sizes_from_blocks(blocks, axes(blocks)) # allow overriding on axes
+sizes_from_blocks(blocks) = sizes_from_blocks(blocks, axes(blocks)) # allow overriding on axes
 
 function sizes_from_blocks(blocks::AbstractVector, _)
     if !all(b -> ndims(b) == 1, blocks)

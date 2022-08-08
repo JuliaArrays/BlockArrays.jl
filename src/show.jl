@@ -145,5 +145,5 @@ end
 
 ## Cumsum
 
-Base.show(io::IO, mimetype::MIME"text/plain", a::BlockedUnitRange) = 
+Base.show(io::IO, mimetype::MIME"text/plain", a::BlockedUnitRange) =
     Base.invoke(show, Tuple{typeof(io),MIME"text/plain",AbstractArray},io, mimetype, a)
