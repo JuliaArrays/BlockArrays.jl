@@ -26,7 +26,7 @@ end
 Block{N, T}(n::Tuple{Vararg{Any, N}}) where {N,T} = Block{N, T}(convert(NTuple{N,T}, n))
 Block{N, T}(n::Vararg{Any, N}) where {N,T} = Block{N, T}(n)
 Block{N}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
-Block{1, T}(n::Tuple{Any}) where {N,T} = Block{1, T}(convert(Tuple{T}, n))
+Block{1, T}(n::Tuple{Any}) where {T} = Block{1, T}(convert(Tuple{T}, n))
 Block{0}() = Block{0,Int}()
 Block() = Block{0}()
 Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
