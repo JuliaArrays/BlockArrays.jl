@@ -44,7 +44,7 @@ end
 
 
 
-similar(M::MulAdd{<:AbstractBlockLayout,<:AbstractBlockLayout}, ::Type{T}, axes) where {T,N} =
+similar(M::MulAdd{<:AbstractBlockLayout,<:AbstractBlockLayout}, ::Type{T}, axes) where {T} =
     similar(BlockArray{T}, axes)
 
 @inline MemoryLayout(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = MemoryLayout(R)
@@ -63,7 +63,7 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{Sl,<:BlockSlice{BlockRange{
     BlockLayout{typeof(sublayout(MLAY(),Tuple{Sl,II})), BLAY}()
 sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{<:BlockSlice{BlockRange{1,Tuple{II}}},Sl}}) where {MLAY,BLAY,Sl<:Slice,II} =
     BlockLayout{typeof(sublayout(MLAY(),Tuple{II,Sl})), BLAY}()
-sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{Sl1,Sl2}}) where {MLAY,BLAY,Sl1<:Slice,Sl2<:Slice,II} =
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{Sl1,Sl2}}) where {MLAY,BLAY,Sl1<:Slice,Sl2<:Slice} =
     BlockLayout{typeof(sublayout(MLAY(),Tuple{Sl1,Sl2})), BLAY}()
 
 # materialize views, used for `getindex`
