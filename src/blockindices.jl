@@ -25,16 +25,24 @@ end
 
 Block{N, T}(n::Tuple{Vararg{Any, N}}) where {N,T} = Block{N, T}(convert(NTuple{N,T}, n))
 Block{N, T}(n::Vararg{Any, N}) where {N,T} = Block{N, T}(n)
-Block{N}(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
 Block{1, T}(n::Tuple{Any}) where {T} = Block{1, T}(convert(Tuple{T}, n))
 Block{0}() = Block{0,Int}()
 Block() = Block{0}()
 Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
-Block{1}(n::Tuple{T}) where {T} = Block{1, T}(n)
-Block{N}(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
-Block(n::NTuple{N, T}) where {N,T} = Block{N, T}(n)
+Block{0}(n::Tuple{}) = Block{0, Int}()
 
-@inline Block(blocks::NTuple{N, Block{1, T}}) where {N,T} = Block{N, T}(ntuple(i -> blocks[i].n[1], Val(N)))
+# These method has been defined for Tuple{A, Vararg{A}} instead of NTuple{N,A}
+# to get Aqua to recognize that these won't be called with an empty tuple,
+# or without any argument in the Vararg case, ever.
+# See https://github.com/JuliaTesting/Aqua.jl/issues/86
+# Arguably, being clear about this is good style
+Block{N}(x::T, n::Vararg{T}) where {N,T} = Block{N, T}(x, n...)
+Block{N}(n::Tuple{T, Vararg{T}}) where {N,T} = Block{N, T}(n)
+Block(n::Tuple{T, Vararg{T}}) where {T} = Block{length(n), T}(n)
+@inline function Block(blocks::Tuple{Block{1, T}, Vararg{Block{1, T}}}) where {T}
+    N = length(blocks)
+    Block{N, T}(ntuple(i -> blocks[i].n[1], Val(N)))
+end
 @inline Block(::Tuple{}) = Block{0,Int}(())
 
 # iterate and broadcast like Number
