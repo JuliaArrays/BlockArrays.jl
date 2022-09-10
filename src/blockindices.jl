@@ -31,9 +31,9 @@ Block() = Block{0}()
 Block(n::Vararg{T, N}) where {N,T} = Block{N, T}(n)
 Block{0}(n::Tuple{}) = Block{0, Int}()
 
-# These method has been defined for Tuple{A, Vararg{A}} instead of NTuple{N,A}
-# to get Aqua to recognize that these won't be called with an empty tuple,
-# or without any argument in the Vararg case, ever.
+# These method have been defined for Tuple{A, Vararg{A}} instead of NTuple{N,A}
+# to get Aqua to recognize that these will never be called with an empty tuple
+# (or without any argument in the Vararg case).
 # See https://github.com/JuliaTesting/Aqua.jl/issues/86
 # Arguably, being clear about this is good style
 Block{N}(x::T, n::Vararg{T}) where {N,T} = Block{N, T}(x, n...)
