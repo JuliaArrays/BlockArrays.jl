@@ -298,10 +298,12 @@ end
 Construct a `BlockMatrix` with `n * m`  blocks.  Each `block_ij` must be an
 `AbstractMatrix`.
 """
-mortar(row1::NTuple{M, AbstractMatrix}, rows::Vararg{NTuple{M, AbstractMatrix}}) where M =
-    mortar(permutedims(reshape(
-        foldl(append!, (row1, rows...), init=eltype(row1)[]),
-        M, length(rows)+1)))
+function mortar(row1::NTuple{M, AbstractMatrix}, rows::Vararg{NTuple{M, AbstractMatrix}}) where M
+    allrows = (row1, rows...)
+    allblocks = reduce((x,y)->(x...,y...), allrows)
+    allblocks_vector = [allblocks...]
+    mortar(permutedims(reshape(allblocks_vector, M, length(allrows))))
+end
 
 # Convert AbstractArrays that conform to block array interface
 convert(::Type{BlockArray{T,N,R}}, A::BlockArray{T,N,R}) where {T,N,R} = A

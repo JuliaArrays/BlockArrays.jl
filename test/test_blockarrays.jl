@@ -173,6 +173,11 @@ end
                      zeros(2,1), zeros(1,1), rand(4,1)], 3, 3);
                 @test @inferred BlockArrays.sizes_from_blocks(blocks) == ([2, 1, 4], [2, 3, 1])
             end
+
+            t1 = (ones(Float16, 2,2), ones(Float16, 2,2))
+            t2 = (ones(Float32, 2,2), ones(Float64, 2,2))
+            M = @inferred mortar(t1, t2)
+            @test M isa AbstractMatrix{Float64}
         end
 
         @testset "BlockVector" begin
