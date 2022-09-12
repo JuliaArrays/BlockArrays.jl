@@ -177,7 +177,9 @@ end
             t1 = (ones(Float16, 2,2), ones(Float16, 2,2))
             t2 = (ones(Float32, 2,2), ones(Float64, 2,2))
             M = @inferred mortar(t1, t2)
-            @test M isa AbstractMatrix{Float64}
+            @test M isa BlockMatrix{Float64}
+            @test size(M) == (4,4)
+            @test all(isone, M)
         end
 
         @testset "BlockVector" begin
