@@ -1,5 +1,5 @@
 blockrowsupport(_, A, k) = blockaxes(A,2)
-""""
+"""
     blockrowsupport(A, k)
 
 gives an iterator containing the possible non-zero blocks in the k-th block-row of A.
@@ -9,7 +9,7 @@ blockrowsupport(A) = blockrowsupport(A, blockaxes(A,1))
 
 blockcolsupport(_, A, j) = Block.(colsupport(blocks(A), Int.(j)))
 
-""""
+"""
     blockcolsupport(A, j)
 
 gives an iterator containing the possible non-zero blocks in the j-th block-column of A.

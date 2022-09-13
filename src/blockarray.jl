@@ -73,7 +73,7 @@ end
 # support non-concrete eltypes in blocks
 _BlockArray(blocks::R, block_axes::BS) where {N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
     _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_axes)
-_BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}} =
+_BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {N, R<:AbstractArray{<:AbstractArray{<:Any,N},N}} =
     _BlockArray(convert(AbstractArray{AbstractArray{mapreduce(eltype,promote_type,blocks),N},N}, blocks), block_sizes...)
 
 const BlockMatrix{T, R <: AbstractMatrix{<:AbstractMatrix{T}}} = BlockArray{T, 2, R}
@@ -298,10 +298,12 @@ end
 Construct a `BlockMatrix` with `n * m`  blocks.  Each `block_ij` must be an
 `AbstractMatrix`.
 """
-mortar(rows::Vararg{NTuple{M, AbstractMatrix}}) where M =
-    mortar(permutedims(reshape(
-        foldl(append!, rows, init=eltype(eltype(rows))[]),
-        M, length(rows))))
+function mortar(row1::NTuple{M, AbstractMatrix}, rows::Vararg{NTuple{M, AbstractMatrix}}) where M
+    allrows = (row1, rows...)
+    allblocks = reduce((x,y)->(x...,y...), allrows)
+    allblocks_vector = [allblocks...]
+    mortar(permutedims(reshape(allblocks_vector, M, length(allrows))))
+end
 
 # Convert AbstractArrays that conform to block array interface
 convert(::Type{BlockArray{T,N,R}}, A::BlockArray{T,N,R}) where {T,N,R} = A

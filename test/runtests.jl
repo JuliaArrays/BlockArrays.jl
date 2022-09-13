@@ -1,6 +1,9 @@
 using BlockArrays, LinearAlgebra, Test
 
-
+using Aqua
+@testset "Project quality" begin
+    Aqua.test_all(BlockArrays, ambiguities=false)
+end
 
 include("test_blockindices.jl")
 include("test_blockarrays.jl")

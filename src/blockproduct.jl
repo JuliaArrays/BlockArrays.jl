@@ -29,7 +29,7 @@ function khatri_rao(A::AbstractMatrix, B::AbstractMatrix)
     kron(A, B)
 end
 
-""""
+"""
     BlockKron(A...)
 
 creates a lazy representation of kron(A...) with the natural
@@ -106,7 +106,7 @@ blockrowsupport(K::BlockKron, J) = Block.(rowsupport(first(K.args), Int.(J)))
 _blockkron(_, A) = BlockArray(BlockKron(A...))
 
 
-""""
+"""
     blockkron(A...)
 
 creates a blocked version of kron(A...) with the natural

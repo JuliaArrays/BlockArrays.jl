@@ -4,6 +4,9 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
     @test Block((Block(3), Block(4))) === Block(3,4)
+    @test Block() === Block(()) === Block{0}() === Block{0}(())
+    @test Block(1) === Block((1,)) === Block{1}(1) === Block{1}((1,))
+    @test Block(1,2) === Block((1,2)) === Block{2}(1,2) === Block{2}((1,2))
 
     @testset "Block iterator" begin
         B = Block(3)

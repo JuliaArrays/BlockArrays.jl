@@ -8,17 +8,19 @@ FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]
+Aqua = "0.5"
 ArrayLayouts = "0.8.1"
 FillArrays = "0.13.2"
 julia = "1.6"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [targets]
-test = ["Base64", "OffsetArrays", "SparseArrays", "StaticArrays", "Test", "Random"]
+test = ["Aqua", "Base64", "OffsetArrays", "SparseArrays", "StaticArrays", "Test", "Random"]
