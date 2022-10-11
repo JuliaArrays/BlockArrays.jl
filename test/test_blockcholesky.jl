@@ -33,7 +33,7 @@ Random.seed!(0)
     #Tests on A
     @test cholesky(A).U ≈ cholesky(A_T).U
     @test cholesky(A).U'cholesky(A).U ≈ A
-    
+
     #Tests on B
     @test cholesky(B).U ≈ cholesky(B_T).U
     @test cholesky(B).U'cholesky(B).U ≈ B

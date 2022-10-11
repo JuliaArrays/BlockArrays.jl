@@ -501,7 +501,7 @@ end
         @test A == B
         B[1] = 2
         @test B[1] == 2
-        @test A[1] ≠ 2
+        @test A[1] ≠ 2
 
         A = BlockArray(randn(6), 1:3)
         B = copy(A)
@@ -510,7 +510,7 @@ end
         @test A == B
         B[1] = 2
         @test B[1] == 2
-        @test A[1] ≠ 2
+        @test A[1] ≠ 2
         @testset "copyto!" begin
             A = PseudoBlockArray(randn(6), 1:3)
             B = BlockArray(randn(6), 1:3)

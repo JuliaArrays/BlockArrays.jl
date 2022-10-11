@@ -144,7 +144,7 @@ function _copyto!(_, ::AbstractBlockLayout, dest::AbstractMatrix, src::AbstractM
         for K = first(CS_d):first(CS_s)-Block(1)
             zero!(view(dest,K,J))
         end
-        for K = CS_s 
+        for K = CS_s
             copyto!(view(dest,K,J), view(src,K,J))
         end
         for K = last(CS_s)+Block(1):last(CS_d)
