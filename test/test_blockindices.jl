@@ -356,7 +356,7 @@ end
 
 #     @test_throws BlockBoundsError A[Block(3)]
 #     @test_throws BlockBoundsError A[Block(3)[1]]
-#     @test_throws BoundsError A[Block(3)[1:1]] # this is likely an error
+#     @test_throws BoundsError A[Block(3)[1:1]] # this is likely an error
 #     @test_throws BoundsError A[Block(2)[3]]
 #     @test_throws BoundsError A[Block(2)[3:3]]
 # end
