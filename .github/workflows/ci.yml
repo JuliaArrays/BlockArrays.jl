@@ -1,7 +1,17 @@
 name: CI
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'LICENSE.md'
+      - 'README.md'
+      - '.github/workflows/TagBot.yml'
+  pull_request:
+    paths-ignore:
+      - 'LICENSE.md'
+      - 'README.md'
+      - '.github/workflows/TagBot.yml'
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
