@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2015: Jarrett Revels.
 
+using Printf
+
 const REGRESS_MARK = ":x:"
 const IMPROVE_MARK = ":white_check_mark:"
 
@@ -27,10 +29,7 @@ function printreport(io::IO, results; iscomparisonjob::Bool = false)
 
     entries = BenchmarkTools.leaves(results)
 
-    try
-        entries = entries[sortperm(map(x -> string(first(x)), entries))]
-    end
-
+    entries = entries[sortperm(map(x -> string(first(x)), entries))]
 
     for (ids, t) in entries
         if !(iscomparisonjob) || BenchmarkTools.isregression(t) || BenchmarkTools.isimprovement(t)
