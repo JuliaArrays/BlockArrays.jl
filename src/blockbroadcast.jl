@@ -135,9 +135,6 @@ subblocks(::Any, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N =
     (nothing for _ in blockaxes(bs[dim], 1))
 
 function subblocks(arr::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N
-    if size(arr, dim) == 1
-        return (BlockIndexRange(Block(1), 1:1) for _ in blockaxes(bs[dim], 1))
-    end
     return SubBlockIterator(arr, bs, dim)
 end
 
