@@ -253,7 +253,7 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
     end
 
     @testset "Adding BlockArrays" begin
-        B = mortar(reshape([[1;;]], 1, 1))
+        B = mortar(reshape([ones(1,1)], 1, 1))
         C = B + B
         @test C[Block(1,1)] == 2B[Block(1,1)]
 
