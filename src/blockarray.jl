@@ -426,8 +426,13 @@ function _replace_in_print_matrix_inds(block_arr, i...)
 end
 function Base.replace_in_print_matrix(block_arr::BlockArray{<:Any,2}, i::Integer, j::Integer, s::AbstractString)
     try
-        bl, inds = _replace_in_print_matrix_inds(block_arr, i, j)
-        Base.replace_in_print_matrix(bl, inds..., s)
+        I,J = findblock(axes(block_arr,1),i),findblock(axes(block_arr,2),j)
+        if Int(I) in colsupport(block_arr.blocks, Int(J))
+            bl, inds = _replace_in_print_matrix_inds(block_arr, i, j)
+            Base.replace_in_print_matrix(bl, inds..., s)
+        else
+            Base.replace_with_centered_mark(s)
+        end
     catch UndefRefError # thrown with undef_blocks
         s
     end
