@@ -330,7 +330,7 @@ copy(A::BlockArray) = _BlockArray(map(copy,A.blocks), A.axes)
 ################################
 @inline axes(block_array::BlockArray) = block_array.axes
 
-function viewblock(block_arr::BlockArray, block)
+Base.@propagate_inbounds function viewblock(block_arr::BlockArray, block)
     blks = block.n
     @boundscheck blockcheckbounds(block_arr, blks...)
     block_arr.blocks[blks...]
@@ -345,9 +345,9 @@ end
     return v
 end
 
-@inline Base.getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
+Base.@propagate_inbounds Base.getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
     _blockindex_getindex(block_arr, blockindex)
-@inline Base.getindex(block_arr::BlockVector{T}, blockindex::BlockIndex{1}) where {T} =
+Base.@propagate_inbounds Base.getindex(block_arr::BlockVector{T}, blockindex::BlockIndex{1}) where {T} =
     _blockindex_getindex(block_arr, blockindex)
 
 ###########################
@@ -379,15 +379,17 @@ const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{Base.OneTo{Int},Vararg{Base.OneTo{Int}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 
-@inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
+Base.@propagate_inbounds function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
-    @inbounds v = block_arr[findblockindex.(axes(block_arr), i)...]
+    x = ntuple(j -> (@inbounds findblockindex(axes(block_arr)[j], i[j])), Val(N))
+    @inbounds v = block_arr[x...]
     return v
 end
 
-@inline function Base.setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
+Base.@propagate_inbounds  function Base.setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
-    @inbounds block_arr[findblockindex.(axes(block_arr), i)...] = v
+    x = ntuple(j -> (@inbounds findblockindex(axes(block_arr)[j], i[j])), Val(N))
+    @inbounds block_arr[x...] = v
     return block_arr
 end
 
@@ -493,4 +495,3 @@ function resize!(a::BlockVector, N::Block{1})
     Ni = Int(N)
     _BlockArray(resize!(a.blocks, Ni), (ax[Block.(Base.OneTo(Ni))],))
 end
-

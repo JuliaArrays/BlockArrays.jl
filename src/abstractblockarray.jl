@@ -133,10 +133,10 @@ end
 @inline @propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
     block_arr[BlockIndex(blockindex)] = v
 
-viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block_arr, block)
-@inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, block::Block{N}) where N = viewblock(block_arr, block)
-@inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, block::Block{1}) where N = view(block_arr, Block(Base._ind2sub(map(Base.OneTo, blocksize(block_arr)), Int(block))...))
-@inline Base.view(block_arr::AbstractBlockVector, block::Block{1}) = viewblock(block_arr, block)
+Base.@propagate_inbounds viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block_arr, block)
+Base.@propagate_inbounds Base.view(block_arr::AbstractBlockArray{<:Any,N}, block::Block{N}) where N = viewblock(block_arr, block)
+Base.@propagate_inbounds Base.view(block_arr::AbstractBlockArray{<:Any,N}, block::Block{1}) where N = view(block_arr, Block(Base._ind2sub(map(Base.OneTo, blocksize(block_arr)), Int(block))...))
+Base.@propagate_inbounds Base.view(block_arr::AbstractBlockVector, block::Block{1}) = viewblock(block_arr, block)
 @inline @propagate_inbounds Base.view(block_arr::AbstractBlockArray, block::Block{1}...) = view(block_arr, Block(block))
 
 """
@@ -195,5 +195,3 @@ end
 
 Base.permutedims(A::AbstractBlockVector{<:Number}) = transpose(A)
 Base.permutedims(A::AbstractBlockMatrix{<:Number}) = transpose(A)
-
-

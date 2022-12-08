@@ -1,15 +1,16 @@
 
 # interface
 
-@inline getindex(b::AbstractVector, K::BlockIndex{1}) = b[Block(K.I[1])][K.α[1]]
-@inline getindex(b::AbstractArray{T,N}, K::BlockIndex{N}) where {T,N} =
+Base.@propagate_inbounds getindex(b::AbstractVector, K::BlockIndex{1}) = b[Block(K.I[1])][K.α[1]]
+Base.@propagate_inbounds getindex(b::AbstractArray{T,N}, K::BlockIndex{N}) where {T,N} =
     b[block(K)][K.α...]
-@inline getindex(b::AbstractArray, K::BlockIndex{1}, J::BlockIndex{1}...) =
+Base.@propagate_inbounds function getindex(b::AbstractArray, K::BlockIndex{1}, J::BlockIndex{1}...)
     b[BlockIndex(tuple(K, J...))]
+end
 
-@inline getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
-@inline getindex(b::LayoutArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
-@inline getindex(b::LayoutArray{T,1}, K::BlockIndexRange{1}) where {T} = b[block(K)][K.indices...]
+Base.@propagate_inbounds getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
+Base.@propagate_inbounds getindex(b::LayoutArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
+Base.@propagate_inbounds getindex(b::LayoutArray{T,1}, K::BlockIndexRange{1}) where {T} = b[block(K)][K.indices...]
 
 function findblockindex(b::AbstractVector, k::Integer)
     @boundscheck k in b || throw(BoundsError())
