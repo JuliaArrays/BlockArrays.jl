@@ -12,8 +12,13 @@
 @inline getindex(b::LayoutArray{T,1}, K::BlockIndexRange{1}) where {T} = b[block(K)][K.indices...]
 
 function findblockindex(b::AbstractVector, k::Integer)
-    K = findblock(b, k)
-    K[searchsortedfirst(b[K], k)] # guaranteed to be in range
+    @boundscheck k in b || throw(BoundsError())
+    bl = blocklasts(b)
+    blockidx = _searchsortedfirst(bl, k)
+    @assert blockindex != lastindex(bl) + 1 # guaranteed by the @boundscheck above
+    prevblocklast = blockidx == firstindex(bl) ? first(b)-1 : bl[blockidx-1]
+    local_index = k - prevblocklast
+    return BlockIndex(blockidx, local_index)
 end
 
 function _BlockedUnitRange end
