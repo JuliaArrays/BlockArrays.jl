@@ -6,6 +6,6 @@ docs/site/
 *.jld
 benchmark/*.md
 src/.DS_Store
-/Manifest.toml
+Manifest.toml
 .DS_Store
 build
