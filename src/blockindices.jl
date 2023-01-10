@@ -387,6 +387,7 @@ _in(b, ::Tuple{}, ::Tuple{}, ::Tuple{}) = b
 # We sometimes need intersection of BlockRange to return a BlockRange
 intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1], b.indices[1]))
 
+Base.show(io::IO, br::BlockRange) = print(io, "BlockRange(", br.indices..., ")")
 
 # needed for scalar-like broadcasting
 
