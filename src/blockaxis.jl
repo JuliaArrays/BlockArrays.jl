@@ -253,6 +253,13 @@ Base.dataids(b::BlockedUnitRange) = Base.dataids(blocklasts(b))
 Base.checkindex(::Type{Bool}, b::BlockRange, K::Int) = checkindex(Bool, Int.(b), K)
 Base.checkindex(::Type{Bool}, b::AbstractUnitRange{Int}, K::Block{1}) = checkindex(Bool, blockaxes(b,1), Int(K))
 
+function Base.checkindex(::Type{Bool}, axis::BlockedUnitRange, ind::BlockIndexRange{1})
+    checkindex(Bool, axis, first(ind)) && checkindex(Bool, axis, last(ind))
+end
+function Base.checkindex(::Type{Bool}, axis::BlockedUnitRange, ind::BlockIndex{1})
+    checkindex(Bool, axis, block(ind)) && checkbounds(Bool, axis[block(ind)], blockindex(ind))
+end
+
 function getindex(b::AbstractUnitRange{Int}, K::Block{1})
     @boundscheck K == Block(1) || throw(BlockBoundsError(b, K))
     b

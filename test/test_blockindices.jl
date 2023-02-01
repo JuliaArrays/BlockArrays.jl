@@ -296,10 +296,32 @@ end
         @test checkindex(Bool, b, Block(1))
         @test checkindex(Bool, b, Block(3))
         @test !checkindex(Bool, b, Block(4))
+        # treat b as the array, and check against the axis of b
         @test checkbounds(Bool, b, Block(1)[1])
+        @test checkbounds(Bool, b, Block(1)[1:1])
         @test !checkbounds(Bool, b, Block(1)[2])
+        @test checkbounds(Bool, b, Block(2)[1])
+        @test checkbounds(Bool, b, Block(2)[1:2])
+        @test !checkbounds(Bool, b, Block(2)[3])
+        @test checkbounds(Bool, b, Block(3)[1])
+        @test checkbounds(Bool, b, Block(3)[3])
+        @test checkbounds(Bool, b, Block(3)[1:3])
+        @test !checkbounds(Bool, b, Block(3)[4])
         @test !checkbounds(Bool, b, Block(0)[1])
         @test !checkbounds(Bool, b, Block(1)[0])
+        # treat b as the axis
+        @test checkindex(Bool, b, Block(1)[1])
+        @test checkindex(Bool, b, Block(1)[1:1])
+        @test !checkindex(Bool, b, Block(1)[2])
+        @test checkindex(Bool, b, Block(2)[1])
+        @test checkindex(Bool, b, Block(2)[1:2])
+        @test !checkindex(Bool, b, Block(2)[3])
+        @test checkindex(Bool, b, Block(3)[1])
+        @test checkindex(Bool, b, Block(3)[3])
+        @test checkindex(Bool, b, Block(3)[1:3])
+        @test !checkindex(Bool, b, Block(3)[4])
+        @test !checkindex(Bool, b, Block(0)[1])
+        @test !checkindex(Bool, b, Block(1)[0])
     end
 
     @testset "Slice" begin
