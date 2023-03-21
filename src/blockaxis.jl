@@ -109,8 +109,11 @@ julia> A = BlockArray([1,2,3],[2,1])
  ─
  3
 
-julia> blockaxes(A)[1]
-2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
+julia> blockaxes(A) # returns a tuple of ranges of blocks
+(BlockRange(Base.OneTo(2)),)
+
+julia> collect(blockaxes(A)[1])
+2-element Vector{Block{1, Int64}}:
  Block(1)
  Block(2)
 ```
@@ -132,8 +135,11 @@ julia> A = BlockArray([1,2,3],[2,1])
  ─
  3
 
-julia> blockaxes(A,1)
-2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
+julia> blockaxes(A,1) # returns a range of blocks
+BlockRange(Base.OneTo(2))
+
+julia> collect(blockaxes(A,1))
+2-element Vector{Block{1, Int64}}:
  Block(1)
  Block(2)
 ```
