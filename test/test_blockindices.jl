@@ -108,7 +108,7 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test stringmime("text/plain", Block{2}(1,2)) == "Block(1, 2)"
 
         @test stringmime("text/plain", BlockIndex((1,2), (3,4))) == "Block(1, 2)[3, 4]"
-        @test repr(BlockArrays.BlockIndexRange(Block(1), 3:4)) == "Block(1)[3:4]"
+        @test stringmime("text/plain", BlockArrays.BlockIndexRange(Block(1), 3:4)) == "Block(1)[3:4]"
 
         @test stringmime("text/plain", BlockRange()) == "BlockRange()"
         @test stringmime("text/plain", BlockRange(1:2)) == "BlockRange(1:2)"

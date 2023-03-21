@@ -192,6 +192,7 @@ function Base.show(io::IO, B::BlockIndexRange)
     print_tuple_elements(io, B.indices)
     print(io, "]")
 end
+Base.show(io::IO, ::MIME"text/plain", B::BlockIndexRange) = show(io, B)
 
 Base.show(io::IO, mimetype::MIME"text/plain", a::BlockedUnitRange) =
     Base.invoke(show, Tuple{typeof(io),MIME"text/plain",AbstractArray},io, mimetype, a)
