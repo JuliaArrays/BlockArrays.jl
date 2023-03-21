@@ -42,7 +42,7 @@ Base.similar(::Type{<:AbstractBlockArray{T,N}}, dims::Dims) where {T,N} = simila
 
 # need to overload axes to return BlockAxis
 @inline size(block_array::AbstractBlockArray) = map(length, axes(block_array))
-@noinline axes(block_array::AbstractBlockArray) = throw(error("axes for ", typeof(block_array), " is not implemented"))
+@noinline axes(block_array::AbstractBlockArray) = throw(ArgumentError("axes for $(typeof(block_array)) is not implemented"))
 
 
 """

@@ -3,6 +3,10 @@ using BlockArrays, LinearAlgebra, FillArrays, Base64, Test
 # avoid fast-paths for view
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
+@testset "missing fallback block axes" begin
+    @test_throws ArgumentError invoke(axes, Tuple{AbstractBlockArray}, PseudoBlockArray{ComplexF64}(undef, (1:4), (2:5)))
+end
+
 @testset "Array block interface" begin
     @test 1[Block()] == 1
 
