@@ -106,6 +106,10 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test stringmime("text/plain", Block{0,BigInt}()) == "Block{0, BigInt}(())"
         @test stringmime("text/plain", Block{1,BigInt}(1)) == "Block{1, BigInt}((1,))"
         @test stringmime("text/plain", Block{2}(1,2)) == "Block(1, 2)"
+
+        @test stringmime("text/plain", BlockRange()) == "BlockRange()"
+        @test stringmime("text/plain", BlockRange(1:2)) == "BlockRange(1:2)"
+        @test stringmime("text/plain", BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
     end
 end
 

@@ -156,18 +156,23 @@ end
 
 # Utility function to print elements of tuples as a comma-separated list
 function print_tuple_elements(io::IO, @nospecialize(t))
-    print(io, t[1])
-    for n in t[2:end]
-        print(io, ", ", n)
+    if !isempty(t)
+        print(io, t[1])
+        for n in t[2:end]
+            print(io, ", ", n)
+        end
     end
+    return nothing
 end
 
 # Block
 
-Base.show(io::IO, B::Block{0,Int}) = print(io, "Block()")
+_typename(::Block{N,Int}) where {N} = "Block"
+_typename(x::Block) = typeof(x)
 
-function Base.show(io::IO, B::Block{N,Int}) where N
-    print(io, "Block(")
+function Base.show(io::IO, B::Block)
+    print(_typename(B))
+    print(io, "(")
     print_tuple_elements(io, B.n)
     print(io, ")")
 end
@@ -204,7 +209,6 @@ function Base.showarg(io::IO, @nospecialize(a::BlocksView), toplevel::Bool)
     end
 end
 
-show(io::IO, ::BlockRange{0}) = print(io, "BlockRange()")
 function show(io::IO, r::BlockRange)
     print(io, "BlockRange(")
     print_tuple_elements(io, r.indices)
