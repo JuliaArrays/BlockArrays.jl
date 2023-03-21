@@ -40,11 +40,9 @@ Base.similar(a::AbstractBlockArray{T}, dims::Tuple) where {T}                = s
 # If all we know is size, just return an Array which conforms to BlockArray interface
 Base.similar(::Type{<:AbstractBlockArray{T,N}}, dims::Dims) where {T,N} = similar(Array{T,N}, dims)
 
-Base.IndexStyle(::Type{<:AbstractBlockArray}) = IndexCartesian()
-
 # need to overload axes to return BlockAxis
 @inline size(block_array::AbstractBlockArray) = map(length, axes(block_array))
-@inline axes(block_array::AbstractBlockArray) = throw(error("axes for ", typeof(block_array), " is not implemented"))
+@noinline axes(block_array::AbstractBlockArray) = throw(error("axes for ", typeof(block_array), " is not implemented"))
 
 
 """
