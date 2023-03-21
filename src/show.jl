@@ -171,7 +171,7 @@ _typename(::Block{N,Int}) where {N} = "Block"
 _typename(x::Block) = typeof(x)
 
 function Base.show(io::IO, B::Block)
-    print(_typename(B))
+    print(io, _typename(B))
     print(io, "(")
     print_tuple_elements(io, B.n)
     print(io, ")")
