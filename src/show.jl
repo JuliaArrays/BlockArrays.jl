@@ -143,7 +143,73 @@ function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,Defaul
     print(io, '}')
 end
 
-## Cumsum
+function Base.showarg(io::IO, A::PseudoBlockArray, toplevel::Bool)
+    if toplevel
+        print(io, "PseudoBlockArray of ")
+        Base.showarg(io, A.blocks, true)
+    else
+        print(io, "::PseudoBlockArray{…,")
+        Base.showarg(io, A.blocks, false)
+        print(io, '}')
+    end
+end
+
+# Utility function to print elements of tuples as a comma-separated list
+function print_tuple_elements(io::IO, @nospecialize(t))
+    print(io, t[1])
+    for n in t[2:end]
+        print(io, ", ", n)
+    end
+end
+
+# Block
+
+Base.show(io::IO, B::Block{0,Int}) = print(io, "Block()")
+
+function Base.show(io::IO, B::Block{N,Int}) where N
+    print(io, "Block(")
+    print_tuple_elements(io, B.n)
+    print(io, ")")
+end
+
+# Block indices
+
+function Base.show(io::IO, B::BlockIndex)
+    show(io, Block(B.I...))
+    print(io, "[")
+    print_tuple_elements(io, B.α)
+    print(io, "]")
+end
+
+function Base.show(io::IO, B::BlockIndexRange)
+    show(io, Block(B))
+    print(io, "[")
+    print_tuple_elements(io, B.indices)
+    print(io, "]")
+end
 
 Base.show(io::IO, mimetype::MIME"text/plain", a::BlockedUnitRange) =
     Base.invoke(show, Tuple{typeof(io),MIME"text/plain",AbstractArray},io, mimetype, a)
+
+show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
+
+function Base.showarg(io::IO, @nospecialize(a::BlocksView), toplevel::Bool)
+    if toplevel
+        print(io, "blocks of ")
+        Base.showarg(io, a.array, true)
+    else
+        print(io, "::BlocksView{…,")
+        Base.showarg(io, a.array, false)
+        print(io, '}')
+    end
+end
+
+show(io::IO, ::BlockRange{0}) = print(io, "BlockRange()")
+function show(io::IO, r::BlockRange)
+    print(io, "BlockRange(")
+    print_tuple_elements(io, r.indices)
+    print(io, ")")
+end
+function show(io::IO, ::MIME"text/plain", @nospecialize(r::BlockRange))
+    show(io, r)
+end

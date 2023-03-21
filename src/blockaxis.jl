@@ -29,7 +29,7 @@ function _BlockedUnitRange end
 
 is an `AbstractUnitRange{Int}` that has been divided
 into blocks, and is used to represent axes of block arrays.
-Construction is typically via `blockrange` which converts
+Construction is typically via `blockedrange` which converts
 a vector of block lengths to a `BlockedUnitRange`.
 ```jldoctest; setup = quote using BlockArrays end
 julia> blockedrange([2,2,3])

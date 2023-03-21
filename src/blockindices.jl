@@ -99,15 +99,6 @@ Int(index::Block{1}) = Int(index.n[1])
 Integer(index::Block{1}) = index.n[1]
 Number(index::Block{1}) = index.n[1]
 
-# print
-Base.show(io::IO, B::Block{0,Int}) = print(io, "Block()")
-function Base.show(io::IO, B::Block{N,Int}) where N
-    print(io, "Block($(B.n[1])")
-    for n in Base.tail(B.n)
-        print(io, ", $n")
-    end
-    print(io, ")")
-end
 
 """
     BlockIndex{N}
@@ -164,15 +155,6 @@ block(b::BlockIndex) = Block(b.I...)
 blockindex(b::BlockIndex{1}) = b.α[1]
 
 BlockIndex(indcs::NTuple{N,BlockIndex{1}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
-
-function Base.show(io::IO, B::BlockIndex)
-    show(io, Block(B.I...))
-    print(io, "[$(B.α[1])")
-    for α in Base.tail(B.α)
-        print(io, ", $α")
-    end
-    print(io, "]")
-end
 
 ##
 # checkindex
@@ -244,17 +226,6 @@ length(iter::BlockIndexRange) = prod(size(iter))
 
 Block(bs::BlockIndexRange) = bs.block
 
-function Base.show(io::IO, B::BlockIndexRange)
-    show(io, Block(B))
-    print(io, "[")
-    show(io, B.indices[1])
-    for α in Base.tail(B.indices)
-        print(io, ", ")
-        show(io, α)
-    end
-    print(io, "]")
-end
-
 
 # #################
 # # support for pointers
@@ -292,7 +263,6 @@ end
 getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
 getindex(S::BlockSlice{<:Block}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
 getindex(S::BlockSlice{<:BlockIndexRange}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
-show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
@@ -332,7 +302,6 @@ broadcasted(::DefaultArrayStyle{0}, ::Type{Int}, block::Block{1}) = Int(block)
 
 # AbstractArray implementation
 axes(iter::BlockRange{N,R}) where {N,R} = map(axes1, iter.indices)
-Base.IndexStyle(::Type{BlockRange{N,R}}) where {N,R} = IndexCartesian()
 @inline function Base.getindex(iter::BlockRange{N,<:NTuple{N,Base.OneTo}}, I::Vararg{Integer, N}) where {N}
     @boundscheck checkbounds(iter, I...)
     Block(I)
@@ -386,8 +355,6 @@ _in(b, ::Tuple{}, ::Tuple{}, ::Tuple{}) = b
 
 # We sometimes need intersection of BlockRange to return a BlockRange
 intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1], b.indices[1]))
-
-Base.show(io::IO, br::BlockRange) = print(io, "BlockRange(", br.indices..., ")")
 
 # needed for scalar-like broadcasting
 
