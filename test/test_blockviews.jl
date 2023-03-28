@@ -1,4 +1,4 @@
-using BlockArrays, Test, Base64
+using BlockArrays, ArrayLayouts, Test, Base64
 
 # useds to force SubArray return
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
@@ -321,5 +321,12 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
     @testset "array indexing past ndims" begin
         v = BlockArray(randn(3),1:2)
         @test_skip @test_throws BlockBoundsError v[Block(1,2)]
+    end
+
+    @testset "BlockedUnitRange views" begin
+        a = BlockArray(randn(3),1:2)
+        v = view(a, axes(a,1))
+        @test MemoryLayout(v) == MemoryLayout(a)
+        @test v[Block(1)] == a[Block(1)]
     end
 end
