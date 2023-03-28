@@ -232,6 +232,8 @@ function getindex(b::BlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
     _BlockedUnitRange(first(b),cs[Base.OneTo(j)])
 end
 
+getindex(b::BlockedUnitRange, KR::BlockSlice) = b[KR.block]
+
 _searchsortedfirst(a::AbstractVector, k) = searchsortedfirst(a, k)
 function _searchsortedfirst(a::Tuple, k)
     k ≤ first(a) && return 1

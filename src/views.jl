@@ -56,7 +56,11 @@ reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
                                             idxs[1].indices[subidxs[1].indices]),
                                 reindex(tail(idxs), tail(subidxs))...))
 
-
+reindex(idxs::Tuple{BlockedUnitRange, Vararg{Any}},
+        subidxs::Tuple{BlockSlice{<:Block}, Vararg{Any}}) =
+    (@_propagate_inbounds_meta; (BlockSlice(subidxs[1].block,
+                                            idxs[1][subidxs[1].block]),
+                                reindex(tail(idxs), tail(subidxs))...))
 # _splatmap taken from Base:
 _splatmap(f, ::Tuple{}) = ()
 _splatmap(f, t::Tuple) = (f(t[1])..., _splatmap(f, tail(t))...)
