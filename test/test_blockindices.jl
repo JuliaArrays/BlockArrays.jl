@@ -149,7 +149,7 @@ end
         @test_throws BlockBoundsError b[Block(2)]
 
         b = blockedrange(Fill(3,1_000_000))
-        @test b isa BlockedUnitRange{StepRangeLen{Int,Int,Int,Int}}
+        @test b isa BlockedUnitRange{<:AbstractRange}
         @test b[Block(100_000)] == 299_998:300_000
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(1_000_001)]

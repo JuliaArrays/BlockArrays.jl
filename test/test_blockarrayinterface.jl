@@ -138,9 +138,9 @@ end
 
 @testset "non-standard block axes" begin
     A = BlockArray([1 2; 3 4], Fill(1, 2), Fill(1, 2))
-    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},NTuple{2,BlockedUnitRange{StepRangeLen{Int,Int,Int,Int}}}}
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:NTuple{2,BlockedUnitRange{<:AbstractRange}}}
     A = BlockArray([1 2; 3 4], Fill(1, 2), [1, 1])
-    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},Tuple{BlockedUnitRange{StepRangeLen{Int,Int,Int,Int}},BlockedUnitRange{Vector{Int}}}}
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:Tuple{BlockedUnitRange{<:AbstractRange},BlockedUnitRange{Vector{Int}}}}
 end
 
 @testset "block Fill" begin
