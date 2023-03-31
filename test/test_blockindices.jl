@@ -1,4 +1,5 @@
-using BlockArrays, FillArrays, OffsetArrays, Test, Base64, StaticArrays, ArrayLayouts
+using BlockArrays, FillArrays, Test, Base64, StaticArrays, ArrayLayouts
+using OffsetArrays
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
 @testset "Blocks" begin
@@ -148,7 +149,7 @@ end
         @test_throws BlockBoundsError b[Block(2)]
 
         b = blockedrange(Fill(3,1_000_000))
-        @test b isa BlockedUnitRange{StepRange{Int,Int}}
+        @test b isa BlockedUnitRange{<:AbstractRange}
         @test b[Block(100_000)] == 299_998:300_000
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(1_000_001)]
@@ -166,7 +167,7 @@ end
 
         f = blockedrange(Fill(2,5))
         @test blockfirsts(f) ≡ 1:2:9
-        @test blocklasts(f) ≡ 2:2:10
+        @test blocklasts(f) ≡ StepRangeLen(2,2,5)
         @test blocklengths(f) ≡ Fill(2,5)
 
         r = blockedrange(Base.OneTo(5))

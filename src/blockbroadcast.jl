@@ -286,14 +286,14 @@ BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tup
 
 for op in (:*, :/)
     @eval begin
-        broadcasted(::AbstractBlockStyle, ::typeof($op), a::Zeros, b::AbstractArray) = FillArrays._broadcasted_zeros(a, b)
+        broadcasted(::AbstractBlockStyle, ::typeof($op), a::Zeros, b::AbstractArray) = FillArrays._broadcasted_zeros($op, a, b)
         broadcasted(::AbstractBlockStyle, ::typeof($op), a::Ones{T}, b::AbstractArray{V}) where {T,V} = LinearAlgebra.copy_oftype(b, Base.promote_op(*, T, V))
     end
 end
 
 for op in (:*, :\)
     @eval begin
-        broadcasted(::AbstractBlockStyle, ::typeof($op), a::AbstractArray, b::Zeros) = FillArrays._broadcasted_zeros(a, b)
+        broadcasted(::AbstractBlockStyle, ::typeof($op), a::AbstractArray, b::Zeros) = FillArrays._broadcasted_zeros($op, a, b)
         broadcasted(::AbstractBlockStyle, ::typeof($op), a::AbstractArray{T}, b::Ones{V}) where {T,V} = LinearAlgebra.copy_oftype(a, Base.promote_op(*, T, V))
     end
 end
