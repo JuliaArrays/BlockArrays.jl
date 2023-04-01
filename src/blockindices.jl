@@ -312,7 +312,7 @@ end
 
 represents a cartesian range of blocks.
 
-The relationship between `Block` and `BlockRange` mimicks the relationship between
+The relationship between `Block` and `BlockRange` mimics the relationship between
 `CartesianIndex` and `CartesianRange`.
 """
 BlockRange

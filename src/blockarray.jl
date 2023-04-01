@@ -66,7 +66,7 @@ struct BlockArray{T, N, R <: AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N
         new{T, N, R, BS}(blocks, block_sizes)
 end
 
-# Auxilary outer constructors
+# Auxiliary outer constructors
 @inline _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     _BlockArray(blocks, map(blockedrange, block_sizes))
 
@@ -97,7 +97,7 @@ end
     _BlockArray(R, block_sizes...)
 
 """
-Constructs a `BlockArray` with uninitialized blocks from a block type `R` with sizes defind by `block_sizes`.
+Constructs a `BlockArray` with uninitialized blocks from a block type `R` with sizes defined by `block_sizes`.
 
 ```jldoctest; setup = quote using BlockArrays end
 julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
