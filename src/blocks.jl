@@ -90,14 +90,3 @@ This is broken for now. See: https://github.com/JuliaArrays/BlockArrays.jl/issue
     view(a.array, Block.(i)...)
 @propagate_inbounds Base.setindex!(a::BlocksView{T,N}, b, i::Vararg{Int,N}) where {T,N} =
     copyto!(a[i...], b)
-
-function Base.showarg(io::IO, a::BlocksView, toplevel::Bool)
-    if toplevel
-        print(io, "blocks of ")
-        Base.showarg(io, a.array, true)
-    else
-        print(io, "::BlocksView{…,")
-        Base.showarg(io, a.array, false)
-        print(io, '}')
-    end
-end
