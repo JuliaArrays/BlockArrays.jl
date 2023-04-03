@@ -178,7 +178,7 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test blockisequal(axes(A .* Ones(axes(A))), axes(Ones(axes(A)) .* A), axes(A .* ones(6)))
     end
 
-    @testset "type inferrence" begin
+    @testset "type inference" begin
         u = BlockArray(randn(5), [2,3]);
         @inferred(copyto!(similar(u), Base.broadcasted(exp, u)))
         @test exp.(u) == exp.(Vector(u))

@@ -174,7 +174,7 @@ function eachblock(A::AbstractBlockArray)
     (view(A, Block(Tuple(I))) for I in blockinds)
 end
 
-# Use memory laout for sub-blocks
+# Use memory layout for sub-blocks
 @inline Base.getindex(A::AbstractMatrix, kr::Colon, jr::Block{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
 @inline Base.getindex(A::AbstractMatrix, kr::Block{1}, jr::Colon) = ArrayLayouts.layout_getindex(A, kr, jr)
 @inline Base.getindex(A::AbstractMatrix, kr::Block{1}, jr::AbstractVector) = ArrayLayouts.layout_getindex(A, kr, jr)
