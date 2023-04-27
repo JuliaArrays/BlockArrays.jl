@@ -138,8 +138,7 @@ julia> blockaxes(A,1)
  Block(2)
 ```
 """
-function blockaxes(A::AbstractArray{T,N}, d) where {T,N}
-    @_inline_meta
+@inline function blockaxes(A::AbstractArray{T,N}, d) where {T,N}
     d::Integer <= N ? blockaxes(A)[d] : Base.OneTo(1)
 end
 
@@ -166,7 +165,7 @@ julia> blocksize(A,2)
 """
 blocksize(A) = map(length, blockaxes(A))
 blocksize(A,i) = length(blockaxes(A,i))
-blocklength(t) = (@_inline_meta; prod(blocksize(t)))
+@inline blocklength(t) = prod(blocksize(t))
 
 """
     blocksizes(A)
