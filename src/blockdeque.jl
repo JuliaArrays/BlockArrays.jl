@@ -230,16 +230,19 @@ Base.append!(dest::BlockVector, sources...) = foldl(append!, sources; init = des
 
 Base.append!(dest::BlockVector, src) = append_itr!(dest, Base.IteratorSize(src), src)
 
+@inline function _append_itr_foldfn!(block,i,x)
+    i += 1
+    @inbounds block[i] = x
+    return i
+end
+
 function append_itr!(dest::BlockVector, ::Union{Base.HasShape,Base.HasLength}, src)
     block = dest.blocks[end]
     li = lastindex(block)
     resize!(block, length(block) + length(src))
     # Equivalent to `i = li; for x in src; ...; end` but (maybe) faster:
     foldl(src, init = li) do i, x
-        Base.@_inline_meta
-        i += 1
-        @inbounds block[i] = x
-        return i
+        _append_itr_foldfn!(block,i,x)
     end
     da, = dest.axes
     da.lasts[end] += length(src)
