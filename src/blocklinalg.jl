@@ -123,9 +123,15 @@ function _copyto!(_, ::AbstractBlockLayout, dest::AbstractVector, src::AbstractV
         return dest
     end
 
-    @inbounds for K = blockaxes(src,1)
+    @inbounds for K = blockcolsupport(src)
         copyto!(view(dest,K), view(src,K))
     end
+    @inbounds for K = blockcolsupport(dest)
+        if K ∉ blockcolsupport(src)
+            zero!(view(dest,K))
+        end
+    end
+
     dest
 end
 
