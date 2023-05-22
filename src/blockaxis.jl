@@ -197,7 +197,8 @@ blocksizes(A,i) = blocklengths(axes(A,i))
 axes(b::BlockedUnitRange) = (_BlockedUnitRange(blocklasts(b) .- (first(b)-1)),)
 unsafe_indices(b::BlockedUnitRange) = axes(b)
 first(b::BlockedUnitRange) = b.first
-last(b::BlockedUnitRange) = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
+# ::Integer works around case where blocklasts might return different type
+last(b::BlockedUnitRange)::Integer = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
 
 function getindex(b::BlockedUnitRange, K::Block{1})
     k = Integer(K)
