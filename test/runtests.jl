@@ -5,6 +5,11 @@ using Aqua
     Aqua.test_all(BlockArrays, ambiguities=false)
 end
 
+using Documenter
+@testset "docstrings" begin
+    doctest(BlockArrays)
+end
+
 include("test_blockindices.jl")
 include("test_blockarrays.jl")
 include("test_blockviews.jl")

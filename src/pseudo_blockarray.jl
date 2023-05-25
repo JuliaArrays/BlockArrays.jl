@@ -17,27 +17,24 @@ When iteratively solving a set of equations with a gradient method the Jacobian 
 to use a `PseudoBlockArray` to build up the Jacobian block by block and then pass the resulting matrix to
 a direct solver using `Array`.
 
-```jldoctest
-julia> using BlockArrays, Random, SparseArrays
+# Examples
+```jldoctest; setup=:(using BlockArrays)
+julia> PseudoBlockArray(reshape([1:6;], 2, 3), [1,1], [2,1])
+2×2-blocked 2×3 PseudoBlockMatrix{Int64}:
+ 1  3  │  5
+ ──────┼───
+ 2  4  │  6
 
-julia> Random.seed!(12345);
-
-julia> A = PseudoBlockArray(rand(2,3), [1,1], [2,1])
-2×2-blocked 2×3 PseudoBlockMatrix{Float64}:
- 0.944791  0.339612  │  0.322501
- ────────────────────┼──────────
- 0.866895  0.136117  │  0.252549
-
-julia> A = PseudoBlockArray(sprand(6, 0.5), [3,2,1])
-3-blocked 6-element PseudoBlockVector{Float64, SparseVector{Float64, Int64}, Tuple{BlockedUnitRange{Vector{Int64}}}}:
- 0.0
- 0.0
- 0.26755021483368013
- ───────────────────
- 0.0
- 0.11848853125656122
- ───────────────────
- 0.0
+julia> PseudoBlockArray([1:6;], [3,2,1])
+3-blocked 6-element PseudoBlockVector{Int64}:
+ 1
+ 2
+ 3
+ ─
+ 4
+ 5
+ ─
+ 6
 ```
 """
 struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{T, N}

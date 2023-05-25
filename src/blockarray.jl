@@ -14,7 +14,7 @@ array-constructor-caller would like an uninitialized block array. See also
 undef_blocks (@ref), an alias for UndefBlocksInitializer().
 
 # Examples
-```julia
+```jldoctest; setup=:(using BlockArrays)
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockMatrix{Float32}:
  #undef  #undef  #undef  │  #undef  #undef
@@ -33,11 +33,11 @@ type UndefBlocksInitializer (@ref), used in block array initialization to indica
 array-constructor-caller would like an uninitialized block array.
 
 # Examples
-```julia
+```jldoctest; setup=:(using BlockArrays)
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockMatrix{Float32}:
  #undef  #undef  #undef  │  #undef  #undef
- ------------------------┼----------------
+ ────────────────────────┼────────────────
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
 ```
@@ -220,23 +220,23 @@ This is an "inverse" of [`blocks`](@ref).
 # Examples
 ```jldoctest; setup = quote using BlockArrays end
 julia> arrays = permutedims(reshape([
-                  1ones(1, 3), 2ones(1, 2),
-                  3ones(2, 3), 4ones(2, 2),
+                  fill(1.0, 1, 3), fill(2.0, 1, 2),
+                  fill(3.0, 2, 3), fill(4.0, 2, 2),
               ], (2, 2)))
 2×2 Matrix{Matrix{Float64}}:
  [1.0 1.0 1.0]               [2.0 2.0]
  [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
 
-julia> mortar(arrays)
+julia> M = mortar(arrays)
 2×2-blocked 3×5 BlockMatrix{Float64}:
  1.0  1.0  1.0  │  2.0  2.0
  ───────────────┼──────────
  3.0  3.0  3.0  │  4.0  4.0
  3.0  3.0  3.0  │  4.0  4.0
 
-julia> ans == mortar(
-                  (1ones(1, 3), 2ones(1, 2)),
-                  (3ones(2, 3), 4ones(2, 2)),
+julia> M == mortar(
+                  (fill(1.0, 1, 3), fill(2.0, 1, 2)),
+                  (fill(3.0, 2, 3), fill(4.0, 2, 2)),
               )
 true
 ```

@@ -23,10 +23,10 @@ julia> BlockArray(rand(4, 4), [2,2], [1,1,2])
 
 julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
 2×2-blocked 4×5 BlockMatrix{Float64, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
- 0.0341601  0.374187  │  0.0118196  0.299058  0.0     
+ 0.0341601  0.374187  │  0.0118196  0.299058  0.0
  ---------------------┼-------------------------------
- 0.0945445  0.931115  │  0.0460428  0.0       0.0     
- 0.314926   0.438939  │  0.496169   0.0       0.0     
+ 0.0945445  0.931115  │  0.0460428  0.0       0.0
+ 0.314926   0.438939  │  0.496169   0.0       0.0
  0.12781    0.246862  │  0.732      0.449182  0.875096
 ```
 
@@ -77,17 +77,16 @@ julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])
 !!! warning
 
     Note that accessing an undefined block will throw an "access to undefined reference"-error!  If you create an array with undefined blocks, you _have_ to [initialize it block-wise](@ref setting_and_getting)); whole-array functions like `fill!` will not work:
-    
+
     ```julia
     julia> fill!(BlockArray{Float32}(undef_blocks, [1,2], [3,2]), 0)
     ERROR: UndefRefError: access to undefined reference
     …
     ```
-    
-    
+
 ## [Setting and getting blocks and values](@id setting_and_getting)
 
-A block can be set by  `block_array[Block(i...)] = v` or
+A block can be set by  `block_array[Block(i...)] = v`. The indexing may equivalently be carried out as
 `block_array[Block.(i)...]`.
 
 ```jldoctest block_array
@@ -98,24 +97,21 @@ julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
  #undef  #undef  │  #undef  #undef
  #undef  #undef  │  #undef  #undef
 
-julia> block_array[Block(2,1)] = rand(2,2)
-2×2 Matrix{Float64}:
- 0.325977  0.218587
- 0.549051  0.894245
+julia> block_array[Block(2,1)] = reshape([1:4;], 2, 2);
 
 julia> block_array[Block(1),Block(1)] = [1 2];
 
 julia> block_array
 2×2-blocked 3×4 BlockMatrix{Float64}:
- 1.0       2.0       │  #undef  #undef
- ────────────────────┼────────────────
- 0.325977  0.218587  │  #undef  #undef
- 0.549051  0.894245  │  #undef  #undef
+ 1.0  2.0  │  #undef  #undef
+ ──────────┼────────────────
+ 1.0  3.0  │  #undef  #undef
+ 2.0  4.0  │  #undef  #undef
 ```
 
 Note that this will "take ownership" of the passed in array, that is, no copy is made.
 
-A block can be retrieved with `view(block_array, Block(i...))`, 
+A block can be retrieved with `view(block_array, Block(i...))`,
 or if a copy is desired, `block_array[Block(i...)]`:
 
 ```jldoctest block_array
@@ -171,10 +167,10 @@ An array can be repacked into a `BlockArray` with `BlockArray(array, block_sizes
 ```jl
 julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
 2×2-blocked 4×5 BlockArray{Float64, 2, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
- 0.0341601  0.374187  │  0.0118196  0.299058  0.0     
+ 0.0341601  0.374187  │  0.0118196  0.299058  0.0
  ---------------------┼-------------------------------
- 0.0945445  0.931115  │  0.0460428  0.0       0.0     
- 0.314926   0.438939  │  0.496169   0.0       0.0     
+ 0.0945445  0.931115  │  0.0460428  0.0       0.0
+ 0.314926   0.438939  │  0.496169   0.0       0.0
  0.12781    0.246862  │  0.732      0.449182  0.875096
 ```
 
