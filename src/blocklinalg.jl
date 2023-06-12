@@ -199,6 +199,14 @@ function materialize!(M::MatMulVecAdd{<:AbstractBlockLayout,<:AbstractStridedLay
     y_in
 end
 
+function _block_muladd!(α, A, X::AbstractVector, β, Y::AbstractVector)
+    _fill_lmul!(β, Y)
+    for N = blockcolsupport(X), K = blockcolsupport(A,N)
+        muladd!(α, view(A,K,N), view(X,N), one(α), view(Y,K))
+    end
+    Y
+end
+
 function _block_muladd!(α, A, X, β, Y)
     _fill_lmul!(β, Y)
     for J = blockaxes(X,2), N = blockcolsupport(X,J), K = blockcolsupport(A,N)
