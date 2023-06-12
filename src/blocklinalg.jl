@@ -211,13 +211,22 @@ mul_blockscompatible(A, B, C) = blockisequal(axes(A,2), axes(B,1)) &&
     blockisequal(axes(A,1), axes(C,1)) &&
     blockisequal(axes(B,2), axes(C,2))
 
-function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractBlockLayout})
+@inline function _matmul(M)
     α, A, B, β, C = M.α, M.A, M.B, M.β, M.C
     if mul_blockscompatible(A,B,C)
         _block_muladd!(α, A, B, β, C)
     else # use default
         materialize!(MulAdd{UnknownLayout,UnknownLayout,UnknownLayout}(α, A, B, β, C))
     end
+end
+
+function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractBlockLayout})
+    _matmul(M)
+end
+
+function materialize!(M::MulAdd{<:AbstractBlockLayout, <:AbstractBlockLayout, <:AbstractBlockLayout,
+        <:Any, <:AbstractMatrix, <:AbstractVector, <:AbstractVector})
+    _matmul(M)
 end
 
 function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractColumnMajor})
