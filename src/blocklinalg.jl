@@ -202,7 +202,7 @@ end
 @inline function _block_muladd!(α, A, X::AbstractVector, β, Y::AbstractVector)
     _fill_lmul!(β, Y)
     for N = blockcolsupport(X), K = blockcolsupport(A,N)
-        muladd!(α, view(A,K,N), view(X,N), one(α), view(Y,K))
+        mul!(view(Y,K), view(A,K,N), view(X,N), α, one(β))
     end
     Y
 end
@@ -210,7 +210,7 @@ end
 @inline function _block_muladd!(α, A, X, β, Y)
     _fill_lmul!(β, Y)
     for J = blockaxes(X,2), N = blockcolsupport(X,J), K = blockcolsupport(A,N)
-        muladd!(α, view(A,K,N), view(X,N,J), one(α), view(Y,K,J))
+        mul!(view(Y,K,J), view(A,K,N), view(X,N,J), α, one(α))
     end
     Y
 end
