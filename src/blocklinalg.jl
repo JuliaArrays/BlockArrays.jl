@@ -199,7 +199,7 @@ function materialize!(M::MatMulVecAdd{<:AbstractBlockLayout,<:AbstractStridedLay
     y_in
 end
 
-function _block_muladd!(α, A, X::AbstractVector, β, Y::AbstractVector)
+@inline function _block_muladd!(α, A, X::AbstractVector, β, Y::AbstractVector)
     _fill_lmul!(β, Y)
     for N = blockcolsupport(X), K = blockcolsupport(A,N)
         muladd!(α, view(A,K,N), view(X,N), one(α), view(Y,K))
@@ -207,7 +207,7 @@ function _block_muladd!(α, A, X::AbstractVector, β, Y::AbstractVector)
     Y
 end
 
-function _block_muladd!(α, A, X, β, Y)
+@inline function _block_muladd!(α, A, X, β, Y)
     _fill_lmul!(β, Y)
     for J = blockaxes(X,2), N = blockcolsupport(X,J), K = blockcolsupport(A,N)
         muladd!(α, view(A,K,N), view(X,N,J), one(α), view(Y,K,J))
@@ -232,8 +232,7 @@ function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayou
     _matmul(M)
 end
 
-function materialize!(M::MulAdd{<:AbstractBlockLayout, <:AbstractBlockLayout, <:AbstractBlockLayout,
-        <:Any, <:AbstractMatrix, <:AbstractVector, <:AbstractVector})
+function materialize!(M::MatMulVecAdd{<:AbstractBlockLayout, <:AbstractBlockLayout, <:AbstractBlockLayout})
     _matmul(M)
 end
 
