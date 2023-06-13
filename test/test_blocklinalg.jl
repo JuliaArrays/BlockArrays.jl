@@ -92,6 +92,20 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
                     Matrix(A)*PseudoBlockArray(B) .=== Matrix(A)*Matrix(B))
     end
 
+    @testset "BlockMatrix * BlockVector" begin
+        A = BlockArray(randn(6,6), fill(2,3), 1:3)
+        v = BlockArray(rand(6), 1:3)
+        w = A * v
+        @test w isa BlockArray
+        @test blocksizes(w,1) == fill(2, 3)
+        @test w ≈ Array(A) * v ≈ A * Array(v) ≈ Array(A) * Array(v)
+
+        z = A * w
+        @test z isa BlockArray
+        @test blocksizes(z,1) == fill(2, 3)
+        @test z ≈ Array(A) * w ≈ A * Array(w) ≈ Array(A) * Array(w)
+    end
+
     @testset "adjoint" begin
         A = BlockArray(randn(6,6), fill(2,3), 1:3)
         B = BlockArray(randn(6,6), 1:3, 1:3)
