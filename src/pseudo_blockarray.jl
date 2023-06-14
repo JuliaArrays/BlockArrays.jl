@@ -129,10 +129,8 @@ convert(::Type{AbstractArray}, A::PseudoBlockArray) = A
 PseudoBlockArray{T, N}(A::AbstractArray{T2, N}) where {T,T2,N} =
     PseudoBlockArray(Array{T, N}(A), axes(A))
 PseudoBlockArray{T1}(A::AbstractArray{T2, N}) where {T1,T2,N} = PseudoBlockArray{T1, N}(A)
+PseudoBlockArray{<:Any,N}(A::AbstractArray{T, N}) where {T,N} = PseudoBlockArray{T, N}(A)
 PseudoBlockArray(A::AbstractArray{T, N}) where {T,N} = PseudoBlockArray{T, N}(A)
-
-PseudoBlockMatrix(A::AbstractMatrix{T}) where {T} = PseudoBlockMatrix{T}(A)
-PseudoBlockVector(A::AbstractVector{T}) where {T} = PseudoBlockVector{T}(A)
 
 convert(::Type{PseudoBlockArray{T, N}}, A::AbstractArray{T2, N}) where {T,T2,N} =
     PseudoBlockArray(convert(Array{T, N}, A), axes(A))
