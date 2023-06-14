@@ -171,6 +171,7 @@ end
         @test blocklengths(f) ≡ Fill(2,5)
 
         r = blockedrange(Base.OneTo(5))
+        @test (@inferred blocklengths(r)) == 1:5
         @test blocklasts(r) ≡ ArrayLayouts.RangeCumsum(Base.OneTo(5))
     end
 
