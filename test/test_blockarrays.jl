@@ -94,6 +94,15 @@ end
             @test A == PseudoBlockArray(A, 1:3) == PseudoBlockArray{Int}(A, 1:3) ==
                 PseudoBlockArray(A, (blockedrange(1:3),)) == PseudoBlockArray{Int}(A, (blockedrange(1:3),)) ==
                 PseudoBlockArray{Float64}(A, 1:3)
+
+            @testset "from arrays" begin
+                v = [1,2,3]
+                @test PseudoBlockVector(v) == v
+                @test PseudoBlockArray(v) == v
+                M = [1 2; 3 4]
+                @test PseudoBlockMatrix(M) == M
+                @test PseudoBlockArray(M) == M
+            end
         end
 
         @testset "similar" begin
