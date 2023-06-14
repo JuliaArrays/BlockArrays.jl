@@ -65,7 +65,7 @@ _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changin
 
 _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
-@inline blocklengths(a::BlockedUnitRange) = isempty(a.lasts) ? _diff(a.lasts) : [first(a.lasts)-a.first+1; _diff(a.lasts)]
+@inline blocklengths(a::BlockedUnitRange) = isempty(a.lasts) ? [_diff(a.lasts);] : [first(a.lasts)-a.first+1; _diff(a.lasts)]
 
 length(a::BlockedUnitRange) = isempty(a.lasts) ? 0 : Integer(last(a.lasts)-a.first+1)
 
