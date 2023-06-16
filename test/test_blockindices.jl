@@ -54,6 +54,8 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test 1 - Block(1,2) == Block(0,-1)
         @test 2*Block(1,2) == Block(2,4)
         @test Block(1,2)*2 == Block(2,4)
+        @test one(Block(1,2))*Block(1,2) == Block(1,2)
+        @test one(Block(1,2))*Block(Int8(1)) === Block(Int8(1))
 
         @test isless(Block(1,1), Block(2,2))
         @test isless(Block(1,1), Block(2,1))

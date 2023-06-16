@@ -58,8 +58,6 @@ ndims(::Block) = 0
 eltype(::Type{B}) where B<:Block = B
 getindex(B::Block, ::CartesianIndex{0}) = B
 
-Base.oneunit(B::Block{N,T}) where {N,T} = Block(ntuple(_->oneunit(T), Val(N)))
-
 # The following code is taken from CartesianIndex
 @inline (+)(index::Block{N}) where {N} = Block{N}(map(+, index.n))
 @inline (-)(index::Block{N}) where {N} = Block{N}(map(-, index.n))
@@ -79,6 +77,9 @@ Base.oneunit(B::Block{N,T}) where {N,T} = Block(ntuple(_->oneunit(T), Val(N)))
 @inline (-)(i::Integer, index::Block{N}) where {N} = Block{N}(map(x->i-x, index.n))
 @inline (*)(a::Integer, index::Block{N}) where {N} = Block{N}(map(x->a*x, index.n))
 @inline (*)(index::Block, a::Integer) = *(a,index)
+
+Base.oneunit(B::Block{N,T}) where {N,T} = Block(ntuple(_->oneunit(T), Val(N)))
+Base.one(B::Block) = true
 
 # comparison
 # _isless copied from Base in Julia 1.7 since it was removed in 1.8.
