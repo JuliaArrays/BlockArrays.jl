@@ -58,6 +58,8 @@ ndims(::Block) = 0
 eltype(::Type{B}) where B<:Block = B
 getindex(B::Block, ::CartesianIndex{0}) = B
 
+Base.oneunit(B::Block{N,T}) where {N,T} = Block(ntuple(_->oneunit(T), Val(N)))
+
 # The following code is taken from CartesianIndex
 @inline (+)(index::Block{N}) where {N} = Block{N}(map(+, index.n))
 @inline (-)(index::Block{N}) where {N} = Block{N}(map(-, index.n))

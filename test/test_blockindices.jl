@@ -48,6 +48,7 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test Block(1,2) + Block(2,3) == Block(3,5)
         @test Block(1,2) + 1 == Block(2,3)
         @test 1 + Block(1,2) == Block(2,3)
+        @test oneunit(Block(1,2)) + Block(1,2) == Block(2,3)
         @test Block(2,3) - Block(1,2) == Block(1,1)
         @test Block(1,2) - 1 == Block(0,1)
         @test 1 - Block(1,2) == Block(0,-1)
