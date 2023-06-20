@@ -78,6 +78,9 @@ getindex(B::Block, ::CartesianIndex{0}) = B
 @inline (*)(a::Integer, index::Block{N}) where {N} = Block{N}(map(x->a*x, index.n))
 @inline (*)(index::Block, a::Integer) = *(a,index)
 
+Base.oneunit(B::Block{N,T}) where {N,T} = Block(ntuple(_->oneunit(T), Val(N)))
+Base.one(B::Block) = true
+
 # comparison
 # _isless copied from Base in Julia 1.7 since it was removed in 1.8.
 @inline function _isless(ret, I1::Tuple{Int,Vararg{Int,N}}, I2::Tuple{Int,Vararg{Int,N}}) where {N}
