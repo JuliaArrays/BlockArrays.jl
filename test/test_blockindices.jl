@@ -156,6 +156,13 @@ end
         @test b[Block(100_000)] == 299_998:300_000
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(1_000_001)]
+
+        b = BlockRange((2:4, 3:4))
+        @test b[2,2] === Block(3,4)
+        @test b[axes(b)...] === b
+
+        b = BlockRange(OffsetArrays.IdOffsetRange.((2:4, 3:5), 2))
+        @test b[axes(b)...] === b
     end
 
     @testset "firsts/lasts/lengths" begin
