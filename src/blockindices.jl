@@ -335,7 +335,6 @@ broadcasted(::DefaultArrayStyle{0}, ::Type{Int}, block::Block{1}) = Int(block)
 
 # AbstractArray implementation
 axes(iter::BlockRange{N,R}) where {N,R} = map(axes1, iter.indices)
-Base.IndexStyle(::Type{BlockRange{N,R}}) where {N,R} = IndexCartesian()
 @inline function Base.getindex(iter::BlockRange{N,<:NTuple{N,Base.OneTo}}, I::Vararg{Integer, N}) where {N}
     @boundscheck checkbounds(iter, I...)
     Block(I)
