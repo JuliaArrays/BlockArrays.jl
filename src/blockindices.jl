@@ -325,6 +325,10 @@ BlockRange(inds::NTuple{N,AbstractUnitRange{Int}}) where {N} =
 BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
     BlockRange(inds)
 
+BlockRange() = BlockRange(())
+BlockRange(sizes::Tuple{Int, Vararg{Int}}) = BlockRange(map(Base.OneTo, sizes))
+BlockRange(sizes::Vararg{Int}) = BlockRange(sizes)
+
 (:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
 (:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
 Base.BroadcastStyle(::Type{<:BlockRange{1}}) = DefaultArrayStyle{1}()
