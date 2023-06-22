@@ -429,15 +429,19 @@ end
     end
 
     @testset "string" begin
-        A = BlockArray(rand(4, 5), [1,3], [2,3]);
         buf = IOBuffer()
-        Base.showerror(buf, BlockBoundsError(A, (3,2)))
-        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}} at block index [3,2]"
+        A = BlockArray(rand(2,3), [1,1], [2,1]);
+        summary(buf, A)
+        s = String(take!(buf))
+        @test s == summary(A)
 
+        A = BlockArray(rand(4, 5), [1,3], [2,3]);
+        Base.showerror(buf, BlockBoundsError(A, (3,2)))
+        @test String(take!(buf)) == "BlockBoundsError: attempt to access $(summary(A)) at block index [3,2]"
 
         A = PseudoBlockArray(rand(4, 5), [1,3], [2,3]);
         Base.showerror(buf, BlockBoundsError(A, (3,2)))
-        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockMatrix{Float64, Matrix{Float64}, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}} at block index [3,2]"
+        @test String(take!(buf)) == "BlockBoundsError: attempt to access $(summary(A)) at block index [3,2]"
     end
 
     @testset "replstring" begin

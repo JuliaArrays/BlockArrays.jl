@@ -83,7 +83,7 @@ specialize this method if they need to provide custom block bounds checking beha
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}} at block index [3,2]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64} at block index [3,2]
 [...]
 ```
 """
