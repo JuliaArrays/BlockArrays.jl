@@ -23,7 +23,6 @@ const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVect
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
 _block_summary(a) = string(block2string(blocksize(a), size(a)), " ", typeof(a))
-Base.summary(a::AbstractBlockArray) = _block_summary(a)
 _show_typeof(io, a) = show(io, typeof(a))
 function _block_summary(io, a)
     print(io, block2string(blocksize(a), size(a)))
@@ -84,7 +83,7 @@ specialize this method if they need to provide custom block bounds checking beha
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
-ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}} at block index [3,2]
+ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64} at block index [3,2]
 [...]
 ```
 """
