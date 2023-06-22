@@ -23,7 +23,6 @@ const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVect
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
 _block_summary(a) = string(block2string(blocksize(a), size(a)), " ", typeof(a))
-Base.summary(a::AbstractBlockArray) = _block_summary(a)
 _show_typeof(io, a) = show(io, typeof(a))
 function _block_summary(io, a)
     print(io, block2string(blocksize(a), size(a)))
