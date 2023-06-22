@@ -150,7 +150,7 @@ julia> A = reshape(1:9, 3, 3)
  2  5  8
  3  6  9
 
-julia> BlockArrays.blockvec(B)
+julia> BlockArrays.blockvec(A)
 3-blocked 9-element PseudoBlockVector{Int64, Base.ReshapedArray{Int64, 1, PseudoBlockMatrix{Int64, Matrix{Int64}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}, Tuple{Base.MultiplicativeInverses.SignedMultiplicativeInverse{Int64}}}, Tuple{BlockedUnitRange{StepRangeLen{Int64, Int64, Int64, Int64}}}}:
  1
  2
