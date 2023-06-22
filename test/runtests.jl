@@ -7,6 +7,7 @@ end
 
 using Documenter
 @testset "docstrings" begin
+    DocMeta.setdocmeta!(BlockArrays, :DocTestSetup, :(using BlockArrays); recursive=true)
     doctest(BlockArrays)
 end
 

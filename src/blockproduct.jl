@@ -32,7 +32,7 @@ end
 """
     BlockKron(A...)
 
-creates a lazy representation of kron(A...) with the natural
+Create a lazy representation of kron(A...) with the natural
 block-structure imposed. This is a component in `blockkron(A...)`.
 """
 struct BlockKron{T,N,ARGS<:Tuple} <: AbstractBlockArray{T,N}

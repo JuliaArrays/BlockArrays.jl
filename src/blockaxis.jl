@@ -31,7 +31,9 @@ is an `AbstractUnitRange{Int}` that has been divided
 into blocks, and is used to represent axes of block arrays.
 Construction is typically via `blockedrange` which converts
 a vector of block lengths to a `BlockedUnitRange`.
-```jldoctest; setup = quote using BlockArrays end
+
+# Examples
+```jldoctest
 julia> blockedrange([2,2,3])
 3-blocked 7-element BlockedUnitRange{Vector{Int64}}:
  1
@@ -72,14 +74,38 @@ length(a::BlockedUnitRange) = isempty(a.lasts) ? 0 : Integer(last(a.lasts)-a.fir
 """
    blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
 
-returns true if a and b have the same block structure.
+Check if `a` and `b` have the same block structure.
+
+# Examples
+```jldoctest
+julia> b1 = blockedrange(1:2)
+2-blocked 3-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+ 1
+ ─
+ 2
+ 3
+
+julia> b2 = blockedrange([1,1,1])
+3-blocked 3-element BlockedUnitRange{Vector{Int64}}:
+ 1
+ ─
+ 2
+ ─
+ 3
+
+julia> blockisequal(b1, b1)
+true
+
+julia> blockisequal(b1, b2)
+false
+```
 """
 blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int}) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
 blockisequal(a, b, c, d...) = blockisequal(a,b) && blockisequal(b,c,d...)
 """
    blockisequal(a::Tuple, b::Tuple)
 
-returns true if `all(blockisequal.(a,b))`` is true.
+Return `all(blockisequal.(a,b))``
 """
 blockisequal(a::Tuple, b::Tuple) = all(blockisequal.(a, b))
 
@@ -101,7 +127,9 @@ Base.promote_rule(::Type{BlockedUnitRange{CS}}, ::Type{Base.OneTo{Int}}) where C
     blockaxes(A)
 
 Return the tuple of valid block indices for array `A`.
-```jldoctest; setup = quote using BlockArrays end
+
+# Examples
+```jldoctest
 julia> A = BlockArray([1,2,3],[2,1])
 2-blocked 3-element BlockVector{Int64}:
  1
@@ -109,10 +137,18 @@ julia> A = BlockArray([1,2,3],[2,1])
  ─
  3
 
-julia> blockaxes(A)[1]
-2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
- Block(1)
- Block(2)
+julia> blockaxes(A)
+(BlockRange(Base.OneTo(2)),)
+
+julia> B = BlockArray(zeros(3,4), [1,2], [1,2,1])
+2×3-blocked 3×4 BlockMatrix{Float64}:
+ 0.0  │  0.0  0.0  │  0.0
+ ─────┼────────────┼─────
+ 0.0  │  0.0  0.0  │  0.0
+ 0.0  │  0.0  0.0  │  0.0
+
+julia> blockaxes(B)
+(BlockRange(Base.OneTo(2)), BlockRange(Base.OneTo(3)))
 ```
 """
 blockaxes(b::BlockedUnitRange) = _blockaxes(b.lasts)
@@ -124,7 +160,9 @@ blockaxes(b) = blockaxes.(axes(b), 1)
     blockaxes(A, d)
 
 Return the valid range of block indices for array `A` along dimension `d`.
-```jldoctest; setup = quote using BlockArrays end
+
+# Examples
+```jldoctest
 julia> A = BlockArray([1,2,3],[2,1])
 2-blocked 3-element BlockVector{Int64}:
  1
@@ -148,7 +186,9 @@ end
 
 Return the tuple of the number of blocks along each
 dimension. See also size and blocksizes.
-```jldoctest; setup = quote using BlockArrays end
+
+# Examples
+```jldoctest
 julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
 2×3-blocked 3×3 BlockMatrix{Float64}:
  1.0  │  1.0  │  1.0
@@ -173,7 +213,9 @@ blocksize(A,i) = length(blockaxes(A,i))
 
 Return the tuple of the sizes of blocks along each
 dimension. See also size and blocksize.
-```jldoctest; setup = quote using BlockArrays end
+
+# Examples
+```jldoctest
 julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
 2×3-blocked 3×3 BlockMatrix{Float64}:
  1.0  │  1.0  │  1.0
@@ -282,19 +324,79 @@ end
 """
    blockfirsts(a::AbstractUnitRange{Int})
 
-returns the first index of each block of `a`.
+Return the first index of each block of `a`.
+
+# Examples
+```jldoctest
+julia> b = blockedrange(1:3)
+3-blocked 6-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+ 1
+ ─
+ 2
+ 3
+ ─
+ 4
+ 5
+ 6
+
+julia> blockfirsts(b)
+3-element Vector{Int64}:
+ 1
+ 2
+ 4
+```
 """
 blockfirsts(a::AbstractUnitRange{Int}) = Ones{Int}(1)
 """
    blocklasts(a::AbstractUnitRange{Int})
 
-returns the last index of each block of `a`.
+Return the last index of each block of `a`.
+
+# Examples
+```jldoctest
+julia> b = blockedrange(1:3)
+3-blocked 6-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+ 1
+ ─
+ 2
+ 3
+ ─
+ 4
+ 5
+ 6
+
+julia> blocklasts(b)
+3-element ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}:
+ 1
+ 3
+ 6
+```
 """
 blocklasts(a::AbstractUnitRange{Int}) = Fill(length(a),1)
 """
    blocklengths(a::AbstractUnitRange{Int})
 
-returns the length of each block of `a`.
+Return the length of each block of `a`.
+
+# Examples
+```jldoctest
+julia> b = blockedrange(1:3)
+3-blocked 6-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+ 1
+ ─
+ 2
+ 3
+ ─
+ 4
+ 5
+ 6
+
+julia> blocklengths(b)
+3-element Vector{Int64}:
+ 1
+ 2
+ 3
+```
 """
 blocklengths(a::AbstractUnitRange) = blocklasts(a) .- blockfirsts(a) .+ 1
 

@@ -80,7 +80,7 @@ Throw a `BlockBoundsError` if the specified block indexes are not in bounds for 
 Subtypes of `AbstractBlockArray` should
 specialize this method if they need to provide custom block bounds checking behaviors.
 
-```jldoctest; setup = quote using BlockArrays end
+```jldoctest
 julia> A = BlockArray(rand(2,3), [1,1], [2,1]);
 
 julia> blockcheckbounds(A, 3, 2)
@@ -146,7 +146,7 @@ end
 Create a generator that iterates over each block of an `AbstractBlockArray`
 returning views.
 
-```jldoctest; setup = quote using BlockArrays end
+```jldoctest
 julia> v = Array(reshape(1:6, (2, 3)))
 2×3 Matrix{Int64}:
  1  3  5
