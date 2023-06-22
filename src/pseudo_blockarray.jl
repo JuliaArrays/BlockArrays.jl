@@ -18,7 +18,7 @@ to use a `PseudoBlockArray` to build up the Jacobian block by block and then pas
 a direct solver using `Array`.
 
 # Examples
-```jldoctest; setup=:(using BlockArrays)
+```jldoctest
 julia> PseudoBlockArray(reshape([1:6;], 2, 3), [1,1], [2,1])
 2×2-blocked 2×3 PseudoBlockMatrix{Int64}:
  1  3  │  5

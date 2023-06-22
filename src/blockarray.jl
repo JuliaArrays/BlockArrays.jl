@@ -14,7 +14,7 @@ array-constructor-caller would like an uninitialized block array. See also
 undef_blocks (@ref), an alias for UndefBlocksInitializer().
 
 # Examples
-```jldoctest; setup=:(using BlockArrays)
+```jldoctest
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockMatrix{Float32}:
  #undef  #undef  #undef  │  #undef  #undef
@@ -33,7 +33,7 @@ type UndefBlocksInitializer (@ref), used in block array initialization to indica
 array-constructor-caller would like an uninitialized block array.
 
 # Examples
-```jldoctest; setup=:(using BlockArrays)
+```jldoctest
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockMatrix{Float32}:
  #undef  #undef  #undef  │  #undef  #undef
@@ -99,7 +99,7 @@ end
 """
 Constructs a `BlockArray` with uninitialized blocks from a block type `R` with sizes defined by `block_sizes`.
 
-```jldoctest; setup = quote using BlockArrays end
+```jldoctest
 julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
 2×2-blocked 4×4 BlockMatrix{Float64}:
  #undef  #undef  │  #undef  #undef
@@ -218,7 +218,7 @@ Construct a `BlockArray` from `blocks`.  `block_sizes` is computed from
 This is an "inverse" of [`blocks`](@ref).
 
 # Examples
-```jldoctest; setup = quote using BlockArrays end
+```jldoctest
 julia> arrays = permutedims(reshape([
                   fill(1.0, 1, 3), fill(2.0, 1, 2),
                   fill(3.0, 2, 3), fill(4.0, 2, 2),

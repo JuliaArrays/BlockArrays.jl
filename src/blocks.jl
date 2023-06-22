@@ -11,7 +11,7 @@ This function does not copy the blocks and give a mutable viwe to the original
 array.  This is an "inverse" of [`mortar`](@ref).
 
 # Examples
-```jldoctest; setup = quote using BlockArrays end
+```jldoctest
 julia> bs1 = permutedims(reshape([
                1ones(1, 3), 2ones(1, 2),
                3ones(2, 3), 4ones(2, 2),

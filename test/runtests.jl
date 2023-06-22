@@ -7,7 +7,11 @@ end
 
 using Documenter
 @testset "docstrings" begin
-    doctest(BlockArrays)
+    # don't test docstrings on old versions to avoid failures due to changes in types
+    if VERSION >= v"1.9"
+        DocMeta.setdocmeta!(BlockArrays, :DocTestSetup, :(using BlockArrays); recursive=true)
+        doctest(BlockArrays)
+    end
 end
 
 include("test_blockindices.jl")
