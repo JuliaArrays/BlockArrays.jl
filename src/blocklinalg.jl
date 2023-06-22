@@ -178,27 +178,6 @@ end
 # BLAS overrides
 #############
 
-
-function materialize!(M::MatMulVecAdd{<:AbstractBlockLayout,<:AbstractStridedLayout,<:AbstractStridedLayout})
-    α, A, x_in, β, y_in = M.α, M.A, M.B, M.β, M.C
-    if length(x_in) != size(A,2) || length(y_in) != size(A,1)
-        throw(DimensionMismatch())
-    end
-
-    # impose block structure
-    y = PseudoBlockArray(y_in, (axes(A,1),))
-    x = PseudoBlockArray(x_in, (axes(A,2),))
-
-    _fill_lmul!(β, y)
-
-    for J = blockaxes(A,2)
-        for K = blockcolsupport(A,J)
-            muladd!(α, view(A,K,J), view(x,J), one(α), view(y,K))
-        end
-    end
-    y_in
-end
-
 @inline function _block_muladd!(α, A, X::AbstractVector, β, Y::AbstractVector)
     _fill_lmul!(β, Y)
     for N = blockcolsupport(X), K = blockcolsupport(A,N)
@@ -213,6 +192,19 @@ end
         mul!(view(Y,K,J), view(A,K,N), view(X,N,J), α, one(α))
     end
     Y
+end
+
+function materialize!(M::MatMulVecAdd{<:AbstractBlockLayout,<:AbstractStridedLayout,<:AbstractStridedLayout})
+    α, A, x_in, β, y_in = M.α, M.A, M.B, M.β, M.C
+    if length(x_in) != size(A,2) || length(y_in) != size(A,1)
+        throw(DimensionMismatch())
+    end
+
+    # impose block structure
+    y = PseudoBlockArray(y_in, (axes(A,1),))
+    x = PseudoBlockArray(x_in, (axes(A,2),))
+    _block_muladd!(α, A, x, β, y)
+    y_in
 end
 
 mul_blockscompatible(A, B, C) = blockisequal(axes(A,2), axes(B,1)) &&
@@ -278,7 +270,6 @@ _triangular_matrix(::Val{'L'}, ::Val{'U'}, A) = UnitLowerTriangular(A)
 function _matchingblocks_triangular_mul!(::Val{'U'}, UNIT, A::AbstractMatrix{T}, dest) where T
     # impose block structure
     b = PseudoBlockArray(dest, (axes(A,1),))
-
     for K = blockaxes(A,1)
         b_2 = view(b, K)
         Ũ = _triangular_matrix(Val('U'), UNIT, view(A, K,K))
