@@ -277,6 +277,13 @@ end
         @test_throws DimensionMismatch (BA_1[Block(3)] = rand(4))
         @test_throws BlockBoundsError blockcheckbounds(BA_1, 4)
         @test_throws BlockBoundsError BA_1[Block(4)]
+        @test_throws BlockBoundsError blockcheckbounds(BA_1)
+        @test_throws BlockBoundsError blockcheckbounds(BA_1, 4, 1)
+
+        Bv = BlockArray(zeros(1))
+        @test Bv[Block()] == Bv[] == 0
+        @test Bv[Block(1)] == Bv
+        @test Bv[Block(1,1)] == zeros(1,1)
 
         BA_2 = BlockArray(undef_blocks, Matrix{Float64}, [1,2], [3,4])
         a_2 = rand(1,4)
@@ -286,6 +293,26 @@ end
 
         @test BA_2[1,5] == a_2[2]
         @test_throws DimensionMismatch BA_2[Block(1,2)] = rand(1,5)
+
+        # linear block indexing
+        @test blockcheckbounds(Bool, BA_2, 3)
+        @test_throws BlockBoundsError blockcheckbounds(BA_2, 5)
+
+        # trailing Block(1) indices
+        BA_3 = BlockArray(undef_blocks, Matrix{Float64}, [1,3], [4])
+        @test blockcheckbounds(Bool, BA_3, 1, 1)
+        @test blockcheckbounds(Bool, BA_3, 2, 1)
+        @test_throws BlockBoundsError blockcheckbounds(BA_3, 3, 1)
+        @test_throws BlockBoundsError blockcheckbounds(BA_3, 1, 2)
+        @test_throws BlockBoundsError blockcheckbounds(BA_3, 3, 2)
+
+        BA_4 = BlockArray(zeros(2,2,1))
+        @test blockcheckbounds(Bool, BA_4)
+        @test blockcheckbounds(Bool, BA_4, 1)
+        @test blockcheckbounds(Bool, BA_4, 1, 1)
+        @test blockcheckbounds(Bool, BA_4, 1, 1, 1)
+        @test blockcheckbounds(Bool, BA_4, 1, 1, 1, 1)
+        @test_throws BlockBoundsError blockcheckbounds(BA_3, 1, 2)
     end
 
     @testset "misc block tests" begin
