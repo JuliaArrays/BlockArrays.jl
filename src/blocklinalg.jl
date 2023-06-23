@@ -2,21 +2,22 @@ blockrowsupport(_, A, k) = blockaxes(A,2)
 """
     blockrowsupport(A, k)
 
-Return an iterator containing the possible non-zero blocks in the k-th block-row of A.
+Return an iterator containing the possible non-zero blocks in the `k`-th block-row of `A`.
 
 # Examples
 ```jldoctest
-julia> B = BlockArray(collect(reshape(1:9, 3, 3)), [1,2], [1,2])
-2×2-blocked 3×3 BlockMatrix{Int64}:
- 1  │  4  7
- ───┼──────
- 2  │  5  8
- 3  │  6  9
+julia> B = BlockArray(collect(reshape(1:9, 3, 3)), [1,2], [1,1,1])
+2×3-blocked 3×3 BlockMatrix{Int64}:
+ 1  │  4  │  7
+ ───┼─────┼───
+ 2  │  5  │  8
+ 3  │  6  │  9
 
 julia> BlockArrays.blockrowsupport(B, 2)
-2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
+3-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
  Block(1)
  Block(2)
+ Block(3)
 ```
 """
 blockrowsupport(A, k) = blockrowsupport(MemoryLayout(A), A, k)
@@ -27,16 +28,16 @@ blockcolsupport(_, A, j) = Block.(colsupport(blocks(A), Int.(j)))
 """
     blockcolsupport(A, j)
 
-Return an iterator containing the possible non-zero blocks in the j-th block-column of A.
+Return an iterator containing the possible non-zero blocks in the `j`-th block-column of `A`.
 
 # Examples
 ```jldoctest
-julia> B = BlockArray(collect(reshape(1:9, 3, 3)), [1,2], [1,2])
-2×2-blocked 3×3 BlockMatrix{Int64}:
- 1  │  4  7
- ───┼──────
- 2  │  5  8
- 3  │  6  9
+julia> B = BlockArray(collect(reshape(1:9, 3, 3)), [1,2], [1,1,1])
+2×3-blocked 3×3 BlockMatrix{Int64}:
+ 1  │  4  │  7
+ ───┼─────┼───
+ 2  │  5  │  8
+ 3  │  6  │  9
 
 julia> BlockArrays.blockcolsupport(B, 2)
 2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
