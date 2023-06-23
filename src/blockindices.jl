@@ -311,12 +311,31 @@ end
 
 # deleted code that isn't used, such as 0-dimensional case
 """
-    BlockRange(startblock, stopblock)
+    BlockRange(axes::Tuple{AbstractUnitRange{Int}})
+    BlockRange(sizes::Vararg{Integer})
 
-represents a cartesian range of blocks.
+Represent a Cartesian range of blocks.
 
 The relationship between `Block` and `BlockRange` mimics the relationship between
-`CartesianIndex` and `CartesianRange`.
+`CartesianIndex` and `CartesianIndices`.
+
+# Examples
+```jldoctest
+julia> BlockRange(2,2)
+2×2 BlockRange{2, Tuple{Base.OneTo{Int64}, Base.OneTo{Int64}}}:
+ Block(1, 1)  Block(1, 2)
+ Block(2, 1)  Block(2, 2)
+
+julia> BlockRange(2:3, 3:4)
+2×2 BlockRange{2, Tuple{UnitRange{Int64}, UnitRange{Int64}}}:
+ Block(2, 3)  Block(2, 4)
+ Block(3, 3)  Block(3, 4)
+
+julia> Block(1):Block(2)
+2-element BlockRange{1, Tuple{UnitRange{Int64}}}:
+ Block(1)
+ Block(2)
+```
 """
 BlockRange
 
@@ -326,8 +345,8 @@ BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
     BlockRange(inds)
 
 BlockRange() = BlockRange(())
-BlockRange(sizes::Tuple{Int, Vararg{Int}}) = BlockRange(map(Base.OneTo, sizes))
-BlockRange(sizes::Vararg{Int}) = BlockRange(sizes)
+BlockRange(sizes::Tuple{Integer, Vararg{Integer}}) = BlockRange(map(oneto, sizes))
+BlockRange(sizes::Vararg{Integer}) = BlockRange(sizes)
 
 (:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
 (:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
