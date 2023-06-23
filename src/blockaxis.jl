@@ -62,7 +62,12 @@ BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to amb
 _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
 @inline blockedrange(blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(_blocklengths2blocklasts(blocks))
 
-@inline blockfirsts(a::BlockedUnitRange) = [a.first; @views(a.lasts[1:end-1]) .+ 1]
+@inline function blockfirsts(a::BlockedUnitRange)
+    v = Vector{eltype(a)}(undef, length(a.lasts))
+    v[1] = a.first
+    v[2:end] .= @views(a.lasts[oneto(end-1)]) .+ 1
+    return v
+end
 @inline blocklasts(a::BlockedUnitRange) = a.lasts
 
 _diff(a::AbstractVector) = diff(a)
