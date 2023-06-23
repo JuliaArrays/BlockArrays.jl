@@ -29,7 +29,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
             BroadcastStyle, checkbounds, throw_boundserror,
             oneunit, ones, zeros, intersect, Slice, resize!
-using Base: ReshapedArray, dataids
+using Base: ReshapedArray, dataids, oneto
 import Base: AbstractArray
 
 _maybetail(::Tuple{}) = ()
