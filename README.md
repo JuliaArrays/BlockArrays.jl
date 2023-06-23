@@ -1,7 +1,8 @@
 # BlockArrays.jl
 
 [![Build Status](https://github.com/JuliaArrays/BlockArrays.jl/workflows/CI/badge.svg)](https://github.com/JuliaArrays/BlockArrays.jl/actions)
-[![codecov](https://codecov.io/gh/JuliaArrays/BlockArrays.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaArrays/BlockArrays.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaArrays.github.io/BlockArrays.jl/stable) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaArrays.github.io/BlockArrays.jl/dev)
+[![codecov](https://codecov.io/gh/JuliaArrays/BlockArrays.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaArrays/BlockArrays.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaArrays.github.io/BlockArrays.jl/stable)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaArrays.github.io/BlockArrays.jl/dev)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 
