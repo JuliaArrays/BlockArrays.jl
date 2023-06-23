@@ -87,16 +87,16 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64
 [...]
 ```
 """
-@inline function blockcheckbounds(A::AbstractArray, i::Integer...)
+@inline function blockcheckbounds(A::AbstractArray, i...)
     blockcheckbounds(Bool, A, i...) || throw(BlockBoundsError(A, i))
 end
 
 # linear block indexing
-@inline function blockcheckbounds(::Type{Bool}, A::AbstractArray, i::Integer)
+@inline function blockcheckbounds(::Type{Bool}, A::AbstractArray, i)
     blockcheckindex(Bool, BlockRange(blocklength(A)), i)
 end
 # cartesian block indexing
-@inline function blockcheckbounds(::Type{Bool}, A::AbstractArray, i::Integer...)
+@inline function blockcheckbounds(::Type{Bool}, A::AbstractArray, i...)
     blockcheckbounds_indices(Bool, blockaxes(A), i)
 end
 
@@ -133,11 +133,11 @@ false
     b = first(blockaxes)
     length(b) == 1 && Int(b[]) == 1 && blockcheckbounds_indices(Bool, blockaxes[2:end], i)
 end
-@inline function blockcheckbounds_indices(::Type{Bool}, blockaxes::Tuple{}, i::Tuple{Vararg{Integer}})
+@inline function blockcheckbounds_indices(::Type{Bool}, blockaxes::Tuple{}, i::Tuple)
     # the trailing indices must be 1
     first(i) == 1 && blockcheckbounds_indices(Bool, blockaxes, i[2:end])
 end
-@inline function blockcheckbounds_indices(::Type{Bool}, blockaxes::Tuple{Vararg{BlockRange{1}}}, i::Tuple{Vararg{Integer}})
+@inline function blockcheckbounds_indices(::Type{Bool}, blockaxes::Tuple{Vararg{BlockRange{1}}}, i::Tuple)
     blockcheckindex(Bool, first(blockaxes), first(i)) &&
         blockcheckbounds_indices(Bool, blockaxes[2:end], i[2:end])
 end
