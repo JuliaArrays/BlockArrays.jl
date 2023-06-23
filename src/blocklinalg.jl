@@ -13,8 +13,8 @@ julia> B = BlockArray(collect(reshape(1:9, 3, 3)), [1,2], [1,1,1])
  2  │  5  │  8
  3  │  6  │  9
 
-julia> BlockArrays.blockrowsupport(B, 2)
-3-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
+julia> BlockArrays.blockrowsupport(B, 2) |> collect
+3-element Vector{Block{1, Int64}}:
  Block(1)
  Block(2)
  Block(3)
@@ -39,8 +39,8 @@ julia> B = BlockArray(collect(reshape(1:9, 3, 3)), [1,2], [1,1,1])
  2  │  5  │  8
  3  │  6  │  9
 
-julia> BlockArrays.blockcolsupport(B, 2)
-2-element BlockRange{1, Tuple{Base.OneTo{Int64}}}:
+julia> BlockArrays.blockcolsupport(B, 2) |> collect
+2-element Vector{Block{1, Int64}}:
  Block(1)
  Block(2)
 ```

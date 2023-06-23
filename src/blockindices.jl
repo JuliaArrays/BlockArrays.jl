@@ -321,20 +321,18 @@ The relationship between `Block` and `BlockRange` mimics the relationship betwee
 
 # Examples
 ```jldoctest
-julia> BlockRange(2,2)
-2×2 BlockRange{2, Tuple{Base.OneTo{Int64}, Base.OneTo{Int64}}}:
- Block(1, 1)  Block(1, 2)
- Block(2, 1)  Block(2, 2)
-
-julia> BlockRange(2:3, 3:4)
-2×2 BlockRange{2, Tuple{UnitRange{Int64}, UnitRange{Int64}}}:
+julia> BlockRange(2:3, 3:4) |> collect
+2×2 Matrix{Block{2, Int64}}:
  Block(2, 3)  Block(2, 4)
  Block(3, 3)  Block(3, 4)
 
+julia> BlockRange(2, 2) |> collect # number of elements, starting at 1
+2×2 Matrix{Block{2, Int64}}:
+ Block(1, 1)  Block(1, 2)
+ Block(2, 1)  Block(2, 2)
+
 julia> Block(1):Block(2)
-2-element BlockRange{1, Tuple{UnitRange{Int64}}}:
- Block(1)
- Block(2)
+BlockRange(1:2)
 ```
 """
 BlockRange
@@ -415,8 +413,6 @@ _in(b, ::Tuple{}, ::Tuple{}, ::Tuple{}) = b
 
 # We sometimes need intersection of BlockRange to return a BlockRange
 intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1], b.indices[1]))
-
-Base.show(io::IO, br::BlockRange) = print(io, "BlockRange(", br.indices..., ")")
 
 # needed for scalar-like broadcasting
 
