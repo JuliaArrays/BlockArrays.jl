@@ -147,3 +147,8 @@ end
 
 Base.show(io::IO, mimetype::MIME"text/plain", a::BlockedUnitRange) =
     Base.invoke(show, Tuple{typeof(io),MIME"text/plain",AbstractArray},io, mimetype, a)
+
+# BlockRange
+
+Base.show(io::IO, br::BlockRange) = print(io, "BlockRange(", join(br.indices, ", "), ")")
+Base.show(io::IO, ::MIME"text/plain", br::BlockRange) = show(io, br)
