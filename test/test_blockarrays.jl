@@ -74,6 +74,12 @@ end
             @test A == BlockArray(A, 1:3) == BlockArray{Int}(A, 1:3) ==
                 BlockArray(A, (blockedrange(1:3),)) == BlockArray{Int}(A, (blockedrange(1:3),)) ==
                 BlockArray{Float64}(A, 1:3)
+
+            #test that Array(::BlockArray) always returns an Array
+            S = spzeros(2,1)
+            B = mortar(fill(S,2,2))
+            A = Array(B)
+            @test A isa Matrix
         end
 
         @testset "PseudoBlockArray constructors" begin
