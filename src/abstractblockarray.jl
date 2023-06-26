@@ -43,6 +43,7 @@ Base.similar(::Type{<:AbstractBlockArray{T,N}}, dims::Dims) where {T,N} = simila
 @inline size(block_array::AbstractBlockArray) = map(length, axes(block_array))
 @noinline axes(block_array::AbstractBlockArray) = throw(ArgumentError("axes for $(typeof(block_array)) is not implemented"))
 
+BlockRange(B::AbstractBlockArray) = BlockRange(blockaxes(B))
 
 """
     BlockBoundsError([A], [inds...])
