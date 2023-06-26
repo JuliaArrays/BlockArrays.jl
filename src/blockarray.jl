@@ -420,7 +420,7 @@ Base.dataids(arr::BlockArray) = (dataids(arr.blocks)..., dataids(arr.axes)...)
 function _replace_in_print_matrix_inds(block_arr, i...)
     J = findblockindex.(axes(block_arr), i)
     blind = map(block, J)
-    bl = block_arr[blind...]
+    bl = @view block_arr[blind...]
     inds = map(blockindex, J)
     bl, inds
 end
@@ -453,11 +453,11 @@ end
 @generated function Base.Array(block_array::BlockArray{T, N, R}) where {T,N,R}
     # TODO: This will fail for empty block array
     return quote
-        arr = similar(block_array.blocks[1], size(block_array)...)
+        arr = Array{eltype(T)}(undef, size(block_array))
         @nloops $N i i->blockaxes(block_array,i) begin
             block_index = @ntuple $N i
             indices = getindex.(axes(block_array), block_index)
-            arr[indices...] = block_array[block_index...]
+            arr[indices...] = @view block_array[block_index...]
         end
 
         return arr
