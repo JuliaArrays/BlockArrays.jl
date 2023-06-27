@@ -27,4 +27,6 @@ BlockIndexRange
 BlockSlice
 unblock
 SubBlockIterator
+blockcheckbounds_indices
+blockcheckindex
 ```
