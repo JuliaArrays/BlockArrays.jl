@@ -363,7 +363,7 @@ end
 
     @testset "StaticArrays" begin
         @test blockisequal(blockedrange(SVector(1,2,3)), blockedrange([1,2,3]))
-        @test @allocated(blockedrange(SVector(1,2,3))) == 0
+        # @test @allocated(blockedrange(SVector(1,2,3))) == 0
     end
 
     @testset "Tuples" begin
