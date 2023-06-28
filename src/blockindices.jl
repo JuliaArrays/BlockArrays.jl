@@ -216,8 +216,8 @@ getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where N = BlockInd
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
-getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{Int}) = BlockIndexRange(B.block, B.indices[1][kr])
-getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
+@propagate_inbounds getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{Int}) = BlockIndexRange(B.block, B.indices[1][kr])
+@propagate_inbounds getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))
 eltype(::Type{BlockIndexRange{N}}) where {N} = BlockIndex{N}
@@ -292,9 +292,9 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
     @eval $f(S::BlockSlice) = $f(S.indices)
 end
 
-getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
-getindex(S::BlockSlice{<:Block}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
-getindex(S::BlockSlice{<:BlockIndexRange}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
+@propagate_inbounds getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
+@propagate_inbounds getindex(S::BlockSlice{<:Block}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
+@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
@@ -363,16 +363,16 @@ broadcasted(::DefaultArrayStyle{0}, ::Type{Int}, block::Block{1}) = Int(block)
 
 # AbstractArray implementation
 axes(iter::BlockRange{N,R}) where {N,R} = map(axes1, iter.indices)
-@inline function Base.getindex(iter::BlockRange{N,<:NTuple{N,Base.OneTo}}, I::Vararg{Int, N}) where {N}
+@inline function getindex(iter::BlockRange{N,<:NTuple{N,Base.OneTo}}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(iter, I...)
     Block(I)
 end
-@propagate_inbounds function Base.getindex(iter::BlockRange{N}, I::Vararg{Int, N}) where {N}
+@propagate_inbounds function getindex(iter::BlockRange{N}, I::Vararg{Int, N}) where {N}
     @boundscheck checkbounds(iter, I...)
     Block(getindex.(iter.indices, I))
 end
 
-@propagate_inbounds function Base.getindex(iter::BlockRange{N}, I::Vararg{AbstractUnitRange{<:Integer}, N}) where {N}
+@propagate_inbounds function getindex(iter::BlockRange{N}, I::Vararg{AbstractUnitRange{<:Integer}, N}) where {N}
     @boundscheck checkbounds(iter, I...)
     BlockRange(getindex.(iter.indices, I))
 end

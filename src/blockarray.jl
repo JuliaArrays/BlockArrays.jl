@@ -330,7 +330,7 @@ copy(A::BlockArray) = _BlockArray(map(copy,A.blocks), A.axes)
 ################################
 @inline axes(block_array::BlockArray) = block_array.axes
 
-function viewblock(block_arr::BlockArray, block)
+@propagate_inbounds function viewblock(block_arr::BlockArray, block)
     blks = block.n
     @boundscheck blockcheckbounds(block_arr, blks...)
     block_arr.blocks[blks...]
@@ -345,9 +345,9 @@ end
     return v
 end
 
-@inline Base.getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
+@propagate_inbounds getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
     _blockindex_getindex(block_arr, blockindex)
-@inline Base.getindex(block_arr::BlockVector{T}, blockindex::BlockIndex{1}) where {T} =
+@propagate_inbounds getindex(block_arr::BlockVector{T}, blockindex::BlockIndex{1}) where {T} =
     _blockindex_getindex(block_arr, blockindex)
 
 ###########################
@@ -381,7 +381,7 @@ const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{Base.OneTo{Int},Vararg{Base.OneTo{Int}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 
-@inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
+@inline function getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr[findblockindex.(axes(block_arr), i)...]
     return v

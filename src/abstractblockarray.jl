@@ -216,16 +216,16 @@ function eachblock(A::AbstractBlockArray)
 end
 
 # Use memory layout for sub-blocks
-@inline Base.getindex(A::AbstractMatrix, kr::Colon, jr::Block{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
-@inline Base.getindex(A::AbstractMatrix, kr::Block{1}, jr::Colon) = ArrayLayouts.layout_getindex(A, kr, jr)
-@inline Base.getindex(A::AbstractMatrix, kr::Block{1}, jr::AbstractVector) = ArrayLayouts.layout_getindex(A, kr, jr)
-@inline Base.getindex(A::AbstractArray{T,N}, kr::Block{1}, jrs...) where {T,N} = ArrayLayouts.layout_getindex(A, kr, jrs...)
-@inline Base.getindex(A::AbstractArray{T,N}, block::Block{N}) where {T,N} = ArrayLayouts.layout_getindex(A, block)
-@inline Base.getindex(A::AbstractMatrix, kr::AbstractVector, jr::Block) = ArrayLayouts.layout_getindex(A, kr, jr)
-@inline Base.getindex(A::AbstractMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
-@inline Base.getindex(A::LayoutMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline getindex(A::AbstractMatrix, kr::Colon, jr::Block{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline getindex(A::AbstractMatrix, kr::Block{1}, jr::Colon) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline getindex(A::AbstractMatrix, kr::Block{1}, jr::AbstractVector) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline getindex(A::AbstractArray{T,N}, kr::Block{1}, jrs...) where {T,N} = ArrayLayouts.layout_getindex(A, kr, jrs...)
+@inline getindex(A::AbstractArray{T,N}, block::Block{N}) where {T,N} = ArrayLayouts.layout_getindex(A, block)
+@inline getindex(A::AbstractMatrix, kr::AbstractVector, jr::Block) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline getindex(A::AbstractMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
+@inline getindex(A::LayoutMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
 for Typ in (:AbstractTriangular, :Adjoint, :Transpose, :Symmetric, :Hermitian)
-    @eval @inline Base.getindex(A::$Typ{<:Any,<:LayoutMatrix}, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
+    @eval @inline getindex(A::$Typ{<:Any,<:LayoutMatrix}, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
 end
 
 ###

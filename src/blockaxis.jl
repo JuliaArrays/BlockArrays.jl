@@ -1,15 +1,15 @@
 
 # interface
 
-@inline getindex(b::AbstractVector, K::BlockIndex{1}) = b[Block(K.I[1])][K.α[1]]
-@inline getindex(b::AbstractArray{T,N}, K::BlockIndex{N}) where {T,N} =
+@propagate_inbounds getindex(b::AbstractVector, K::BlockIndex{1}) = b[Block(K.I[1])][K.α[1]]
+@propagate_inbounds getindex(b::AbstractArray{T,N}, K::BlockIndex{N}) where {T,N} =
     b[block(K)][K.α...]
-@inline getindex(b::AbstractArray, K::BlockIndex{1}, J::BlockIndex{1}...) =
+@propagate_inbounds getindex(b::AbstractArray, K::BlockIndex{1}, J::BlockIndex{1}...) =
     b[BlockIndex(tuple(K, J...))]
 
-@inline getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
-@inline getindex(b::LayoutArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
-@inline getindex(b::LayoutArray{T,1}, K::BlockIndexRange{1}) where {T} = b[block(K)][K.indices...]
+@propagate_inbounds getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
+@propagate_inbounds getindex(b::LayoutArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
+@propagate_inbounds getindex(b::LayoutArray{T,1}, K::BlockIndexRange{1}) where {T} = b[block(K)][K.indices...]
 
 function findblockindex(b::AbstractVector, k::Integer)
     @boundscheck k in b || throw(BoundsError())
@@ -252,7 +252,7 @@ first(b::BlockedUnitRange) = b.first
 # ::Integer works around case where blocklasts might return different type
 last(b::BlockedUnitRange)::Integer = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
 
-function getindex(b::BlockedUnitRange, K::Block{1})
+@propagate_inbounds function getindex(b::BlockedUnitRange, K::Block{1})
     k = Integer(K)
     bax = blockaxes(b,1)
     cs = blocklasts(b)
@@ -262,7 +262,7 @@ function getindex(b::BlockedUnitRange, K::Block{1})
     return cs[k-1]+1:cs[k]
 end
 
-function getindex(b::BlockedUnitRange, KR::BlockRange{1})
+@propagate_inbounds function getindex(b::BlockedUnitRange, KR::BlockRange{1})
     cs = blocklasts(b)
     isempty(KR) && return _BlockedUnitRange(1,cs[1:0])
     K,J = first(KR),last(KR)
@@ -274,7 +274,7 @@ function getindex(b::BlockedUnitRange, KR::BlockRange{1})
     _BlockedUnitRange(cs[k-1]+1,cs[k:j])
 end
 
-function getindex(b::BlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
+@propagate_inbounds function getindex(b::BlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
     cs = blocklasts(b)
     isempty(KR) && return _BlockedUnitRange(1,cs[Base.OneTo(0)])
     J = last(KR)
@@ -284,7 +284,7 @@ function getindex(b::BlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
     _BlockedUnitRange(first(b),cs[Base.OneTo(j)])
 end
 
-getindex(b::BlockedUnitRange, KR::BlockSlice) = b[KR.block]
+@propagate_inbounds getindex(b::BlockedUnitRange, KR::BlockSlice) = b[KR.block]
 
 _searchsortedfirst(a::AbstractVector, k) = searchsortedfirst(a, k)
 function _searchsortedfirst(a::Tuple, k)
@@ -314,12 +314,12 @@ function Base.checkindex(::Type{Bool}, axis::BlockedUnitRange, ind::BlockIndex{1
     checkindex(Bool, axis, block(ind)) && checkbounds(Bool, axis[block(ind)], blockindex(ind))
 end
 
-function getindex(b::AbstractUnitRange{Int}, K::Block{1})
+@propagate_inbounds function getindex(b::AbstractUnitRange{Int}, K::Block{1})
     @boundscheck K == Block(1) || throw(BlockBoundsError(b, K))
     b
 end
 
-function getindex(b::AbstractUnitRange{Int}, K::BlockRange)
+@propagate_inbounds function getindex(b::AbstractUnitRange{Int}, K::BlockRange)
     @boundscheck K == Block.(1:1) || throw(BlockBoundsError(b, K))
     b
 end
@@ -422,8 +422,8 @@ Base.axes(S::Base.Slice{<:BlockedUnitRange}) = (S.indices,)
 Base.unsafe_indices(S::Base.Slice{<:BlockedUnitRange}) = (S.indices,)
 Base.axes1(S::Base.Slice{<:BlockedUnitRange}) = S.indices
 blockaxes(S::Base.Slice) = blockaxes(S.indices)
-getindex(S::Base.Slice, b::Block{1}) = S.indices[b]
-getindex(S::Base.Slice, b::BlockRange{1}) = S.indices[b]
+@propagate_inbounds getindex(S::Base.Slice, b::Block{1}) = S.indices[b]
+@propagate_inbounds getindex(S::Base.Slice, b::BlockRange{1}) = S.indices[b]
 
 
 # This supports broadcasting with infinite block arrays
