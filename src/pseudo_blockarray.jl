@@ -176,8 +176,8 @@ to_axes(n::Integer) = Base.oneto(n)
 @inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
     PseudoBlockArray{T}(undef, map(to_axes,axes))
 
-@inline @propagate_inbounds getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N} = block_arr.blocks[i...]
-@inline @propagate_inbounds Base.setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N} = setindex!(block_arr.blocks, v, i...)
+@propagate_inbounds getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N} = block_arr.blocks[i...]
+@propagate_inbounds Base.setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N} = setindex!(block_arr.blocks, v, i...)
 
 ################################
 # AbstractBlockArray Interface #
@@ -193,16 +193,16 @@ to_axes(n::Integer) = Base.oneto(n)
     return view(block_arr.blocks, range...)
 end
 
-@inline @propagate_inbounds function _pseudoblockindex_getindex(block_arr, blockindex)
+@propagate_inbounds function _pseudoblockindex_getindex(block_arr, blockindex)
     I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
     block_arr.blocks[I...]
 end
 
-@inline getindex(block_arr::PseudoBlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
+@propagate_inbounds getindex(block_arr::PseudoBlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
     _pseudoblockindex_getindex(block_arr, blockindex)
 
 
-@inline getindex(block_arr::PseudoBlockVector{T}, blockindex::BlockIndex{1}) where T =
+@propagate_inbounds getindex(block_arr::PseudoBlockVector{T}, blockindex::BlockIndex{1}) where T =
     _pseudoblockindex_getindex(block_arr, blockindex)
 
 ########
