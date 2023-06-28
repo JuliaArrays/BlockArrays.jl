@@ -182,6 +182,11 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test stringmime("text/plain", W) == "3×1 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}"*
             ", $(typeof(axes(A)))}, $(Wi[1]), $(Wi[2])) "*
             "with eltype $Int with indices $(axes(W,1))×$(axes(W,2)):\n 1\n ─\n 4\n 7"
+
+        Vv = view(V, Block(1), Block(2))
+        @test Vv === blocks(A)[1,2]
+        Wv = view(W, Block(2), Block(1))
+        @test Wv === blocks(A)[2,1]
     end
 
     @testset "getindex with BlockRange" begin

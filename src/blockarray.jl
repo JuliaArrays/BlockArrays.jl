@@ -330,7 +330,7 @@ copy(A::BlockArray) = _BlockArray(map(copy,A.blocks), A.axes)
 ################################
 @inline axes(block_array::BlockArray) = block_array.axes
 
-function viewblock(block_arr::BlockArray, block)
+@propagate_inbounds function viewblock(block_arr::BlockArray, block::Block)
     blks = block.n
     @boundscheck blockcheckbounds(block_arr, blks...)
     block_arr.blocks[blks...]

@@ -300,7 +300,7 @@ function _matchingblocks_triangular_mul!(::Val{'U'}, UNIT, A::AbstractMatrix{T},
     for K = blockaxes(A,1)
         b_2 = view(b, K)
         Ũ = _triangular_matrix(Val('U'), UNIT, view(A, K,K))
-        materialize!(Lmul(Ũ, b_2))
+        lmul!(Ũ, b_2)
         JR = (K+1):last(blockrowsupport(A,K))
         if !isempty(JR)
             muladd!(one(T), view(A, K, JR), view(b,JR), one(T), b_2)
@@ -318,7 +318,7 @@ function _matchingblocks_triangular_mul!(::Val{'L'}, UNIT, A::AbstractMatrix{T},
     for K = N:-1:1
         b_2 = view(b, Block(K))
         L̃ = _triangular_matrix(Val('L'), UNIT, view(A, Block(K,K)))
-        materialize!(Lmul(L̃, b_2))
+        lmul!(L̃, b_2)
         JR = blockrowstart(A,Block(K)):Block(K-1)
         if !isempty(JR)
             muladd!(one(T), view(A, Block(K), JR), view(b,JR), one(T), b_2)
