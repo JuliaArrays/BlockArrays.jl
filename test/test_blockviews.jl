@@ -93,6 +93,15 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test view(A, Block(1), 2, 1) == A[1:1,2,1]
         @test view(A, 1, Block(2), 1) == A[1,2:3,1]
         @test view(A, 1, 2, Block(2)) == A[1,2,2:3]
+
+        @testset "Fill arrays" begin
+            f = Fill(3, 4, 5)
+            @test view(f, 1, 2:3) === Fill(3, 2)
+            @test view(f, Block(1), 1:1) === Fill(3, 4, 1)
+            @test view(f, Block(1), 2) === Fill(3, 4)
+            @test view(f, 1, Block(1)) === Fill(3, 5)
+            @test view(f, 1:2, Block(1)) === Fill(3, 2, 5)
+        end
     end
 
     @testset "block view pointers" begin
