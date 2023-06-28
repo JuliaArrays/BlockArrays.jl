@@ -337,10 +337,17 @@ BlockRange(1:2)
 """
 BlockRange
 
-BlockRange(inds::NTuple{N,AbstractUnitRange{Int}}) where {N} =
-    BlockRange{N,typeof(inds)}(inds)
-BlockRange(inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
-    BlockRange(inds)
+combine_indices(inds::Tuple{BlockRange, Vararg{BlockRange}}) =
+    (inds[1].indices..., combine_indices(inds[2:end])...)
+combine_indices(::Tuple{}) = ()
+
+function BlockRange(inds::Tuple{BlockRange,Vararg{BlockRange}})
+    BlockRange(combine_indices(inds))
+end
+
+BlockRange(inds::Tuple{Vararg{AbstractUnitRange{Int}}}) =
+    BlockRange{length(inds),typeof(inds)}(inds)
+BlockRange(inds::Vararg{AbstractUnitRange{Int}}) = BlockRange(inds)
 
 BlockRange() = BlockRange(())
 BlockRange(sizes::Tuple{Integer, Vararg{Integer}}) = BlockRange(map(oneto, sizes))

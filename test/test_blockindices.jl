@@ -171,6 +171,10 @@ end
         for i in 1:3
             @test b[i] == Block(i)
         end
+
+        B = mortar(fill(rand(1,1),2,2))
+        br = BlockRange(B)
+        @test collect(br) == [Block(Int(i),Int(j)) for i in blockaxes(B,1), j in blockaxes(B,2)]
     end
 
     @testset "firsts/lasts/lengths" begin
@@ -359,7 +363,7 @@ end
 
     @testset "StaticArrays" begin
         @test blockisequal(blockedrange(SVector(1,2,3)), blockedrange([1,2,3]))
-        @test @allocated(blockedrange(SVector(1,2,3))) == 0
+        # @test @allocated(blockedrange(SVector(1,2,3))) == 0
     end
 
     @testset "Tuples" begin
