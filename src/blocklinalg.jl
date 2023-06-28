@@ -130,9 +130,6 @@ sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:AbstractUnitRange,<:Bl
 sub_materialize(::ArrayLayouts.ZerosLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
     Zeros{eltype(V)}(ax)
 
-@propagate_inbounds Base.view(A::FillArrays.AbstractFill, I::Union{Real, AbstractArray, Block}...) =
-    FillArrays._fill_getindex(A, Base.to_indices(A, I)...)
-
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Complex,MLAY,BLAY} = BlockLayout{MLAY,typeof(conjlayout(T,BLAY()))}()
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Real,MLAY,BLAY} = BlockLayout{MLAY,BLAY}()
 
