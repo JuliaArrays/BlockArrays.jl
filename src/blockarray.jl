@@ -387,7 +387,7 @@ const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
     return v
 end
 
-@inline function Base.setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
+@inline function setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds block_arr[findblockindex.(axes(block_arr), i)...] = v
     return block_arr
@@ -406,7 +406,7 @@ function _check_setblock!(block_arr::BlockArray{T, N}, v, block::NTuple{N, Integ
     end
 end
 
-@inline function Base.setindex!(block_arr::BlockArray{T, N}, v, block::Vararg{Block{1}, N}) where {T,N}
+@inline function setindex!(block_arr::BlockArray{T, N}, v, block::Vararg{Block{1}, N}) where {T,N}
     blks = Int.(block)
     @boundscheck blockcheckbounds(block_arr, blks...)
     @boundscheck _check_setblock!(block_arr, v, blks)

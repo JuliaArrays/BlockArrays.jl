@@ -177,7 +177,7 @@ to_axes(n::Integer) = Base.oneto(n)
     PseudoBlockArray{T}(undef, map(to_axes,axes))
 
 @propagate_inbounds getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N} = block_arr.blocks[i...]
-@propagate_inbounds Base.setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N} = setindex!(block_arr.blocks, v, i...)
+@propagate_inbounds setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N} = setindex!(block_arr.blocks, v, i...)
 
 ################################
 # AbstractBlockArray Interface #
