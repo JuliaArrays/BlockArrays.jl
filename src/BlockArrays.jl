@@ -21,7 +21,7 @@ export blockappend!, blockpush!, blockpushfirst!, blockpop!, blockpopfirst!
 import Base: @propagate_inbounds, Array, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
-            getindex, ndims, show,
+            getindex, ndims, show, view,
             step,
             broadcast, eltype, convert, similar,
             tail, reindex,

@@ -128,46 +128,46 @@ block(A::BlockSlice) = block(A.block)
 block(A::Block) = A
 
 # unwind BLockSlice1 for AbstractBlockArray
-@inline Base.view(block_arr::AbstractBlockArray{<:Any,N}, blocks::Vararg{BlockSlice1, N}) where N =
+@inline view(block_arr::AbstractBlockArray{<:Any,N}, blocks::Vararg{BlockSlice1, N}) where N =
     view(block_arr, map(block,blocks)...)
 
 const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}}}
-# Base.view(V::SubArray{<:Any,N,NTuple{N,BlockSlices}},
+# view(V::SubArray{<:Any,N,NTuple{N,BlockSlices}},
 
 _block_reindex(b::BlockSlice, i::Block{1}) = b.block[Int(i)]
 _block_reindex(b::Slice, i::Block{1}) = i
 
-@inline Base.view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlices}}, block::Block{N}) where N =
+@inline view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlices}}, block::Block{N}) where N =
     view(parent(V), _block_reindex.(parentindices(V), Block.(block.n))...)
-@inline Base.view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlices}}, block::Vararg{Block{1},N}) where N =
+@inline view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlices}}, block::Vararg{Block{1},N}) where N =
     view(parent(V), _block_reindex.(parentindices(V), block)...)
-@inline Base.view(V::SubArray{<:Any,1,<:AbstractBlockArray,<:Tuple{BlockSlices}}, block::Block{1}) =
+@inline view(V::SubArray{<:Any,1,<:AbstractBlockArray,<:Tuple{BlockSlices}}, block::Block{1}) =
     view(parent(V), _block_reindex(parentindices(V)[1], block))
 
 
 
 
-function Base.view(A::Adjoint{<:Any,<:BlockMatrix}, b::Block{2})
+function view(A::Adjoint{<:Any,<:BlockMatrix}, b::Block{2})
     k, j = b.n
     view(parent(A), Block(j), Block(k))'
 end
-function Base.view(A::Transpose{<:Any,<:BlockMatrix}, b::Block{2})
+function view(A::Transpose{<:Any,<:BlockMatrix}, b::Block{2})
     k, j = b.n
     transpose(view(parent(A), Block(j), Block(k)))
 end
 
-function Base.view(A::Adjoint{<:Any,<:BlockVector}, b::Block{2})
+function view(A::Adjoint{<:Any,<:BlockVector}, b::Block{2})
     @boundscheck blockcheckbounds(A, b)
     k, j = b.n
     view(parent(A), Block(j))'
 end
-function Base.view(A::Transpose{<:Any,<:BlockVector}, b::Block{2})
+function view(A::Transpose{<:Any,<:BlockVector}, b::Block{2})
     @boundscheck blockcheckbounds(A, b)
     k, j = b.n
     transpose(view(parent(A), Block(j)))
 end
 
-Base.view(A::AdjOrTrans{<:Any,<:BlockArray}, K::Block{1}, J::Block{1}) = view(A, Block(Int(K), Int(J)))
+view(A::AdjOrTrans{<:Any,<:BlockArray}, K::Block{1}, J::Block{1}) = view(A, Block(Int(K), Int(J)))
 
 @propagate_inbounds getindex(v::LinearAlgebra.AdjOrTransAbsVec, ::Colon, is::AbstractArray{<:Block{1}}) = LinearAlgebra.wrapperop(v)(v.parent[is])
 
