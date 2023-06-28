@@ -81,12 +81,12 @@ Base.axes(a::BlocksView) = map(br -> only(br.indices), blockaxes(a.array))
 #=
 This is broken for now. See: https://github.com/JuliaArrays/BlockArrays.jl/issues/120
 # IndexLinear implementations
-@propagate_inbounds Base.getindex(a::BlocksView, i::Int) = view(a.array, Block(i))
+@propagate_inbounds getindex(a::BlocksView, i::Int) = view(a.array, Block(i))
 @propagate_inbounds Base.setindex!(a::BlocksView, b, i::Int) = copyto!(a[i], b)
 =#
 
 # IndexCartesian implementations
-@propagate_inbounds Base.getindex(a::BlocksView{T,N}, i::Vararg{Int,N}) where {T,N} =
+@propagate_inbounds getindex(a::BlocksView{T,N}, i::Vararg{Int,N}) where {T,N} =
     view(a.array, Block.(i)...)
 @propagate_inbounds Base.setindex!(a::BlocksView{T,N}, b, i::Vararg{Int,N}) where {T,N} =
     copyto!(a[i...], b)
