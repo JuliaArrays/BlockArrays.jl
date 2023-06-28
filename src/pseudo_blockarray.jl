@@ -209,6 +209,8 @@ end
 # Misc #
 ########
 
+Base.parent(block_array::PseudoBlockArray) = block_array.blocks
+
 Base.Array(block_array::PseudoBlockArray) = Array(block_array.blocks)
 
 function copyto!(block_array::PseudoBlockArray{T, N, R}, arr::R) where {T,N,R <: AbstractArray}
