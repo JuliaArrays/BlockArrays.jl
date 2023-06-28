@@ -159,9 +159,9 @@ false
 """
 @inline blockcheckindex(::Type{Bool}, inds::BlockRange{1}, i::Integer) = Block(i) in inds
 
-@propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Block{N}) where {T,N} =
+@propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Block{N}) where {T,N} =
     setindex!(block_arr, v, Block.(block.n)...)
-@inline @propagate_inbounds function Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N}
+@inline @propagate_inbounds function setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N}
     blockcheckbounds(block_arr, block...)
     dest = view(block_arr, block...)
     size(dest) == size(v) || throw(DimensionMismatch(string("tried to assign $(size(v)) array to $(size(dest)) block")))
@@ -169,11 +169,11 @@ false
     block_arr
 end
 
-@inline @propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N} =
+@inline @propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N} =
     view(block_arr, block(blockindex))[blockindex.α...] = v
-@inline @propagate_inbounds Base.setindex!(block_arr::AbstractBlockVector{T}, v, blockindex::BlockIndex{1}) where {T} =
+@inline @propagate_inbounds setindex!(block_arr::AbstractBlockVector{T}, v, blockindex::BlockIndex{1}) where {T} =
     view(block_arr, block(blockindex))[blockindex.α...] = v
-@inline @propagate_inbounds Base.setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
+@inline @propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
     block_arr[BlockIndex(blockindex)] = v
 
 viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block_arr, block)
