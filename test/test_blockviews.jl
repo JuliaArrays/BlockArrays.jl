@@ -61,6 +61,11 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
         @test view(V, Block(1, 1)) ≡ V
 
+        B = view(parent(A), axes(A)...)
+        for I in BlockRange(A)
+            @test view(B, I) == view(A, I)
+        end
+
         @test_throws BlockBoundsError view(V, Block(1,2))
         @test_throws BlockBoundsError view(V, Block(2,1))
 
