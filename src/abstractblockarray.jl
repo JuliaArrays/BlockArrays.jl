@@ -222,7 +222,7 @@ end
 @inline getindex(A::AbstractMatrix, kr::AbstractVector, jr::Block) = ArrayLayouts.layout_getindex(A, kr, jr)
 @inline getindex(A::AbstractMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
 @inline getindex(A::LayoutMatrix, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
-for Typ in (:AbstractTriangular, :Adjoint, :Transpose, :Symmetric, :Hermitian)
+for Typ in (:UpperOrLowerTriangular, :Adjoint, :Transpose, :Symmetric, :Hermitian)
     @eval @inline getindex(A::$Typ{<:Any,<:LayoutMatrix}, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
 end
 

@@ -44,6 +44,15 @@ import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdi
                         triangularlayout, triangulardata, _inv, _copyto!, axes_print_matrix_row,
                         colsupport, rowsupport, sub_materialize, sub_materialize_axes, zero!
 
+if VERSION ≥ v"1.11.0-DEV.21"
+    using LinearAlgebra: UpperOrLowerTriangular
+else
+    const UpperOrLowerTriangular{T,S} = Union{LinearAlgebra.UpperTriangular{T,S},
+                                              LinearAlgebra.UnitUpperTriangular{T,S},
+                                              LinearAlgebra.LowerTriangular{T,S},
+                                              LinearAlgebra.UnitLowerTriangular{T,S}}
+end
+
 include("blockindices.jl")
 include("blockaxis.jl")
 include("abstractblockarray.jl")
