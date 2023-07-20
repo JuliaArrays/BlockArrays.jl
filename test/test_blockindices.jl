@@ -117,6 +117,11 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 end
 
 @testset "BlockedUnitRange" begin
+    @testset "promote" begin
+        b = blockedrange([1,2,3])
+        @test promote(b, 1:2) == (1:6, 1:2)
+        @test promote(b, Base.OneTo(2)) == (1:6, 1:2)
+    end
     @testset "Block indexing" begin
         b = blockedrange([1,2,3])
         @test axes(b) == (b,)
