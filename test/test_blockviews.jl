@@ -26,6 +26,8 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         view(A, Block(2))[2] = -1
         @test A[3] == -1
 
+        @test_throws BoundsError view(A)
+
         # backend tests
         @test_throws ArgumentError Base.to_index(A, Block(1))
 
@@ -45,6 +47,8 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test A[2,8] == -1
         @test A[Block(4)] == A[Block(1),Block(2)]
         @test_throws BoundsError A[Block(10)]
+
+        @test_throws BoundsError view(A)
 
         V = view(A, Block(3, 2))
         @test size(V) == (3, 4)
