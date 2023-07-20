@@ -251,6 +251,9 @@ first(b::BlockedUnitRange) = b.first
 # ::Integer works around case where blocklasts might return different type
 last(b::BlockedUnitRange)::Integer = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
 
+# view and indexing are identical for a unitrange
+Base.view(b::BlockedUnitRange, K::Block{1}) = b[K]
+
 @propagate_inbounds function getindex(b::BlockedUnitRange, K::Block{1})
     k = Integer(K)
     bax = blockaxes(b,1)

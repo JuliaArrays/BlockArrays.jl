@@ -127,11 +127,13 @@ end
         @test axes(b) == (b,)
         @test blockaxes(b,1) isa BlockRange
 
-        @test @inferred(b[Block(1)]) == 1:1
-        @test b[Block(2)] == 2:3
-        @test b[Block(3)] == 4:6
+        @test @inferred(b[Block(1)]) === 1:1
+        @test b[Block(2)] === 2:3
+        @test b[Block(3)] === 4:6
+        @test @inferred(view(b, Block(3))) === 4:6
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(4)]
+        @test_throws BlockBoundsError view(b, Block(4))
 
         o = OffsetArray([2,2,3],-1:1)
         b = blockedrange(o)
