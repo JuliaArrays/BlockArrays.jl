@@ -10,31 +10,34 @@
 
 A `PseudoBlockArray` is similar to a [`BlockArray`](@ref) except the full array is stored
 contiguously instead of block by block. This means that is not possible to insert and retrieve
-blocks without copying data. On the other hand `Array` on a `PseudoBlockArray` is instead instant since
+blocks without copying data. On the other hand `parent` on a `PseudoBlockArray` is instead instant since
 it just returns the wrapped array.
 
 When iteratively solving a set of equations with a gradient method the Jacobian typically has a block structure. It can be convenient
 to use a `PseudoBlockArray` to build up the Jacobian block by block and then pass the resulting matrix to
-a direct solver using `Array`.
+a direct solver using `parent`.
 
 # Examples
 ```jldoctest
-julia> PseudoBlockArray(reshape([1:6;], 2, 3), [1,1], [2,1])
-2×2-blocked 2×3 PseudoBlockMatrix{Int64}:
- 1  3  │  5
- ──────┼───
- 2  4  │  6
+julia> A = zeros(Int, 2, 3);
 
-julia> PseudoBlockArray([1:6;], [3,2,1])
-3-blocked 6-element PseudoBlockVector{Int64}:
- 1
- 2
- 3
- ─
- 4
- 5
- ─
- 6
+julia> B = PseudoBlockArray(A, [1,1], [2,1])
+2×2-blocked 2×3 PseudoBlockMatrix{Int64}:
+ 0  0  │  0
+ ──────┼───
+ 0  0  │  0
+
+julia> parent(B) === A
+true
+
+julia> B[Block(1,1)] .= 4
+1×2 view(::Matrix{Int64}, 1:1, 1:2) with eltype Int64:
+ 4  4
+
+julia> A
+2×3 Matrix{Int64}:
+ 4  4  0
+ 0  0  0
 ```
 """
 struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{T, N}
@@ -46,7 +49,52 @@ struct PseudoBlockArray{T, N, R<:AbstractArray{T,N}, BS<:NTuple{N,AbstractUnitRa
     end
 end
 
+"""
+    PseudoBlockMatrix{T}
+
+Alias for `PseudoBlockArray{T, 2}`
+
+```jldoctest
+julia> A = reshape([1:6;], 2, 3)
+2×3 Matrix{Int64}:
+ 1  3  5
+ 2  4  6
+
+julia> PseudoBlockMatrix(A, [1,1], [1,2])
+2×2-blocked 2×3 PseudoBlockMatrix{Int64}:
+ 1  │  3  5
+ ───┼──────
+ 2  │  4  6
+```
+"""
 const PseudoBlockMatrix{T} = PseudoBlockArray{T, 2}
+"""
+    PseudoBlockVector{T}
+
+Alias for `PseudoBlockArray{T, 1}`
+
+```jldoctest
+julia> A = [1:6;]
+6-element Vector{Int64}:
+ 1
+ 2
+ 3
+ 4
+ 5
+ 6
+
+julia> PseudoBlockVector(A, [3,2,1])
+3-blocked 6-element PseudoBlockVector{Int64}:
+ 1
+ 2
+ 3
+ ─
+ 4
+ 5
+ ─
+ 6
+ ```
+"""
 const PseudoBlockVector{T} = PseudoBlockArray{T, 1}
 const PseudoBlockVecOrMat{T} = Union{PseudoBlockMatrix{T}, PseudoBlockVector{T}}
 
