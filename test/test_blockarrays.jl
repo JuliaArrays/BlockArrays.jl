@@ -135,6 +135,8 @@ end
 
             @test similar(randn(6,5), Float64, (blockedrange(1:3),3)) isa PseudoBlockMatrix
             @test similar(randn(6,5), Float64, (3,blockedrange(1:3))) isa PseudoBlockMatrix
+            @test similar(typeof(view(randn(5),1:3)), (blockedrange(1:3),)) isa PseudoBlockVector
+            @test similar(view(randn(5),1:3), Int, (blockedrange(1:3),)) isa PseudoBlockVector{Int}
         end
 
         @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])
