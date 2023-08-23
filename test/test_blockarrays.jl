@@ -700,4 +700,12 @@ end
         c = resize!(b,Block(0))
         @test isempty(c)
     end
+
+    @testset "empty indexing of vectors" begin
+        a = mortar([1:3, 2:6])
+        @test size(a[:,Block.(1:0)]) == size(PseudoBlockVector(a)[:,Block.(1:0)]) == (8,0)
+        @test size(a[:,Block.(1:1)]) == size(PseudoBlockVector(a)[:,Block.(1:1)]) == size(a[:,Block(1)]) == (8,1)
+        @test_throws BoundsError a[:,Block.(1:2)]
+        @test size(a[:,1]) == (8,)
+    end
 end
