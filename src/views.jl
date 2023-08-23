@@ -11,7 +11,8 @@ function unblock(A, inds, I)
 end
 # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
 # similar to `ones(2)[1:1, 1:1]`.
-unblock(A, ::Tuple{}, I) = BlockSlice(first(I),Base.OneTo(1))
+# Need to check the length of I in case its empty
+unblock(A, ::Tuple{}, I) = BlockSlice(first(I),Base.OneTo(length(I[1])))
 
 to_index(::Block) = throw(ArgumentError("Block must be converted by to_indices(...)"))
 to_index(::BlockIndex) = throw(ArgumentError("BlockIndex must be converted by to_indices(...)"))
