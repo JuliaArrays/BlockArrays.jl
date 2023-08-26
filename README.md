@@ -4,7 +4,9 @@
 [![codecov](https://codecov.io/gh/JuliaArrays/BlockArrays.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaArrays/BlockArrays.jl) [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaArrays.github.io/BlockArrays.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaArrays.github.io/BlockArrays.jl/dev)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
-
+[![deps](https://juliahub.com/docs/General/BlockArrays/stable/deps.svg)](https://juliahub.com/ui/Packages/General/BlockArrays?t=2)
+[![version](https://juliahub.com/docs/General/BlockArrays/stable/version.svg)](https://juliahub.com/ui/Packages/General/BlockArrays)
+[![pkgeval](https://juliahub.com/docs/General/BlockArrays/stable/pkgeval.svg)](https://juliahub.com/ui/Packages/General/BlockArrays)
 
 A block array is a partition of an array into blocks or subarrays, see [wikipedia](https://en.wikipedia.org/wiki/Block_matrix) for a more extensive description. This package has two purposes. Firstly, it defines an interface for an `AbstractBlockArray` block arrays that can be shared among types representing different types of block arrays. The advantage to this is that it provides a consistent API for block arrays.
 
