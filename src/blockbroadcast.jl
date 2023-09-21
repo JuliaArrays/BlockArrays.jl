@@ -30,13 +30,14 @@ BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(
 
 # sortedunion can assume inputs are already sorted so this could be improved
 sortedunion(a,b) = sort!(union(a,b))
+sortedunion(a::Tuple, b::Tuple) = (a..., b...)
 sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
 
-Base.Broadcast.axistype(a::BlockedUnitRange, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
-Base.Broadcast.axistype(a::BlockedUnitRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
-Base.Broadcast.axistype(a, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::BlockedUnitRange, b::BlockedUnitRange) = combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::BlockedUnitRange, b) = combine_blockaxes(a, b)
+Base.Broadcast.axistype(a, b::BlockedUnitRange) = combine_blockaxes(a, b)
 
 
 similar(bc::Broadcasted{<:AbstractBlockStyle{N}}, ::Type{T}) where {T,N} =
