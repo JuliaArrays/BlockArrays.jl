@@ -79,7 +79,7 @@ _diff(a::Tuple) = diff(collect(a))
 length(a::BlockedUnitRange) = isempty(a.lasts) ? 0 : Integer(last(a.lasts)-a.first+1)
 
 """
-   blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
+    blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
 
 Check if `a` and `b` have the same block structure.
 
@@ -110,7 +110,7 @@ false
 blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int}) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
 blockisequal(a, b, c, d...) = blockisequal(a,b) && blockisequal(b,c,d...)
 """
-   blockisequal(a::Tuple, b::Tuple)
+    blockisequal(a::Tuple, b::Tuple)
 
 Return `all(blockisequal.(a,b))``
 """
@@ -334,7 +334,7 @@ function findblock(b::AbstractUnitRange{Int}, k::Integer)
 end
 
 """
-   blockfirsts(a::AbstractUnitRange{Int})
+    blockfirsts(a::AbstractUnitRange{Int})
 
 Return the first index of each block of `a`.
 
@@ -360,7 +360,7 @@ julia> blockfirsts(b)
 """
 blockfirsts(a::AbstractUnitRange{Int}) = Ones{Int}(1)
 """
-   blocklasts(a::AbstractUnitRange{Int})
+    blocklasts(a::AbstractUnitRange{Int})
 
 Return the last index of each block of `a`.
 
@@ -386,7 +386,7 @@ julia> blocklasts(b)
 """
 blocklasts(a::AbstractUnitRange{Int}) = Fill(length(a),1)
 """
-   blocklengths(a::AbstractUnitRange{Int})
+    blocklengths(a::AbstractUnitRange{Int})
 
 Return the length of each block of `a`.
 
