@@ -26,7 +26,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             broadcast, eltype, convert, similar,
             tail, reindex,
             RangeIndex, Int, Integer, Number,
-            +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
+            +, -, *, /, \, ==, min, max, isless, in, copy, copyto!, axes, @deprecate,
             BroadcastStyle, checkbounds, throw_boundserror,
             oneunit, ones, zeros, intersect, Slice, resize!
 using Base: ReshapedArray, dataids, oneto
