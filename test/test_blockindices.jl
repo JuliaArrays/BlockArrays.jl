@@ -4,6 +4,7 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
+    @test Tuple(Block(2, 2)) === (Block(2), Block(2))
     @test Block((Block(3), Block(4))) === Block(3,4)
     @test Block() === Block(()) === Block{0}() === Block{0}(())
     @test Block(1) === Block((1,)) === Block{1}(1) === Block{1}((1,))
@@ -70,6 +71,8 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
         @test convert(Int, Block(2)) == 2
         @test convert(Float64, Block(2)) == 2.0
+        @test convert(Tuple, Block(2, 2)) == (Block(2), Block(2))
+        @test convert(Tuple{Vararg{Int}}, Block(2, 2)) == (2, 2)
 
         @test_throws MethodError convert(Int, Block(2,1))
         @test convert(Tuple{Int,Int}, Block(2,1)) == (2,1)

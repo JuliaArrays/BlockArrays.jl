@@ -25,7 +25,7 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             step,
             broadcast, eltype, convert, similar,
             tail, reindex,
-            RangeIndex, Int, Integer, Number,
+            RangeIndex, Int, Integer, Number, Tuple,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
             BroadcastStyle, checkbounds, throw_boundserror,
             oneunit, ones, zeros, intersect, Slice, resize!
