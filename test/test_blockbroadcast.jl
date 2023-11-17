@@ -265,4 +265,12 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         C = B + B
         @test C[Block(1)] == 2B[Block(1)]
     end
+
+    @testset "broadcast bug" begin
+        X = randn(5,5)
+        Y = similar(X)
+        B = PseudoBlockArray(randn(5,5), [2,3], [2,3])
+        Y .= X .- B ./ 2
+        @test Y == X - B/2
+    end
 end
