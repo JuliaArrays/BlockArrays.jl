@@ -1,4 +1,4 @@
-using BlockArrays, ArrayLayouts, Test, Base64
+using BlockArrays, ArrayLayouts, Test
 
 # useds to force SubArray return
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
@@ -193,11 +193,11 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test blocks(V) == blocks(A)[1:1,1:2]
         @test blocks(W) == blocks(A)[1:2,1:1]
         Vi = parentindices(V)
-        @test stringmime("text/plain", V) == "1×3 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}, "*
+        @test sprint(show, "text/plain", V) == "1×3 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}, "*
             "$(typeof(axes(A)))}, $(Vi[1]), $(Vi[2])) "*
             "with eltype $Int with indices $(axes(V,1))×$(axes(V,2)):\n 1  │  2  3"
         Wi = parentindices(W)
-        @test stringmime("text/plain", W) == "3×1 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}"*
+        @test sprint(show, "text/plain", W) == "3×1 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}"*
             ", $(typeof(axes(A)))}, $(Wi[1]), $(Wi[2])) "*
             "with eltype $Int with indices $(axes(W,1))×$(axes(W,2)):\n 1\n ─\n 4\n 7"
     end
