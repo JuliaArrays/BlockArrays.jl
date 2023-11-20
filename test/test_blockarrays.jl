@@ -1,4 +1,4 @@
-using SparseArrays, BlockArrays, Base64, FillArrays, LinearAlgebra, Test
+using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
@@ -480,24 +480,24 @@ end
     end
 
     @testset "replstring" begin
-        @test stringmime("text/plain",BlockArray(collect(1:4), [1,3])) == "2-blocked 4-element BlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
-        @test stringmime("text/plain",PseudoBlockArray(collect(1:4), [1,3])) == "2-blocked 4-element PseudoBlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
-        @test stringmime("text/plain",BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-        @test stringmime("text/plain",PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 PseudoBlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-        @test stringmime("text/plain",BlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 BlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
-        @test stringmime("text/plain",PseudoBlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 PseudoBlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
+        @test sprint(show, "text/plain", BlockArray(collect(1:4), [1,3])) == "2-blocked 4-element BlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
+        @test sprint(show, "text/plain", PseudoBlockArray(collect(1:4), [1,3])) == "2-blocked 4-element PseudoBlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
+        @test sprint(show, "text/plain", BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+        @test sprint(show, "text/plain", PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 PseudoBlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+        @test sprint(show, "text/plain", BlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 BlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
+        @test sprint(show, "text/plain", PseudoBlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 PseudoBlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
         design = zeros(Int16,6,9);
         A = BlockArray(design,[6],[4,5])
-        @test stringmime("text/plain",A) == "1×2-blocked 6×9 BlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+        @test sprint(show, "text/plain", A) == "1×2-blocked 6×9 BlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
         A = PseudoBlockArray(design,[6],[4,5])
-        @test stringmime("text/plain",A) == "1×2-blocked 6×9 PseudoBlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+        @test sprint(show, "text/plain", A) == "1×2-blocked 6×9 PseudoBlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
         D = PseudoBlockArray(Diagonal(1:3), [1,2], [2,1])
-        @test stringmime("text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockMatrix{Int, Diagonal{Int, UnitRange{Int}}, Tuple{BlockedUnitRange{Vector{Int}}, BlockedUnitRange{Vector{Int}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
+        @test sprint(show, "text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockMatrix{Int, Diagonal{Int, UnitRange{Int}}, Tuple{BlockedUnitRange{Vector{Int}}, BlockedUnitRange{Vector{Int}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
 
         a = BlockArray{Int}(undef_blocks, [1,2])
-        @test stringmime("text/plain", a) == "2-blocked 3-element BlockVector{Int64}:\n #undef\n ──────\n #undef\n #undef"
+        @test sprint(show, "text/plain", a) == "2-blocked 3-element BlockVector{Int64}:\n #undef\n ──────\n #undef\n #undef"
         B = BlockArray{Int}(undef_blocks, [1,2], [1,1])
-        @test stringmime("text/plain", B) == "2×2-blocked 3×2 BlockMatrix{Int64}:\n #undef  │  #undef\n ────────┼────────\n #undef  │  #undef\n #undef  │  #undef"
+        @test sprint(show, "text/plain", B) == "2×2-blocked 3×2 BlockMatrix{Int64}:\n #undef  │  #undef\n ────────┼────────\n #undef  │  #undef\n #undef  │  #undef"
     end
 
     @testset "AbstractVector{Int} blocks" begin

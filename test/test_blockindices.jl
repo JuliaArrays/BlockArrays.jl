@@ -1,4 +1,4 @@
-using BlockArrays, FillArrays, Test, Base64, StaticArrays, ArrayLayouts
+using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
@@ -100,16 +100,16 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
     end
 
     @testset "print" begin
-        @test stringmime("text/plain", Block()) == "Block()"
-        @test stringmime("text/plain", Block(1)) == "Block(1)"
-        @test stringmime("text/plain", Block(1,2)) == "Block(1, 2)"
-        @test stringmime("text/plain", Block{0}()) == "Block()"
-        @test stringmime("text/plain", Block{1}(1)) == "Block(1)"
-        @test stringmime("text/plain", Block{2}(1,2)) == "Block(1, 2)"
+        @test sprint(show, "text/plain", Block()) == "Block()"
+        @test sprint(show, "text/plain", Block(1)) == "Block(1)"
+        @test sprint(show, "text/plain", Block(1,2)) == "Block(1, 2)"
+        @test sprint(show, "text/plain", Block{0}()) == "Block()"
+        @test sprint(show, "text/plain", Block{1}(1)) == "Block(1)"
+        @test sprint(show, "text/plain", Block{2}(1,2)) == "Block(1, 2)"
 
-        @test stringmime("text/plain", Block{0,BigInt}()) == "Block{0, BigInt}(())"
-        @test stringmime("text/plain", Block{1,BigInt}(1)) == "Block{1, BigInt}((1,))"
-        @test stringmime("text/plain", Block{2}(1,2)) == "Block(1, 2)"
+        @test sprint(show, "text/plain", Block{0,BigInt}()) == "Block{0, BigInt}(())"
+        @test sprint(show, "text/plain", Block{1,BigInt}(1)) == "Block{1, BigInt}((1,))"
+        @test sprint(show, "text/plain", Block{2}(1,2)) == "Block(1, 2)"
 
         @test sprint(show, BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
         @test sprint(show, "text/plain", BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
@@ -314,7 +314,7 @@ end
         @test findblock(b,1) == Block(1)
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
-        @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        @test sprint(show, "text/plain", blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
     end
 
     @testset "BlockIndex type piracy (#108)" begin
