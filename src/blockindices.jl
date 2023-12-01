@@ -96,11 +96,12 @@ icmp(a, b) = ifelse(isless(a,b), 1, ifelse(a==b, 0, -1))
 
 # conversions
 convert(::Type{T}, index::Block{1}) where {T<:Number} = convert(T, index.n[1])
-convert(::Type{T}, index::Block) where {T<:Tuple} = convert(T, index.n)
+convert(::Type{T}, index::Block) where {T<:Tuple} = convert(T, Block.(index.n))
 
 Int(index::Block{1}) = Int(index.n[1])
 Integer(index::Block{1}) = index.n[1]
 Number(index::Block{1}) = index.n[1]
+Tuple(index::Block) = Block.(index.n)
 
 # print
 Base.show(io::IO, B::Block{0,Int}) = print(io, "Block()")
