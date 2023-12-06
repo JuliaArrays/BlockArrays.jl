@@ -93,7 +93,7 @@ julia> PseudoBlockVector(A, [3,2,1])
  5
  ─
  6
- ```
+```
 """
 const PseudoBlockVector{T} = PseudoBlockArray{T, 1}
 const PseudoBlockVecOrMat{T} = Union{PseudoBlockMatrix{T}, PseudoBlockVector{T}}
@@ -307,7 +307,7 @@ function Base.showarg(io::IO, A::PseudoBlockArray, toplevel::Bool)
     end
 end
 """
-resize!(a::PseudoBlockVector, N::Block) -> PseudoBlockVector
+    resize!(a::PseudoBlockVector, N::Block) -> PseudoBlockVector
 
 Resize `a` to contain the first `N` blocks, returning a new `PseudoBlockVector` sharing
 memory with `a`. If `N` is smaller than the current

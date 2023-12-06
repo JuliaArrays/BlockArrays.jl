@@ -484,7 +484,7 @@ Base.reshape(block_array::BlockArray, dims::Tuple{Vararg{Union{Int,Colon}}}) =
     reshape(PseudoBlockArray(block_array), dims)
 
 """
-resize!(a::BlockVector, N::Block) -> PseudoBlockVector
+    resize!(a::BlockVector, N::Block) -> PseudoBlockVector
 
 Resize `a` to contain the first `N` blocks, returning a new `BlockVector` sharing
 memory with `a`. If `N` is smaller than the current
