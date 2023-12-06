@@ -19,7 +19,8 @@ makedocs(
             "lib/public.md",
             "lib/internals.md"
         ]
-    ]
+    ],
+    warnonly = :missing_docs,
 )
 
 # Deploy built documentation from Travis.

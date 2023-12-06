@@ -66,6 +66,8 @@ Base.popfirst!
 
 ```@docs
 PseudoBlockArray
+PseudoBlockVector
+PseudoBlockMatrix
 Base.resize!
 ```
 
