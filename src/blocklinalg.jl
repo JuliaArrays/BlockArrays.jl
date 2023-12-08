@@ -202,8 +202,10 @@ end
 # BLAS overrides
 #############
 
+_fill_rmul!(A::AbstractArray, β) = iszero(β) ? zero!(A) : rmul!(A, β)
+
 @inline function _block_muladd!(α, A, X::AbstractVector, β, Y::AbstractVector)
-    _fill_lmul!(β, Y)
+    _fill_rmul!(Y, β)
     for N = blockcolsupport(X), K = blockcolsupport(A,N)
         mul!(view(Y,K), view(A,K,N), view(X,N), α, one(β))
     end
@@ -211,7 +213,7 @@ end
 end
 
 @inline function _block_muladd!(α, A, X, β, Y)
-    _fill_lmul!(β, Y)
+    _fill_rmul!(Y, β)
     for J = blockaxes(X,2), N = blockcolsupport(X,J), K = blockcolsupport(A,N)
         mul!(view(Y,K,J), view(A,K,N), view(X,N,J), α, one(α))
     end
