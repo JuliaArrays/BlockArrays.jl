@@ -312,7 +312,7 @@ convert(::Type{BlockArray{T}}, A::BlockArray{T}) where {T} = A
 convert(::Type{BlockArray}, A::BlockArray) = A
 
 BlockArray{T, N}(A::AbstractArray{T2, N}) where {T,T2,N} =
-    BlockArray(Array{T, N}(A), axes(A))
+    copyto!(BlockArray{T, N}(undef, axes(A)), A)
 BlockArray{T1}(A::AbstractArray{T2, N}) where {T1,T2,N} = BlockArray{T1, N}(A)
 BlockArray(A::AbstractArray{T, N}) where {T,N} = BlockArray{T, N}(A)
 

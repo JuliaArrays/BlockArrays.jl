@@ -175,7 +175,7 @@ convert(::Type{AbstractArray}, A::PseudoBlockArray) = A
 
 
 PseudoBlockArray{T, N}(A::AbstractArray{T2, N}) where {T,T2,N} =
-    PseudoBlockArray(Array{T, N}(A), axes(A))
+    copyto!(PseudoBlockArray{T,N}(undef, axes(A)), A)
 PseudoBlockArray{T1}(A::AbstractArray{T2, N}) where {T1,T2,N} = PseudoBlockArray{T1, N}(A)
 PseudoBlockArray{<:Any,N}(A::AbstractArray{T, N}) where {T,N} = PseudoBlockArray{T, N}(A)
 PseudoBlockArray(A::AbstractArray{T, N}) where {T,N} = PseudoBlockArray{T, N}(A)
