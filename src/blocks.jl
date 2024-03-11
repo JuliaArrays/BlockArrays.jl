@@ -88,8 +88,10 @@ This is broken for now. See: https://github.com/JuliaArrays/BlockArrays.jl/issue
 # IndexCartesian implementations
 @propagate_inbounds getindex(a::BlocksView{T,N}, i::Vararg{Int,N}) where {T,N} =
     view(a.array, Block.(i)...)
-@propagate_inbounds setindex!(a::BlocksView{T,N}, b, i::Vararg{Int,N}) where {T,N} =
+@propagate_inbounds function setindex!(a::BlocksView{T,N}, b, i::Vararg{Int,N}) where {T,N}
     copyto!(a[i...], b)
+    a
+end
 
 function Base.showarg(io::IO, a::BlocksView, toplevel::Bool)
     if toplevel
