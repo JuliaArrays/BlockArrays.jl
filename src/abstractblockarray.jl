@@ -159,7 +159,7 @@ false
 
 @propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Block{N}) where {T,N} =
     setindex!(block_arr, v, Block.(block.n)...)
-@inline @propagate_inbounds function setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N}
+@propagate_inbounds function setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N}
     blockcheckbounds(block_arr, block...)
     dest = view(block_arr, block...)
     size(dest) == size(v) || throw(DimensionMismatch(string("tried to assign $(size(v)) array to $(size(dest)) block")))
@@ -167,12 +167,18 @@ false
     block_arr
 end
 
-@inline @propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N} =
+@propagate_inbounds function setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N}
     view(block_arr, block(blockindex))[blockindex.α...] = v
-@inline @propagate_inbounds setindex!(block_arr::AbstractBlockVector{T}, v, blockindex::BlockIndex{1}) where {T} =
+    block_arr
+end
+@propagate_inbounds function setindex!(block_arr::AbstractBlockVector{T}, v, blockindex::BlockIndex{1}) where {T}
     view(block_arr, block(blockindex))[blockindex.α...] = v
-@inline @propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
+    block_arr
+end
+@propagate_inbounds function setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N}
     block_arr[BlockIndex(blockindex)] = v
+    block_arr
+end
 
 viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block_arr, block)
 @inline view(block_arr::AbstractBlockArray{<:Any,N}, block::Block{N}) where N = viewblock(block_arr, block)
@@ -181,7 +187,7 @@ viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block
     view(block_arr, blkind)
 end
 @inline view(block_arr::AbstractBlockVector, block::Block{1}) = viewblock(block_arr, block)
-@inline @propagate_inbounds view(block_arr::AbstractBlockArray, block::Block{1}...) = view(block_arr, Block(block))
+@propagate_inbounds view(block_arr::AbstractBlockArray, block::Block{1}...) = view(block_arr, Block(block))
 
 """
     eachblock(A::AbstractBlockArray)
