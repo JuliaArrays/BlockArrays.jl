@@ -55,7 +55,8 @@ end
 
 const DefaultBlockAxis = BlockedUnitRange{Int,Vector{Int}}
 
-@inline _BlockedUnitRange(cs) = _BlockedUnitRange(one(first(cs)), cs)
+# TODO: Is this a good default for `first`?
+@inline _BlockedUnitRange(cs) = _BlockedUnitRange(isempty(cs) ? one(eltype(cs)) : one(first(cs)), cs)
 
 
 BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
@@ -64,7 +65,7 @@ _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changin
 
 @inline blockfirsts(a::BlockedUnitRange) = [a.first; @views(a.lasts[1:end-1]) .+ 1]
 # optimize common cases
-@inline function blockfirsts(a::BlockedUnitRange{<:Union{Vector, RangeCumsum{<:Any, <:UnitRange}}})
+@inline function blockfirsts(a::BlockedUnitRange{<:Integer, <:Union{Vector, RangeCumsum{<:Any, <:UnitRange}}})
     v = Vector{eltype(a)}(undef, length(a.lasts))
     v[1] = a.first
     v[2:end] .= @views(a.lasts[oneto(end-1)]) .+ 1
@@ -121,13 +122,13 @@ Base.convert(::Type{BlockedUnitRange}, axis::BlockedUnitRange) = axis
 Base.convert(::Type{BlockedUnitRange}, axis::AbstractUnitRange{Int}) = _BlockedUnitRange(first(axis),[last(axis)])
 Base.convert(::Type{BlockedUnitRange}, axis::Base.Slice) = _BlockedUnitRange(first(axis),[last(axis)])
 Base.convert(::Type{BlockedUnitRange}, axis::Base.IdentityUnitRange) = _BlockedUnitRange(first(axis),[last(axis)])
-Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange{CS}) where CS = axis
-Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange) where CS = _BlockedUnitRange(first(axis), convert(CS, blocklasts(axis)))
-Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(BlockedUnitRange{CS}, convert(BlockedUnitRange, axis))
+Base.convert(::Type{BlockedUnitRange{T, CS}}, axis::BlockedUnitRange{T, CS}) where {T, CS} = axis
+Base.convert(::Type{BlockedUnitRange{T, CS}}, axis::BlockedUnitRange) where {T, CS} = _BlockedUnitRange(convert(T, first(axis)), convert(CS, blocklasts(axis)))
+Base.convert(::Type{BlockedUnitRange{T, CS}}, axis::AbstractUnitRange{Int}) where {T, CS} = convert(BlockedUnitRange{T, CS}, convert(BlockedUnitRange, axis))
 
 Base.unitrange(b::BlockedUnitRange) = first(b):last(b)
 
-Base.promote_rule(::Type{BlockedUnitRange{CS}}, ::Type{Base.OneTo{Int}}) where CS = UnitRange{Int}
+Base.promote_rule(::Type{BlockedUnitRange{T, CS}}, ::Type{Base.OneTo{Int}}) where {T, CS} = UnitRange{T}
 
 """
     blockaxes(A)
@@ -429,7 +430,8 @@ blockaxes(S::Base.Slice) = blockaxes(S.indices)
 
 
 # This supports broadcasting with infinite block arrays
-Base.BroadcastStyle(::Type{BlockedUnitRange{R}}) where R = Base.BroadcastStyle(R)
+# TODO: Account for `T` here?
+Base.BroadcastStyle(::Type{BlockedUnitRange{T, R}}) where {T, R} = Base.BroadcastStyle(R)
 
 
 ###
@@ -439,21 +441,21 @@ Base.BroadcastStyle(::Type{BlockedUnitRange{R}}) where R = Base.BroadcastStyle(R
 ###
 
 _blocklengths2blocklasts(blocks::AbstractRange) = RangeCumsum(blocks)
-function blockfirsts(a::BlockedUnitRange{Base.OneTo{Int}})
+function blockfirsts(a::BlockedUnitRange{Int, Base.OneTo{Int}})
     a.first == 1 || error("Offset axes not supported")
     Base.OneTo{Int}(length(a.lasts))
 end
-function blocklengths(a::BlockedUnitRange{Base.OneTo{Int}})
+function blocklengths(a::BlockedUnitRange{Int, Base.OneTo{Int}})
     a.first == 1 || error("Offset axes not supported")
     Ones{Int}(length(a.lasts))
 end
-function blockfirsts(a::BlockedUnitRange{<:AbstractRange})
+function blockfirsts(a::BlockedUnitRange{<:Integer, <:AbstractRange})
     st = step(a.lasts)
     a.first == 1 || error("Offset axes not supported")
     @assert first(a.lasts)-a.first+1 == st
     range(1; step=st, length=length(a.lasts))
 end
-function blocklengths(a::BlockedUnitRange{<:AbstractRange})
+function blocklengths(a::BlockedUnitRange{<:Integer, <:AbstractRange})
     st = step(a.lasts)
     a.first == 1 || error("Offset axes not supported")
     @assert first(a.lasts)-a.first+1 == st

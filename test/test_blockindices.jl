@@ -165,7 +165,7 @@ end
         @test_throws BlockBoundsError b[Block(2)]
 
         b = blockedrange(Fill(3,1_000_000))
-        @test b isa BlockedUnitRange{<:AbstractRange}
+        @test b isa BlockedUnitRange{<:Integer,<:AbstractRange}
         @test b[Block(100_000)] == 299_998:300_000
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(1_000_001)]
@@ -214,9 +214,9 @@ end
         @test blockisequal(convert(BlockedUnitRange, Base.OneTo(5)), blockedrange([5]))
         @test blockisequal(convert(BlockedUnitRange, Base.Slice(Base.OneTo(5))), blockedrange([5]))
         @test blockisequal(convert(BlockedUnitRange, Base.IdentityUnitRange(-2:2)), BlockArrays._BlockedUnitRange(-2,[2]))
-        @test convert(BlockedUnitRange{Vector{Int}}, c) === c
-        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, b),b)
-        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, Base.OneTo(5)), blockedrange([5]))
+        @test convert(BlockedUnitRange{Int,Vector{Int}}, c) === c
+        @test blockisequal(convert(BlockedUnitRange{Int,Vector{Int}}, b),b)
+        @test blockisequal(convert(BlockedUnitRange{Int,Vector{Int}}, Base.OneTo(5)), blockedrange([5]))
     end
 
     @testset "findblock" begin
@@ -299,7 +299,7 @@ end
         @test Base.dataids(b) == Base.dataids(blocklasts(b))
         @test_throws ArgumentError BlockedUnitRange(b)
 
-        @test summary(b) == "3-blocked 6-element BlockedUnitRange{Vector{$Int}}"
+        @test summary(b) == "3-blocked 6-element BlockedUnitRange{$Int, Vector{$Int}}"
     end
 
     @testset "OneTo interface" begin
@@ -317,7 +317,7 @@ end
         @test findblock(b,1) == Block(1)
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
-        @test sprint(show, "text/plain", blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        @test sprint(show, "text/plain", blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{$Int, Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
     end
 
     @testset "BlockIndex type piracy (#108)" begin

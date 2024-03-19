@@ -130,7 +130,7 @@ end
     @test_throws BlockBoundsError A[Block(1, 3)]
     @test A == [1 2 0 0; 0 0 1 2]
     @test BlockArray(A) == A
-    @test sprint(show, "text/plain", A) == "2×2-blocked 2×4 BlockMatrix{$Int, Diagonal{Matrix{$Int}, Vector{Matrix{$Int}}}, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}}:\n 1  2  │  ⋅  ⋅\n ──────┼──────\n ⋅  ⋅  │  1  2"
+    @test sprint(show, "text/plain", A) == "2×2-blocked 2×4 BlockMatrix{$Int, Diagonal{Matrix{$Int}, Vector{Matrix{$Int}}}, Tuple{BlockedUnitRange{$Int, Vector{$Int}}, BlockedUnitRange{$Int, Vector{$Int}}}}:\n 1  2  │  ⋅  ⋅\n ──────┼──────\n ⋅  ⋅  │  1  2"
 
     N = 3
     D = Diagonal(mortar(Fill.(-(0:N) - (0:N) .^ 2, 1:2:2N+1)))
@@ -142,9 +142,9 @@ end
 
 @testset "non-standard block axes" begin
     A = BlockArray([1 2; 3 4], Fill(1, 2), Fill(1, 2))
-    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:NTuple{2,BlockedUnitRange{<:AbstractRange}}}
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:NTuple{2,BlockedUnitRange{<:Integer,<:AbstractRange}}}
     A = BlockArray([1 2; 3 4], Fill(1, 2), [1, 1])
-    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:Tuple{BlockedUnitRange{<:AbstractRange},BlockedUnitRange{Vector{Int}}}}
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:Tuple{BlockedUnitRange{<:Integer,<:AbstractRange},BlockedUnitRange{Int, Vector{Int}}}}
 end
 
 @testset "block Fill" begin
@@ -187,9 +187,9 @@ end
 
     U = UpperTriangular(Ones((blockedrange([1, 2]), blockedrange([2, 1]))))
 
-    @test sprint(show, "text/plain", A) == "5-element Fill{$Int, 1, Tuple{BlockedUnitRange{Vector{$Int}}}} with indices 1:1:5, with entries equal to 2"
-    @test sprint(show, "text/plain", B) == "3×3 Diagonal{Float64, Ones{Float64, 1, Tuple{BlockedUnitRange{Vector{$Int}}}}} with indices 1:1:3×1:1:3"
-    @test sprint(show, "text/plain", U) == "3×3 UpperTriangular{Float64, Ones{Float64, 2, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}}} with indices 1:1:3×1:1:3:\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
+    @test sprint(show, "text/plain", A) == "5-element Fill{$Int, 1, Tuple{BlockedUnitRange{$Int, Vector{$Int}}}} with indices 1:1:5, with entries equal to 2"
+    @test sprint(show, "text/plain", B) == "3×3 Diagonal{Float64, Ones{Float64, 1, Tuple{BlockedUnitRange{$Int, Vector{$Int}}}}} with indices 1:1:3×1:1:3"
+    @test sprint(show, "text/plain", U) == "3×3 UpperTriangular{Float64, Ones{Float64, 2, Tuple{BlockedUnitRange{$Int, Vector{$Int}}, BlockedUnitRange{$Int, Vector{$Int}}}}} with indices 1:1:3×1:1:3:\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
 
     @testset "views" begin
         # This in theory can be dropped because `view` returns the block, but we keep in case needed
