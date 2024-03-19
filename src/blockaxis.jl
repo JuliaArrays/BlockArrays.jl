@@ -47,7 +47,7 @@ julia> blockedrange([2,2,3])
  7
 ```
 """
-struct BlockedUnitRange{T, CS} <: AbstractUnitRange{T}
+struct BlockedUnitRange{T<:Integer, CS} <: AbstractUnitRange{T}
     first::T
     lasts::CS
     global _BlockedUnitRange(f::T, cs::CS) where {T, CS} = new{T, CS}(f, cs)
