@@ -35,7 +35,7 @@ a vector of block lengths to a `BlockedUnitRange`.
 # Examples
 ```jldoctest
 julia> blockedrange([2,2,3])
-3-blocked 7-element BlockedUnitRange{Vector{Int64}}:
+3-blocked 7-element BlockedUnitRange{Int64, Vector{Int64}}:
  1
  2
  ─
@@ -47,15 +47,15 @@ julia> blockedrange([2,2,3])
  7
 ```
 """
-struct BlockedUnitRange{CS} <: AbstractUnitRange{Int}
-    first::Int
+struct BlockedUnitRange{T, CS} <: AbstractUnitRange{T}
+    first::T
     lasts::CS
-    global _BlockedUnitRange(f, cs::CS) where CS = new{CS}(f, cs)
+    global _BlockedUnitRange(f::T, cs::CS) where {T, CS} = new{T, CS}(f, cs)
 end
 
-const DefaultBlockAxis = BlockedUnitRange{Vector{Int}}
+const DefaultBlockAxis = BlockedUnitRange{Int,Vector{Int}}
 
-@inline _BlockedUnitRange(cs) = _BlockedUnitRange(1,cs)
+@inline _BlockedUnitRange(cs) = _BlockedUnitRange(one(first(cs)), cs)
 
 
 BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
@@ -86,14 +86,14 @@ Check if `a` and `b` have the same block structure.
 # Examples
 ```jldoctest
 julia> b1 = blockedrange(1:2)
-2-blocked 3-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+2-blocked 3-element BlockedUnitRange{Int64, ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
  1
  ─
  2
  3
 
 julia> b2 = blockedrange([1,1,1])
-3-blocked 3-element BlockedUnitRange{Vector{Int64}}:
+3-blocked 3-element BlockedUnitRange{Int64, Vector{Int64}}:
  1
  ─
  2
@@ -341,7 +341,7 @@ Return the first index of each block of `a`.
 # Examples
 ```jldoctest
 julia> b = blockedrange(1:3)
-3-blocked 6-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+3-blocked 6-element BlockedUnitRange{Int64, ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
  1
  ─
  2
@@ -367,7 +367,7 @@ Return the last index of each block of `a`.
 # Examples
 ```jldoctest
 julia> b = blockedrange(1:3)
-3-blocked 6-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+3-blocked 6-element BlockedUnitRange{Int64, ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
  1
  ─
  2
@@ -393,7 +393,7 @@ Return the length of each block of `a`.
 # Examples
 ```jldoctest
 julia> b = blockedrange(1:3)
-3-blocked 6-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+3-blocked 6-element BlockedUnitRange{Int64, ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
  1
  ─
  2

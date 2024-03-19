@@ -22,7 +22,7 @@ julia> BlockArray(rand(4, 4), [2,2], [1,1,2])
  0.844314  │  0.794279  │  0.0421491  0.683791
 
 julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
-2×2-blocked 4×5 BlockMatrix{Float64, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
+2×2-blocked 4×5 BlockMatrix{Float64, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Int64, Vector{Int64}}, BlockedUnitRange{Int64, Vector{Int64}}}}:
  0.0341601  0.374187  │  0.0118196  0.299058  0.0
  ---------------------┼-------------------------------
  0.0945445  0.931115  │  0.0460428  0.0       0.0
@@ -67,7 +67,7 @@ The `block_type` should be an array type.  It specifies the internal block type,
 
 ```julia
 julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])
-2-blocked 3-element BlockVector{Float64, Vector{SparseVector{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}}}:
+2-blocked 3-element BlockVector{Float64, Vector{SparseVector{Float64, Int64}}, Tuple{BlockedUnitRange{Int64, Vector{Int64}}}}:
  #undef
  ------
  #undef
@@ -152,7 +152,7 @@ julia> view(A, Block(2)) .= [3,4]; A[Block(2)]
  4.0
 
 julia> view(A, Block.(1:2))
-3-element view(::BlockVector{Float64, Vector{Vector{Float64}}, Tuple{BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}}}, BlockSlice(BlockRange(1:2),1:1:3)) with eltype Float64 with indices 1:1:3:
+3-element view(::BlockVector{Float64, Vector{Vector{Float64}}, Tuple{BlockedUnitRange{Int64, ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}}}, BlockSlice(BlockRange(1:2),1:1:3)) with eltype Float64 with indices 1:1:3:
  1.0
  3.0
  4.0
@@ -166,7 +166,7 @@ An array can be repacked into a `BlockArray` with `BlockArray(array, block_sizes
 
 ```jl
 julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
-2×2-blocked 4×5 BlockArray{Float64, 2, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
+2×2-blocked 4×5 BlockArray{Float64, 2, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Int64, Vector{Int64}}, BlockedUnitRange{Int64, Vector{Int64}}}}:
  0.0341601  0.374187  │  0.0118196  0.299058  0.0
  ---------------------┼-------------------------------
  0.0945445  0.931115  │  0.0460428  0.0       0.0
