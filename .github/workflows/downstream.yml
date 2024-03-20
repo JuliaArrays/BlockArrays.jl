@@ -32,7 +32,6 @@ jobs:
         package:
           - {repo: BlockBandedMatrices.jl, group: JuliaLinearAlgebra}
           - {repo: ApproxFunBase.jl, group: JuliaApproximation}
-          - {repo: ApproxFun.jl, group: JuliaApproximation}
           # - {repo: InfiniteLinearAlgebra.jl, group: JuliaLinearAlgebra}
 
     steps:
