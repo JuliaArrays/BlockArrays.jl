@@ -130,7 +130,7 @@ Base.unitrange(b::BlockedUnitRange) = first(b):last(b)
 Base.promote_rule(::Type{BlockedUnitRange{CS}}, ::Type{Base.OneTo{Int}}) where CS = UnitRange{Int}
 
 """
-    blockaxes(A)
+    blockaxes(A::AbstractArray)
 
 Return the tuple of valid block indices for array `A`.
 
@@ -163,13 +163,13 @@ _blockaxes(b::Tuple) = (Block.(Base.OneTo(length(b))),)
 blockaxes(b) = blockaxes.(axes(b), 1)
 
 """
-    blockaxes(A, d)
+    blockaxes(A::AbstractArray, d::Int)
 
 Return the valid range of block indices for array `A` along dimension `d`.
 
 # Examples
 ```jldoctest
-julia> A = BlockArray([1,2,3],[2,1])
+julia> A = BlockArray([1,2,3], [2,1])
 2-blocked 3-element BlockVector{Int64}:
  1
  2
@@ -190,8 +190,8 @@ julia> blockaxes(A,1) |> collect
 end
 
 """
-    blocksize(A)
-    blocksize(A,i)
+    blocksize(A::AbstractArray)
+    blocksize(A::AbstractArray, i::Int)
 
 Return the tuple of the number of blocks along each
 dimension. See also size and blocksizes.
@@ -217,8 +217,8 @@ blocksize(A,i) = length(blockaxes(A,i))
 @inline blocklength(t) = prod(blocksize(t))
 
 """
-    blocksizes(A)
-    blocksizes(A,i)
+    blocksizes(A::AbstractArray)
+    blocksizes(A::AbstractArray, i::Int)
 
 Return the tuple of the sizes of blocks along each
 dimension. See also size and blocksize.
@@ -340,8 +340,8 @@ Return the first index of each block of `a`.
 
 # Examples
 ```jldoctest
-julia> b = blockedrange(1:3)
-3-blocked 6-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+julia> b = blockedrange([1,2,3])
+3-blocked 6-element BlockedUnitRange{Vector{Int64}}:
  1
  ─
  2
@@ -366,8 +366,8 @@ Return the last index of each block of `a`.
 
 # Examples
 ```jldoctest
-julia> b = blockedrange(1:3)
-3-blocked 6-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+julia> b = blockedrange([1,2,3])
+3-blocked 6-element BlockedUnitRange{Vector{Int64}}:
  1
  ─
  2
@@ -378,7 +378,7 @@ julia> b = blockedrange(1:3)
  6
 
 julia> blocklasts(b)
-3-element ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}:
+3-element Vector{Int64}:
  1
  3
  6
@@ -392,8 +392,8 @@ Return the length of each block of `a`.
 
 # Examples
 ```jldoctest
-julia> b = blockedrange(1:3)
-3-blocked 6-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+julia> b = blockedrange([1,2,3])
+3-blocked 6-element BlockedUnitRange{Vector{Int64}}:
  1
  ─
  2
