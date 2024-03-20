@@ -109,17 +109,17 @@ function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},NTuple{N,Def
 end
 
 # LayoutArray with blocked axes will dispatch to here
-axes_print_matrix_row(::Tuple{BlockedUnitRange}, io, X, A, i, cols, sep) =
+axes_print_matrix_row(::Tuple{AbstractBlockedUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
-axes_print_matrix_row(::NTuple{2,BlockedUnitRange}, io, X, A, i, cols, sep) =
+axes_print_matrix_row(::NTuple{2,AbstractBlockedUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
-axes_print_matrix_row(::Tuple{AbstractUnitRange,BlockedUnitRange}, io, X, A, i, cols, sep) =
+axes_print_matrix_row(::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
-axes_print_matrix_row(::Tuple{BlockedUnitRange,AbstractUnitRange}, io, X, A, i, cols, sep) =
+axes_print_matrix_row(::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
-# Need to handled BlockedUnitRange, which is not a LayoutVector
-Base.print_matrix_row(io::IO, X::BlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString, idxlast::Integer=last(axes(X, 2))) =
+# Need to handled AbstractBlockedUnitRange, which is not a LayoutVector
+Base.print_matrix_row(io::IO, X::AbstractBlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString, idxlast::Integer=last(axes(X, 2))) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
 function _show_typeof(io::IO, a::PseudoBlockVector{T,Vector{T},Tuple{DefaultBlockAxis}}) where T
@@ -194,7 +194,7 @@ function Base.show(io::IO, B::BlockIndexRange)
 end
 Base.show(io::IO, ::MIME"text/plain", B::BlockIndexRange) = show(io, B)
 
-Base.show(io::IO, mimetype::MIME"text/plain", a::BlockedUnitRange) =
+Base.show(io::IO, mimetype::MIME"text/plain", a::AbstractBlockedUnitRange) =
     Base.invoke(show, Tuple{typeof(io),MIME"text/plain",AbstractArray},io, mimetype, a)
 
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")

@@ -21,6 +21,8 @@ function findblockindex(b::AbstractVector, k::Integer)
     return BlockIndex(blockidx, local_index)
 end
 
+abstract type AbstractBlockedUnitRange{T,CS} <: AbstractUnitRange{T} end
+
 function _BlockedUnitRange end
 
 
@@ -35,7 +37,7 @@ a vector of block lengths to a `BlockedUnitRange`.
 # Examples
 ```jldoctest
 julia> blockedrange([2,2,3])
-3-blocked 7-element BlockedUnitRange{Vector{Int64}}:
+3-blocked 7-element BlockedOneTo{Vector{Int64}}:
  1
  2
  ─
@@ -47,36 +49,60 @@ julia> blockedrange([2,2,3])
  7
 ```
 """
-struct BlockedUnitRange{CS} <: AbstractUnitRange{Int}
+struct BlockedUnitRange{CS} <: AbstractBlockedUnitRange{Int,CS}
     first::Int
     lasts::CS
     global _BlockedUnitRange(f, cs::CS) where CS = new{CS}(f, cs)
 end
 
-const DefaultBlockAxis = BlockedUnitRange{Vector{Int}}
-
 @inline _BlockedUnitRange(cs) = _BlockedUnitRange(1,cs)
 
+first(b::BlockedUnitRange) = b.first
+@inline blocklasts(a::BlockedUnitRange) = a.lasts
 
 BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
-_blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
-@inline blockedrange(blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(_blocklengths2blocklasts(blocks))
 
-@inline blockfirsts(a::BlockedUnitRange) = [first(a); @views(blocklasts(a)[1:end-1]) .+ 1]
+@inline blockfirsts(a::AbstractBlockedUnitRange) = [first(a); @views(blocklasts(a)[1:end-1]) .+ 1]
 # optimize common cases
-@inline function blockfirsts(a::BlockedUnitRange{<:Union{Vector, RangeCumsum{<:Any, <:UnitRange}}})
+@inline function blockfirsts(a::AbstractBlockedUnitRange{<:Any,<:Union{Vector, RangeCumsum{<:Any, <:UnitRange}}})
     v = Vector{eltype(a)}(undef, length(blocklasts(a)))
     v[1] = first(a)
     v[2:end] .= @views(blocklasts(a)[oneto(end-1)]) .+ 1
     return v
 end
-@inline blocklasts(a::BlockedUnitRange) = a.lasts
+
+length(a::AbstractBlockedUnitRange) = isempty(blocklasts(a)) ? 0 : Integer(last(blocklasts(a))-first(a)+1)
+
+struct BlockedOneTo{CS} <: AbstractBlockedUnitRange{Int,CS}
+    lasts::CS
+end
+
+const DefaultBlockAxis = BlockedOneTo{Vector{Int}}
+
+first(b::BlockedOneTo) = oneunit(eltype(b))
+@inline blocklasts(a::BlockedOneTo) = a.lasts
+
+BlockedOneTo(::BlockedOneTo) = throw(ArgumentError("Forbidden due to ambiguity"))
+
+axes(b::BlockedOneTo) = (b,)
+function axes(b::BlockedOneTo{<:RangeCumsum}, d::Int)
+    d <= 1 && return axes(b)[d]
+    return BlockedOneTo(oftype(b.lasts, RangeCumsum(Base.OneTo(1))))
+end
+
+_blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
+@inline blockedrange(blocks::Union{Tuple,AbstractVector}) = BlockedOneTo(_blocklengths2blocklasts(blocks))
+@inline blockedrange(f, blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(f, f-1 .+ _blocklengths2blocklasts(blocks))
 
 _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
-@inline blocklengths(a::BlockedUnitRange) = isempty(blocklasts(a)) ? [_diff(blocklasts(a));] : [first(blocklasts(a))-first(a)+1; _diff(blocklasts(a))]
-
-length(a::BlockedUnitRange) = isempty(blocklasts(a)) ? 0 : Integer(last(blocklasts(a))-first(a)+1)
+_blocklengths(a, bl, dbl) = isempty(bl) ? [dbl;] : [first(bl)-first(a)+1; dbl]
+function _blocklengths(a::BlockedOneTo, bl::RangeCumsum, ::AbstractUnitRange)
+    # the 1:0 is hardcoded here to enable conversions to a Base.OneTo
+    isempty(bl) ? oftype(bl.range, 1:0) : bl.range
+end
+_blocklengths(a, bl) = _blocklengths(a, bl, _diff(bl))
+blocklengths(a::AbstractBlockedUnitRange) = _blocklengths(a, blocklasts(a))
 
 """
     blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
@@ -86,14 +112,14 @@ Check if `a` and `b` have the same block structure.
 # Examples
 ```jldoctest
 julia> b1 = blockedrange([1,2])
-2-blocked 3-element BlockedUnitRange{Vector{Int64}}:
+2-blocked 3-element BlockedOneTo{Vector{Int64}}:
  1
  ─
  2
  3
 
 julia> b2 = blockedrange([1,1,1])
-3-blocked 3-element BlockedUnitRange{Vector{Int64}}:
+3-blocked 3-element BlockedOneTo{Vector{Int64}}:
  1
  ─
  2
@@ -120,7 +146,7 @@ blockisequal(::Tuple, ::Tuple{}) = false
 blockisequal(::Tuple{}, ::Tuple) = false
 
 
-_shift_blocklengths(::BlockedUnitRange, bl, f) = bl
+_shift_blocklengths(::AbstractBlockedUnitRange, bl, f) = bl
 _shift_blocklengths(::Any, bl, f) = bl .+ (f - 1)
 const OneBasedRanges = Union{Base.OneTo, Base.Slice{<:Base.OneTo}, Base.IdentityUnitRange{<:Base.OneTo}}
 _shift_blocklengths(::OneBasedRanges, bl, f) = bl
@@ -135,9 +161,20 @@ function Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}
     _BlockedUnitRange(f, convert(CS, _shift_blocklengths(axis, bl, f)))
 end
 
-Base.unitrange(b::BlockedUnitRange) = first(b):last(b)
+Base.unitrange(b::AbstractBlockedUnitRange) = first(b):last(b)
 
-Base.promote_rule(::Type{BlockedUnitRange{CS}}, ::Type{Base.OneTo{Int}}) where CS = UnitRange{Int}
+Base.promote_rule(::Type{<:AbstractBlockedUnitRange}, ::Type{Base.OneTo{Int}}) = UnitRange{Int}
+
+Base.convert(::Type{BlockedOneTo}, axis::BlockedOneTo) = axis
+_convert(::Type{BlockedOneTo}, axis::AbstractBlockedUnitRange) = BlockedOneTo(blocklasts(axis))
+_convert(::Type{BlockedOneTo}, axis::AbstractUnitRange{Int}) = BlockedOneTo(last(axis):last(axis))
+function Base.convert(::Type{BlockedOneTo}, axis::AbstractUnitRange{Int})
+    first(axis) == 1 || throw(ArgumentError("first element of range is not 1"))
+    _convert(BlockedOneTo, axis)
+end
+Base.convert(::Type{BlockedOneTo{CS}}, axis::BlockedOneTo{CS}) where CS = axis
+Base.convert(::Type{BlockedOneTo{CS}}, axis::BlockedOneTo) where CS = BlockedOneTo(convert(CS, blocklasts(axis)))
+Base.convert(::Type{BlockedOneTo{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(BlockedOneTo{CS}, convert(BlockedOneTo, axis))
 
 """
     blockaxes(A::AbstractArray)
@@ -167,7 +204,7 @@ julia> blockaxes(B)
 (BlockRange(Base.OneTo(2)), BlockRange(Base.OneTo(3)))
 ```
 """
-blockaxes(b::BlockedUnitRange) = _blockaxes(blocklasts(b))
+blockaxes(b::AbstractBlockedUnitRange) = _blockaxes(blocklasts(b))
 _blockaxes(b::AbstractVector) = (Block.(axes(b,1)),)
 _blockaxes(b::Tuple) = (Block.(Base.OneTo(length(b))),)
 blockaxes(b) = blockaxes.(axes(b), 1)
@@ -255,16 +292,15 @@ julia> blocksizes(A,2)
 blocksizes(A) = map(blocklengths, axes(A))
 blocksizes(A,i) = blocklengths(axes(A,i))
 
-axes(b::BlockedUnitRange) = (_BlockedUnitRange(blocklasts(b) .- (first(b)-1)),)
-unsafe_indices(b::BlockedUnitRange) = axes(b)
-first(b::BlockedUnitRange) = b.first
+axes(b::AbstractBlockedUnitRange) = (_BlockedUnitRange(blocklasts(b) .- (first(b)-1)),)
+unsafe_indices(b::AbstractBlockedUnitRange) = axes(b)
 # ::Integer works around case where blocklasts might return different type
-last(b::BlockedUnitRange)::Integer = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
+last(b::AbstractBlockedUnitRange)::Integer = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
 
 # view and indexing are identical for a unitrange
-view(b::BlockedUnitRange, K::Block{1}) = b[K]
+view(b::AbstractBlockedUnitRange, K::Block{1}) = b[K]
 
-@propagate_inbounds function getindex(b::BlockedUnitRange, K::Block{1})
+@propagate_inbounds function getindex(b::AbstractBlockedUnitRange, K::Block{1})
     k = Integer(K)
     bax = blockaxes(b,1)
     cs = blocklasts(b)
@@ -274,7 +310,7 @@ view(b::BlockedUnitRange, K::Block{1}) = b[K]
     return cs[k-1]+1:cs[k]
 end
 
-@propagate_inbounds function getindex(b::BlockedUnitRange, KR::BlockRange{1})
+@propagate_inbounds function getindex(b::AbstractBlockedUnitRange, KR::BlockRange{1})
     cs = blocklasts(b)
     isempty(KR) && return _BlockedUnitRange(1,cs[1:0])
     K,J = first(KR),last(KR)
@@ -286,7 +322,7 @@ end
     _BlockedUnitRange(cs[k-1]+1,cs[k:j])
 end
 
-@propagate_inbounds function getindex(b::BlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
+@propagate_inbounds function getindex(b::AbstractBlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
     cs = blocklasts(b)
     isempty(KR) && return _BlockedUnitRange(1,cs[Base.OneTo(0)])
     J = last(KR)
@@ -296,7 +332,7 @@ end
     _BlockedUnitRange(first(b),cs[Base.OneTo(j)])
 end
 
-@propagate_inbounds getindex(b::BlockedUnitRange, KR::BlockSlice) = b[KR.block]
+@propagate_inbounds getindex(b::AbstractBlockedUnitRange, KR::BlockSlice) = b[KR.block]
 
 _searchsortedfirst(a::AbstractVector, k) = searchsortedfirst(a, k)
 function _searchsortedfirst(a::Tuple, k)
@@ -305,12 +341,12 @@ function _searchsortedfirst(a::Tuple, k)
 end
 _searchsortedfirst(a::Tuple{}, k) = 1
 
-function findblock(b::BlockedUnitRange, k::Integer)
+function findblock(b::AbstractBlockedUnitRange, k::Integer)
     @boundscheck k in b || throw(BoundsError(b,k))
     Block(_searchsortedfirst(blocklasts(b), k))
 end
 
-Base.dataids(b::BlockedUnitRange) = Base.dataids(blocklasts(b))
+Base.dataids(b::AbstractBlockedUnitRange) = Base.dataids(blocklasts(b))
 
 
 ###
@@ -319,10 +355,10 @@ Base.dataids(b::BlockedUnitRange) = Base.dataids(blocklasts(b))
 Base.checkindex(::Type{Bool}, b::BlockRange, K::Int) = checkindex(Bool, Int.(b), K)
 Base.checkindex(::Type{Bool}, b::AbstractUnitRange{Int}, K::Block{1}) = checkindex(Bool, blockaxes(b,1), Int(K))
 
-function Base.checkindex(::Type{Bool}, axis::BlockedUnitRange, ind::BlockIndexRange{1})
+function Base.checkindex(::Type{Bool}, axis::AbstractBlockedUnitRange, ind::BlockIndexRange{1})
     checkindex(Bool, axis, first(ind)) && checkindex(Bool, axis, last(ind))
 end
-function Base.checkindex(::Type{Bool}, axis::BlockedUnitRange, ind::BlockIndex{1})
+function Base.checkindex(::Type{Bool}, axis::AbstractBlockedUnitRange, ind::BlockIndex{1})
     checkindex(Bool, axis, block(ind)) && checkbounds(Bool, axis[block(ind)], blockindex(ind))
 end
 
@@ -351,7 +387,7 @@ Return the first index of each block of `a`.
 # Examples
 ```jldoctest
 julia> b = blockedrange([1,2,3])
-3-blocked 6-element BlockedUnitRange{Vector{Int64}}:
+3-blocked 6-element BlockedOneTo{Vector{Int64}}:
  1
  ─
  2
@@ -377,7 +413,7 @@ Return the last index of each block of `a`.
 # Examples
 ```jldoctest
 julia> b = blockedrange([1,2,3])
-3-blocked 6-element BlockedUnitRange{Vector{Int64}}:
+3-blocked 6-element BlockedOneTo{Vector{Int64}}:
  1
  ─
  2
@@ -403,7 +439,7 @@ Return the length of each block of `a`.
 # Examples
 ```jldoctest
 julia> b = blockedrange([1,2,3])
-3-blocked 6-element BlockedUnitRange{Vector{Int64}}:
+3-blocked 6-element BlockedOneTo{Vector{Int64}}:
  1
  ─
  2
@@ -422,24 +458,23 @@ julia> blocklengths(b)
 """
 blocklengths(a::AbstractUnitRange) = blocklasts(a) .- blockfirsts(a) .+ 1
 
-Base.summary(a::BlockedUnitRange) = _block_summary(a)
-Base.summary(io::IO, a::BlockedUnitRange) =  _block_summary(io, a)
+Base.summary(io::IO, a::AbstractBlockedUnitRange) =  _block_summary(io, a)
 
 
 ###
 # Slice{<:BlockedUnitRange}
 ###
 
-Base.axes(S::Base.Slice{<:BlockedUnitRange}) = (S.indices,)
-Base.unsafe_indices(S::Base.Slice{<:BlockedUnitRange}) = (S.indices,)
-Base.axes1(S::Base.Slice{<:BlockedUnitRange}) = S.indices
+Base.axes(S::Base.Slice{<:AbstractBlockedUnitRange}) = (S.indices,)
+Base.unsafe_indices(S::Base.Slice{<:AbstractBlockedUnitRange}) = (S.indices,)
+Base.axes1(S::Base.Slice{<:AbstractBlockedUnitRange}) = S.indices
 blockaxes(S::Base.Slice) = blockaxes(S.indices)
 @propagate_inbounds getindex(S::Base.Slice, b::Block{1}) = S.indices[b]
 @propagate_inbounds getindex(S::Base.Slice, b::BlockRange{1}) = S.indices[b]
 
 
 # This supports broadcasting with infinite block arrays
-Base.BroadcastStyle(::Type{BlockedUnitRange{R}}) where R = Base.BroadcastStyle(R)
+Base.BroadcastStyle(::Type{<:AbstractBlockedUnitRange{<:Any,R}}) where R = Base.BroadcastStyle(R)
 
 
 ###
@@ -449,21 +484,21 @@ Base.BroadcastStyle(::Type{BlockedUnitRange{R}}) where R = Base.BroadcastStyle(R
 ###
 
 _blocklengths2blocklasts(blocks::AbstractRange) = RangeCumsum(blocks)
-function blockfirsts(a::BlockedUnitRange{Base.OneTo{Int}})
+function blockfirsts(a::AbstractBlockedUnitRange{<:Any,Base.OneTo{Int}})
     first(a) == 1 || error("Offset axes not supported")
     Base.OneTo{Int}(length(blocklasts(a)))
 end
-function blocklengths(a::BlockedUnitRange{Base.OneTo{Int}})
+function blocklengths(a::AbstractBlockedUnitRange{<:Any,Base.OneTo{Int}})
     first(a) == 1 || error("Offset axes not supported")
     Ones{Int}(length(blocklasts(a)))
 end
-function blockfirsts(a::BlockedUnitRange{<:AbstractRange})
+function blockfirsts(a::AbstractBlockedUnitRange{<:Any,<:AbstractRange})
     st = step(blocklasts(a))
     first(a) == 1 || error("Offset axes not supported")
     @assert first(blocklasts(a))-first(a)+1 == st
     range(1; step=st, length=length(blocklasts(a)))
 end
-function blocklengths(a::BlockedUnitRange{<:AbstractRange})
+function blocklengths(a::AbstractBlockedUnitRange{<:Any,<:AbstractRange})
     st = step(blocklasts(a))
     first(a) == 1 || error("Offset axes not supported")
     @assert first(blocklasts(a))-first(a)+1 == st
