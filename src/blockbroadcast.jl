@@ -67,7 +67,7 @@ julia> import BlockArrays: SubBlockIterator, BlockIndexRange
 
 julia> A = BlockArray(1:6, 1:3);
 
-julia> subblock_lasts = axes(A, 1).lasts;
+julia> subblock_lasts = blocklasts(axes(A, 1));
 
 julia> @assert subblock_lasts == [1, 3, 6];
 
