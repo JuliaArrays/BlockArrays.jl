@@ -22,7 +22,7 @@ julia> BlockArray(Array(reshape(1:16, 4, 4)), [2,2], [1,1,2])
 julia> S = spzeros(4,5); S[1,2] = S[4,3] = 1;
 
 julia> block_array_sparse = BlockArray(S, [1,3], [2,3])
-2×2-blocked 4×5 BlockMatrix{Float64, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
+2×2-blocked 4×5 BlockMatrix{Float64, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Int64, Vector{Int64}}, BlockedUnitRange{Int64, Vector{Int64}}}}:
   ⋅   1.0  │   ⋅    ⋅    ⋅ 
  ──────────┼───────────────
   ⋅    ⋅   │   ⋅    ⋅    ⋅ 
@@ -167,7 +167,7 @@ An array can be repacked into a `BlockArray` with `BlockArray(array, block_sizes
 julia> S = spzeros(4,5); S[1,2] = S[4,3] = 1;
 
 julia> block_array_sparse = BlockArray(S, [1,3], [2,3])
-2×2-blocked 4×5 BlockMatrix{Float64, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
+2×2-blocked 4×5 BlockMatrix{Float64, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Int64, Vector{Int64}}, BlockedUnitRange{Int64, Vector{Int64}}}}:
   ⋅   1.0  │   ⋅    ⋅    ⋅ 
  ──────────┼───────────────
   ⋅    ⋅   │   ⋅    ⋅    ⋅ 
