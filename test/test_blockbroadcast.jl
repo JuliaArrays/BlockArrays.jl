@@ -182,6 +182,12 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         u = BlockArray(randn(5), [2,3]);
         @inferred(copyto!(similar(u), Base.broadcasted(exp, u)))
         @test exp.(u) == exp.(Vector(u))
+
+        shape1 = (BlockArrays._BlockedUnitRange((2,)),);
+        shape2 = (BlockArrays._BlockedUnitRange((2,)),);
+        @inferred Base.Broadcast.axistype(shape1[1], shape2[1])
+        @inferred BlockArrays.combine_blockaxes(shape1[1], shape2[1])
+        @inferred Base.Broadcast.broadcast_shape(shape1, shape2)
     end
 
     @testset "adjtrans" begin
