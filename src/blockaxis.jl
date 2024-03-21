@@ -71,8 +71,6 @@ BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to amb
     return v
 end
 
-length(a::AbstractBlockedUnitRange) = isempty(blocklasts(a)) ? 0 : Integer(last(blocklasts(a))-first(a)+1)
-
 struct BlockedOneTo{CS} <: AbstractBlockedUnitRange{Int,CS}
     lasts::CS
 end
@@ -85,10 +83,6 @@ first(b::BlockedOneTo) = oneunit(eltype(b))
 BlockedOneTo(::BlockedOneTo) = throw(ArgumentError("Forbidden due to ambiguity"))
 
 axes(b::BlockedOneTo) = (b,)
-function axes(b::BlockedOneTo{<:RangeCumsum}, d::Int)
-    d <= 1 && return axes(b)[d]
-    return BlockedOneTo(oftype(b.lasts, RangeCumsum(Base.OneTo(1))))
-end
 
 _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
 @inline blockedrange(blocks::Union{Tuple,AbstractVector}) = BlockedOneTo(_blocklengths2blocklasts(blocks))
@@ -96,13 +90,15 @@ _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changin
 
 _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
-_blocklengths(a, bl, dbl) = isempty(bl) ? [dbl;] : [first(bl)-first(a)+1; dbl]
-function _blocklengths(a::BlockedOneTo, bl::RangeCumsum, ::AbstractUnitRange)
+@inline _blocklengths(a, bl, dbl) = isempty(bl) ? [dbl;] : [first(bl)-first(a)+1; dbl]
+@inline function _blocklengths(a::BlockedOneTo, bl::RangeCumsum, ::AbstractUnitRange)
     # the 1:0 is hardcoded here to enable conversions to a Base.OneTo
     isempty(bl) ? oftype(bl.range, 1:0) : bl.range
 end
-_blocklengths(a, bl) = _blocklengths(a, bl, _diff(bl))
-blocklengths(a::AbstractBlockedUnitRange) = _blocklengths(a, blocklasts(a))
+@inline _blocklengths(a, bl) = _blocklengths(a, bl, _diff(bl))
+@inline blocklengths(a::AbstractBlockedUnitRange) = _blocklengths(a, blocklasts(a))
+
+length(a::AbstractBlockedUnitRange) = isempty(blocklasts(a)) ? 0 : Integer(last(blocklasts(a))-first(a)+1)
 
 """
     blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
@@ -292,7 +288,11 @@ julia> blocksizes(A,2)
 blocksizes(A) = map(blocklengths, axes(A))
 blocksizes(A,i) = blocklengths(axes(A,i))
 
-axes(b::AbstractBlockedUnitRange) = (_BlockedUnitRange(blocklasts(b) .- (first(b)-1)),)
+axes(b::AbstractBlockedUnitRange) = (BlockedOneTo(blocklasts(b) .- (first(b)-1)),)
+function axes(b::AbstractBlockedUnitRange{<:Any,<:RangeCumsum}, d::Int)
+    d <= 1 && return axes(b)[d]
+    return BlockedOneTo(oftype(b.lasts, RangeCumsum(Base.OneTo(1))))
+end
 unsafe_indices(b::AbstractBlockedUnitRange) = axes(b)
 # ::Integer works around case where blocklasts might return different type
 last(b::AbstractBlockedUnitRange)::Integer = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
@@ -465,9 +465,9 @@ Base.summary(io::IO, a::AbstractBlockedUnitRange) =  _block_summary(io, a)
 # Slice{<:BlockedUnitRange}
 ###
 
-Base.axes(S::Base.Slice{<:AbstractBlockedUnitRange}) = (S.indices,)
-Base.unsafe_indices(S::Base.Slice{<:AbstractBlockedUnitRange}) = (S.indices,)
-Base.axes1(S::Base.Slice{<:AbstractBlockedUnitRange}) = S.indices
+Base.axes(S::Base.Slice{<:BlockedOneTo}) = (S.indices,)
+Base.unsafe_indices(S::Base.Slice{<:BlockedOneTo}) = (S.indices,)
+Base.axes1(S::Base.Slice{<:BlockedOneTo}) = S.indices
 blockaxes(S::Base.Slice) = blockaxes(S.indices)
 @propagate_inbounds getindex(S::Base.Slice, b::Block{1}) = S.indices[b]
 @propagate_inbounds getindex(S::Base.Slice, b::BlockRange{1}) = S.indices[b]
