@@ -202,6 +202,10 @@ end
         @test blocklasts(f) ≡ StepRangeLen(2,2,5)
         @test blocklengths(f) ≡ Fill(2,5)
 
+        f = blockedrange(Zeros{Int}(2))
+        @test blockfirsts(f) == [1,1]
+        @test blocklasts(f) == [0,0]
+
         r = blockedrange(Base.OneTo(5))
         @test (@inferred blocklengths(r)) == 1:5
         @test blocklasts(r) ≡ ArrayLayouts.RangeCumsum(Base.OneTo(5))

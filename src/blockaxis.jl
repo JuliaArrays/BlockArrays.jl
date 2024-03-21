@@ -74,21 +74,21 @@ _blocklengths2blocklasts(blocks::Fill) = cumsum(blocks)
 _blocklengths2blocklasts(blocks::Ones) = cumsum(blocks)
 @inline blockedrange(blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(_blocklengths2blocklasts(blocks))
 
-@inline blockfirsts(a::BlockedUnitRange) = [a.first; @views(a.lasts[1:end-1]) .+ 1]
+@inline blockfirsts(a::BlockedUnitRange) = [first(a); @views(blocklasts(a)[1:end-1]) .+ 1]
 # optimize common cases
-@inline function blockfirsts(a::BlockedUnitRange{<:Integer, <:Union{Vector, RangeCumsum{<:Any, <:UnitRange}}})
-    v = Vector{eltype(a)}(undef, length(a.lasts))
-    v[1] = a.first
-    v[2:end] .= @views(a.lasts[oneto(end-1)]) .+ 1
+@inline function blockfirsts(a::BlockedUnitRange{<:Union{Vector, RangeCumsum{<:Any, <:UnitRange}}})
+    v = Vector{eltype(a)}(undef, length(blocklasts(a)))
+    v[1] = first(a)
+    v[2:end] .= @views(blocklasts(a)[oneto(end-1)]) .+ 1
     return v
 end
 @inline blocklasts(a::BlockedUnitRange) = a.lasts
 
 _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
-@inline blocklengths(a::BlockedUnitRange) = isempty(a.lasts) ? [_diff(a.lasts);] : [first(a.lasts)-a.first+one(eltype(a)); _diff(a.lasts)]
+@inline blocklengths(a::BlockedUnitRange) = isempty(blocklasts(a)) ? [_diff(blocklasts(a));] : [first(blocklasts(a))-first(a)+one(eltype(a)); _diff(blocklasts(a))]
 
-length(a::BlockedUnitRange) = isempty(a.lasts) ? zero(eltype(a)) : Integer(last(a.lasts)-a.first+one(eltype(a)))
+length(a::BlockedUnitRange) = isempty(blocklasts(a)) ? zero(eltype(a)) : Integer(last(blocklasts(a))-first(a)+one(eltype(a)))
 
 """
     blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
@@ -142,7 +142,7 @@ Base.unitrange(b::BlockedUnitRange) = first(b):last(b)
 Base.promote_rule(::Type{BlockedUnitRange{T, CS}}, ::Type{Base.OneTo{Int}}) where {T, CS} = UnitRange{T}
 
 """
-    blockaxes(A)
+    blockaxes(A::AbstractArray)
 
 Return the tuple of valid block indices for array `A`.
 
@@ -169,19 +169,19 @@ julia> blockaxes(B)
 (BlockRange(Base.OneTo(2)), BlockRange(Base.OneTo(3)))
 ```
 """
-blockaxes(b::BlockedUnitRange) = _blockaxes(b.lasts)
+blockaxes(b::BlockedUnitRange) = _blockaxes(blocklasts(b))
 _blockaxes(b::AbstractVector) = (Block.(axes(b,1)),)
 _blockaxes(b::Tuple) = (Block.(Base.OneTo(length(b))),)
 blockaxes(b) = blockaxes.(axes(b), 1)
 
 """
-    blockaxes(A, d)
+    blockaxes(A::AbstractArray, d::Int)
 
 Return the valid range of block indices for array `A` along dimension `d`.
 
 # Examples
 ```jldoctest
-julia> A = BlockArray([1,2,3],[2,1])
+julia> A = BlockArray([1,2,3], [2,1])
 2-blocked 3-element BlockVector{Int64}:
  1
  2
@@ -202,8 +202,8 @@ julia> blockaxes(A,1) |> collect
 end
 
 """
-    blocksize(A)
-    blocksize(A,i)
+    blocksize(A::AbstractArray)
+    blocksize(A::AbstractArray, i::Int)
 
 Return the tuple of the number of blocks along each
 dimension. See also size and blocksizes.
@@ -229,8 +229,8 @@ blocksize(A,i) = length(blockaxes(A,i))
 @inline blocklength(t) = prod(blocksize(t))
 
 """
-    blocksizes(A)
-    blocksizes(A,i)
+    blocksizes(A::AbstractArray)
+    blocksizes(A::AbstractArray, i::Int)
 
 Return the tuple of the sizes of blocks along each
 dimension. See also size and blocksize.
@@ -352,8 +352,8 @@ Return the first index of each block of `a`.
 
 # Examples
 ```jldoctest
-julia> b = blockedrange(1:3)
-3-blocked 6-element BlockedUnitRange{Int64, ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+julia> b = blockedrange([1,2,3])
+3-blocked 6-element BlockedUnitRange{Int64, Vector{Int64}}:
  1
  ─
  2
@@ -378,8 +378,8 @@ Return the last index of each block of `a`.
 
 # Examples
 ```jldoctest
-julia> b = blockedrange(1:3)
-3-blocked 6-element BlockedUnitRange{Int64, ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+julia> b = blockedrange([1,2,3])
+3-blocked 6-element BlockedUnitRange{Int64, Vector{Int64}}:
  1
  ─
  2
@@ -390,7 +390,7 @@ julia> b = blockedrange(1:3)
  6
 
 julia> blocklasts(b)
-3-element ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}:
+3-element Vector{Int64}:
  1
  3
  6
@@ -404,8 +404,8 @@ Return the length of each block of `a`.
 
 # Examples
 ```jldoctest
-julia> b = blockedrange(1:3)
-3-blocked 6-element BlockedUnitRange{Int64, ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+julia> b = blockedrange([1,2,3])
+3-blocked 6-element BlockedUnitRange{Int64, Vector{Int64}}:
  1
  ─
  2
@@ -453,24 +453,24 @@ Base.BroadcastStyle(::Type{BlockedUnitRange{T, R}}) where {T, R} = Base.Broadcas
 
 _blocklengths2blocklasts(blocks::AbstractRange) = RangeCumsum(blocks)
 function blockfirsts(a::BlockedUnitRange{<:Integer, <:Base.OneTo})
-    a.first == 1 || error("Offset axes not supported")
-    Base.OneTo{eltype(a)}(length(a.lasts))
+    first(a) == 1 || error("Offset axes not supported")
+    Base.OneTo{eltype(a)}(length(blocklasts(a)))
 end
 function blocklengths(a::BlockedUnitRange{<:Integer, <:Base.OneTo})
-    a.first == 1 || error("Offset axes not supported")
-    Ones{eltype(a)}(length(a.lasts))
+    first(a) == 1 || error("Offset axes not supported")
+    Ones{eltype(a)}(length(blocklasts(a)))
 end
 function blockfirsts(a::BlockedUnitRange{<:Integer, <:AbstractRange})
-    st = step(a.lasts)
-    a.first == 1 || error("Offset axes not supported")
-    @assert first(a.lasts)-a.first+1 == st
-    range(one(eltype(a)); step=st, length=eltype(a)(length(a.lasts)))
+    st = step(blocklasts(a))
+    first(a) == 1 || error("Offset axes not supported")
+    @assert first(blocklasts(a))-first(a)+1 == st
+    range(one(eltype(a)); step=st, length=eltype(a)(length(blocklasts(a))))
 end
 function blocklengths(a::BlockedUnitRange{<:Integer, <:AbstractRange})
-    st = step(a.lasts)
-    a.first == 1 || error("Offset axes not supported")
-    @assert first(a.lasts)-a.first+1 == st
-    Fill(st,length(a.lasts))
+    st = step(blocklasts(a))
+    first(a) == 1 || error("Offset axes not supported")
+    @assert first(blocklasts(a))-first(a)+1 == st
+    Fill(st,length(blocklasts(a)))
 end
 
 
