@@ -214,3 +214,6 @@ end
 
 Base.show(io::IO, br::BlockRange) = print(io, "BlockRange(", join(br.indices, ", "), ")")
 Base.show(io::IO, ::MIME"text/plain", br::BlockRange) = show(io, br)
+
+# AbstractBlockedUnitRange
+Base.show(io::IO, b::BlockedOneTo) = print(io, BlockedOneTo, "(", blocklasts(b), ")")
