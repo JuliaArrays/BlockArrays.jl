@@ -307,13 +307,12 @@ function Base.popfirst!(A::BlockVector)
     isempty(A) && throw(Argument("array must be nonempty"))
     _squash_firsts!(A)
     x = popfirst!(A.blocks[1])
-    ax, = A.axes
+    lasts = blocklasts(A.axes[1])
     if isempty(A.blocks[1])
         popfirst!(A.blocks)
-        popfirst!(blocklasts(ax))
-    else
-        blocklasts(ax)[1] -= 1
+        popfirst!(lasts)
     end
+    lasts .-= 1
     return x
 end
 
