@@ -165,7 +165,7 @@ end
         @test_throws BlockBoundsError b[Block(2)]
 
         b = blockedrange(Fill(3,1_000_000))
-        @test b isa BlockedUnitRange{<:AbstractRange}
+        @test b isa BlockedUnitRange{<:Integer,<:AbstractRange}
         @test b[Block(100_000)] == 299_998:300_000
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(1_000_001)]
@@ -218,9 +218,9 @@ end
         @test blockisequal(convert(BlockedUnitRange, Base.OneTo(5)), blockedrange([5]))
         @test blockisequal(convert(BlockedUnitRange, Base.Slice(Base.OneTo(5))), blockedrange([5]))
         @test blockisequal(convert(BlockedUnitRange, Base.IdentityUnitRange(-2:2)), BlockArrays._BlockedUnitRange(-2,[2]))
-        @test convert(BlockedUnitRange{Vector{Int}}, c) === c
-        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, b),b)
-        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, Base.OneTo(5)), blockedrange([5]))
+        @test convert(BlockedUnitRange{Int,Vector{Int}}, c) === c
+        @test blockisequal(convert(BlockedUnitRange{Int,Vector{Int}}, b),b)
+        @test blockisequal(convert(BlockedUnitRange{Int,Vector{Int}}, Base.OneTo(5)), blockedrange([5]))
     end
 
     @testset "findblock" begin
@@ -303,7 +303,7 @@ end
         @test Base.dataids(b) == Base.dataids(blocklasts(b))
         @test_throws ArgumentError BlockedUnitRange(b)
 
-        @test summary(b) == "3-blocked 6-element BlockedUnitRange{Vector{$Int}}"
+        @test summary(b) == "3-blocked 6-element BlockedUnitRange{$Int, Vector{$Int}}"
     end
 
     @testset "OneTo interface" begin
@@ -321,7 +321,7 @@ end
         @test findblock(b,1) == Block(1)
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
-        @test sprint(show, "text/plain", blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        @test sprint(show, "text/plain", blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{$Int, Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
     end
 
     @testset "BlockIndex type piracy (#108)" begin
@@ -384,10 +384,72 @@ end
         # we support Tuples in addition to SVectors for InfiniteArrays.jl, which has
         # infinite block sizes
         s = blockedrange((5,big(100_000_000)^2))
+        @test eltype(s) === BigInt
+        @test first(s) isa BigInt
+        @test last(s) isa BigInt
         @test blocklengths(s) == [5,big(100_000_000)^2]
+        @test eltype(blocklengths(s)) === BigInt
         @test blockaxes(s) == (Block.(1:2),)
         @test findblock(s,3) == Block(1)
         @test findblock(s,big(100_000_000)) == Block(2)
+    end
+
+    @testset "General element types" begin
+        elt = UInt8
+        r = blockedrange(elt[2, 4])
+        @test length(r) isa elt
+        @test r isa BlockedUnitRange{elt}
+        @test eltype(r) === elt
+        @test r[Block(1):Block(2)] isa BlockedUnitRange{elt}
+        @test r[Block(1):Block(1)] isa BlockedUnitRange{elt}
+        @test r[Block(2):Block(2)] isa BlockedUnitRange{elt}
+        @test r[Block(2):Block(1)] isa BlockedUnitRange{elt}
+        @test r[BlockRange(Base.OneTo(0))] isa BlockedUnitRange{elt}
+        @test r[BlockRange(Base.OneTo(1))] isa BlockedUnitRange{elt}
+        @test r[BlockRange(Base.OneTo(2))] isa BlockedUnitRange{elt}
+        @test r[Block(1)] isa UnitRange{elt}
+        @test r[Block(2)] isa UnitRange{elt}
+        @test eltype(blocklengths(r)) === elt
+        @test first(r) isa elt
+        @test last(r) isa elt
+        for i in eachindex(r)
+          @test r[i] isa elt
+        end
+        @test eltype(blockedrange(Base.OneTo(elt(3)))) === elt
+        @test eltype(blockedrange(elt(1):elt(3))) === elt
+
+        if VERSION >= v"1.7"
+          # `cumsum(::Fill)` doesn't preserve element types properly.
+          # That issue was fixed by this fix to `StepRangeLen`:
+          # https://github.com/JuliaLang/julia/pull/41619
+          # which is only available in Julia v1.7 and higher.
+          r = blockedrange(Fill(elt(2), 3))
+          @test r isa BlockedUnitRange{elt,<:StepRangeLen{elt}}
+          @test eltype(r) === elt
+        end
+
+        r = blockedrange(Ones(elt, 3))
+        @test r isa BlockedUnitRange{elt}
+        @test eltype(r) === elt
+
+        # TODO: Construct with `blockedrange(Fill(elt(1), 4))`?
+        r = BlockArrays._BlockedUnitRange(one(elt), elt(1):elt(4))
+        @test eltype(r) === elt
+        @test eltype(blockfirsts(r)) === elt
+        @test eltype(blocklasts(r)) === elt
+        @test eltype(blocklengths(r)) === elt
+
+        # TODO: Construct with `blockedrange(Ones(elt, 4))`?
+        r = BlockArrays._BlockedUnitRange(one(elt), Base.OneTo(elt(4)))
+        @test eltype(r) === elt
+        @test eltype(blockfirsts(r)) === elt
+        @test eltype(blocklasts(r)) === elt
+        @test eltype(blocklengths(r)) === elt
+
+        r = elt(1):elt(2)
+        @test eltype(blockfirsts(r)) === elt
+        @test eltype(blocklasts(r)) === elt
+        @test eltype(blocklengths(r)) === elt
     end
 end
 
