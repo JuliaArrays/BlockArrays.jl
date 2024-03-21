@@ -380,10 +380,66 @@ end
         # we support Tuples in addition to SVectors for InfiniteArrays.jl, which has
         # infinite block sizes
         s = blockedrange((5,big(100_000_000)^2))
+        @test eltype(s) === BigInt
+        @test first(s) isa BigInt
+        @test last(s) isa BigInt
         @test blocklengths(s) == [5,big(100_000_000)^2]
+        @test eltype(blocklengths(s)) === BigInt
         @test blockaxes(s) == (Block.(1:2),)
         @test findblock(s,3) == Block(1)
         @test findblock(s,big(100_000_000)) == Block(2)
+    end
+
+    @testset "General element types" begin
+        elt = UInt8
+        r = blockedrange(elt[2, 4])
+        @test length(r) isa elt
+        @test r isa BlockedUnitRange{elt}
+        @test eltype(r) === elt
+        @test r[Block(1):Block(2)] isa BlockedUnitRange{elt}
+        @test r[Block(1):Block(1)] isa BlockedUnitRange{elt}
+        @test r[Block(2):Block(2)] isa BlockedUnitRange{elt}
+        @test r[Block(2):Block(1)] isa BlockedUnitRange{elt}
+        @test r[BlockRange(Base.OneTo(0))] isa BlockedUnitRange{elt}
+        @test r[BlockRange(Base.OneTo(1))] isa BlockedUnitRange{elt}
+        @test r[BlockRange(Base.OneTo(2))] isa BlockedUnitRange{elt}
+        @test r[Block(1)] isa UnitRange{elt}
+        @test r[Block(2)] isa UnitRange{elt}
+        @test eltype(blocklengths(r)) === elt
+        @test first(r) isa elt
+        @test last(r) isa elt
+        for i in eachindex(r)
+          @test r[i] isa elt
+        end
+        @test eltype(blockedrange(Base.OneTo(elt(3)))) === elt
+        @test eltype(blockedrange(elt(1):elt(3))) === elt
+
+        r = blockedrange(Fill(elt(2), 3))
+        @test r isa BlockedUnitRange{elt,<:StepRangeLen{elt}}
+        @test eltype(r) === elt
+
+        r = blockedrange(Ones(elt, 3))
+        @test r isa BlockedUnitRange{elt}
+        @test eltype(r) === elt
+
+        # TODO: Construct with `blockedrange(Fill(elt(1), 4))`?
+        r = BlockArrays._BlockedUnitRange(one(elt), elt(1):elt(4))
+        @test eltype(r) === elt
+        @test eltype(blockfirsts(r)) === elt
+        @test eltype(blocklasts(r)) === elt
+        @test eltype(blocklengths(r)) === elt
+
+        # TODO: Construct with `blockedrange(Ones(elt, 4))`?
+        r = BlockArrays._BlockedUnitRange(one(elt), Base.OneTo(elt(4)))
+        @test eltype(r) === elt
+        @test eltype(blockfirsts(r)) === elt
+        @test eltype(blocklasts(r)) === elt
+        @test eltype(blocklengths(r)) === elt
+
+        r = elt(1):elt(2)
+        @test eltype(blockfirsts(r)) === elt
+        @test eltype(blocklasts(r)) === elt
+        @test eltype(blocklengths(r)) === elt
     end
 end
 
