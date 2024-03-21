@@ -473,7 +473,7 @@ end
         @test_throws BlockBoundsError b[Block(-2)]
         @test_throws BlockBoundsError b[Block(2)]
 
-        b = BlockArrays._BlockedUnitRange(1, cumsum(Fill(3,1_000_000)))
+        b = blockedrange(1,Fill(3,1_000_000))
         @test b isa BlockedUnitRange{<:AbstractRange}
         @test b[Block(100_000)] == 299_998:300_000
         @test_throws BlockBoundsError b[Block(0)]
