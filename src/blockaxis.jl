@@ -29,25 +29,26 @@ function _BlockedUnitRange end
 """
     BlockedUnitRange
 
-is an `AbstractUnitRange{Int}` that has been divided
-into blocks, and is used to represent axes of block arrays.
+is an `AbstractUnitRange{Int}` that has been divided into blocks.
 Construction is typically via `blockedrange` which converts
 a vector of block lengths to a `BlockedUnitRange`.
 
 # Examples
 ```jldoctest
-julia> blockedrange([2,2,3])
-3-blocked 7-element BlockedOneTo{Vector{Int64}}:
- 1
+julia> blockedrange(2, [2,2,3]) # first value and block lengths
+3-blocked 7-element BlockedUnitRange{Vector{Int64}}:
  2
- ─
  3
- 4
  ─
+ 4
  5
+ ─
  6
  7
+ 8
 ```
+
+See also [`BlockedOneTo`](@ref).
 """
 struct BlockedUnitRange{CS} <: AbstractBlockedUnitRange{Int,CS}
     first::Int
@@ -71,6 +72,34 @@ BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to amb
     return v
 end
 
+"""
+    BlockedOneTo
+
+Define an `AbstractUnitRange{Int}` that has been divided
+into blocks, which is used to represent `axes` of block arrays.
+This parallels `Base.OneTo` in that the first value is guaranteed
+to be `1`.
+
+Construction is typically via `blockedrange` which converts
+a vector of block lengths to a `BlockedUnitRange`.
+
+# Examples
+```jldoctest
+julia> blockedrange([2,2,3]) # block lengths
+3-blocked 7-element BlockedOneTo{Vector{Int64}}:
+ 1
+ 2
+ ─
+ 3
+ 4
+ ─
+ 5
+ 6
+ 7
+```
+
+See also [`BlockedUnitRange`](@ref).
+"""
 struct BlockedOneTo{CS} <: AbstractBlockedUnitRange{Int,CS}
     lasts::CS
 end
@@ -85,8 +114,34 @@ BlockedOneTo(::BlockedOneTo) = throw(ArgumentError("Forbidden due to ambiguity")
 axes(b::BlockedOneTo) = (b,)
 
 _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
+
+"""
+    blockedrange(blocklengths::Union{Tuple, AbstractVector})
+    blockedrange(first::Int, blocklengths::Union{Tuple, AbstractVector})
+
+Return a blocked `AbstractUnitRange{Int}` with the block sizes being `blocklengths`.
+If `first` is provided, this is used as the first value of the range.
+Otherwise, if only the block lengths are provided, `first` is assumed to be `1`.
+
+# Examples
+```jldoctest
+julia> blockedrange([1,2])
+2-blocked 3-element BlockedOneTo{Vector{Int64}}:
+ 1
+ ─
+ 2
+ 3
+
+julia> blockedrange(2, (1,2))
+2-blocked 3-element BlockedUnitRange{Tuple{Int64, Int64}}:
+ 2
+ ─
+ 3
+ 4
+```
+"""
 @inline blockedrange(blocks::Union{Tuple,AbstractVector}) = BlockedOneTo(_blocklengths2blocklasts(blocks))
-@inline blockedrange(f, blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(f, f-1 .+ _blocklengths2blocklasts(blocks))
+@inline blockedrange(f::Int, blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(f, f-1 .+ _blocklengths2blocklasts(blocks))
 
 _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
@@ -462,7 +517,7 @@ Base.summary(io::IO, a::AbstractBlockedUnitRange) =  _block_summary(io, a)
 
 
 ###
-# Slice{<:BlockedUnitRange}
+# Slice{<:BlockedOneTo}
 ###
 
 Base.axes(S::Base.Slice{<:BlockedOneTo}) = (S.indices,)
