@@ -418,9 +418,15 @@ end
         @test eltype(blockedrange(Base.OneTo(elt(3)))) === elt
         @test eltype(blockedrange(elt(1):elt(3))) === elt
 
-        r = blockedrange(Fill(elt(2), 3))
-        @test r isa BlockedUnitRange{elt,<:StepRangeLen{elt}}
-        @test eltype(r) === elt
+        if VERSION >= v"1.7"
+          # `cumsum(::Fill)` doesn't preserve element types properly.
+          # That issue was fixed by this fix to `StepRangeLen`:
+          # https://github.com/JuliaLang/julia/pull/41619
+          # which is only available in Julia v1.7 and higher.
+          r = blockedrange(Fill(elt(2), 3))
+          @test r isa BlockedUnitRange{elt,<:StepRangeLen{elt}}
+          @test eltype(r) === elt
+        end
 
         r = blockedrange(Ones(elt, 3))
         @test r isa BlockedUnitRange{elt}
