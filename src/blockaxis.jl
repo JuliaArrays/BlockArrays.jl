@@ -157,7 +157,7 @@ julia> blockaxes(B)
 (BlockRange(Base.OneTo(2)), BlockRange(Base.OneTo(3)))
 ```
 """
-blockaxes(b::BlockedUnitRange) = _blockaxes(b.lasts)
+blockaxes(b::BlockedUnitRange) = _blockaxes(blocklasts(b))
 _blockaxes(b::AbstractVector) = (Block.(axes(b,1)),)
 _blockaxes(b::Tuple) = (Block.(Base.OneTo(length(b))),)
 blockaxes(b) = blockaxes.(axes(b), 1)

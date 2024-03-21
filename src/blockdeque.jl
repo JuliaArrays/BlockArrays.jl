@@ -32,8 +32,8 @@ blockappend!(dest::BlockVector, s1, s2, sources...) =
 
 function blockappend!(dest::BlockVector{<:Any,T}, src::BlockVector{<:Any,T}) where {T}
     append!(dest.blocks, src.blocks)
-    offset = last(dest.axes[1]) + 1 - src.axes[1].first
-    append!(dest.axes[1].lasts, (n + offset for n in src.axes[1].lasts))
+    offset = last(dest.axes[1]) + 1 - first(src.axes[1])
+    append!(blocklasts(dest.axes[1]), (n + offset for n in blocklasts(src.axes[1])))
     return dest
 end
 
@@ -102,7 +102,7 @@ _newblockfor(dest, block) =
 
 function _blockpush!(dest, block)
     push!(dest.blocks, block)
-    push!(dest.axes[1].lasts, last(dest.axes[1]) + length(block))
+    push!(blocklasts(dest.axes[1]), last(dest.axes[1]) + length(block))
     return dest
 end
 
@@ -144,8 +144,8 @@ blockpushfirst!(dest::BlockVector{<:Any,<:Any}, block) =
 
 function _blockpushfirst!(dest, block)
     pushfirst!(dest.blocks, block)
-    dest.axes[1].lasts .+= length(block) - 1 + dest.axes[1].first
-    pushfirst!(dest.axes[1].lasts, length(block))
+    blocklasts(dest.axes[1]) .+= length(block) - 1 + first(dest.axes[1])
+    pushfirst!(blocklasts(dest.axes[1]), length(block))
     return dest
 end
 
@@ -172,7 +172,7 @@ julia> A
 """
 function blockpop!(A::BlockVector)
     block = pop!(A.blocks)
-    pop!(A.axes[1].lasts)
+    pop!(blocklasts(A.axes[1]))
     return block
 end
 
@@ -199,8 +199,8 @@ julia> A
 """
 function blockpopfirst!(A::BlockVector)
     block = popfirst!(A.blocks)
-    n = popfirst!(A.axes[1].lasts)
-    A.axes[1].lasts .-= n
+    n = popfirst!(blocklasts(A.axes[1]))
+    blocklasts(A.axes[1]) .-= n
     return block
 end
 
@@ -245,7 +245,7 @@ function append_itr!(dest::BlockVector, ::Union{Base.HasShape,Base.HasLength}, s
         _append_itr_foldfn!(block,i,x)
     end
     da, = dest.axes
-    da.lasts[end] += length(src)
+    blocklasts(da)[end] += length(src)
     return dest
 end
 
@@ -257,7 +257,7 @@ function append_itr!(dest::BlockVector, ::Base.SizeUnknown, src)
         return n + 1
     end
     da, = dest.axes
-    da.lasts[end] += n
+    blocklasts(da)[end] += n
     return dest
 end
 
@@ -265,7 +265,7 @@ end
 function _squash_lasts!(A::BlockVector)
     while !isempty(A.blocks) && isempty(A.blocks[end])
         pop!(A.blocks)
-        pop!(A.axes[1].lasts)
+        pop!(blocklasts(A.axes[1]))
     end
 end
 
@@ -273,7 +273,7 @@ end
 function _squash_firsts!(A::BlockVector)
     while !isempty(A.blocks) && isempty(A.blocks[1])
         popfirst!(A.blocks)
-        popfirst!(A.axes[1].lasts)
+        popfirst!(blocklasts(A.axes[1]))
     end
 end
 
@@ -287,7 +287,7 @@ function Base.pop!(A::BlockVector)
     isempty(A) && throw(Argument("array must be nonempty"))
     _squash_lasts!(A)
     x = pop!(A.blocks[end])
-    lasts = A.axes[1].lasts
+    lasts = blocklasts(A.axes[1])
     if isempty(A.blocks[end])
         pop!(A.blocks)
         pop!(lasts)
@@ -310,9 +310,9 @@ function Base.popfirst!(A::BlockVector)
     ax, = A.axes
     if isempty(A.blocks[1])
         popfirst!(A.blocks)
-        popfirst!(ax.lasts)
+        popfirst!(blocklasts(ax))
     else
-        ax.lasts[1] -= 1
+        blocklasts(ax)[1] -= 1
     end
     return x
 end
@@ -331,6 +331,6 @@ Push items to the beginning of the first block.
 """
 function Base.pushfirst!(A::BlockVector, items...)
     pushfirst!(A.blocks[1], items...)
-    A.axes[1].lasts .+= length(items)
+    blocklasts(A.axes[1]) .+= length(items)
     return A
 end

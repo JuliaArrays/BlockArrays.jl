@@ -159,6 +159,13 @@ using BlockArrays, Test
         end
         @test A == []
         @test B == 5:-1:1
+
+        @testset "empty blocks" begin
+            B = BlockArray([1:6;], [1,2,3,0,0])
+            @test pop!(B) == 6
+            @test B == 1:5
+            @test !any(isempty, blocks(B))
+        end
     end
 
     @testset "popfirst!" begin
