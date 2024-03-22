@@ -258,6 +258,7 @@ end
         @test convert(BlockedUnitRange{Vector{Int}}, c) === c
         @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, b),b)
         @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, Base.OneTo(5)), blockedrange(1, [5]))
+        @test blockisequal(convert(BlockedUnitRange, BlockedOneTo(1:3)), blockedrange(1, [1,1,1]))
     end
 
     @testset "findblock" begin
