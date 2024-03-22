@@ -117,13 +117,20 @@ Return `all(blockisequal.(a,b))``
 blockisequal(a::Tuple, b::Tuple) = all(blockisequal.(a, b))
 
 
-Base.convert(::Type{BlockedUnitRange}, axis::BlockedUnitRange) = axis
-Base.convert(::Type{BlockedUnitRange}, axis::AbstractUnitRange{Int}) = _BlockedUnitRange(first(axis),[last(axis)])
-Base.convert(::Type{BlockedUnitRange}, axis::Base.Slice) = _BlockedUnitRange(first(axis),[last(axis)])
-Base.convert(::Type{BlockedUnitRange}, axis::Base.IdentityUnitRange) = _BlockedUnitRange(first(axis),[last(axis)])
-Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange{CS}) where CS = axis
-Base.convert(::Type{BlockedUnitRange{CS}}, axis::BlockedUnitRange) where CS = _BlockedUnitRange(first(axis), convert(CS, blocklasts(axis)))
-Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(BlockedUnitRange{CS}, convert(BlockedUnitRange, axis))
+_shift_blocklengths(::BlockedUnitRange, bl, f) = bl
+_shift_blocklengths(::Any, bl, f) = bl .+ (f - 1)
+const OneBasedRanges = Union{Base.OneTo, Base.Slice{<:Base.OneTo}, Base.IdentityUnitRange{<:Base.OneTo}}
+_shift_blocklengths(::OneBasedRanges, bl, f) = bl
+function Base.convert(::Type{BlockedUnitRange}, axis::AbstractUnitRange{Int})
+    bl = blocklasts(axis)
+    f = first(axis)
+    _BlockedUnitRange(f, _shift_blocklengths(axis, bl, f))
+end
+function Base.convert(::Type{BlockedUnitRange{CS}}, axis::AbstractUnitRange{Int}) where CS
+    bl = blocklasts(axis)
+    f = first(axis)
+    _BlockedUnitRange(f, convert(CS, _shift_blocklengths(axis, bl, f)))
+end
 
 Base.unitrange(b::BlockedUnitRange) = first(b):last(b)
 
