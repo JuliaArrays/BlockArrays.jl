@@ -2,9 +2,7 @@
 
 ```@meta
 DocTestSetup = quote
-    using BlockArrays
-    using Random
-    Random.seed!(1234)
+    using BlockArrays, SparseArrays
 end
 ```
 
@@ -12,22 +10,24 @@ end
 
 An `AbstractArray` can be repacked into a `BlockArray` with `BlockArray(array, block_sizes...)`.  The block sizes are each an `AbstractVector{Int}` which determines the size of the blocks in that dimension (so the sum of `block_sizes` in every dimension must match the size of `array` in that dimension).
 
-```julia
-julia> BlockArray(rand(4, 4), [2,2], [1,1,2])
-2×3-blocked 4×4 BlockMatrix{Float64}:
- 0.70393   │  0.568703  │  0.0137366  0.953038
- 0.24957   │  0.145924  │  0.884324   0.134155
- ──────────┼────────────┼─────────────────────
- 0.408133  │  0.707723  │  0.467458   0.326718
- 0.844314  │  0.794279  │  0.0421491  0.683791
+```jldoctest
+julia> BlockArray(Array(reshape(1:16, 4, 4)), [2,2], [1,1,2])
+2×3-blocked 4×4 BlockMatrix{Int64}:
+ 1  │  5  │   9  13
+ 2  │  6  │  10  14
+ ───┼─────┼────────
+ 3  │  7  │  11  15
+ 4  │  8  │  12  16
 
-julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
+julia> S = spzeros(4,5); S[1,2] = S[4,3] = 1;
+
+julia> block_array_sparse = BlockArray(S, [1,3], [2,3])
 2×2-blocked 4×5 BlockMatrix{Float64, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
- 0.0341601  0.374187  │  0.0118196  0.299058  0.0     
- ---------------------┼-------------------------------
- 0.0945445  0.931115  │  0.0460428  0.0       0.0     
- 0.314926   0.438939  │  0.496169   0.0       0.0     
- 0.12781    0.246862  │  0.732      0.449182  0.875096
+  ⋅   1.0  │   ⋅    ⋅    ⋅ 
+ ──────────┼───────────────
+  ⋅    ⋅   │   ⋅    ⋅    ⋅ 
+  ⋅    ⋅   │   ⋅    ⋅    ⋅ 
+  ⋅    ⋅   │  1.0   ⋅    ⋅ 
 ```
 
 
@@ -65,11 +65,11 @@ julia> BlockArray{Float32}(undef_blocks, [1,2], [3,2])
 
 The `block_type` should be an array type.  It specifies the internal block type, which defaults to an `Array` of the according dimension.  We can also use a `SparseVector` or any other user defined array type:
 
-```julia
+```jldoctest
 julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])
 2-blocked 3-element BlockVector{Float64, Vector{SparseVector{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}}}:
  #undef
- ------
+ ──────
  #undef
  #undef
 ```
@@ -77,17 +77,15 @@ julia> BlockArray(undef_blocks, SparseVector{Float64, Int}, [1,2])
 !!! warning
 
     Note that accessing an undefined block will throw an "access to undefined reference"-error!  If you create an array with undefined blocks, you _have_ to [initialize it block-wise](@ref setting_and_getting)); whole-array functions like `fill!` will not work:
-    
-    ```julia
+
+    ```jldoctest
     julia> fill!(BlockArray{Float32}(undef_blocks, [1,2], [3,2]), 0)
     ERROR: UndefRefError: access to undefined reference
-    …
     ```
-    
-    
+
 ## [Setting and getting blocks and values](@id setting_and_getting)
 
-A block can be set by  `block_array[Block(i...)] = v` or
+A block can be set by  `block_array[Block(i...)] = v`. The indexing may equivalently be carried out as
 `block_array[Block.(i)...]`.
 
 ```jldoctest block_array
@@ -98,24 +96,21 @@ julia> block_array = BlockArray{Float64}(undef_blocks, [1,2], [2,2])
  #undef  #undef  │  #undef  #undef
  #undef  #undef  │  #undef  #undef
 
-julia> block_array[Block(2,1)] = rand(2,2)
-2×2 Matrix{Float64}:
- 0.325977  0.218587
- 0.549051  0.894245
+julia> block_array[Block(2,1)] = reshape([1:4;], 2, 2);
 
 julia> block_array[Block(1),Block(1)] = [1 2];
 
 julia> block_array
 2×2-blocked 3×4 BlockMatrix{Float64}:
- 1.0       2.0       │  #undef  #undef
- ────────────────────┼────────────────
- 0.325977  0.218587  │  #undef  #undef
- 0.549051  0.894245  │  #undef  #undef
+ 1.0  2.0  │  #undef  #undef
+ ──────────┼────────────────
+ 1.0  3.0  │  #undef  #undef
+ 2.0  4.0  │  #undef  #undef
 ```
 
 Note that this will "take ownership" of the passed in array, that is, no copy is made.
 
-A block can be retrieved with `view(block_array, Block(i...))`, 
+A block can be retrieved with `view(block_array, Block(i...))`,
 or if a copy is desired, `block_array[Block(i...)]`:
 
 ```jldoctest block_array
@@ -168,32 +163,35 @@ julia> view(A, Block.(1:2))
 
 An array can be repacked into a `BlockArray` with `BlockArray(array, block_sizes...)`:
 
-```jl
-julia> block_array_sparse = BlockArray(sprand(4, 5, 0.7), [1,3], [2,3])
-2×2-blocked 4×5 BlockArray{Float64, 2, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
- 0.0341601  0.374187  │  0.0118196  0.299058  0.0     
- ---------------------┼-------------------------------
- 0.0945445  0.931115  │  0.0460428  0.0       0.0     
- 0.314926   0.438939  │  0.496169   0.0       0.0     
- 0.12781    0.246862  │  0.732      0.449182  0.875096
+```jldoctest repack
+julia> S = spzeros(4,5); S[1,2] = S[4,3] = 1;
+
+julia> block_array_sparse = BlockArray(S, [1,3], [2,3])
+2×2-blocked 4×5 BlockMatrix{Float64, Matrix{SparseMatrixCSC{Float64, Int64}}, Tuple{BlockedUnitRange{Vector{Int64}}, BlockedUnitRange{Vector{Int64}}}}:
+  ⋅   1.0  │   ⋅    ⋅    ⋅ 
+ ──────────┼───────────────
+  ⋅    ⋅   │   ⋅    ⋅    ⋅ 
+  ⋅    ⋅   │   ⋅    ⋅    ⋅ 
+  ⋅    ⋅   │  1.0   ⋅    ⋅ 
 ```
 
-To get back the underlying array use `Array`:
+To get back the underlying sparse array, use `sparse`:
 
-```jl
+```jldoctest repack
+julia> sparse(block_array_sparse)
+4×5 SparseMatrixCSC{Float64, Int64} with 2 stored entries:
+  ⋅   1.0   ⋅    ⋅    ⋅ 
+  ⋅    ⋅    ⋅    ⋅    ⋅ 
+  ⋅    ⋅    ⋅    ⋅    ⋅ 
+  ⋅    ⋅   1.0   ⋅    ⋅ 
+```
+
+To get a dense array, use `Array`:
+```jldoctest repack
 julia> Array(block_array_sparse)
-4×5 SparseMatrixCSC{Float64,Int64} with 13 stored entries:
-  [1, 1]  =  0.30006
-  [2, 1]  =  0.451742
-  [3, 1]  =  0.243174
-  [4, 1]  =  0.156468
-  [1, 2]  =  0.94057
-  [3, 2]  =  0.544175
-  [4, 2]  =  0.598345
-  [3, 3]  =  0.737486
-  [4, 3]  =  0.929512
-  [1, 4]  =  0.539601
-  [3, 4]  =  0.757658
-  [4, 4]  =  0.44709
-  [2, 5]  =  0.514679
+4×5 Matrix{Float64}:
+ 0.0  1.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  1.0  0.0  0.0
 ```

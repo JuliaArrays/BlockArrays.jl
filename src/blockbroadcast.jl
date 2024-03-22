@@ -34,7 +34,6 @@ sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
 
-Base.Broadcast.axistype(a::T, b::T) where T<:BlockedUnitRange = length(b) == 1 ? a : combine_blockaxes(a, b)
 Base.Broadcast.axistype(a::BlockedUnitRange, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 Base.Broadcast.axistype(a::BlockedUnitRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
 Base.Broadcast.axistype(a, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
@@ -68,7 +67,7 @@ julia> import BlockArrays: SubBlockIterator, BlockIndexRange
 
 julia> A = BlockArray(1:6, 1:3);
 
-julia> subblock_lasts = axes(A, 1).lasts;
+julia> subblock_lasts = blocklasts(axes(A, 1));
 
 julia> @assert subblock_lasts == [1, 3, 6];
 
@@ -229,7 +228,7 @@ _removeblocks(a::Adjoint) = _removeblocks(parent(a))'
 _removeblocks(a::Transpose) = transpose(_removeblocks(parent(a)))
 _removeblocks(a::SubArray{<:Any,N,<:PseudoBlockArray}) where N = view(_removeblocks(parent(a)), map(_removeblocks, parentindices(a))...)
 _removeblocks(a) = a
-copy(bc::Broadcasted{PseudoBlockStyle{N}}) where N = PseudoBlockArray(materialize(_removeblocks(bc)), axes(bc))
+copy(bc::Broadcasted{PseudoBlockStyle{N}}) where N = PseudoBlockArray(Broadcast.materialize(_removeblocks(bc)), axes(bc))
 
 for op in (:+, :-, :*)
     @eval function copy(bc::Broadcasted{BlockStyle{N},<:Any,typeof($op),<:Tuple{<:AbstractArray{<:Number,N}}}) where N

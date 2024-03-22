@@ -9,8 +9,8 @@ end
 # Symmetric and Triangular should inherit blocks from parent
 axes(A::HermOrSym{<:Any,<:AbstractBlockMatrix}) = _sym_axes(A)
 axes(A::HermOrSym{<:Any,<:SubArray{<:Any,2,<:AbstractBlockMatrix}}) = _sym_axes(A)
-axes(A::AbstractTriangular{<:Any,<:AbstractBlockMatrix}) = axes(parent(A))
-axes(A::AbstractTriangular{<:Any,<:SubArray{<:Any,2,<:AbstractBlockMatrix}}) = axes(parent(A))
+axes(A::UpperOrLowerTriangular{<:Any,<:AbstractBlockMatrix}) = axes(parent(A))
+axes(A::UpperOrLowerTriangular{<:Any,<:SubArray{<:Any,2,<:AbstractBlockMatrix}}) = axes(parent(A))
 function axes(D::Diagonal{<:Any,<:AbstractBlockVector})
     a = axes(parent(D),1)
     (a,a)

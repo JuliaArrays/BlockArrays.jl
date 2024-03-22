@@ -21,15 +21,15 @@ export blockappend!, blockpush!, blockpushfirst!, blockpop!, blockpopfirst!
 import Base: @propagate_inbounds, Array, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
-            getindex, ndims, show,
+            getindex, setindex!, ndims, show, view,
             step,
             broadcast, eltype, convert, similar,
-            @_inline_meta, tail, @_propagate_inbounds_meta, reindex,
-            RangeIndex, Int, Integer, Number,
+            tail, reindex,
+            RangeIndex, Int, Integer, Number, Tuple,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
             BroadcastStyle, checkbounds, throw_boundserror,
-            ones, zeros, intersect, Slice, resize!
-using Base: ReshapedArray, dataids
+            oneunit, ones, zeros, intersect, Slice, resize!
+using Base: ReshapedArray, dataids, oneto
 import Base: AbstractArray
 
 _maybetail(::Tuple{}) = ()
@@ -39,10 +39,19 @@ import Base: (:), IteratorSize, iterate, axes1, strides, isempty
 import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, broadcastable
 import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
                         StructuredMatrixStyle, cholesky, cholesky!, cholcopy, RealHermSymComplexHerm
-import ArrayLayouts: _fill_lmul!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdivVec,
+import ArrayLayouts: zero!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdivVec,
                         materialize!, MemoryLayout, sublayout, transposelayout, conjlayout,
                         triangularlayout, triangulardata, _inv, _copyto!, axes_print_matrix_row,
-                        colsupport, rowsupport, sub_materialize, zero!
+                        colsupport, rowsupport, sub_materialize, sub_materialize_axes, zero!
+
+if VERSION ≥ v"1.11.0-DEV.21"
+    using LinearAlgebra: UpperOrLowerTriangular
+else
+    const UpperOrLowerTriangular{T,S} = Union{LinearAlgebra.UpperTriangular{T,S},
+                                              LinearAlgebra.UnitUpperTriangular{T,S},
+                                              LinearAlgebra.LowerTriangular{T,S},
+                                              LinearAlgebra.UnitLowerTriangular{T,S}}
+end
 
 include("blockindices.jl")
 include("blockaxis.jl")

@@ -1,4 +1,4 @@
-using SparseArrays, BlockArrays, Base64, FillArrays, LinearAlgebra, Test
+using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
@@ -74,6 +74,12 @@ end
             @test A == BlockArray(A, 1:3) == BlockArray{Int}(A, 1:3) ==
                 BlockArray(A, (blockedrange(1:3),)) == BlockArray{Int}(A, (blockedrange(1:3),)) ==
                 BlockArray{Float64}(A, 1:3)
+
+            #test that Array(::BlockArray) always returns an Array
+            S = spzeros(2,1)
+            B = mortar(fill(S,2,2))
+            A = Array(B)
+            @test A isa Matrix
         end
 
         @testset "PseudoBlockArray constructors" begin
@@ -94,6 +100,15 @@ end
             @test A == PseudoBlockArray(A, 1:3) == PseudoBlockArray{Int}(A, 1:3) ==
                 PseudoBlockArray(A, (blockedrange(1:3),)) == PseudoBlockArray{Int}(A, (blockedrange(1:3),)) ==
                 PseudoBlockArray{Float64}(A, 1:3)
+
+            @testset "from arrays" begin
+                v = [1,2,3]
+                @test PseudoBlockVector(v) == v
+                @test PseudoBlockArray(v) == v
+                M = [1 2; 3 4]
+                @test PseudoBlockMatrix(M) == M
+                @test PseudoBlockArray(M) == M
+            end
         end
 
         @testset "similar" begin
@@ -120,6 +135,8 @@ end
 
             @test similar(randn(6,5), Float64, (blockedrange(1:3),3)) isa PseudoBlockMatrix
             @test similar(randn(6,5), Float64, (3,blockedrange(1:3))) isa PseudoBlockMatrix
+            @test similar(typeof(view(randn(5),1:3)), (blockedrange(1:3),)) isa PseudoBlockVector
+            @test similar(view(randn(5),1:3), Int, (blockedrange(1:3),)) isa PseudoBlockVector{Int}
         end
 
         @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])
@@ -268,6 +285,13 @@ end
         @test_throws DimensionMismatch (BA_1[Block(3)] = rand(4))
         @test_throws BlockBoundsError blockcheckbounds(BA_1, 4)
         @test_throws BlockBoundsError BA_1[Block(4)]
+        @test_throws BlockBoundsError blockcheckbounds(BA_1)
+        @test_throws BlockBoundsError blockcheckbounds(BA_1, 4, 1)
+
+        Bv = BlockArray(zeros(1))
+        @test Bv[Block()] == Bv[] == 0
+        @test Bv[Block(1)] == Bv
+        @test Bv[Block(1,1)] == zeros(1,1)
 
         BA_2 = BlockArray(undef_blocks, Matrix{Float64}, [1,2], [3,4])
         a_2 = rand(1,4)
@@ -277,6 +301,26 @@ end
 
         @test BA_2[1,5] == a_2[2]
         @test_throws DimensionMismatch BA_2[Block(1,2)] = rand(1,5)
+
+        # linear block indexing
+        @test blockcheckbounds(Bool, BA_2, 3)
+        @test_throws BlockBoundsError blockcheckbounds(BA_2, 5)
+
+        # trailing Block(1) indices
+        BA_3 = BlockArray(undef_blocks, Matrix{Float64}, [1,3], [4])
+        @test blockcheckbounds(Bool, BA_3, 1, 1)
+        @test blockcheckbounds(Bool, BA_3, 2, 1)
+        @test_throws BlockBoundsError blockcheckbounds(BA_3, 3, 1)
+        @test_throws BlockBoundsError blockcheckbounds(BA_3, 1, 2)
+        @test_throws BlockBoundsError blockcheckbounds(BA_3, 3, 2)
+
+        BA_4 = BlockArray(zeros(2,2,1))
+        @test blockcheckbounds(Bool, BA_4)
+        @test blockcheckbounds(Bool, BA_4, 1)
+        @test blockcheckbounds(Bool, BA_4, 1, 1)
+        @test blockcheckbounds(Bool, BA_4, 1, 1, 1)
+        @test blockcheckbounds(Bool, BA_4, 1, 1, 1, 1)
+        @test_throws BlockBoundsError blockcheckbounds(BA_3, 1, 2)
     end
 
     @testset "misc block tests" begin
@@ -420,36 +464,40 @@ end
     end
 
     @testset "string" begin
-        A = BlockArray(rand(4, 5), [1,3], [2,3]);
         buf = IOBuffer()
-        Base.showerror(buf, BlockBoundsError(A, (3,2)))
-        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}} at block index [3,2]"
+        A = BlockArray(rand(2,3), [1,1], [2,1]);
+        summary(buf, A)
+        s = String(take!(buf))
+        @test s == summary(A)
 
+        A = BlockArray(rand(4, 5), [1,3], [2,3]);
+        Base.showerror(buf, BlockBoundsError(A, (3,2)))
+        @test String(take!(buf)) == "BlockBoundsError: attempt to access $(summary(A)) at block index [3,2]"
 
         A = PseudoBlockArray(rand(4, 5), [1,3], [2,3]);
         Base.showerror(buf, BlockBoundsError(A, (3,2)))
-        @test String(take!(buf)) == "BlockBoundsError: attempt to access 2×2-blocked 4×5 PseudoBlockMatrix{Float64, Matrix{Float64}, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}} at block index [3,2]"
+        @test String(take!(buf)) == "BlockBoundsError: attempt to access $(summary(A)) at block index [3,2]"
     end
 
     @testset "replstring" begin
-        @test stringmime("text/plain",BlockArray(collect(1:4), [1,3])) == "2-blocked 4-element BlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
-        @test stringmime("text/plain",PseudoBlockArray(collect(1:4), [1,3])) == "2-blocked 4-element PseudoBlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
-        @test stringmime("text/plain",BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-        @test stringmime("text/plain",PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 PseudoBlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-        @test stringmime("text/plain",BlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 BlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
-        @test stringmime("text/plain",PseudoBlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 PseudoBlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
+        @test sprint(show, "text/plain", BlockArray(collect(1:4), [1,3])) == "2-blocked 4-element BlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
+        @test sprint(show, "text/plain", PseudoBlockArray(collect(1:4), [1,3])) == "2-blocked 4-element PseudoBlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
+        @test sprint(show, "text/plain", BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+        @test sprint(show, "text/plain", PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 PseudoBlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+        @test sprint(show, "text/plain", BlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 BlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
+        @test sprint(show, "text/plain", PseudoBlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 PseudoBlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
         design = zeros(Int16,6,9);
         A = BlockArray(design,[6],[4,5])
-        @test stringmime("text/plain",A) == "1×2-blocked 6×9 BlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+        @test sprint(show, "text/plain", A) == "1×2-blocked 6×9 BlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
         A = PseudoBlockArray(design,[6],[4,5])
-        @test stringmime("text/plain",A) == "1×2-blocked 6×9 PseudoBlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+        @test sprint(show, "text/plain", A) == "1×2-blocked 6×9 PseudoBlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
         D = PseudoBlockArray(Diagonal(1:3), [1,2], [2,1])
-        @test stringmime("text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockMatrix{Int, Diagonal{Int, UnitRange{Int}}, Tuple{BlockedUnitRange{Vector{Int}}, BlockedUnitRange{Vector{Int}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
+        @test sprint(show, "text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockMatrix{Int, Diagonal{Int, UnitRange{Int}}, Tuple{BlockedUnitRange{Vector{Int}}, BlockedUnitRange{Vector{Int}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
 
         a = BlockArray{Int}(undef_blocks, [1,2])
-        @test stringmime("text/plain", a) == "2-blocked 3-element BlockVector{Int64}:\n #undef\n ──────\n #undef\n #undef"
+        @test sprint(show, "text/plain", a) == "2-blocked 3-element BlockVector{Int64}:\n #undef\n ──────\n #undef\n #undef"
         B = BlockArray{Int}(undef_blocks, [1,2], [1,1])
-        @test stringmime("text/plain", B) == "2×2-blocked 3×2 BlockMatrix{Int64}:\n #undef  │  #undef\n ────────┼────────\n #undef  │  #undef\n #undef  │  #undef"
+        @test sprint(show, "text/plain", B) == "2×2-blocked 3×2 BlockMatrix{Int64}:\n #undef  │  #undef\n ────────┼────────\n #undef  │  #undef\n #undef  │  #undef"
     end
 
     @testset "AbstractVector{Int} blocks" begin
@@ -651,5 +699,13 @@ end
         @test_throws BoundsError a[4] # length of a.blocks has changed
         c = resize!(b,Block(0))
         @test isempty(c)
+    end
+
+    @testset "empty indexing of vectors" begin
+        a = mortar([1:3, 2:6])
+        @test size(a[:,Block.(1:0)]) == size(PseudoBlockVector(a)[:,Block.(1:0)]) == (8,0)
+        @test size(a[:,Block.(1:1)]) == size(PseudoBlockVector(a)[:,Block.(1:1)]) == size(a[:,Block(1)]) == (8,1)
+        @test_throws BoundsError a[:,Block.(1:2)]
+        @test size(a[:,1]) == (8,)
     end
 end

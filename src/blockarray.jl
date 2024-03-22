@@ -14,7 +14,7 @@ array-constructor-caller would like an uninitialized block array. See also
 undef_blocks (@ref), an alias for UndefBlocksInitializer().
 
 # Examples
-```julia
+```jldoctest
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockMatrix{Float32}:
  #undef  #undef  #undef  │  #undef  #undef
@@ -33,11 +33,11 @@ type UndefBlocksInitializer (@ref), used in block array initialization to indica
 array-constructor-caller would like an uninitialized block array.
 
 # Examples
-```julia
+```jldoctest
 julia> BlockArray(undef_blocks, Matrix{Float32}, [1,2], [3,2])
 2×2-blocked 3×5 BlockMatrix{Float32}:
  #undef  #undef  #undef  │  #undef  #undef
- ------------------------┼----------------
+ ────────────────────────┼────────────────
  #undef  #undef  #undef  │  #undef  #undef
  #undef  #undef  #undef  │  #undef  #undef
 ```
@@ -66,7 +66,7 @@ struct BlockArray{T, N, R <: AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N
         new{T, N, R, BS}(blocks, block_sizes)
 end
 
-# Auxilary outer constructors
+# Auxiliary outer constructors
 @inline _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     _BlockArray(blocks, map(blockedrange, block_sizes))
 
@@ -97,9 +97,9 @@ end
     _BlockArray(R, block_sizes...)
 
 """
-Constructs a `BlockArray` with uninitialized blocks from a block type `R` with sizes defind by `block_sizes`.
+Constructs a `BlockArray` with uninitialized blocks from a block type `R` with sizes defined by `block_sizes`.
 
-```jldoctest; setup = quote using BlockArrays end
+```jldoctest
 julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
 2×2-blocked 4×4 BlockMatrix{Float64}:
  #undef  #undef  │  #undef  #undef
@@ -218,25 +218,25 @@ Construct a `BlockArray` from `blocks`.  `block_sizes` is computed from
 This is an "inverse" of [`blocks`](@ref).
 
 # Examples
-```jldoctest; setup = quote using BlockArrays end
+```jldoctest
 julia> arrays = permutedims(reshape([
-                  1ones(1, 3), 2ones(1, 2),
-                  3ones(2, 3), 4ones(2, 2),
+                  fill(1.0, 1, 3), fill(2.0, 1, 2),
+                  fill(3.0, 2, 3), fill(4.0, 2, 2),
               ], (2, 2)))
 2×2 Matrix{Matrix{Float64}}:
  [1.0 1.0 1.0]               [2.0 2.0]
  [3.0 3.0 3.0; 3.0 3.0 3.0]  [4.0 4.0; 4.0 4.0]
 
-julia> mortar(arrays)
+julia> M = mortar(arrays)
 2×2-blocked 3×5 BlockMatrix{Float64}:
  1.0  1.0  1.0  │  2.0  2.0
  ───────────────┼──────────
  3.0  3.0  3.0  │  4.0  4.0
  3.0  3.0  3.0  │  4.0  4.0
 
-julia> ans == mortar(
-                  (1ones(1, 3), 2ones(1, 2)),
-                  (3ones(2, 3), 4ones(2, 2)),
+julia> M == mortar(
+                  (fill(1.0, 1, 3), fill(2.0, 1, 2)),
+                  (fill(3.0, 2, 3), fill(4.0, 2, 2)),
               )
 true
 ```
@@ -330,7 +330,7 @@ copy(A::BlockArray) = _BlockArray(map(copy,A.blocks), A.axes)
 ################################
 @inline axes(block_array::BlockArray) = block_array.axes
 
-function viewblock(block_arr::BlockArray, block)
+@propagate_inbounds function viewblock(block_arr::BlockArray, block)
     blks = block.n
     @boundscheck blockcheckbounds(block_arr, blks...)
     block_arr.blocks[blks...]
@@ -345,9 +345,9 @@ end
     return v
 end
 
-@inline Base.getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
+@propagate_inbounds getindex(block_arr::BlockArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
     _blockindex_getindex(block_arr, blockindex)
-@inline Base.getindex(block_arr::BlockVector{T}, blockindex::BlockIndex{1}) where {T} =
+@propagate_inbounds getindex(block_arr::BlockVector{T}, blockindex::BlockIndex{1}) where {T} =
     _blockindex_getindex(block_arr, blockindex)
 
 ###########################
@@ -369,6 +369,8 @@ end
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{Union{AbstractUnitRange{Int},Integer},BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 
+@inline Base.similar(B::BlockArray, ::Type{T}) where {T} = mortar(similar.(blocks(B), T))
+
 const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
 
 # avoid ambiguities
@@ -379,13 +381,13 @@ const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
 @inline Base.similar(block_array::BlockArray, ::Type{T}, axes::Tuple{Base.OneTo{Int},Vararg{Base.OneTo{Int}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 
-@inline function Base.getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
+@inline function getindex(block_arr::BlockArray{T, N}, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr[findblockindex.(axes(block_arr), i)...]
     return v
 end
 
-@inline function Base.setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
+@inline function setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds block_arr[findblockindex.(axes(block_arr), i)...] = v
     return block_arr
@@ -404,7 +406,7 @@ function _check_setblock!(block_arr::BlockArray{T, N}, v, block::NTuple{N, Integ
     end
 end
 
-@inline function Base.setindex!(block_arr::BlockArray{T, N}, v, block::Vararg{Block{1}, N}) where {T,N}
+@inline function setindex!(block_arr::BlockArray{T, N}, v, block::Vararg{Block{1}, N}) where {T,N}
     blks = Int.(block)
     @boundscheck blockcheckbounds(block_arr, blks...)
     @boundscheck _check_setblock!(block_arr, v, blks)
@@ -420,7 +422,7 @@ Base.dataids(arr::BlockArray) = (dataids(arr.blocks)..., dataids(arr.axes)...)
 function _replace_in_print_matrix_inds(block_arr, i...)
     J = findblockindex.(axes(block_arr), i)
     blind = map(block, J)
-    bl = block_arr[blind...]
+    bl = @view block_arr[blind...]
     inds = map(blockindex, J)
     bl, inds
 end
@@ -453,11 +455,11 @@ end
 @generated function Base.Array(block_array::BlockArray{T, N, R}) where {T,N,R}
     # TODO: This will fail for empty block array
     return quote
-        arr = similar(block_array.blocks[1], size(block_array)...)
+        arr = Array{eltype(T)}(undef, size(block_array))
         @nloops $N i i->blockaxes(block_array,i) begin
             block_index = @ntuple $N i
             indices = getindex.(axes(block_array), block_index)
-            arr[indices...] = block_array[block_index...]
+            arr[indices...] = @view block_array[block_index...]
         end
 
         return arr
@@ -482,7 +484,7 @@ Base.reshape(block_array::BlockArray, dims::Tuple{Vararg{Union{Int,Colon}}}) =
     reshape(PseudoBlockArray(block_array), dims)
 
 """
-resize!(a::BlockVector, N::Block) -> PseudoBlockVector
+    resize!(a::BlockVector, N::Block) -> PseudoBlockVector
 
 Resize `a` to contain the first `N` blocks, returning a new `BlockVector` sharing
 memory with `a`. If `N` is smaller than the current

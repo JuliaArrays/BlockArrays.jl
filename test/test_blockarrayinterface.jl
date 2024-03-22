@@ -1,7 +1,11 @@
-using BlockArrays, LinearAlgebra, FillArrays, Base64, Test
+using BlockArrays, LinearAlgebra, FillArrays, Test
 
 # avoid fast-paths for view
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
+
+@testset "missing fallback block axes" begin
+    @test_throws ArgumentError invoke(axes, Tuple{AbstractBlockArray}, PseudoBlockArray{ComplexF64}(undef, (1:4), (2:5)))
+end
 
 @testset "Array block interface" begin
     @test 1[Block()] == 1
@@ -47,7 +51,7 @@ end
         @test H[Block(2, 3)] == A[2:3, 4:6]
         @test H[Block(3, 2)] == A[2:3, 4:6]'
 
-        @test stringmime("text/plain", UpperTriangular(A)) == "10×10 UpperTriangular{ComplexF64, PseudoBlockMatrix{ComplexF64, Matrix{ComplexF64}, $(typeof(axes(A)))}} with indices 1:1:10×1:1:10:\n 1.0+0.0im  │  11.0+0.0im  21.0+0.0im  │  31.0+0.0im  41.0+0.0im  51.0+0.0im  │  61.0+0.0im  71.0+0.0im  81.0+0.0im   91.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │  12.0+0.0im  22.0+0.0im  │  32.0+0.0im  42.0+0.0im  52.0+0.0im  │  62.0+0.0im  72.0+0.0im  82.0+0.0im   92.0+0.0im\n     ⋅      │       ⋅      23.0+0.0im  │  33.0+0.0im  43.0+0.0im  53.0+0.0im  │  63.0+0.0im  73.0+0.0im  83.0+0.0im   93.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │       ⋅           ⋅      │  34.0+0.0im  44.0+0.0im  54.0+0.0im  │  64.0+0.0im  74.0+0.0im  84.0+0.0im   94.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅      45.0+0.0im  55.0+0.0im  │  65.0+0.0im  75.0+0.0im  85.0+0.0im   95.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅      56.0+0.0im  │  66.0+0.0im  76.0+0.0im  86.0+0.0im   96.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │  67.0+0.0im  77.0+0.0im  87.0+0.0im   97.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅      78.0+0.0im  88.0+0.0im   98.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅           ⋅      89.0+0.0im   99.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅           ⋅           ⋅      100.0+0.0im"
+        @test sprint(show, "text/plain", UpperTriangular(A)) == "10×10 UpperTriangular{ComplexF64, PseudoBlockMatrix{ComplexF64, Matrix{ComplexF64}, $(typeof(axes(A)))}} with indices 1:1:10×1:1:10:\n 1.0+0.0im  │  11.0+0.0im  21.0+0.0im  │  31.0+0.0im  41.0+0.0im  51.0+0.0im  │  61.0+0.0im  71.0+0.0im  81.0+0.0im   91.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │  12.0+0.0im  22.0+0.0im  │  32.0+0.0im  42.0+0.0im  52.0+0.0im  │  62.0+0.0im  72.0+0.0im  82.0+0.0im   92.0+0.0im\n     ⋅      │       ⋅      23.0+0.0im  │  33.0+0.0im  43.0+0.0im  53.0+0.0im  │  63.0+0.0im  73.0+0.0im  83.0+0.0im   93.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │       ⋅           ⋅      │  34.0+0.0im  44.0+0.0im  54.0+0.0im  │  64.0+0.0im  74.0+0.0im  84.0+0.0im   94.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅      45.0+0.0im  55.0+0.0im  │  65.0+0.0im  75.0+0.0im  85.0+0.0im   95.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅      56.0+0.0im  │  66.0+0.0im  76.0+0.0im  86.0+0.0im   96.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │  67.0+0.0im  77.0+0.0im  87.0+0.0im   97.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅      78.0+0.0im  88.0+0.0im   98.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅           ⋅      89.0+0.0im   99.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅           ⋅           ⋅      100.0+0.0im"
 
         V = view(A, Block.(1:2), Block.(1:2))
         @test blockisequal(axes(Symmetric(V)), axes(view(A, Block.(1:2), Block.(1:2))))
@@ -126,7 +130,7 @@ end
     @test_throws BlockBoundsError A[Block(1, 3)]
     @test A == [1 2 0 0; 0 0 1 2]
     @test BlockArray(A) == A
-    @test stringmime("text/plain", A) == "2×2-blocked 2×4 BlockMatrix{$Int, Diagonal{Matrix{$Int}, Vector{Matrix{$Int}}}, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}}:\n 1  2  │  ⋅  ⋅\n ──────┼──────\n ⋅  ⋅  │  1  2"
+    @test sprint(show, "text/plain", A) == "2×2-blocked 2×4 BlockMatrix{$Int, Diagonal{Matrix{$Int}, Vector{Matrix{$Int}}}, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}}:\n 1  2  │  ⋅  ⋅\n ──────┼──────\n ⋅  ⋅  │  1  2"
 
     N = 3
     D = Diagonal(mortar(Fill.(-(0:N) - (0:N) .^ 2, 1:2:2N+1)))
@@ -183,9 +187,9 @@ end
 
     U = UpperTriangular(Ones((blockedrange([1, 2]), blockedrange([2, 1]))))
 
-    @test stringmime("text/plain", A) == "5-element Fill{$Int, 1, Tuple{BlockedUnitRange{Vector{$Int}}}} with indices 1:1:5, with entries equal to 2"
-    @test stringmime("text/plain", B) == "3×3 Diagonal{Float64, Ones{Float64, 1, Tuple{BlockedUnitRange{Vector{$Int}}}}} with indices 1:1:3×1:1:3"
-    @test stringmime("text/plain", U) == "3×3 UpperTriangular{Float64, Ones{Float64, 2, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}}} with indices 1:1:3×1:1:3:\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
+    @test sprint(show, "text/plain", A) == "5-element Fill{$Int, 1, Tuple{BlockedUnitRange{Vector{$Int}}}} with indices 1:1:5, with entries equal to 2"
+    @test sprint(show, "text/plain", B) == "3×3 Diagonal{Float64, Ones{Float64, 1, Tuple{BlockedUnitRange{Vector{$Int}}}}} with indices 1:1:3×1:1:3"
+    @test sprint(show, "text/plain", U) == "3×3 UpperTriangular{Float64, Ones{Float64, 2, Tuple{BlockedUnitRange{Vector{$Int}}, BlockedUnitRange{Vector{$Int}}}}} with indices 1:1:3×1:1:3:\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
 
     @testset "views" begin
         # This in theory can be dropped because `view` returns the block, but we keep in case needed

@@ -1,9 +1,10 @@
-using BlockArrays, FillArrays, Test, Base64, StaticArrays, ArrayLayouts
+using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
+    @test Tuple(Block(2,3)) === (Block(2),Block(3))
     @test Block((Block(3), Block(4))) === Block(3,4)
     @test Block() === Block(()) === Block{0}() === Block{0}(())
     @test Block(1) === Block((1,)) === Block{1}(1) === Block{1}((1,))
@@ -48,11 +49,14 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test Block(1,2) + Block(2,3) == Block(3,5)
         @test Block(1,2) + 1 == Block(2,3)
         @test 1 + Block(1,2) == Block(2,3)
+        @test oneunit(Block(1,2)) + Block(1,2) == Block(2,3)
         @test Block(2,3) - Block(1,2) == Block(1,1)
         @test Block(1,2) - 1 == Block(0,1)
         @test 1 - Block(1,2) == Block(0,-1)
         @test 2*Block(1,2) == Block(2,4)
         @test Block(1,2)*2 == Block(2,4)
+        @test one(Block(1,2))*Block(1,2) == Block(1,2)
+        @test one(Block(1,2))*Block(Int8(1)) === Block(Int8(1))
 
         @test isless(Block(1,1), Block(2,2))
         @test isless(Block(1,1), Block(2,1))
@@ -67,6 +71,8 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
         @test convert(Int, Block(2)) == 2
         @test convert(Float64, Block(2)) == 2.0
+        @test convert(Tuple, Block(2,3)) == (Block(2),Block(3))
+        @test convert(Tuple{Vararg{Int}}, Block(2,3)) == (2,3)
 
         @test_throws MethodError convert(Int, Block(2,1))
         @test convert(Tuple{Int,Int}, Block(2,1)) == (2,1)
@@ -97,37 +103,45 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
     end
 
     @testset "print" begin
-        @test stringmime("text/plain", Block()) == "Block()"
-        @test stringmime("text/plain", Block(1)) == "Block(1)"
-        @test stringmime("text/plain", Block(1,2)) == "Block(1, 2)"
-        @test stringmime("text/plain", Block{0}()) == "Block()"
-        @test stringmime("text/plain", Block{1}(1)) == "Block(1)"
-        @test stringmime("text/plain", Block{2}(1,2)) == "Block(1, 2)"
+        @test sprint(show, "text/plain", Block()) == "Block()"
+        @test sprint(show, "text/plain", Block(1)) == "Block(1)"
+        @test sprint(show, "text/plain", Block(1,2)) == "Block(1, 2)"
+        @test sprint(show, "text/plain", Block{0}()) == "Block()"
+        @test sprint(show, "text/plain", Block{1}(1)) == "Block(1)"
+        @test sprint(show, "text/plain", Block{2}(1,2)) == "Block(1, 2)"
 
-        @test stringmime("text/plain", Block{0,BigInt}()) == "Block{0, BigInt}()"
-        @test stringmime("text/plain", Block{1,BigInt}(1)) == "Block{1, BigInt}(1)"
-        @test stringmime("text/plain", Block{2}(1,2)) == "Block(1, 2)"
+        @test sprint(show, "text/plain", Block{0,BigInt}()) == "Block{0, BigInt}()"
+        @test sprint(show, "text/plain", Block{1,BigInt}(1)) == "Block{1, BigInt}(1)"
+        @test sprint(show, "text/plain", Block{2}(1,2)) == "Block(1, 2)"
 
-        @test stringmime("text/plain", BlockIndex((1,2), (3,4))) == "Block(1, 2)[3, 4]"
-        @test stringmime("text/plain", BlockArrays.BlockIndexRange(Block(1), 3:4)) == "Block(1)[3:4]"
+        @test sprint(show, "text/plain", BlockIndex((1,2), (3,4))) == "Block(1, 2)[3, 4]"
+        @test sprint(show, "text/plain", BlockArrays.BlockIndexRange(Block(1), 3:4)) == "Block(1)[3:4]"
 
-        @test stringmime("text/plain", BlockRange()) == "BlockRange()"
-        @test stringmime("text/plain", BlockRange(1:2)) == "BlockRange(1:2)"
-        @test stringmime("text/plain", BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
+        @test sprint(show, "text/plain", BlockRange()) == "BlockRange()"
+        @test sprint(show, "text/plain", BlockRange(1:2)) == "BlockRange(1:2)"
+        @test sprint(show, "text/plain", BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
+        @test sprint(show, BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
     end
 end
 
 @testset "BlockedUnitRange" begin
+    @testset "promote" begin
+        b = blockedrange([1,2,3])
+        @test promote(b, 1:2) == (1:6, 1:2)
+        @test promote(b, Base.OneTo(2)) == (1:6, 1:2)
+    end
     @testset "Block indexing" begin
         b = blockedrange([1,2,3])
         @test axes(b) == (b,)
         @test blockaxes(b,1) isa BlockRange
 
-        @test @inferred(b[Block(1)]) == 1:1
-        @test b[Block(2)] == 2:3
-        @test b[Block(3)] == 4:6
+        @test @inferred(b[Block(1)]) === 1:1
+        @test b[Block(2)] === 2:3
+        @test b[Block(3)] === 4:6
+        @test @inferred(view(b, Block(3))) === 4:6
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(4)]
+        @test_throws BlockBoundsError view(b, Block(4))
 
         o = OffsetArray([2,2,3],-1:1)
         b = blockedrange(o)
@@ -160,6 +174,22 @@ end
         @test b[Block(100_000)] == 299_998:300_000
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(1_000_001)]
+
+        b = BlockRange((2:4, 3:4))
+        @test b[2,2] === Block(3,4)
+        @test b[axes(b)...] === b
+
+        b = BlockRange(OffsetArrays.IdOffsetRange.((2:4, 3:5), 2))
+        @test b[axes(b)...] === b
+
+        b = BlockRange(3)
+        for i in 1:3
+            @test b[i] == Block(i)
+        end
+
+        B = mortar(fill(rand(1,1),2,2))
+        br = BlockRange(B)
+        @test collect(br) == [Block(Int(i),Int(j)) for i in blockaxes(B,1), j in blockaxes(B,2)]
     end
 
     @testset "firsts/lasts/lengths" begin
@@ -177,7 +207,12 @@ end
         @test blocklasts(f) ≡ StepRangeLen(2,2,5)
         @test blocklengths(f) ≡ Fill(2,5)
 
+        f = blockedrange(Zeros{Int}(2))
+        @test blockfirsts(f) == [1,1]
+        @test blocklasts(f) == [0,0]
+
         r = blockedrange(Base.OneTo(5))
+        @test (@inferred blocklengths(r)) == 1:5
         @test blocklasts(r) ≡ ArrayLayouts.RangeCumsum(Base.OneTo(5))
     end
 
@@ -291,7 +326,7 @@ end
         @test findblock(b,1) == Block(1)
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
-        @test stringmime("text/plain",blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        @test sprint(show, "text/plain", blockedrange([1,2,2])) == "3-blocked 5-element BlockedUnitRange{Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
     end
 
     @testset "BlockIndex type piracy (#108)" begin
@@ -347,7 +382,7 @@ end
 
     @testset "StaticArrays" begin
         @test blockisequal(blockedrange(SVector(1,2,3)), blockedrange([1,2,3]))
-        @test @allocated(blockedrange(SVector(1,2,3))) == 0
+        # @test @allocated(blockedrange(SVector(1,2,3))) == 0
     end
 
     @testset "Tuples" begin

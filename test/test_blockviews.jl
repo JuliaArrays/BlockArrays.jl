@@ -1,4 +1,4 @@
-using BlockArrays, ArrayLayouts, Test, Base64
+using BlockArrays, ArrayLayouts, Test
 
 # useds to force SubArray return
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
@@ -26,6 +26,8 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         view(A, Block(2))[2] = -1
         @test A[3] == -1
 
+        @test_throws BoundsError view(A)
+
         # backend tests
         @test_throws ArgumentError Base.to_index(A, Block(1))
 
@@ -44,7 +46,9 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         V[1,1] = -1
         @test A[2,8] == -1
         @test A[Block(4)] == A[Block(1),Block(2)]
-        @test_throws BlockBoundsError A[Block(10)]
+        @test_throws BoundsError A[Block(10)]
+
+        @test_throws BoundsError view(A)
 
         V = view(A, Block(3, 2))
         @test size(V) == (3, 4)
@@ -60,6 +64,11 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test view(A, :, Block(1)) == A[:,1:3]
 
         @test view(V, Block(1, 1)) ≡ V
+
+        B = view(parent(A), axes(A)...)
+        for I in BlockRange(A)
+            @test view(B, I) == view(A, I)
+        end
 
         @test_throws BlockBoundsError view(V, Block(1,2))
         @test_throws BlockBoundsError view(V, Block(2,1))
@@ -93,6 +102,15 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test view(A, Block(1), 2, 1) == A[1:1,2,1]
         @test view(A, 1, Block(2), 1) == A[1,2:3,1]
         @test view(A, 1, 2, Block(2)) == A[1,2,2:3]
+
+        @testset "Fill arrays" begin
+            f = Fill(3, 4, 5)
+            @test view(f, 1, 2:3) === Fill(3, 2)
+            @test view(f, Block(1), 1:1) === Fill(3, 4, 1)
+            @test view(f, Block(1), 2) === Fill(3, 4)
+            @test view(f, 1, Block(1)) === Fill(3, 5)
+            @test view(f, 1:2, Block(1)) === Fill(3, 2, 5)
+        end
     end
 
     @testset "block view pointers" begin
@@ -175,11 +193,11 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test blocks(V) == blocks(A)[1:1,1:2]
         @test blocks(W) == blocks(A)[1:2,1:1]
         Vi = parentindices(V)
-        @test stringmime("text/plain", V) == "1×3 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}, "*
+        @test sprint(show, "text/plain", V) == "1×3 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}, "*
             "$(typeof(axes(A)))}, $(Vi[1]), $(Vi[2])) "*
             "with eltype $Int with indices $(axes(V,1))×$(axes(V,2)):\n 1  │  2  3"
         Wi = parentindices(W)
-        @test stringmime("text/plain", W) == "3×1 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}"*
+        @test sprint(show, "text/plain", W) == "3×1 view(::BlockMatrix{$Int, Matrix{Matrix{$Int}}"*
             ", $(typeof(axes(A)))}, $(Wi[1]), $(Wi[2])) "*
             "with eltype $Int with indices $(axes(W,1))×$(axes(W,2)):\n 1\n ─\n 4\n 7"
     end

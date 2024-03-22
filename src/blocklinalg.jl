@@ -2,7 +2,23 @@ blockrowsupport(_, A, k) = blockaxes(A,2)
 """
     blockrowsupport(A, k)
 
-gives an iterator containing the possible non-zero blocks in the k-th block-row of A.
+Return an iterator containing the possible non-zero blocks in the `k`-th block-row of `A`.
+
+# Examples
+```jldoctest
+julia> B = BlockArray(collect(reshape(1:9, 3, 3)), [1,2], [1,1,1])
+2×3-blocked 3×3 BlockMatrix{Int64}:
+ 1  │  4  │  7
+ ───┼─────┼───
+ 2  │  5  │  8
+ 3  │  6  │  9
+
+julia> BlockArrays.blockrowsupport(B, 2) |> collect
+3-element Vector{Block{1, Int64}}:
+ Block(1)
+ Block(2)
+ Block(3)
+```
 """
 blockrowsupport(A, k) = blockrowsupport(MemoryLayout(A), A, k)
 blockrowsupport(A) = blockrowsupport(A, blockaxes(A,1))
@@ -12,7 +28,22 @@ blockcolsupport(_, A, j) = Block.(colsupport(blocks(A), Int.(j)))
 """
     blockcolsupport(A, j)
 
-gives an iterator containing the possible non-zero blocks in the j-th block-column of A.
+Return an iterator containing the possible non-zero blocks in the `j`-th block-column of `A`.
+
+# Examples
+```jldoctest
+julia> B = BlockArray(collect(reshape(1:9, 3, 3)), [1,2], [1,1,1])
+2×3-blocked 3×3 BlockMatrix{Int64}:
+ 1  │  4  │  7
+ ───┼─────┼───
+ 2  │  5  │  8
+ 3  │  6  │  9
+
+julia> BlockArrays.blockcolsupport(B, 2) |> collect
+2-element Vector{Block{1, Int64}}:
+ Block(1)
+ Block(2)
+```
 """
 blockcolsupport(A, j) = blockcolsupport(MemoryLayout(A), A, j)
 blockcolsupport(A) = blockcolsupport(A, blockaxes(A,2))
@@ -70,16 +101,12 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:BlockedUnitRange}}) wh
 
 # materialize views, used for `getindex`
 sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
-sub_materialize(::AbstractBlockLayout, V, ::Tuple{<:BlockedUnitRange}) = BlockArray(V)
-sub_materialize(::AbstractBlockLayout, V, ::Tuple{<:BlockedUnitRange,<:BlockedUnitRange}) = BlockArray(V)
-sub_materialize(::AbstractBlockLayout, V, ::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) = BlockArray(V)
-sub_materialize(::AbstractBlockLayout, V, ::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) = BlockArray(V)
 
 # if it's not a block layout, best to use PseudoBlockArray to take advantage of strideness
-sub_materialize(_, V, ::Tuple{<:BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize(_, V, ::Tuple{<:BlockedUnitRange,<:BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize(_, V, ::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize(_, V, ::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{BlockedUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{BlockedUnitRange,BlockedUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractUnitRange,BlockedUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{BlockedUnitRange,AbstractUnitRange}) = PseudoBlockArray(V)
 
 # Special for FillArrays.jl
 
@@ -102,9 +129,6 @@ sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:AbstractUnitRange,<:Bl
     Ones{eltype(V)}(ax)
 sub_materialize(::ArrayLayouts.ZerosLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
     Zeros{eltype(V)}(ax)
-
-@propagate_inbounds Base.view(A::FillArrays.AbstractFill, I::Union{Real, AbstractArray, Block}...) =
-    FillArrays._fill_getindex(A, Base.to_indices(A, I)...)
 
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Complex,MLAY,BLAY} = BlockLayout{MLAY,typeof(conjlayout(T,BLAY()))}()
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Real,MLAY,BLAY} = BlockLayout{MLAY,BLAY}()
@@ -178,6 +202,23 @@ end
 # BLAS overrides
 #############
 
+_fill_rmul!(A::AbstractArray, β) = iszero(β) ? zero!(A) : rmul!(A, β)
+
+@inline function _block_muladd!(α, A, X::AbstractVector, β, Y::AbstractVector)
+    _fill_rmul!(Y, β)
+    for N = blockcolsupport(X), K = blockcolsupport(A,N)
+        mul!(view(Y,K), view(A,K,N), view(X,N), α, one(β))
+    end
+    Y
+end
+
+@inline function _block_muladd!(α, A, X, β, Y)
+    _fill_rmul!(Y, β)
+    for J = blockaxes(X,2), N = blockcolsupport(X,J), K = blockcolsupport(A,N)
+        mul!(view(Y,K,J), view(A,K,N), view(X,N,J), α, one(α))
+    end
+    Y
+end
 
 function materialize!(M::MatMulVecAdd{<:AbstractBlockLayout,<:AbstractStridedLayout,<:AbstractStridedLayout})
     α, A, x_in, β, y_in = M.α, M.A, M.B, M.β, M.C
@@ -188,36 +229,29 @@ function materialize!(M::MatMulVecAdd{<:AbstractBlockLayout,<:AbstractStridedLay
     # impose block structure
     y = PseudoBlockArray(y_in, (axes(A,1),))
     x = PseudoBlockArray(x_in, (axes(A,2),))
-
-    _fill_lmul!(β, y)
-
-    for J = blockaxes(A,2)
-        for K = blockcolsupport(A,J)
-            muladd!(α, view(A,K,J), view(x,J), one(α), view(y,K))
-        end
-    end
+    _block_muladd!(α, A, x, β, y)
     y_in
-end
-
-function _block_muladd!(α, A, X, β, Y)
-    _fill_lmul!(β, Y)
-    for J = blockaxes(X,2), N = blockcolsupport(X,J), K = blockcolsupport(A,N)
-        muladd!(α, view(A,K,N), view(X,N,J), one(α), view(Y,K,J))
-    end
-    Y
 end
 
 mul_blockscompatible(A, B, C) = blockisequal(axes(A,2), axes(B,1)) &&
     blockisequal(axes(A,1), axes(C,1)) &&
     blockisequal(axes(B,2), axes(C,2))
 
-function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractBlockLayout})
+@inline function _matmul(M)
     α, A, B, β, C = M.α, M.A, M.B, M.β, M.C
     if mul_blockscompatible(A,B,C)
         _block_muladd!(α, A, B, β, C)
     else # use default
         materialize!(MulAdd{UnknownLayout,UnknownLayout,UnknownLayout}(α, A, B, β, C))
     end
+end
+
+function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractBlockLayout})
+    _matmul(M)
+end
+
+function materialize!(M::MatMulVecAdd{<:AbstractBlockLayout, <:AbstractBlockLayout, <:AbstractBlockLayout})
+    _matmul(M)
 end
 
 function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractColumnMajor})
@@ -262,7 +296,6 @@ _triangular_matrix(::Val{'L'}, ::Val{'U'}, A) = UnitLowerTriangular(A)
 function _matchingblocks_triangular_mul!(::Val{'U'}, UNIT, A::AbstractMatrix{T}, dest) where T
     # impose block structure
     b = PseudoBlockArray(dest, (axes(A,1),))
-
     for K = blockaxes(A,1)
         b_2 = view(b, K)
         Ũ = _triangular_matrix(Val('U'), UNIT, view(A, K,K))

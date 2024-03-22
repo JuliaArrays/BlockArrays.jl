@@ -210,11 +210,7 @@ function Base.showarg(io::IO, @nospecialize(a::BlocksView), toplevel::Bool)
     end
 end
 
-function show(io::IO, r::BlockRange)
-    print(io, "BlockRange(")
-    print_tuple_elements(io, r.indices)
-    print(io, ")")
-end
-function show(io::IO, ::MIME"text/plain", @nospecialize(r::BlockRange))
-    show(io, r)
-end
+# BlockRange
+
+Base.show(io::IO, br::BlockRange) = print(io, "BlockRange(", join(br.indices, ", "), ")")
+Base.show(io::IO, ::MIME"text/plain", br::BlockRange) = show(io, br)

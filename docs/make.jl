@@ -3,10 +3,11 @@ using Documenter, BlockArrays
 # Build documentation.
 # ====================
 
+DocMeta.setdocmeta!(BlockArrays, :DocTestSetup, :(using BlockArrays); recursive=true)
+
 makedocs(
     modules = [BlockArrays],
     sitename = "BlockArrays.jl",
-    strict = VERSION.major == 1 && sizeof(Int) == 8, # only strict mode on 1.0 and Int64
     pages = Any[
         "Home" => "index.md",
         "Manual" => [
@@ -18,7 +19,8 @@ makedocs(
             "lib/public.md",
             "lib/internals.md"
         ]
-    ]
+    ],
+    warnonly = :missing_docs,
 )
 
 # Deploy built documentation from Travis.
