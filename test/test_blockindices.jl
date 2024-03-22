@@ -220,12 +220,23 @@ end
         b = blockedrange(Fill(2,3))
         c = blockedrange([2,2,2])
         @test convert(BlockedUnitRange, b) === b
-        @test blockisequal(convert(BlockedUnitRange, Base.OneTo(5)), blockedrange([5]))
-        @test blockisequal(convert(BlockedUnitRange, Base.Slice(Base.OneTo(5))), blockedrange([5]))
-        @test blockisequal(convert(BlockedUnitRange, Base.IdentityUnitRange(-2:2)), BlockArrays._BlockedUnitRange(-2,[2]))
-        @test convert(BlockedUnitRange{Vector{Int}}, c) === c
-        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, b),b)
-        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, Base.OneTo(5)), blockedrange([5]))
+        @test convert(typeof(b), b) === b
+        @test convert(BlockedUnitRange, c) === c
+        @test convert(typeof(c), c) === c
+        function test_type_and_blocks(T, r, res)
+            s = convert(T, r)
+            @test s isa T
+            @test blockisequal(s, res)
+        end
+        for T in (BlockedUnitRange, BlockedUnitRange{Vector{Int}})
+            test_type_and_blocks(T, blockedrange(5:5), blockedrange(5:5))
+            test_type_and_blocks(T, Base.OneTo(5), blockedrange([5]))
+            test_type_and_blocks(T, Base.Slice(Base.OneTo(5)), blockedrange([5]))
+            test_type_and_blocks(T, -2:2, BlockArrays._BlockedUnitRange(-2,[2]))
+            test_type_and_blocks(T, Base.IdentityUnitRange(-2:2), BlockArrays._BlockedUnitRange(-2,[2]))
+            test_type_and_blocks(T, b, b)
+            test_type_and_blocks(T, Base.OneTo(5), blockedrange([5]))
+        end
     end
 
     @testset "findblock" begin
