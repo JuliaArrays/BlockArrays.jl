@@ -227,16 +227,14 @@ Base.unitrange(b::AbstractBlockedUnitRange) = first(b):last(b)
 
 Base.promote_rule(::Type{<:AbstractBlockedUnitRange}, ::Type{Base.OneTo{Int}}) = UnitRange{Int}
 
-Base.convert(::Type{BlockedOneTo}, axis::BlockedOneTo) = axis
-_convert(::Type{BlockedOneTo}, axis::AbstractBlockedUnitRange) = BlockedOneTo(blocklasts(axis))
-_convert(::Type{BlockedOneTo}, axis::AbstractUnitRange{Int}) = BlockedOneTo(last(axis):last(axis))
 function Base.convert(::Type{BlockedOneTo}, axis::AbstractUnitRange{Int})
     first(axis) == 1 || throw(ArgumentError("first element of range is not 1"))
-    _convert(BlockedOneTo, axis)
+    BlockedOneTo(blocklasts(axis))
 end
-Base.convert(::Type{BlockedOneTo{CS}}, axis::BlockedOneTo{CS}) where CS = axis
-Base.convert(::Type{BlockedOneTo{CS}}, axis::BlockedOneTo) where CS = BlockedOneTo(convert(CS, blocklasts(axis)))
-Base.convert(::Type{BlockedOneTo{CS}}, axis::AbstractUnitRange{Int}) where CS = convert(BlockedOneTo{CS}, convert(BlockedOneTo, axis))
+function Base.convert(::Type{BlockedOneTo{CS}}, axis::AbstractUnitRange{Int}) where CS
+    first(axis) == 1 || throw(ArgumentError("first element of range is not 1"))
+    BlockedOneTo(convert(CS, blocklasts(axis)))
+end
 
 """
     blockaxes(A::AbstractArray)
