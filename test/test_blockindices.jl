@@ -175,6 +175,17 @@ end
         @test_throws BlockBoundsError b[Block(4)]
         @test_throws BlockBoundsError view(b, Block(4))
 
+        b = blockedrange(2, 1:3)
+        bpart = @inferred(b[Block.(1:2)])
+        @test bpart isa BlockedUnitRange
+        @test bpart == blockedrange(2, 1:2)
+        bpart = @inferred(b[Block.(Base.OneTo(2))])
+        @test bpart isa BlockedUnitRange
+        @test bpart == blockedrange(2, 1:2)
+        bpart = @inferred(b[Block.(Base.OneTo(0))])
+        @test bpart isa BlockedUnitRange
+        @test bpart == blockedrange(2, 1:0)
+
         o = OffsetArray([2,2,3],-1:1)
         b = blockedrange(1, o)
         @test axes(b) == (b,)
@@ -450,6 +461,20 @@ end
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(4)]
         @test_throws BlockBoundsError view(b, Block(4))
+
+        b = blockedrange(1:3)
+        bpart = @inferred(b[Block.(1:2)])
+        @test bpart isa BlockedUnitRange
+        @test bpart == blockedrange(1:2)
+        bpart = @inferred(b[Block.(1:0)])
+        @test bpart isa BlockedUnitRange
+        @test bpart == blockedrange(1:0)
+        bpart = @inferred(b[Block.(Base.OneTo(2))])
+        @test bpart isa BlockedOneTo
+        @test bpart == blockedrange(1:2)
+        bpart = @inferred(b[Block.(Base.OneTo(0))])
+        @test bpart isa BlockedOneTo
+        @test bpart == blockedrange(1:0)
 
         o = OffsetArray([2,2,3],-1:1)
         b = blockedrange(o)

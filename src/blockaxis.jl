@@ -379,12 +379,14 @@ end
 
 @propagate_inbounds function getindex(b::AbstractBlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
     cs = blocklasts(b)
-    isempty(KR) && return _BlockedUnitRange(1,cs[Base.OneTo(0)])
+    _getindex(b, blocklengths) = _BlockedUnitRange(first(b), blocklengths)
+    _getindex(b::BlockedOneTo, blocklengths) = BlockedOneTo(blocklengths)
+    isempty(KR) && return _getindex(b, cs[Base.OneTo(0)])
     J = last(KR)
     j = Integer(J)
     bax = blockaxes(b,1)
     @boundscheck J in bax || throw(BlockBoundsError(b,J))
-    _BlockedUnitRange(first(b),cs[Base.OneTo(j)])
+    _getindex(b, cs[Base.OneTo(j)])
 end
 
 @propagate_inbounds getindex(b::AbstractBlockedUnitRange, KR::BlockSlice) = b[KR.block]
