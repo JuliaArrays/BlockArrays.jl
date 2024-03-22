@@ -187,13 +187,7 @@ end
         @test bpart == blockedrange(2, 1:0)
 
         o = OffsetArray([2,2,3],-1:1)
-        b = blockedrange(1, o)
-        @test axes(b) == (b,)
-        @test @inferred(b[Block(-1)]) == 1:2
-        @test b[Block(0)] == 3:4
-        @test b[Block(1)] == 5:7
-        @test_throws BlockBoundsError b[Block(-2)]
-        @test_throws BlockBoundsError b[Block(2)]
+        @test_throws ArgumentError blockedrange(1, o)
 
         b = BlockArrays._BlockedUnitRange(-1,[-1,1,4])
         @test axes(b,1) == blockedrange(1, [1,2,3])
@@ -202,15 +196,6 @@ end
         @test b[Block(3)] == 2:4
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(4)]
-
-        o = OffsetArray([2,2,3],-1:1)
-        b = BlockArrays._BlockedUnitRange(-3, cumsum(o) .- 4)
-        @test axes(b,1) == blockedrange(1, [2,2,3])
-        @test b[Block(-1)] == -3:-2
-        @test b[Block(0)] == -1:0
-        @test b[Block(1)] == 1:3
-        @test_throws BlockBoundsError b[Block(-2)]
-        @test_throws BlockBoundsError b[Block(2)]
 
         b = BlockArrays._BlockedUnitRange(1, cumsum(Fill(3,1_000_000)))
         @test b isa BlockedUnitRange{<:AbstractRange}
@@ -286,17 +271,6 @@ end
         @test_throws BoundsError findblockindex(b,0)
         @test_throws BoundsError findblockindex(b,7)
 
-        o = OffsetArray([2,2,3],-1:1)
-        b = blockedrange(1, o)
-        @test @inferred(findblock(b,1)) == Block(-1)
-        @test @inferred(findblockindex(b,1)) == Block(-1)[1]
-        @test findblock.(Ref(b),1:7) == Block.([-1,-1,0,0,1,1,1])
-        @test findblockindex.(Ref(b),1:7) == BlockIndex.([-1,-1,0,0,1,1,1], [1,2,1,2,1,2,3])
-        @test_throws BoundsError findblock(b,0)
-        @test_throws BoundsError findblock(b,8)
-        @test_throws BoundsError findblockindex(b,0)
-        @test_throws BoundsError findblockindex(b,8)
-
         b = BlockArrays._BlockedUnitRange(-1,[-1,1,4])
         @test @inferred(findblock(b,-1)) == Block(1)
         @test @inferred(findblockindex(b,-1)) == Block(1)[1]
@@ -305,17 +279,6 @@ end
         @test_throws BoundsError findblock(b,-2)
         @test_throws BoundsError findblock(b,5)
         @test_throws BoundsError findblockindex(b,-2)
-        @test_throws BoundsError findblockindex(b,5)
-
-        o = OffsetArray([2,2,3],-1:1)
-        b = BlockArrays._BlockedUnitRange(-3, cumsum(o) .- 4)
-        @test @inferred(findblock(b,-3)) == Block(-1)
-        @test @inferred(findblockindex(b,-3)) == Block(-1)[1]
-        @test findblock.(Ref(b),-3:3) == Block.([-1,-1,0,0,1,1,1])
-        @test findblockindex.(Ref(b),-3:3) == BlockIndex.([-1,-1,0,0,1,1,1], [1,2,1,2,1,2,3])
-        @test_throws BoundsError findblock(b,-4)
-        @test_throws BoundsError findblock(b,5)
-        @test_throws BoundsError findblockindex(b,-4)
         @test_throws BoundsError findblockindex(b,5)
 
         b = blockedrange(1, Fill(3,1_000_000))
@@ -462,31 +425,13 @@ end
         @test_throws BlockBoundsError b[Block(4)]
         @test_throws BlockBoundsError view(b, Block(4))
 
-        o = OffsetArray([2,2,3],-1:1)
-        b = blockedrange(o)
-        @test axes(b) == (b,)
-        @test @inferred(b[Block(-1)]) == 1:2
-        @test b[Block(0)] == 3:4
-        @test b[Block(1)] == 5:7
-        @test_throws BlockBoundsError b[Block(-2)]
-        @test_throws BlockBoundsError b[Block(2)]
-
-        b = BlockArrays._BlockedUnitRange(-1,[-1,1,4])
-        @test axes(b,1) == blockedrange([1,2,3])
-        @test b[Block(1)] == -1:-1
-        @test b[Block(2)] == 0:1
+        b = BlockedOneTo([0,1,4])
+        @test axes(b,1) == blockedrange([0,1,3])
+        @test b[Block(1)] == 1:0
+        @test b[Block(2)] == 1:1
         @test b[Block(3)] == 2:4
         @test_throws BlockBoundsError b[Block(0)]
         @test_throws BlockBoundsError b[Block(4)]
-
-        o = OffsetArray([2,2,3],-1:1)
-        b = BlockArrays._BlockedUnitRange(-3, cumsum(o) .- 4)
-        @test axes(b,1) == blockedrange([2,2,3])
-        @test b[Block(-1)] == -3:-2
-        @test b[Block(0)] == -1:0
-        @test b[Block(1)] == 1:3
-        @test_throws BlockBoundsError b[Block(-2)]
-        @test_throws BlockBoundsError b[Block(2)]
 
         b = blockedrange(1,Fill(3,1_000_000))
         @test b isa BlockedUnitRange{<:AbstractRange}
@@ -610,8 +555,8 @@ end
         end
 
         b = blockedrange(1:3)
-        @test bpart isa BlockedUnitRange
         bpart = @inferred(b[Block.(1:2)])
+        @test bpart isa BlockedUnitRange
         @test bpart == blockedrange(1:2)
         bpart = @inferred(b[Block.(1:0)])
         @test bpart isa BlockedUnitRange

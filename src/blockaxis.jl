@@ -53,7 +53,11 @@ See also [`BlockedOneTo`](@ref).
 struct BlockedUnitRange{CS} <: AbstractBlockedUnitRange{Int,CS}
     first::Int
     lasts::CS
-    global _BlockedUnitRange(f, cs::CS) where CS = new{CS}(f, cs)
+    # assume that lasts is sorted, no checks carried out here
+    global function _BlockedUnitRange(f, cs::CS) where CS
+        Base.require_one_based_indexing(cs)
+        new{CS}(f, cs)
+    end
 end
 
 @inline _BlockedUnitRange(cs) = _BlockedUnitRange(1,cs)
@@ -102,8 +106,10 @@ See also [`BlockedUnitRange`](@ref).
 """
 struct BlockedOneTo{CS} <: AbstractBlockedUnitRange{Int,CS}
     lasts::CS
+    # assume that lasts is sorted, no checks carried out here
     function BlockedOneTo{CS}(lasts) where {CS}
         Base.require_one_based_indexing(lasts)
+        isempty(lasts) || first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
         new{CS}(lasts)
     end
 end
