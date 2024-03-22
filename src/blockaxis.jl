@@ -102,7 +102,12 @@ See also [`BlockedUnitRange`](@ref).
 """
 struct BlockedOneTo{CS} <: AbstractBlockedUnitRange{Int,CS}
     lasts::CS
+    function BlockedOneTo{CS}(lasts) where {CS}
+        Base.require_one_based_indexing(lasts)
+        new{CS}(lasts)
+    end
 end
+BlockedOneTo(lasts) = BlockedOneTo{typeof(lasts)}(lasts)
 
 const DefaultBlockAxis = BlockedOneTo{Vector{Int}}
 
