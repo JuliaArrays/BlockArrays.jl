@@ -146,7 +146,7 @@ julia> blockedrange(2, (1,2))
 _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
 @inline _blocklengths(a, bl, dbl) = isempty(bl) ? [dbl;] : [first(bl)-first(a)+1; dbl]
-@inline function _blocklengths(a::BlockedOneTo, bl::RangeCumsum, ::AbstractUnitRange)
+@inline function _blocklengths(a::BlockedOneTo, bl::RangeCumsum, ::OrdinalRange)
     # the 1:0 is hardcoded here to enable conversions to a Base.OneTo
     isempty(bl) ? oftype(bl.range, 1:0) : bl.range
 end
