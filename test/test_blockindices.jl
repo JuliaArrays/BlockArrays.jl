@@ -226,26 +226,30 @@ end
 
     @testset "firsts/lasts/lengths" begin
         b = blockedrange(1, [1,2,3])
-        @test blockfirsts(b) == [1,2,4]
-        @test blocklasts(b) == [1,3,6]
-        @test blocklengths(b) == [1,2,3]
+        @test @inferred(blockfirsts(b)) == [1,2,4]
+        @test @inferred(blocklasts(b)) == [1,3,6]
+        @test @inferred(blocklengths(b)) == [1,2,3]
 
         o = blockedrange(1, Ones{Int}(10))
-        @test blocklasts(o) == blockfirsts(o) == Base.OneTo(10)
-        @test blocklengths(o) == Ones{Int}(10)
+        @test @inferred(blocklasts(o)) == @inferred(blockfirsts(o)) == Base.OneTo(10)
+        @test @inferred(blocklengths(o)) == Ones{Int}(10)
 
         f = blockedrange(1, Fill(2,5))
-        @test blockfirsts(f) ≡ 1:2:9
-        @test blocklasts(f) ≡ StepRangeLen(2,2,5)
-        @test blocklengths(f) ≡ Fill(2,5)
+        @test @inferred(blockfirsts(f)) ≡ 1:2:9
+        @test @inferred(blocklasts(f)) ≡ StepRangeLen(2,2,5)
+        @test @inferred(blocklengths(f)) ≡ Fill(2,5)
 
         f = blockedrange(1, Zeros{Int}(2))
-        @test blockfirsts(f) == [1,1]
-        @test blocklasts(f) == [0,0]
+        @test @inferred(blockfirsts(f)) == [1,1]
+        @test @inferred(blocklasts(f)) == [0,0]
 
         r = blockedrange(1, Base.OneTo(5))
-        @test (@inferred blocklengths(r)) == 1:5
-        @test blocklasts(r) == ArrayLayouts.RangeCumsum(Base.OneTo(5))
+        @test @inferred(blocklengths(r)) == 1:5
+        @test @inferred(blocklasts(r)) == ArrayLayouts.RangeCumsum(Base.OneTo(5))
+
+        r = blockedrange(2, 2:3:11)
+        @test @inferred(blockfirsts(r)) == [2,4,9,17]
+        @test @inferred(blocklengths(r)) == 2:3:11
     end
 
     @testset "convert" begin
@@ -498,26 +502,30 @@ end
 
     @testset "firsts/lasts/lengths" begin
         b = blockedrange([1,2,3])
-        @test blockfirsts(b) == [1,2,4]
-        @test blocklasts(b) == [1,3,6]
-        @test blocklengths(b) == [1,2,3]
+        @test @inferred(blockfirsts(b)) == [1,2,4]
+        @test @inferred(blocklasts(b)) == [1,3,6]
+        @test @inferred(blocklengths(b)) == [1,2,3]
 
         o = blockedrange(Ones{Int}(10))
-        @test blocklasts(o) == blockfirsts(o) == Base.OneTo(10)
-        @test blocklengths(o) == Ones{Int}(10)
+        @test @inferred(blocklasts(o)) == @inferred(blockfirsts(o)) == Base.OneTo(10)
+        @test @inferred(blocklengths(o)) == Ones{Int}(10)
 
         f = blockedrange(Fill(2,5))
-        @test blockfirsts(f) ≡ 1:2:9
-        @test blocklasts(f) ≡ StepRangeLen(2,2,5)
-        @test blocklengths(f) ≡ Fill(2,5)
+        @test @inferred(blockfirsts(f)) ≡ 1:2:9
+        @test @inferred(blocklasts(f)) ≡ StepRangeLen(2,2,5)
+        @test @inferred(blocklengths(f)) ≡ Fill(2,5)
 
         f = blockedrange(Zeros{Int}(2))
-        @test blockfirsts(f) == [1,1]
-        @test blocklasts(f) == [0,0]
+        @test @inferred(blockfirsts(f)) == [1,1]
+        @test @inferred(blocklasts(f)) == [0,0]
 
         r = blockedrange(Base.OneTo(5))
-        @test (@inferred blocklengths(r)) == 1:5
-        @test blocklasts(r) == ArrayLayouts.RangeCumsum(Base.OneTo(5))
+        @test @inferred(blocklengths(r)) == 1:5
+        @test @inferred(blocklasts(r)) == ArrayLayouts.RangeCumsum(Base.OneTo(5))
+
+        r = blockedrange(2:3:11)
+        @test @inferred(blockfirsts(r)) == [1,3,8,16]
+        @test @inferred(blocklengths(r)) == 2:3:11
     end
 
     @testset "convert" begin
