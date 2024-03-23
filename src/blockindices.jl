@@ -154,14 +154,10 @@ end
 @inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
 @inline BlockIndex(a::Block, b::Int) = BlockIndex(a, (b,))
 
-@generated function BlockIndex(I::NTuple{N, Int}, α::NTuple{M, Int}) where {M,N}
-    @assert M < N
-    α_ex = Expr(:tuple, [k <= M ? :(α[$k]) : :(1) for k = 1:N]...)
-    return quote
-        $(Expr(:meta, :inline))
-        @inbounds α2 = $α_ex
-        BlockIndex(I, α2)
-    end
+@inline function BlockIndex(I::NTuple{N, Int}, α::NTuple{M, Int}) where {M,N}
+    M <= N || throw(ArgumentError("number of indices must not exceed the number of blocks"))
+    α2 = ntuple(k -> k <= M ? α[k] : 1, N)
+    BlockIndex(I, α2)
 end
 
 block(b::BlockIndex) = Block(b.I...)

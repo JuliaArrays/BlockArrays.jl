@@ -174,17 +174,13 @@ end
 BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T,N} =
     BlockArray{T}(arr, block_sizes...)
 
-@generated function BlockArray{T}(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
-    return quote
-        block_arr = _BlockArray(Array{typeof(arr),N}, baxes)
-        @nloops $N i i->blockaxes(baxes[i],1) begin
-            block_index = @ntuple $N i
-            indices = getindex.(baxes,block_index)
-            block_arr[block_index...] = arr[indices...]
-        end
-
-        return block_arr
+function BlockArray{T}(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
+    block_arr = _BlockArray(Array{typeof(arr),N}, baxes)
+    for block_index in Iterators.product(blockaxes.(baxes,1)...)
+        indices = getindex.(baxes,block_index)
+        block_arr[block_index...] = arr[indices...]
     end
+    return block_arr
 end
 
 BlockArray{T}(arr::AbstractArray{<:Any, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N} =
@@ -277,19 +273,17 @@ end
 
 getsizes(block_sizes, block_index) = getindex.(block_sizes, block_index)
 
-@generated function checksizes(fullsizes::Array{NTuple{N,Int}, N}, block_sizes::NTuple{N,Vector{Int}}) where N
-    quote
-        @nloops $N i fullsizes begin
-            block_index = @ntuple $N i
-            if fullsizes[block_index...] != getsizes(block_sizes, block_index)
-                error("size(blocks[", strip(repr(block_index), ['(', ')']),
-                      "]) (= ", fullsizes[block_index...],
-                      ") is incompatible with expected size: ",
-                      getsizes(block_sizes, block_index))
-            end
+function checksizes(fullsizes::Array{NTuple{N,Int}, N}, block_sizes::NTuple{N,Vector{Int}}) where N
+    for I in CartesianIndices(fullsizes)
+        block_index = Tuple(I)
+        if fullsizes[block_index...] != getsizes(block_sizes, block_index)
+            error("size(blocks[", strip(repr(block_index), ['(', ')']),
+                  "]) (= ", fullsizes[block_index...],
+                  ") is incompatible with expected size: ",
+                  getsizes(block_sizes, block_index))
         end
-        return fullsizes
     end
+    return fullsizes
 end
 
 """
@@ -452,18 +446,13 @@ end
 # Misc #
 ########
 
-@generated function Base.Array(block_array::BlockArray{T, N, R}) where {T,N,R}
-    # TODO: This will fail for empty block array
-    return quote
-        arr = Array{eltype(T)}(undef, size(block_array))
-        @nloops $N i i->blockaxes(block_array,i) begin
-            block_index = @ntuple $N i
-            indices = getindex.(axes(block_array), block_index)
-            arr[indices...] = @view block_array[block_index...]
-        end
-
-        return arr
+function Base.Array(block_array::BlockArray{T, N, R}) where {T,N,R}
+    arr = Array{eltype(T)}(undef, size(block_array))
+    for block_index in Iterators.product(blockaxes(block_array)...)
+        indices = getindex.(axes(block_array), block_index)
+        arr[indices...] = @view block_array[block_index...]
     end
+    return arr
 end
 
 function Base.fill!(block_array::BlockArray, v)

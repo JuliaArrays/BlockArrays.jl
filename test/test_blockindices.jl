@@ -84,9 +84,10 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
     @testset "BlockIndex" begin
         @test Block(1)[1] == BlockIndex((1,),(1,))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
-        @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1))
+        @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
+        @test BlockIndex((2,2,2),(2,)) == BlockIndex((2,2,2),(2,1,)) == BlockIndex((2,2,2),(2,1,1))
     end
 
     @testset "BlockRange" begin
