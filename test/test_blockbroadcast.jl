@@ -1,5 +1,6 @@
 using BlockArrays, FillArrays, Test
 import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
+using JET
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
@@ -180,8 +181,10 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
     @testset "type inference" begin
         u = BlockArray(randn(5), [2,3]);
+        A = zeros(size(u))
         @inferred(copyto!(similar(u), Base.broadcasted(exp, u)))
         @test exp.(u) == exp.(Vector(u))
+        @test_opt ((A,B) -> A .= B)(A,u)
     end
 
     @testset "adjtrans" begin
