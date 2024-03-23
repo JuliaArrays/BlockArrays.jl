@@ -184,7 +184,10 @@ using JET
         A = zeros(size(u))
         @inferred(copyto!(similar(u), Base.broadcasted(exp, u)))
         @test exp.(u) == exp.(Vector(u))
-        @test_opt ((A,B) -> A .= B)(A,u)
+        # test_opt isn't available on JET v0.4, which is installed on Julia v1.6
+        @static if isdefined(JET, :test_opt)
+            @test_opt ((A,B) -> A .= B)(A,u)
+        end
     end
 
     @testset "adjtrans" begin
