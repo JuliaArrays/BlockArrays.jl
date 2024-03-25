@@ -144,45 +144,32 @@ end
     return copyto!(dest, Base.Broadcast.instantiate(Base.Broadcast.Broadcasted{BS}(bc.f, bc.args, combine_blockaxes.(axes(dest),axes(bc)))))
 end
 
-@generated function _generic_blockbroadcast_copyto!(dest::AbstractArray,
+function _generic_blockbroadcast_copyto!(dest::AbstractArray,
                             bc::Broadcasted{<:AbstractBlockStyle{NDims}, <:Any, <:Any, Args}) where {NDims, Args <: Tuple}
 
-    NArgs = length(Args.parameters)
+    NArgs = fieldcount(Args)
 
-    # `bvar(0, dim)` is a variable for BlockIndexRange of `dim`-th dimension
-    # of `dest` array.  `bvar(i, dim)` is a similar variable of `i`-th
-    # argument in `bc.args`.
-    bvar(i, dim) = Symbol("blockindexrange_", i, "_", dim)
-
-    function forloop(dim)
-        if dim > 0
-            quote
-                for ($(bvar(0, dim)), $(bvar.(1:NArgs, dim)...),) in zip(
-                        subblocks(dest, bs, $dim),
-                        subblocks.(bc.args, Ref(bs), Ref($dim))...)
-                    $(forloop(dim - 1))
-                end
-            end
-        else
-            bview(a, i) = :(_bview($a, $([bvar(i, d) for d in 1:NDims]...)))
-            destview = bview(:dest, 0)
-            argblocks = [bview(:(bc.args[$i]), i) for i in 1:NArgs]
-            quote
-                broadcast!(bc.f, $destview, $(argblocks...))
-            end
-        end
-    end
-
-    quote
-        bs = axes(bc)
-        if !blockisequal(axes(dest), bs)
-            copyto!(PseudoBlockArray(dest, bs), bc)
-            return dest
-        end
-
-        $(forloop(NDims))
+    bs = axes(bc)
+    if !blockisequal(axes(dest), bs)
+        copyto!(PseudoBlockArray(dest, bs), bc)
         return dest
     end
+
+    t = ntuple(NDims) do dim
+            zip(
+                subblocks(dest, bs, dim),
+                map(x -> subblocks(x, bs, dim), bc.args)...
+            )
+        end
+
+    for inds in Iterators.product(t...)
+        destinds, bcinds = map(first, inds), ntuple(i -> map(x->x[i+1], inds), NArgs)
+        destview = _bview(dest, destinds...)
+        argblocks = ntuple(i -> _bview(bc.args[i], bcinds[i]...), NArgs)
+        broadcast!(bc.f, destview, argblocks...)
+    end
+
+    return dest
 end
 
 copyto!(dest::AbstractArray,
