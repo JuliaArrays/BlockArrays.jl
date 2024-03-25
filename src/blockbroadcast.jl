@@ -140,8 +140,13 @@ end
 @inline _bview(arg, ::Vararg) = arg
 @inline _bview(A::AbstractArray, I...) = view(A, I...)
 
-@inline function Base.Broadcast.materialize!(dest, bc::Broadcasted{BS}) where {BS<:AbstractBlockStyle}
-    return copyto!(dest, Base.Broadcast.instantiate(Base.Broadcast.Broadcasted{BS}(bc.f, bc.args, combine_blockaxes.(axes(dest),axes(bc)))))
+@inline function Broadcast.materialize!(dest, bc::Broadcasted{BS}) where {NDims, BS<:AbstractBlockStyle{NDims}}
+    dest_reshaped = ndims(dest) == NDims ? dest : reshape(dest, size(bc))
+    bc2 = Broadcast.instantiate(
+            Broadcast.Broadcasted{BS}(bc.f, bc.args,
+                map(combine_blockaxes, axes(dest_reshaped), axes(bc))))
+    copyto!(dest_reshaped, bc2)
+    return dest
 end
 
 function _generic_blockbroadcast_copyto!(dest::AbstractArray,

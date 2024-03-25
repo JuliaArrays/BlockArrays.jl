@@ -12,6 +12,7 @@ Aqua = "0.8"
 ArrayLayouts = "1.0.8"
 Documenter = "1"
 FillArrays = "1"
+JET = "0.4, 0.6, 0.7, 0.8"
 LinearAlgebra = "1.6"
 OffsetArrays = "1"
 Random = "1.6"
@@ -23,6 +24,7 @@ julia = "1.6"
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
@@ -30,4 +32,4 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "Documenter", "OffsetArrays", "SparseArrays", "StaticArrays", "Test", "Random"]
+test = ["Aqua", "Documenter", "JET", "OffsetArrays", "SparseArrays", "StaticArrays", "Test", "Random"]
