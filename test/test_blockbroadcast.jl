@@ -25,6 +25,24 @@ using JET
 
         @test axes(A + A) == axes(A .+ A) == axes(A)
         @test axes(A .+ 1) == axes(A)
+
+        @testset "mismatched ndims" begin
+            u = BlockArray(randn(5), [2,3])
+            dest = zeros(size(u)..., 1)
+            @test (dest .= u) isa typeof(dest)
+            @static if isdefined(JET, :test_opt)
+                @test_opt ((dest,u) -> dest .= u)(dest,u)
+            end
+            @test reshape(dest, size(u)) == u
+
+            u = BlockArray(randn(3,3), [1,2], [1,2])
+            dest = zeros(length(u))
+            @test (dest .= u) isa typeof(dest)
+            @static if isdefined(JET, :test_opt)
+                @test_opt ((dest,u) -> dest .= u)(dest,u)
+            end
+            @test reshape(dest, size(u)) == u
+        end
     end
 
     @testset "PseudoBlockArray" begin
