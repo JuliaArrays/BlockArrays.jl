@@ -460,18 +460,32 @@ end
     @test B[1, 1] == Block(1, 1)[1, 1]
     @test B[4, 6] == Block(2, 2)[2, 3]
 
-    @test B[Block(1, 1)] isa BlockArrays.BlockIndexRange{2}
+    @test B[Block(1, 1)] isa BlockIndexRange{2}
     @test B[Block(1, 1)] == Block(1, 1)[1:2, 1:3]
     @test B[Block(2, 1)] == Block(2, 1)[1:3, 1:3]
     @test B[Block(1, 2)] == Block(1, 2)[1:2, 1:4]
     @test B[Block(2, 2)] == Block(2, 2)[1:3, 1:4]
 
-    @test view(B, Block(1, 2)) isa BlockArrays.BlockIndexRange{2}
+    @test view(B, Block(1, 2)) isa BlockIndexRange{2}
     @test view(B, Block(1, 2)) == Block(1, 2)[1:2, 1:4]
 
-    @test B[Block(1), Block(2)] isa BlockArrays.BlockIndexRange{2}
+    @test B[Block(1), Block(2)] isa BlockIndexRange{2}
     @test B[Block(1), Block(2)] == Block(1, 2)[1:2, 1:4]
 
-    @test view(B, Block(1), Block(2)) isa BlockArrays.BlockIndexRange{2}
+    @test view(B, Block(1), Block(2)) isa BlockIndexRange{2}
     @test view(B, Block(1), Block(2)) == Block(1, 2)[1:2, 1:4]
+
+    r1 = BlockArrays._BlockedUnitRange(2, [2, 3])
+    r2 = BlockArrays._BlockedUnitRange(2, [3, 4])
+    @test B[2:3, 2:4] == BlockIndices((r1, r2))
+    @test_broken B[2:3, 2:4] isa BlockIndices{2}
+
+    @test B[Block(2, 2)[2:3, 2:3]] == Block(2, 2)[2:3, 2:3]
+    @test_broken B[Block(2, 2)[2:3, 2:3]] isa BlockedIndexRange{2}
+
+    @test B[Block(1):Block(2), Block(1):Block(2)] == B
+    @test_broken B[Block(1):Block(2), Block(1):Block(2)] isa BlockedIndices{2}
+
+    @test B[Block(2), Block(1):Block(2)] == mortar([[Block(2, 1)[1:3, 1:3]] [Block(2, 2)[1:3, 1:4]]])
+    @test_broken B[Block(2), Block(1):Block(2)] isa BlockedIndices{2}
 end
