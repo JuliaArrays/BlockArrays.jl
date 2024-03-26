@@ -113,6 +113,14 @@ function Base.show(io::IO, B::Block{N,Int}) where N
     print(io, ")")
 end
 
+# Some views may be computed eagerly without the SubArray wrapper
+Base.@propagate_inbounds Base.view(r::AbstractRange, B::Block{1}) = r[to_indices(r, (B,))...]
+Base.@propagate_inbounds function Base.view(C::CartesianIndices{N}, B::Block{N}) where {N}
+    inds = to_indices(C, (B,))
+    @boundscheck checkbounds(C, inds...)
+    @inbounds view(C, inds...)
+end
+
 """
     BlockIndex{N}
 
@@ -300,8 +308,7 @@ _indices(B) = B
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
 
 # Avoid creating a SubArray wrapper in certain non-allocating cases
-Base.view(C::AbstractRange, bs::BlockSlice) = C[bs...]
-Base.view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = C[bs...]
+Base.@propagate_inbounds Base.view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = C[bs...]
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 

@@ -103,6 +103,32 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test intersect(Block.(2:5), Block.(3:6)) ≡ Block.(3:5)
     end
 
+    @testset "view into CartesianIndices/ranges" begin
+        r = 2:10
+        @test view(r, Block(1)) === r
+        @test_throws BlockBoundsError view(r, Block(2))
+        C = CartesianIndices((2:10, 2:10))
+        @test view(C, Block(1,1)) === C
+        @test view(C, Block(1), Block(1)) == C
+        @test_throws BlockBoundsError view(C, Block(1), Block(2))
+        @test_throws BlockBoundsError view(C, Block(1,2))
+
+        B = BlockArray([1:3;], [2,1])
+        Cb = CartesianIndices(B)
+        @test view(Cb, Block(1)) === Cb[Block(1)] === CartesianIndices((1:2,))
+        @test view(Cb, Block(2)) === Cb[Block(2)] === CartesianIndices((3:3,))
+
+        B = BlockArray(reshape([1:9;],3,3), [2,1], [2,1])
+        Cb = CartesianIndices(B)
+        @test view(Cb, Block(1,1)) === Cb[Block(1,1)] === CartesianIndices((1:2,1:2))
+        @test view(Cb, Block(1,2)) === Cb[Block(1,2)] === CartesianIndices((1:2, 3:3))
+        @test view(Cb, Block(2,1)) === Cb[Block(2,1)] === CartesianIndices((3:3,1:2))
+        @test view(Cb, Block(2,2)) === Cb[Block(2,2)] === CartesianIndices((3:3, 3:3))
+        for i in 1:2, j in 1:2
+            @test view(Cb, Block(j), Block(i)) == view(Cb, Block(j, i)) == Cb[Block(j, i)]
+        end
+    end
+
     @testset "print" begin
         @test sprint(show, "text/plain", Block()) == "Block()"
         @test sprint(show, "text/plain", Block(1)) == "Block(1)"
