@@ -157,6 +157,16 @@ false
 """
 @inline blockcheckindex(::Type{Bool}, inds::BlockRange{1}, i::Integer) = Block(i) in inds
 
+"""
+    findblockindex(A::AbstractArray{T,N}, I::Tuple{Vararg{Integer,N}})
+
+Returns the [`BlockIndex`](@ref) of `A[I...]`.
+"""
+function findblockindex(A::AbstractArray{T,N}, I::Tuple{Vararg{Integer,N}}) where {T,N}
+    blockinds = findblockindex.(axes(A), I)
+    BlockIndex(Base.IteratorsMD.flatten(map(x->x.I, blockinds)), Base.IteratorsMD.flatten(map(x->x.α, blockinds)))
+end
+
 @propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Block{N}) where {T,N} =
     setindex!(block_arr, v, Block.(block.n)...)
 @propagate_inbounds function setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N}
