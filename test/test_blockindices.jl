@@ -108,22 +108,24 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test view(r, Block(1)) === r
         @test_throws BlockBoundsError view(r, Block(2))
         C = CartesianIndices((2:10, 2:10))
-        @test view(C, Block(1,1)) === C
+        ==ᵥ = VERSION >= v"1.10" ? (===) : (==)
+
+        @test view(C, Block(1,1)) ==ᵥ C
         @test view(C, Block(1), Block(1)) == C
         @test_throws BlockBoundsError view(C, Block(1), Block(2))
         @test_throws BlockBoundsError view(C, Block(1,2))
 
         B = BlockArray([1:3;], [2,1])
         Cb = CartesianIndices(B)
-        @test view(Cb, Block(1)) === Cb[Block(1)] === CartesianIndices((1:2,))
-        @test view(Cb, Block(2)) === Cb[Block(2)] === CartesianIndices((3:3,))
+        @test view(Cb, Block(1)) ==ᵥ Cb[Block(1)] ==ᵥ CartesianIndices((1:2,))
+        @test view(Cb, Block(2)) ==ᵥ Cb[Block(2)] ==ᵥ CartesianIndices((3:3,))
 
         B = BlockArray(reshape([1:9;],3,3), [2,1], [2,1])
         Cb = CartesianIndices(B)
-        @test view(Cb, Block(1,1)) === Cb[Block(1,1)] === CartesianIndices((1:2,1:2))
-        @test view(Cb, Block(1,2)) === Cb[Block(1,2)] === CartesianIndices((1:2, 3:3))
-        @test view(Cb, Block(2,1)) === Cb[Block(2,1)] === CartesianIndices((3:3,1:2))
-        @test view(Cb, Block(2,2)) === Cb[Block(2,2)] === CartesianIndices((3:3, 3:3))
+        @test view(Cb, Block(1,1)) ==ᵥ Cb[Block(1,1)] ==ᵥ CartesianIndices((1:2,1:2))
+        @test view(Cb, Block(1,2)) ==ᵥ Cb[Block(1,2)] ==ᵥ CartesianIndices((1:2, 3:3))
+        @test view(Cb, Block(2,1)) ==ᵥ Cb[Block(2,1)] ==ᵥ CartesianIndices((3:3,1:2))
+        @test view(Cb, Block(2,2)) ==ᵥ Cb[Block(2,2)] ==ᵥ CartesianIndices((3:3, 3:3))
         for i in 1:2, j in 1:2
             @test view(Cb, Block(j), Block(i)) == view(Cb, Block(j, i)) == Cb[Block(j, i)]
         end
@@ -431,9 +433,9 @@ end
 
 @testset "BlockSlice" begin
     b = BlockSlice(Block(5),1:3)
-    @test b[b] === b
+    @test b[b] == b
     @test b[Base.Slice(1:3)] ≡ b
-    @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5),1:2)
+    @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
     @test Block(b) ≡ Block(5)
 
     @testset "OneTo converts" begin
@@ -448,6 +450,8 @@ end
         b = BlockSlice(Block(1), r)
         @test view(C, b) === view(C, r)
         @test view(1:10, b) === view(1:10, r)
+        C = CartesianIndices((1:3, 1:3))
+        @test view(C, b, b) === view(C, r, r)
     end
 end
 

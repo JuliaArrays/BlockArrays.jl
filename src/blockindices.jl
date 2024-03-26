@@ -302,13 +302,13 @@ _indices(B) = B
 
 @propagate_inbounds getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
 @propagate_inbounds getindex(S::BlockSlice{<:Block{1}}, k::AbstractUnitRange{Int}) =
-    BlockSlice(S.block, S.indices[_indices(k)])
+    BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
 @propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1}}, k::AbstractUnitRange{Int}) =
-    BlockSlice(S.block, S.indices[_indices(k)])
+    BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
 
 # Avoid creating a SubArray wrapper in certain non-allocating cases
-Base.@propagate_inbounds Base.view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = C[bs...]
+Base.@propagate_inbounds Base.view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = view(C, map(x->x.indices, bs)...)
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
