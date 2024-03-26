@@ -405,14 +405,23 @@ end
 
 @testset "BlockSlice" begin
     b = BlockSlice(Block(5),1:3)
+    @test b[b] === b
     @test b[Base.Slice(1:3)] ≡ b
-    @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
+    @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5),1:2)
     @test Block(b) ≡ Block(5)
 
     @testset "OneTo converts" begin
         for b in (BlockSlice(Block(1), 1:1), BlockSlice(Block.(1:1), 1:1), BlockSlice(Block(1)[1:1], 1:1))
             @test convert(typeof(b), Base.OneTo(1)) ≡ b
         end
+    end
+
+    @testset "view into CartesianIndices/ranges" begin
+        C = CartesianIndices((1:3,))
+        r = 1:2
+        b = BlockSlice(Block(1), r)
+        @test view(C, b) === view(C, r)
+        @test view(1:10, b) === view(1:10, r)
     end
 end
 

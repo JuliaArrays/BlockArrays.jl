@@ -289,10 +289,19 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
     @eval $f(S::BlockSlice) = $f(S.indices)
 end
 
+_indices(B::BlockSlice) = B.indices
+_indices(B) = B
+
 @propagate_inbounds getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
-@propagate_inbounds getindex(S::BlockSlice{<:Block}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
-@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
+@propagate_inbounds getindex(S::BlockSlice{<:Block{1}}, k::AbstractUnitRange{Int}) =
+    BlockSlice(S.block, S.indices[_indices(k)])
+@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1}}, k::AbstractUnitRange{Int}) =
+    BlockSlice(S.block, S.indices[_indices(k)])
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
+
+# Avoid creating a SubArray wrapper in certain non-allocating cases
+Base.view(C::AbstractRange, bs::BlockSlice) = C[bs...]
+Base.view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = C[bs...]
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
