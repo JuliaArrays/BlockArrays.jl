@@ -23,7 +23,7 @@ struct BlockIndices{N,R<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray
   end
 end
 function Base.axes(a::BlockIndices)
-  return map(Base.axes1, blockedunitrange_getindex.(a.indices, range.(a.first, last.(a.indices))))
+  return map(Base.axes1, blockedunitrange_getindex.(a.indices, (:).(a.first, last.(a.indices))))
 end
 function BlockIndices(indices::Tuple{Vararg{AbstractUnitRange{Int},N}}) where {N}
     first = ntuple(_ -> 1, Val(N))
