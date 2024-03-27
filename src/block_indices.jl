@@ -25,8 +25,8 @@ end
 function Base.axes(a::BlockIndices)
   return map(Base.axes1, blockedunitrange_getindex.(a.indices, range.(a.first, last.(a.indices))))
 end
-function BlockIndices(indices::Tuple{Vararg{AbstractUnitRange{Int}}})
-    first = ntuple(Returns(1), length(indices))
+function BlockIndices(indices::Tuple{Vararg{AbstractUnitRange{Int},N}}) where {N}
+    first = ntuple(_ -> 1, Val(N))
     return _BlockIndices(first, indices)
 end
 BlockIndices(a::AbstractArray) = BlockIndices(axes(a))
@@ -68,7 +68,7 @@ function Base.getindex(a::BlockIndices{N}, indices::BlockIndexRange{N}) where {N
 end
 
 function Base.view(a::BlockIndices{N}, indices::Vararg{AbstractUnitRange,N}) where {N}
-    offsets = a.first .- ntuple(Returns(1), Val(N))
+    offsets = a.first .- ntuple(_ -> 1, Val(N))
     firsts = first.(indices) .+ offsets
     inds = blockedunitrange_getindex.(a.indices, Base.OneTo.(last.(indices) .+ offsets))
     return _BlockIndices(firsts, inds)
