@@ -82,7 +82,7 @@ end
             @test A isa Matrix
 
             # test that BlockArrays may be created from immutable arrays
-            B = BlockArray(reshape([1:9;],3,3), [2,1], [2,1])
+            B = BlockArray(reshape(1:9,3,3), [2,1], [2,1])
             @test blocksizes(B) == ([2,1], [2,1])
             @test B == reshape([1:9;],3,3)
             @test blocks(B) isa Matrix{Matrix{Int}}
