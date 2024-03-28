@@ -115,10 +115,13 @@ end
 
 # Some views may be computed eagerly without the SubArray wrapper
 Base.@propagate_inbounds Base.view(r::AbstractRange, B::Block{1}) = r[to_indices(r, (B,))...]
+Base.@propagate_inbounds function Base.view(C::CartesianIndices{N}, b1::Block{1}, B::Block{1}...) where {N}
+    blk = Block((b1, B...))
+    view(C, to_indices(C, (blk,))...)
+end
 Base.@propagate_inbounds function Base.view(C::CartesianIndices{N}, B::Block{N}) where {N}
     inds = to_indices(C, (B,))
-    @boundscheck checkbounds(C, inds...)
-    @inbounds view(C, inds...)
+    view(C, inds...)
 end
 
 """

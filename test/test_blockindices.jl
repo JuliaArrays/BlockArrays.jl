@@ -127,8 +127,11 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test view(Cb, Block(2,1)) ==ᵥ Cb[Block(2,1)] ==ᵥ CartesianIndices((3:3,1:2))
         @test view(Cb, Block(2,2)) ==ᵥ Cb[Block(2,2)] ==ᵥ CartesianIndices((3:3, 3:3))
         for i in 1:2, j in 1:2
-            @test view(Cb, Block(j), Block(i)) == view(Cb, Block(j, i)) == Cb[Block(j, i)]
+            @test view(Cb, Block(j), Block(i)) ==ᵥ view(Cb, Block(j, i))
         end
+        # ensure that calls with mismatched ndims don't error
+        @test view(Cb, Block(1)) == view(Cb, to_indices(Cb, (Block(1),))...)
+        @test reshape(view(Cb, Block(1), Block(1), Block(1)), 2, 2) == view(Cb, Block(1), Block(1))
     end
 
     @testset "print" begin
