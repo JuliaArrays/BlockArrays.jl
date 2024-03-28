@@ -6,28 +6,32 @@ function to_blockindex(a::AbstractUnitRange, index::Integer)
     return axis_blockindex
 end
 
-function blockedunitrange_getindex(a::BlockedUnitRange, indices::AbstractUnitRange)
+# https://github.com/JuliaArrays/BlockArrays.jl/issues/347
+function blockedgetindex(a::BlockedUnitRange, indices::AbstractUnitRange)
   first_block = block(to_blockindex(a, first(indices)))
   last_block = block(to_blockindex(a, last(indices)))
   lasts = [blocklasts(a)[Int(first_block):(Int(last_block) - 1)]; last(indices)]
   return BlockArrays._BlockedUnitRange(first(indices), lasts)
 end
+function blockedgetindex(a::AbstractUnitRange, indices::AbstractUnitRange)
+  return a[indices]
+end
 
 function _BlockIndices end
 
-struct BlockIndices{N,R<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{BlockIndex{N},N}
+struct BlockIndices{N,R<:NTuple{N,AbstractUnitRange{Int}},BS<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{BlockIndex{N},N}
   first::NTuple{N,Int}
   indices::R
-  global function _BlockIndices(first::NTuple{N,Int}, indices::NTuple{N,AbstractUnitRange{Int}}) where {N}
-      return new{N,typeof(indices)}(first, indices)
+  axes::BS
+  global function _BlockIndices(first::NTuple{N,Int}, indices::R, axes::BS) where {N,R<:NTuple{N,AbstractUnitRange{Int}},BS<:NTuple{N,AbstractUnitRange{Int}}}
+      return new{N,R,BS}(first, indices, axes)
   end
 end
-function Base.axes(a::BlockIndices)
-  return map(Base.axes1, blockedunitrange_getindex.(a.indices, (:).(a.first, last.(a.indices))))
-end
+Base.axes(a::BlockIndices) = a.axes
 function BlockIndices(indices::Tuple{Vararg{AbstractUnitRange{Int},N}}) where {N}
     first = ntuple(_ -> 1, Val(N))
-    return _BlockIndices(first, indices)
+    axes = map(Base.axes1, blockedgetindex.(indices, Base.OneTo.(last.(indices))))
+    return _BlockIndices(first, indices, axes)
 end
 BlockIndices(a::AbstractArray) = BlockIndices(axes(a))
 
@@ -70,8 +74,8 @@ end
 function Base.view(a::BlockIndices{N}, indices::Vararg{AbstractUnitRange,N}) where {N}
     offsets = a.first .- ntuple(_ -> 1, Val(N))
     firsts = first.(indices) .+ offsets
-    inds = blockedunitrange_getindex.(a.indices, Base.OneTo.(last.(indices) .+ offsets))
-    return _BlockIndices(firsts, inds)
+    inds = blockedgetindex.(a.indices, Base.OneTo.(last.(indices) .+ offsets))
+    return _BlockIndices(firsts, inds, Base.axes1.(indices))
 end
 
 # Ranges that result in contiguous slices, and therefore preserve `BlockIndices`.

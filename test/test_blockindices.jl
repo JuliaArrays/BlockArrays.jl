@@ -457,7 +457,7 @@ end
     @test axes(B) == (1:5, 1:7)
     @test blocklengths.(axes(B)) == ([2, 3], [3, 4])
     @test blocksize(B) == (2, 2)
-    @test blockaxes(B) == (Block(1):Block(2), Block(1):Block(2))
+    @test blockaxes(B) == (Block.(1:2), Block.(1:2))
     @test B[1, 1] == Block(1, 1)[1, 1]
     @test B[4, 6] == Block(2, 2)[2, 3]
 
@@ -478,24 +478,33 @@ end
 
     B23_24 = mortar([[Block(1, 1)[2:2, 2:3]] [Block(1, 2)[2:2, 1:1]]
                      [Block(2, 1)[1:1, 2:3]] [Block(2, 2)[1:1, 1:1]]])
-    @test B[2:3, 2:4] == B23_24
-    @test B[2:3, 2:4] isa BlockIndices{2}
-    @test B[CartesianIndices((2:3,)), CartesianIndices((2:4,))] == B23_24
-    @test B[CartesianIndices((2:3,)), CartesianIndices((2:4,))] isa BlockIndices{2}
-    @test B[CartesianIndices((2:3, 2:4))] == B23_24
-    @test B[CartesianIndices((2:3, 2:4))] isa BlockIndices{2}
+    Br = B[2:3, 2:4]
+    @test Br == B23_24
+    @test blocksize(Br) == (1, 1)
+    @test Br isa AbstractMatrix{<:BlockIndex{2}}
+    @test Br isa BlockIndices{2}
+    Br = B[CartesianIndices((2:3,)), CartesianIndices((2:4,))]
+    @test Br == B23_24
+    @test blocksize(Br) == (1, 1)
+    @test Br isa AbstractMatrix{<:BlockIndex{2}}
+    @test Br isa BlockIndices{2}
+    Br = B[CartesianIndices((2:3, 2:4))]
+    @test Br == B23_24
+    @test Br isa AbstractMatrix{<:BlockIndex{2}}
+    @test Br isa BlockIndices{2}
 
     @test B[Block(2, 2)[2:3, 2:3]] == Block(2, 2)[2:3, 2:3]
     @test B[Block(2, 2)[2:3, 2:3]] isa BlockIndexRange{2}
 
-    @test B[Block(1):Block(2), Block(1):Block(2)] == B
-    @test B[Block(1):Block(2), Block(1):Block(2)] isa BlockIndices{2}
+    @test B[Block.(1:2), Block.(1:2)] == B
+    @test B[Block.(1:2), Block.(1:2)] isa BlockIndices{2}
 
     @test B[BlockRange(1:2, 1:2)] == B
     @test B[BlockRange(1:2, 1:2)] isa BlockIndices{2}
 
-    @test B[Block(2), Block(1):Block(2)] == mortar([[Block(2, 1)[1:3, 1:3]] [Block(2, 2)[1:3, 1:4]]])
-    @test B[Block(2), Block(1):Block(2)] isa BlockIndices{2}
+    # TODO: Should this make a `BlockIndices{1}`?
+    @test B[Block(2), Block.(1:2)] == mortar([[Block(2, 1)[1:3, 1:3]] [Block(2, 2)[1:3, 1:4]]])
+    @test B[Block(2), Block.(1:2)] isa BlockIndices{2}
 
     @test B[2:4, 2:5][2:3, 2:3] == mortar([[Block(2, 1)[1:2, 3:3]] [Block(2, 2)[1:2, 1:1]]])
     @test B[2:4, 2:5][2:3, 2:3] isa BlockIndices{2}
@@ -508,6 +517,8 @@ end
     @test B[Block(2)] == Block(2)[1:3]
     @test B[Block(2)] isa BlockIndexRange{1}
     @test B[2:4] == [Block(1)[2], Block(2)[1], Block(2)[2]]
-    @test blocklengths(only(axes(B[2:4]))) == [1, 2]
+    @test blocklength(only(axes(B[2:4]))) == 1
+    @test blocklengths(only(axes(B[2:4]))) == [3]
+    @test B[2:4] isa AbstractVector{<:BlockIndex{1}}
     @test B[2:4] isa BlockIndices{1}
 end
