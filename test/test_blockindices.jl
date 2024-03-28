@@ -502,9 +502,8 @@ end
     @test B[BlockRange(1:2, 1:2)] == B
     @test B[BlockRange(1:2, 1:2)] isa BlockIndices{2}
 
-    # TODO: Should this make a `BlockIndices{1}`?
-    @test B[Block(2), Block.(1:2)] == mortar([[Block(2, 1)[1:3, 1:3]] [Block(2, 2)[1:3, 1:4]]])
-    @test B[Block(2), Block.(1:2)] isa BlockIndices{2}
+    @test B[Block.(2:2), Block.(1:2)] == mortar([[Block(2, 1)[1:3, 1:3]] [Block(2, 2)[1:3, 1:4]]])
+    @test B[Block.(2:2), Block.(1:2)] isa BlockIndices{2}
 
     @test B[2:4, 2:5][2:3, 2:3] == mortar([[Block(2, 1)[1:2, 3:3]] [Block(2, 2)[1:2, 1:1]]])
     @test B[2:4, 2:5][2:3, 2:3] isa BlockIndices{2}
