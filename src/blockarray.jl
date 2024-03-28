@@ -175,12 +175,11 @@ BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{<:Intege
     BlockArray{T}(arr, block_sizes...)
 
 function BlockArray{T}(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
-    block_arr = _BlockArray(Array{typeof(arr),N}, baxes)
-    for block_index in Iterators.product(blockaxes.(baxes,1)...)
+    blocks = map(Iterators.product(blockaxes.(baxes,1)...)) do block_index
         indices = getindex.(baxes,block_index)
-        block_arr[block_index...] = arr[indices...]
+        arr[indices...]
     end
-    return block_arr
+    return _BlockArray(blocks, baxes)
 end
 
 BlockArray{T}(arr::AbstractArray{<:Any, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N} =
