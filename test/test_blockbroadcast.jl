@@ -1,5 +1,6 @@
 using BlockArrays, FillArrays, Test
 import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
+using JET
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
@@ -24,6 +25,24 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
         @test axes(A + A) == axes(A .+ A) == axes(A)
         @test axes(A .+ 1) == axes(A)
+
+        @testset "mismatched ndims" begin
+            u = BlockArray(randn(5), [2,3])
+            dest = zeros(size(u)..., 1)
+            @test (dest .= u) isa typeof(dest)
+            @static if isdefined(JET, :test_opt)
+                @test_opt ((dest,u) -> dest .= u)(dest,u)
+            end
+            @test reshape(dest, size(u)) == u
+
+            u = BlockArray(randn(3,3), [1,2], [1,2])
+            dest = zeros(length(u))
+            @test (dest .= u) isa typeof(dest)
+            @static if isdefined(JET, :test_opt)
+                @test_opt ((dest,u) -> dest .= u)(dest,u)
+            end
+            @test reshape(dest, size(u)) == u
+        end
     end
 
     @testset "PseudoBlockArray" begin
@@ -180,8 +199,13 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
     @testset "type inference" begin
         u = BlockArray(randn(5), [2,3]);
+        A = zeros(size(u))
         @inferred(copyto!(similar(u), Base.broadcasted(exp, u)))
         @test exp.(u) == exp.(Vector(u))
+        # test_opt isn't available on JET v0.4, which is installed on Julia v1.6
+        @static if isdefined(JET, :test_opt)
+            @test_opt ((A,B) -> A .= B)(A,u)
+        end
     end
 
     @testset "adjtrans" begin

@@ -84,9 +84,10 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
     @testset "BlockIndex" begin
         @test Block(1)[1] == BlockIndex((1,),(1,))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
-        @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1))
+        @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
+        @test BlockIndex((2,2,2),(2,)) == BlockIndex((2,2,2),(2,1,)) == BlockIndex((2,2,2),(2,1,1))
     end
 
     @testset "BlockRange" begin
@@ -100,6 +101,37 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test_throws BlockBoundsError Base.OneTo(5)[Block.(1:3)]
 
         @test intersect(Block.(2:5), Block.(3:6)) ≡ Block.(3:5)
+    end
+
+    @testset "view into CartesianIndices/ranges" begin
+        r = 2:10
+        @test view(r, Block(1)) === r
+        @test_throws BlockBoundsError view(r, Block(2))
+        C = CartesianIndices((2:10, 2:10))
+        ==ᵥ = VERSION >= v"1.10" ? (===) : (==)
+
+        @test view(C, Block(1,1)) ==ᵥ C
+        @test view(C, Block(1), Block(1)) == C
+        @test_throws BlockBoundsError view(C, Block(1), Block(2))
+        @test_throws BlockBoundsError view(C, Block(1,2))
+
+        B = BlockArray([1:3;], [2,1])
+        Cb = CartesianIndices(B)
+        @test view(Cb, Block(1)) ==ᵥ Cb[Block(1)] ==ᵥ CartesianIndices((1:2,))
+        @test view(Cb, Block(2)) ==ᵥ Cb[Block(2)] ==ᵥ CartesianIndices((3:3,))
+
+        B = BlockArray(reshape([1:9;],3,3), [2,1], [2,1])
+        Cb = CartesianIndices(B)
+        @test view(Cb, Block(1,1)) ==ᵥ Cb[Block(1,1)] ==ᵥ CartesianIndices((1:2,1:2))
+        @test view(Cb, Block(1,2)) ==ᵥ Cb[Block(1,2)] ==ᵥ CartesianIndices((1:2, 3:3))
+        @test view(Cb, Block(2,1)) ==ᵥ Cb[Block(2,1)] ==ᵥ CartesianIndices((3:3,1:2))
+        @test view(Cb, Block(2,2)) ==ᵥ Cb[Block(2,2)] ==ᵥ CartesianIndices((3:3, 3:3))
+        for i in 1:2, j in 1:2
+            @test view(Cb, Block(j), Block(i)) ==ᵥ view(Cb, Block(j, i))
+        end
+        # ensure that calls with mismatched ndims don't error
+        @test view(Cb, Block(1)) == view(Cb, to_indices(Cb, (Block(1),))...)
+        @test reshape(view(Cb, Block(1), Block(1), Block(1)), 2, 2) == view(Cb, Block(1), Block(1))
     end
 
     @testset "print" begin
@@ -409,6 +441,8 @@ end
 
 @testset "BlockSlice" begin
     b = BlockSlice(Block(5),1:3)
+    @test b[b] == b
+    @test b[b] isa BlockSlice{<:BlockIndexRange}
     @test b[Base.Slice(1:3)] ≡ b
     @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
     @test Block(b) ≡ Block(5)
@@ -417,6 +451,16 @@ end
         for b in (BlockSlice(Block(1), 1:1), BlockSlice(Block.(1:1), 1:1), BlockSlice(Block(1)[1:1], 1:1))
             @test convert(typeof(b), Base.OneTo(1)) ≡ b
         end
+    end
+
+    @testset "view into CartesianIndices/ranges" begin
+        C = CartesianIndices((1:3,))
+        r = 1:2
+        b = BlockSlice(Block(1), r)
+        @test view(C, b) === view(C, r)
+        @test view(1:10, b) === view(1:10, r)
+        C = CartesianIndices((1:3, 1:3))
+        @test view(C, b, b) === view(C, r, r)
     end
 end
 
