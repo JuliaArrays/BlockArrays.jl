@@ -175,8 +175,8 @@ BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{<:Intege
     BlockArray{T}(arr, block_sizes...)
 
 function BlockArray{T}(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
-    blocks = map(Iterators.product(blockaxes.(baxes,1)...)) do block_index
-        indices = getindex.(baxes,block_index)
+    blocks = map(Iterators.product(map(x -> blockaxes(x,1), baxes)...)) do block_index
+        indices = map((x,y) -> x[y], baxes, block_index)
         arr[indices...]
     end
     return _BlockArray(blocks, baxes)
