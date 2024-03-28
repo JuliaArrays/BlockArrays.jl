@@ -92,14 +92,3 @@ This is broken for now. See: https://github.com/JuliaArrays/BlockArrays.jl/issue
     copyto!(a[i...], b)
     a
 end
-
-function Base.showarg(io::IO, a::BlocksView, toplevel::Bool)
-    if toplevel
-        print(io, "blocks of ")
-        Base.showarg(io, a.array, true)
-    else
-        print(io, "::BlocksView{…,")
-        Base.showarg(io, a.array, false)
-        print(io, '}')
-    end
-end

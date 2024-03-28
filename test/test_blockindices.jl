@@ -142,12 +142,17 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test sprint(show, "text/plain", Block{1}(1)) == "Block(1)"
         @test sprint(show, "text/plain", Block{2}(1,2)) == "Block(1, 2)"
 
-        @test sprint(show, "text/plain", Block{0,BigInt}()) == "Block{0, BigInt}(())"
-        @test sprint(show, "text/plain", Block{1,BigInt}(1)) == "Block{1, BigInt}((1,))"
+        @test sprint(show, "text/plain", Block{0,BigInt}()) == "Block{0, BigInt}()"
+        @test sprint(show, "text/plain", Block{1,BigInt}(1)) == "Block{1, BigInt}(1)"
         @test sprint(show, "text/plain", Block{2}(1,2)) == "Block(1, 2)"
 
-        @test sprint(show, BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
+        @test sprint(show, "text/plain", BlockIndex((1,2), (3,4))) == "Block(1, 2)[3, 4]"
+        @test sprint(show, "text/plain", BlockArrays.BlockIndexRange(Block(1), 3:4)) == "Block(1)[3:4]"
+
+        @test sprint(show, "text/plain", BlockRange()) == "BlockRange()"
+        @test sprint(show, "text/plain", BlockRange(1:2)) == "BlockRange(1:2)"
         @test sprint(show, "text/plain", BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
+        @test sprint(show, BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
     end
 end
 
