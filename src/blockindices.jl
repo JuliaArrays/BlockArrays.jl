@@ -113,6 +113,16 @@ function Base.show(io::IO, B::Block{N,Int}) where N
     print(io, ")")
 end
 
+# Some views may be computed eagerly without the SubArray wrapper
+Base.@propagate_inbounds Base.view(r::AbstractRange, B::Block{1}) = r[to_indices(r, (B,))...]
+Base.@propagate_inbounds function Base.view(C::CartesianIndices{N}, b1::Block{1}, B::Block{1}...) where {N}
+    blk = Block((b1, B...))
+    view(C, to_indices(C, (blk,))...)
+end
+Base.@propagate_inbounds function Base.view(C::CartesianIndices{N}, B::Block{N}) where {N}
+    view(C, to_indices(C, (B,))...)
+end
+
 """
     BlockIndex{N}
 
@@ -289,10 +299,18 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
     @eval $f(S::BlockSlice) = $f(S.indices)
 end
 
+_indices(B::BlockSlice) = B.indices
+_indices(B) = B
+
 @propagate_inbounds getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
-@propagate_inbounds getindex(S::BlockSlice{<:Block}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
-@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
+@propagate_inbounds getindex(S::BlockSlice{<:Block{1}}, k::AbstractUnitRange{Int}) =
+    BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
+@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1}}, k::AbstractUnitRange{Int}) =
+    BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
 show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
+
+# Avoid creating a SubArray wrapper in certain non-allocating cases
+Base.@propagate_inbounds Base.view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = view(C, map(x->x.indices, bs)...)
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
