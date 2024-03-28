@@ -1,6 +1,6 @@
 using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
-import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
+import BlockArrays: BlockIndex, BlockIndexRange, BlockIndices, BlockSlice
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -504,4 +504,69 @@ end
     @test A[1,2] == 0
     first(eachblock(B))[1,2] = 0
     @test B[1,2] == 0
+end
+
+@testset "BlockIndices" begin
+    v = Array(reshape(1:35, (5, 7)))
+    A = BlockArray(v, [2, 3], [3, 4])
+    B = BlockIndices(A)
+    @test B == BlockIndices((blockedrange([2,3]), blockedrange([3,4])))
+    @test eltype(B) === BlockIndex{2}
+    @test size(B) == (5, 7)
+    @test axes(B) == (1:5, 1:7)
+    @test blocklengths.(axes(B)) == ([2, 3], [3, 4])
+    @test blocksize(B) == (2, 2)
+    @test blockaxes(B) == (Block(1):Block(2), Block(1):Block(2))
+    @test B[1, 1] == Block(1, 1)[1, 1]
+    @test B[4, 6] == Block(2, 2)[2, 3]
+
+    @test B[Block(1, 1)] isa BlockIndexRange{2}
+    @test B[Block(1, 1)] == Block(1, 1)[1:2, 1:3]
+    @test B[Block(2, 1)] == Block(2, 1)[1:3, 1:3]
+    @test B[Block(1, 2)] == Block(1, 2)[1:2, 1:4]
+    @test B[Block(2, 2)] == Block(2, 2)[1:3, 1:4]
+
+    @test view(B, Block(1, 2)) isa BlockIndexRange{2}
+    @test view(B, Block(1, 2)) == Block(1, 2)[1:2, 1:4]
+
+    @test B[Block(1), Block(2)] isa BlockIndexRange{2}
+    @test B[Block(1), Block(2)] == Block(1, 2)[1:2, 1:4]
+
+    @test view(B, Block(1), Block(2)) isa BlockIndexRange{2}
+    @test view(B, Block(1), Block(2)) == Block(1, 2)[1:2, 1:4]
+
+    B23_24 = mortar([[Block(1, 1)[2:2, 2:3]] [Block(1, 2)[2:2, 1:1]]
+                     [Block(2, 1)[1:1, 2:3]] [Block(2, 2)[1:1, 1:1]]])
+    @test B[2:3, 2:4] == B23_24
+    @test B[2:3, 2:4] isa BlockIndices{2}
+    @test B[CartesianIndices((2:3,)), CartesianIndices((2:4,))] == B23_24
+    @test B[CartesianIndices((2:3,)), CartesianIndices((2:4,))] isa BlockIndices{2}
+    @test B[CartesianIndices((2:3, 2:4))] == B23_24
+    @test B[CartesianIndices((2:3, 2:4))] isa BlockIndices{2}
+
+    @test B[Block(2, 2)[2:3, 2:3]] == Block(2, 2)[2:3, 2:3]
+    @test B[Block(2, 2)[2:3, 2:3]] isa BlockIndexRange{2}
+
+    @test B[Block(1):Block(2), Block(1):Block(2)] == B
+    @test B[Block(1):Block(2), Block(1):Block(2)] isa BlockIndices{2}
+
+    @test B[BlockRange(1:2, 1:2)] == B
+    @test B[BlockRange(1:2, 1:2)] isa BlockIndices{2}
+
+    @test B[Block(2), Block(1):Block(2)] == mortar([[Block(2, 1)[1:3, 1:3]] [Block(2, 2)[1:3, 1:4]]])
+    @test B[Block(2), Block(1):Block(2)] isa BlockIndices{2}
+
+    @test B[2:4, 2:5][2:3, 2:3] == mortar([[Block(2, 1)[1:2, 3:3]] [Block(2, 2)[1:2, 1:1]]])
+    @test B[2:4, 2:5][2:3, 2:3] isa BlockIndices{2}
+
+    B = BlockIndices(blockedrange([2, 3]))
+    @test B == [Block(1)[1], Block(1)[2], Block(2)[1], Block(2)[2], Block(2)[3]]
+    @test blocklengths(only(axes(B))) == [2, 3]
+    @test B[Block(1)] == Block(1)[1:2]
+    @test B[Block(1)] isa BlockIndexRange{1}
+    @test B[Block(2)] == Block(2)[1:3]
+    @test B[Block(2)] isa BlockIndexRange{1}
+    @test B[2:4] == [Block(1)[2], Block(2)[1], Block(2)[2]]
+    @test blocklengths(only(axes(B[2:4]))) == [1, 2]
+    @test B[2:4] isa BlockIndices{1}
 end
