@@ -120,8 +120,7 @@ Base.@propagate_inbounds function Base.view(C::CartesianIndices{N}, b1::Block{1}
     view(C, to_indices(C, (blk,))...)
 end
 Base.@propagate_inbounds function Base.view(C::CartesianIndices{N}, B::Block{N}) where {N}
-    inds = to_indices(C, (B,))
-    view(C, inds...)
+    view(C, to_indices(C, (B,))...)
 end
 
 """

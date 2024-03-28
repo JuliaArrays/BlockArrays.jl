@@ -437,6 +437,7 @@ end
 @testset "BlockSlice" begin
     b = BlockSlice(Block(5),1:3)
     @test b[b] == b
+    @test b[b] isa BlockSlice{<:BlockIndexRange}
     @test b[Base.Slice(1:3)] ≡ b
     @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
     @test Block(b) ≡ Block(5)
