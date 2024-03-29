@@ -520,4 +520,25 @@ end
     @test blocklengths(only(axes(B[2:4]))) == [3]
     @test B[2:4] isa AbstractVector{<:BlockIndex{1}}
     @test B[2:4] isa BlockIndices{1}
+
+    A = BlockArray(randn(5, 5), [2, 3], [2, 3])
+    BA = BlockIndices(A)
+    r = BlockArrays._BlockedUnitRange(2, [2, 4])
+    B = BA[r, r]
+    @test B == BA[2:4, 2:4]
+    @test size(B) == (3, 3)
+    @test blocksize(B) == (2, 2)
+    @test blocklengths.(axes(B)) == ([1, 2], [1, 2])
+    CB = CartesianIndices(A)[B]
+    @test CB == CartesianIndices((2:4, 2:4))
+    @test size(CB) == (3, 3)
+    @test blocksize(CB) == (2, 2)
+    @test blocklengths.(axes(CB)) == ([1, 2], [1, 2])
+    @test all(blockisequal.(axes(CB), axes(B)))
+    AB = A[B]
+    @test AB == A[2:4, 2:4]
+    @test size(AB) == (3, 3)
+    @test blocksize(AB) == (2, 2)
+    @test blocklengths.(axes(AB)) == ([1, 2], [1, 2])
+    @test all(blockisequal.(axes(AB), axes(B)))
 end

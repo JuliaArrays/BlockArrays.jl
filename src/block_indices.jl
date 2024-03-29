@@ -102,3 +102,15 @@ end
 function Base.getindex(a::BlockIndices{N}, indices::BlockRange{N}) where {N}
     return view(a, to_indices(a, (indices,))...)
 end
+
+function Base.getindex(a::CartesianIndices{N}, indices::BlockIndices{N}) where {N}
+  # TODO: Is there a better way to write this?
+  new_axes = (:).(Tuple(a[first(indices)]), Tuple(a[last(indices)]))
+  firsts = first.(new_axes)
+  blocklasts = ntuple(i -> accumulate(+, blocklengths(axes(indices, i)); init=firsts[i] - one(firsts[i])), Val(N))
+  return CartesianIndices(_BlockedUnitRange.(firsts, blocklasts))
+end
+
+function Base.getindex(a::AbstractArray{<:Any,N}, indices::BlockIndices{N}) where {N}
+  return a[CartesianIndices(a)[indices]]
+end
