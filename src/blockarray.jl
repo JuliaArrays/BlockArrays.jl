@@ -160,7 +160,7 @@ julia> B[Block(1)] .= 2 # errors, as the block is not allocated yet
 ERROR: UndefRefError: access to undefined reference
 [...]
 
-julia> B[Block(1)] = [2]; # assign an array to the block
+julia> B[Block(1)] = [1]; # assign an array to the block
 
 julia> B[Block(2)] = [2,3];
 
