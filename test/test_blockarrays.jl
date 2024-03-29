@@ -1,4 +1,4 @@
-using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test
+using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
@@ -25,6 +25,19 @@ end
 
             ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, 1:3)
             fill!(ret, 0)
+            @test Array(ret)  == zeros(6)
+
+            ret = BlockArray{Float64,1,Vector{OffsetVector{Float64,Vector{Float64}}}}(undef, 1:3)
+            fill!(ret, 0)
+            @test blocks(ret) isa Vector{OffsetVector{Float64,Vector{Float64}}}
+            @test Array(ret)  == zeros(6)
+
+            ret = BlockArray{Float64,1,
+                        OffsetVector{OffsetVector{Float64,Vector{Float64}},
+                            Vector{OffsetVector{Float64,Vector{Float64}}}}}(undef, 1:3)
+            fill!(ret, 0)
+            @test blocks(ret) isa OffsetVector{OffsetVector{Float64,Vector{Float64}},
+                                    Vector{OffsetVector{Float64,Vector{Float64}}}}
             @test Array(ret)  == zeros(6)
 
             ret = BlockArray{Float64}(undef, (blockedrange(1:3),))

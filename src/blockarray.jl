@@ -183,16 +183,12 @@ See also [`undef_blocks`](@ref), [`UndefBlocksInitializer`](@ref)
 @inline BlockArray{T,N,R}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     undef_blocks_BlockArray(R, block_sizes...)
 
-@generated function initialized_blocks_BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where R<:AbstractArray{V,N} where {T,N,V<:AbstractArray{T,N}}
-    return quote
-        block_arr = _BlockArray(R, baxes)
-        @nloops $N i i->blockaxes(baxes[i],1) begin
-            block_index = @ntuple $N i
-            block_arr[block_index...] = similar(V, length.(getindex.(baxes, block_index)))
-        end
-
-        return block_arr
+function initialized_blocks_BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where R<:AbstractArray{V,N} where {T,N,V<:AbstractArray{T,N}}
+    blocks = map(Iterators.product(map(x -> blockaxes(x,1), baxes)...)) do block_index
+        indices = map((x,y) -> x[y], baxes, block_index)
+        similar(V, map(length, indices))
     end
+    return _BlockArray(convert(R, blocks), baxes)
 end
 
 
