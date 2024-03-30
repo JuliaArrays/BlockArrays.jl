@@ -117,15 +117,15 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
         B = BlockArray([1:3;], [2,1])
         Cb = CartesianIndices(B)
-        @test view(Cb, Block(1)) ==ᵥ Cb[Block(1)] ==ᵥ CartesianIndices((1:2,))
-        @test view(Cb, Block(2)) ==ᵥ Cb[Block(2)] ==ᵥ CartesianIndices((3:3,))
+        @test view(Cb, Block(1)) ==ᵥ CartesianIndices((1:2,)) == Cb[Block(1)]
+        @test view(Cb, Block(2)) ==ᵥ CartesianIndices((3:3,)) == Cb[Block(2)]
 
         B = BlockArray(reshape([1:9;],3,3), [2,1], [2,1])
         Cb = CartesianIndices(B)
-        @test view(Cb, Block(1,1)) ==ᵥ Cb[Block(1,1)] ==ᵥ CartesianIndices((1:2,1:2))
-        @test view(Cb, Block(1,2)) ==ᵥ Cb[Block(1,2)] ==ᵥ CartesianIndices((1:2, 3:3))
-        @test view(Cb, Block(2,1)) ==ᵥ Cb[Block(2,1)] ==ᵥ CartesianIndices((3:3,1:2))
-        @test view(Cb, Block(2,2)) ==ᵥ Cb[Block(2,2)] ==ᵥ CartesianIndices((3:3, 3:3))
+        @test view(Cb, Block(1,1)) ==ᵥ CartesianIndices((1:2,1:2)) == Cb[Block(1,1)]
+        @test view(Cb, Block(1,2)) ==ᵥ CartesianIndices((1:2, 3:3)) == Cb[Block(1,2)]
+        @test view(Cb, Block(2,1)) ==ᵥ CartesianIndices((3:3,1:2)) == Cb[Block(2,1)]
+        @test view(Cb, Block(2,2)) ==ᵥ CartesianIndices((3:3, 3:3)) == Cb[Block(2,2)]
         for i in 1:2, j in 1:2
             @test view(Cb, Block(j), Block(i)) ==ᵥ view(Cb, Block(j, i))
         end
