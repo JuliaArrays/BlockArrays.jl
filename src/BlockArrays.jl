@@ -56,6 +56,7 @@ end
 include("blockindices.jl")
 include("blockaxis.jl")
 include("abstractblockarray.jl")
+include("block_indices.jl")
 include("blockarray.jl")
 include("pseudo_blockarray.jl")
 include("views.jl")
