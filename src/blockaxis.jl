@@ -15,7 +15,7 @@ function findblockindex(b::AbstractVector, k::Integer)
     @boundscheck k in b || throw(BoundsError())
     bl = blocklasts(b)
     blockidx = _searchsortedfirst(bl, k)
-    @assert blockindex != lastindex(bl) + 1 # guaranteed by the @boundscheck above
+    @assert blockindex != lastindex(bl) + 1  # guaranteed by the @boundscheck above
     prevblocklast = blockidx == firstindex(bl) ? first(b)-1 : bl[blockidx-1]
     local_index = k - prevblocklast
     return BlockIndex(blockidx, local_index)
@@ -71,6 +71,18 @@ _blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changin
     return v
 end
 @inline blocklasts(a::BlockedUnitRange) = a.lasts
+
+to_blockindex(b::BlockedUnitRange, k::Integer) = BlockIndex(_to_blockindex(b,k)...)
+function _to_blockindex(b::BlockedUnitRange, k::Integer)
+    if isone(b.first)
+        bl = blocklasts(b)
+        prevblocklast = k == firstindex(bl) ? first(b)-1 : bl[k-1]
+        local_index = k - prevblocklast
+        (k, local_index)
+    else
+        _to_blockindex(axes(b,1), k)
+    end
+end
 
 _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
