@@ -1,4 +1,4 @@
-using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test
+using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
@@ -17,33 +17,56 @@ end
         @testset "BlockArray Constructors" begin
             ret = BlockArray{Float64}(undef, 1:3)
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockVector{Float64}(undef, 1:3)
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, 1:3)
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret = BlockArray{Float64,1,Vector{OffsetVector{Float64,Vector{Float64}}}}(undef, 1:3)
+            fill!(ret, 0)
+            @test blocks(ret) isa Vector{OffsetVector{Float64,Vector{Float64}}}
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret = BlockArray{Float64,1,
+                        OffsetVector{OffsetVector{Float64,Vector{Float64}},
+                            Vector{OffsetVector{Float64,Vector{Float64}}}}}(undef, 1:3)
+            fill!(ret, 0)
+            @test blocks(ret) isa OffsetVector{OffsetVector{Float64,Vector{Float64}},
+                                    Vector{OffsetVector{Float64,Vector{Float64}}}}
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArray{Float64}(undef, (blockedrange(1:3),))
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockVector{Float64}(undef, (blockedrange(1:3),))
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, (blockedrange(1:3),))
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], 1:3)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (blockedrange(1:3),))
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArray{Float32}(undef_blocks, 1:3)
             @test eltype(ret.blocks) == Vector{Float32}
@@ -68,7 +91,8 @@ end
 
             ret = BlockArray{Float64}(undef, 1:3, 1:3)
             fill!(ret, 0)
-            @test Matrix(ret) == zeros(6,6)
+            @test size(ret) == (6,6)
+            @test all(iszero, ret)
 
             A = [1,2,3,4,5,6]
             @test A == BlockArray(A, 1:3) == BlockArray{Int}(A, 1:3) ==
@@ -80,20 +104,29 @@ end
             B = mortar(fill(S,2,2))
             A = Array(B)
             @test A isa Matrix
+
+            # test that BlockArrays may be created from immutable arrays
+            B = BlockArray(reshape(1:9,3,3), [2,1], [2,1])
+            @test blocksizes(B) == ([2,1], [2,1])
+            @test B == reshape([1:9;],3,3)
+            @test blocks(B) isa Matrix{Matrix{Int}}
         end
 
         @testset "PseudoBlockArray constructors" begin
             ret = PseudoBlockArray{Float64}(undef, 1:3)
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = PseudoBlockVector{Float64}(undef, 1:3)
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = PseudoBlockArray{Float64}(undef, 1:3, 1:3)
             fill!(ret, 0)
-            @test Matrix(ret) == zeros(6,6)
+            @test size(ret) == (6,6)
+            @test all(iszero, ret)
 
             A = [1,2,3,4,5,6]
             @test_throws BoundsError PseudoBlockArray(A,10:20)
@@ -163,7 +196,10 @@ end
                 (spzeros(5, 3), spzeros(5, 4)),
             )
 
-            @test Array(ret) == zeros(8, 7)
+            a = Array(ret)
+            @test a isa Array
+            @test size(a) == (8, 7)
+            @test all(iszero, a)
             @test eltype(ret.blocks) <: SparseMatrixCSC
             @test axes(ret) == blockedrange.(([1, 2, 5], [3, 4]))
 
@@ -343,6 +379,9 @@ end
                 fill!(q2, 0)
                 copyto!(q2, view(BA_1, Block(1)))
                 @test q2 == q
+
+                @test Base.mightalias(BA_1, view(BA_1, Block(1,1)))
+                @test Base.mightalias(BA_1, axes(BA_1, 1))
             end
             fill!(BA_1, 1.0)
             @test BA_1 == ones(size(BA_1))

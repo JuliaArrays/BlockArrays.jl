@@ -11,7 +11,7 @@
 
 Singleton type used in block array initialization, indicating the
 array-constructor-caller would like an uninitialized block array. See also
-undef_blocks (@ref), an alias for UndefBlocksInitializer().
+[`undef_blocks`](@ref), an alias for `UndefBlocksInitializer()`.
 
 # Examples
 ```jldoctest
@@ -28,8 +28,8 @@ struct UndefBlocksInitializer end
 """
     undef_blocks
 
-Alias for UndefBlocksInitializer(), which constructs an instance of the singleton
-type UndefBlocksInitializer (@ref), used in block array initialization to indicate the
+Alias for `UndefBlocksInitializer()`, which constructs an instance of the singleton
+type [`UndefBlocksInitializer`](@ref), used in block array initialization to indicate the
 array-constructor-caller would like an uninitialized block array.
 
 # Examples
@@ -97,21 +97,83 @@ end
     _BlockArray(R, block_sizes...)
 
 """
-Constructs a `BlockArray` with uninitialized blocks from a block type `R` with sizes defined by `block_sizes`.
+    BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {N,R<:AbstractArray{<:Any,N}}
 
+Construct a `N`-dim `BlockArray` with uninitialized blocks from a block type `R`, with sizes defined by `block_sizes`.
+Each block **must** be allocated before being accessed.
+
+# Examples
 ```jldoctest
-julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
+julia> B = BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
 2×2-blocked 4×4 BlockMatrix{Float64}:
  #undef  #undef  │  #undef  #undef
  ────────────────┼────────────────
  #undef  #undef  │  #undef  #undef
  #undef  #undef  │  #undef  #undef
  #undef  #undef  │  #undef  #undef
+
+julia> typeof(blocks(B))
+Matrix{Matrix{Float64}} (alias for Array{Array{Float64, 2}, 2})
+
+julia> using SparseArrays
+
+julia> B = BlockArray(undef_blocks, SparseMatrixCSC{Float64,Int}, [1,3], [2,2]);
+
+julia> typeof(blocks(B))
+Matrix{SparseMatrixCSC{Float64, Int64}} (alias for Array{SparseMatrixCSC{Float64, Int64}, 2})
 ```
+
+See also [`undef_blocks`](@ref), [`UndefBlocksInitializer`](@ref)
 """
 @inline BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{T,N}} =
     undef_blocks_BlockArray(Array{R,N}, block_sizes...)
 
+"""
+    BlockArray{T}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T,N}
+
+Construct a `N`-dim `BlockArray` with uninitialized blocks of type `Array{T,N}`, with sizes defined by `block_sizes`.
+Each block **must** be allocated before being accessed.
+
+# Examples
+```jldoctest
+julia> B = BlockArray{Float64}(undef_blocks, [1,2], [1,2])
+2×2-blocked 3×3 BlockMatrix{Float64}:
+ #undef  │  #undef  #undef
+ ────────┼────────────────
+ #undef  │  #undef  #undef
+ #undef  │  #undef  #undef
+
+julia> typeof(blocks(B))
+Matrix{Matrix{Float64}} (alias for Array{Array{Float64, 2}, 2})
+
+julia> B = BlockArray{Int8}(undef_blocks, [1,2])
+2-blocked 3-element BlockVector{Int8}:
+ #undef
+ ──────
+ #undef
+ #undef
+
+julia> typeof(blocks(B))
+Vector{Vector{Int8}} (alias for Array{Array{Int8, 1}, 1})
+
+julia> B[Block(1)] .= 2 # errors, as the block is not allocated yet
+ERROR: UndefRefError: access to undefined reference
+[...]
+
+julia> B[Block(1)] = [1]; # assign an array to the block
+
+julia> B[Block(2)] = [2,3];
+
+julia> B
+2-blocked 3-element BlockVector{Int8}:
+ 1
+ ─
+ 2
+ 3
+```
+
+See also [`undef_blocks`](@ref), [`UndefBlocksInitializer`](@ref)
+"""
 @inline BlockArray{T}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     BlockArray(undef_blocks, Array{T,N}, block_sizes...)
 
@@ -121,16 +183,12 @@ julia> BlockArray(undef_blocks, Matrix{Float64}, [1,3], [2,2])
 @inline BlockArray{T,N,R}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
     undef_blocks_BlockArray(R, block_sizes...)
 
-@generated function initialized_blocks_BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where R<:AbstractArray{V,N} where {T,N,V<:AbstractArray{T,N}}
-    return quote
-        block_arr = _BlockArray(R, baxes)
-        @nloops $N i i->blockaxes(baxes[i],1) begin
-            block_index = @ntuple $N i
-            block_arr[block_index...] = similar(V, length.(getindex.(baxes, block_index)))
-        end
-
-        return block_arr
+function initialized_blocks_BlockArray(::Type{R}, baxes::NTuple{N,AbstractUnitRange{Int}}) where R<:AbstractArray{V,N} where {T,N,V<:AbstractArray{T,N}}
+    blocks = map(Iterators.product(map(x -> blockaxes(x,1), baxes)...)) do block_index
+        indices = map((x,y) -> x[y], baxes, block_index)
+        similar(V, map(length, indices))
     end
+    return _BlockArray(convert(R, blocks), baxes)
 end
 
 
@@ -149,6 +207,28 @@ initialized_blocks_BlockArray(::Type{R}, block_sizes::Vararg{AbstractVector{<:In
 @inline BlockArray{T,N,R,BS}(::UndefInitializer, baxes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
     initialized_blocks_BlockArray(R, baxes)
 
+"""
+    BlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N}
+
+Construct a `N`-dim `BlockArray` with blocks of type `Array{T,N}`, with sizes defined by `block_sizes`.
+The blocks are allocated using `similar`, and the elements in each block are therefore unitialized.
+
+# Examples
+```jldoctest
+julia> B = BlockArray{Int8}(undef, [1,2]);
+
+julia> B[Block(1)] .= 2;
+
+julia> B[Block(2)] .= 3;
+
+julia> B
+2-blocked 3-element BlockVector{Int8}:
+ 2
+ ─
+ 3
+ 3
+```
+"""
 @inline BlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     initialized_blocks_BlockArray(Array{Array{T,N},N}, block_sizes...)
 
@@ -175,12 +255,11 @@ BlockArray(arr::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{<:Intege
     BlockArray{T}(arr, block_sizes...)
 
 function BlockArray{T}(arr::AbstractArray{T, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N}
-    block_arr = _BlockArray(Array{typeof(arr),N}, baxes)
-    for block_index in Iterators.product(blockaxes.(baxes,1)...)
-        indices = getindex.(baxes,block_index)
-        block_arr[block_index...] = arr[indices...]
+    blocks = map(Iterators.product(map(x -> blockaxes(x,1), baxes)...)) do block_index
+        indices = map((x,y) -> x[y], baxes, block_index)
+        arr[indices...]
     end
-    return block_arr
+    return _BlockArray(blocks, baxes)
 end
 
 BlockArray{T}(arr::AbstractArray{<:Any, N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N} =
