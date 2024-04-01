@@ -533,7 +533,6 @@ Base.summary(io::IO, a::AbstractBlockedUnitRange) =  _block_summary(io, a)
 
 Base.axes(S::Base.Slice{<:BlockedOneTo}) = (S.indices,)
 Base.unsafe_indices(S::Base.Slice{<:BlockedOneTo}) = (S.indices,)
-Base.axes1(S::Base.Slice{<:BlockedOneTo}) = S.indices
 blockaxes(S::Base.Slice) = blockaxes(S.indices)
 @propagate_inbounds getindex(S::Base.Slice, b::Block{1}) = S.indices[b]
 @propagate_inbounds getindex(S::Base.Slice, b::BlockRange{1}) = S.indices[b]
