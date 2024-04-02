@@ -356,3 +356,9 @@ Base.replace_in_print_matrix(f::PseudoBlockVecOrMat, i::Integer, j::Integer, s::
 
 
 LinearAlgebra.norm(A::PseudoBlockArray, p::Real=2) = norm(A.blocks, p)
+
+###########################
+# FillArrays interface #
+###########################
+
+FillArrays.getindex_value(P::PseudoBlockArray) = FillArrays.getindex_value(P.blocks)

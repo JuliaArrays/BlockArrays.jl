@@ -555,6 +555,13 @@ end
         @test BLAS.gemv!('N', 2.0, A, x, 0.0, y) ≈ 2A*x
     end
 
+    @testset "FillArrays interface" begin
+        P = PseudoBlockArray(Fill(3,4,4), [1,3], [1,3])
+        @test P[1:3, 2:3] === Fill(3,3,2)
+        @test P[1:3, 1] == Fill(3,3)
+        @test P[2, 1:3] == Fill(3,3)
+    end
+
     @testset "lmul!/rmul!" begin
         A = PseudoBlockArray{Float64}(undef, 1:3)
         @test fill!(A, NaN) === A
