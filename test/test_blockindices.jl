@@ -505,3 +505,14 @@ end
     first(eachblock(B))[1,2] = 0
     @test B[1,2] == 0
 end
+
+@testset "blockisequal" begin
+    B = BlockArray(rand(4,4), [1,3], [1,3])
+    v = BlockArray(rand(4), [1,3])
+    axB = axes(B)
+    axv = axes(v)
+    @test blockisequal(axB, axB)
+    @test blockisequal(axv, axv)
+    @test !blockisequal(axB, axv)
+    @test !blockisequal(axv, axB)
+end
