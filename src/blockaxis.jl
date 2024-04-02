@@ -85,8 +85,8 @@ Check if `a` and `b` have the same block structure.
 
 # Examples
 ```jldoctest
-julia> b1 = blockedrange(1:2)
-2-blocked 3-element BlockedUnitRange{ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}:
+julia> b1 = blockedrange([1,2])
+2-blocked 3-element BlockedUnitRange{Vector{Int64}}:
  1
  ─
  2
@@ -112,9 +112,12 @@ blockisequal(a, b, c, d...) = blockisequal(a,b) && blockisequal(b,c,d...)
 """
     blockisequal(a::Tuple, b::Tuple)
 
-Return `all(blockisequal.(a,b))``
+Return if the tuples satisfy `blockisequal` elementwise.
 """
-blockisequal(a::Tuple, b::Tuple) = all(blockisequal.(a, b))
+blockisequal(a::Tuple, b::Tuple) = blockisequal(first(a), first(b)) && blockisequal(Base.tail(a), Base.tail(b))
+blockisequal(::Tuple{}, ::Tuple{}) = true
+blockisequal(::Tuple, ::Tuple{}) = false
+blockisequal(::Tuple{}, ::Tuple) = false
 
 
 _shift_blocklengths(::BlockedUnitRange, bl, f) = bl

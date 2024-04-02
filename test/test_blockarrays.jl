@@ -357,6 +357,25 @@ end
         @test blockcheckbounds(Bool, BA_4, 1, 1, 1)
         @test blockcheckbounds(Bool, BA_4, 1, 1, 1, 1)
         @test_throws BlockBoundsError blockcheckbounds(BA_3, 1, 2)
+
+        @testset for (T,F) in ((Fill, Fill(3,4,4)), (Ones, Ones(4,4)), (Zeros, Zeros(4,4)))
+            P = PseudoBlockArray(F, [1,3], [1,3])
+            V = P[axes(P)...]
+            @test V isa T
+            @test V == F
+            @test axes(P) == axes(V)
+            @test blocks.(axes(P)) == blocks.(axes(V))
+            V = P[axes(P,1), 1:2]
+            @test V isa T
+            @test size(V) == (size(P,1), 2)
+            @test blocks(axes(V,1)) == blocks(axes(P,1))
+            @test blocks(axes(V,2)) == blocks(1:2)
+            V = P[1:2, axes(P,2)]
+            @test V isa T
+            @test size(V) == (2, size(P,2))
+            @test blocks(axes(V,1)) == blocks(1:2)
+            @test blocks(axes(V,2)) == blocks(axes(P,2))
+        end
     end
 
     @testset "misc block tests" begin
@@ -553,6 +572,13 @@ end
         x = randn(size(A,2))
         y = similar(x)
         @test BLAS.gemv!('N', 2.0, A, x, 0.0, y) ≈ 2A*x
+    end
+
+    @testset "FillArrays interface" begin
+        P = PseudoBlockArray(Fill(3,4,4), [1,3], [1,3])
+        @test P[1:3, 2:3] === Fill(3,3,2)
+        @test P[1:3, 1] == Fill(3,3)
+        @test P[2, 1:3] == Fill(3,3)
     end
 
     @testset "lmul!/rmul!" begin
