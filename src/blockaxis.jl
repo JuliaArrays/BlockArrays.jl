@@ -353,10 +353,6 @@ blocksizes(A) = map(blocklengths, axes(A))
 blocksizes(A,i) = blocklengths(axes(A,i))
 
 axes(b::AbstractBlockedUnitRange) = (BlockedOneTo(blocklasts(b) .- (first(b)-1)),)
-function axes(b::AbstractBlockedUnitRange{<:Any,<:RangeCumsum}, d::Int)
-    d <= 1 && return axes(b)[d]
-    return BlockedOneTo(oftype(b.lasts, RangeCumsum(Base.OneTo(1))))
-end
 unsafe_indices(b::AbstractBlockedUnitRange) = axes(b)
 # ::Integer works around case where blocklasts might return different type
 last(b::AbstractBlockedUnitRange)::Integer = isempty(blocklasts(b)) ? first(b)-1 : last(blocklasts(b))
