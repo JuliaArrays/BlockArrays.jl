@@ -338,7 +338,7 @@ rowsupport(A::PseudoBlockArray, j) = rowsupport(A.blocks, j)
 ###
 
 for op in (:zeros, :ones)
-    @eval $op(::Type{T}, axs::Tuple{BlockedUnitRange,Vararg{Any}}) where T = PseudoBlockArray($op(T, map(length,axs)...), axs)
+    @eval $op(::Type{T}, axs::Tuple{BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange}}}) where T = PseudoBlockArray($op(T, map(length,axs)...), axs)
 end
 
 Base.replace_in_print_matrix(f::PseudoBlockVecOrMat, i::Integer, j::Integer, s::AbstractString) =
