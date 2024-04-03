@@ -110,6 +110,16 @@ end
             @test blocksizes(B) == ([2,1], [2,1])
             @test B == reshape([1:9;],3,3)
             @test blocks(B) isa Matrix{Matrix{Int}}
+
+            @testset "zeros/ones" begin
+                br = blockedrange(2:3)
+                z = zeros(Float64, br)
+                @test all(iszero, z)
+                @test axes(z) == (br,)
+                o = ones(Float64, br)
+                @test all(isone, o)
+                @test axes(o) == (br,)
+            end
         end
 
         @testset "PseudoBlockArray constructors" begin
