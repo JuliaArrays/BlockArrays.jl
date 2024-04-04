@@ -122,6 +122,14 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test (@. z = x + y + z; z) == (@. z2 = x2 + y2 + z2; z2)
     end
 
+    @testset "blockedrange" begin
+        b = blockedrange(InfiniteArrays.OneToInf())
+        b2 = b .+ b
+        for i in 1:10
+            @test b2[Block(i)] == b[Block(i)] + b[Block(i)]
+        end
+    end
+
     @testset "Special broadcast" begin
         v = mortar([1:3,4:7])
         @test broadcast(+, v) isa BlockVector{Int,Vector{UnitRange{Int}}}
