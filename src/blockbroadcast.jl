@@ -29,9 +29,9 @@ BroadcastStyle(::PseudoBlockStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(
 
 
 # sortedunion can assume inputs are already sorted so this could be improved
-maybeinplacesort(v::Vector) = sort!(v)
-maybeinplacesort(v) = sort(v)
-sortedunion(a,b) = maybeinplacesort(union(a,b))
+maybeinplacesort!(v::StridedVector) = sort!(v)
+maybeinplacesort!(v) = sort(v)
+sortedunion(a,b) = maybeinplacesort!(union(a,b))
 sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
