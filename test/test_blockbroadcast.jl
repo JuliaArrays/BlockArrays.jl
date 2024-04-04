@@ -278,4 +278,16 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         C = B + B
         @test C[Block(1)] == 2B[Block(1)]
     end
+
+    @testset "utilities" begin
+        for v in ([2,3,1], 2:4)
+            w = BlockArrays.maybeinplacesort!(v)
+            @test issorted(w)
+            @test v === w
+        end
+        v = 3:-1:2
+        w = BlockArrays.maybeinplacesort!(v)
+        @test issorted(w)
+        @test w == reverse(v)
+    end
 end
