@@ -1,5 +1,6 @@
 using BlockArrays, FillArrays, Test
 import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
+import InfiniteArrays
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
