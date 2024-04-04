@@ -535,7 +535,8 @@ blockaxes(S::Base.Slice) = blockaxes(S.indices)
 
 
 # This supports broadcasting with infinite block arrays
-Base.BroadcastStyle(::Type{<:AbstractBlockedUnitRange{<:Any,R}}) where R = Base.BroadcastStyle(R)
+_broadcaststyle(_) = Broadcast.DefaultArrayStyle{1}()
+Base.BroadcastStyle(::Type{<:AbstractBlockedUnitRange{<:Any,R}}) where R = _broadcaststyle(Base.BroadcastStyle(R))
 
 
 ###
