@@ -96,17 +96,17 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{<:BlockSlice{BlockRange{1,T
     BlockLayout{typeof(sublayout(MLAY(),Tuple{II,Sl})), BLAY}()
 sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{Sl1,Sl2}}) where {MLAY,BLAY,Sl1<:Slice,Sl2<:Slice} =
     BlockLayout{typeof(sublayout(MLAY(),Tuple{Sl1,Sl2})), BLAY}()
-sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:BlockedUnitRange}}) where {N,MLAY,BLAY} =
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:AbstractBlockedUnitRange}}) where {N,MLAY,BLAY} =
     BlockLayout{typeof(sublayout(MLAY(),NTuple{N,Base.OneTo{Int}})), BLAY}()
 
 # materialize views, used for `getindex`
 sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
 
 # if it's not a block layout, best to use PseudoBlockArray to take advantage of strideness
-sub_materialize_axes(V, ::Tuple{BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize_axes(V, ::Tuple{BlockedUnitRange,BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize_axes(V, ::Tuple{AbstractUnitRange,BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize_axes(V, ::Tuple{BlockedUnitRange,AbstractUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}) = PseudoBlockArray(V)
 
 # Special for FillArrays.jl
 
