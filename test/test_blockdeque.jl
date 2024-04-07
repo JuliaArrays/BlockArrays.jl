@@ -1,3 +1,5 @@
+module TestBlockDeque
+
 using BlockArrays, Test
 
 @testset "block dequeue" begin
@@ -192,3 +194,5 @@ using BlockArrays, Test
         end
     end
 end
+
+end # module

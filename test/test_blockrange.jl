@@ -1,3 +1,5 @@
+module TestBlockRange
+
 using BlockArrays, Test
 
 @testset "block range" begin
@@ -99,3 +101,5 @@ end
         @test size(bi) == (2,2)
     end
 end
+
+end # module
