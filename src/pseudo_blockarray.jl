@@ -192,6 +192,8 @@ AbstractArray{T,N}(A::PseudoBlockArray) where {T,N} = PseudoBlockArray(AbstractA
 
 copy(A::PseudoBlockArray) = PseudoBlockArray(copy(A.blocks), A.axes)
 
+Base.dataids(A::PseudoBlockArray) = Base.dataids(A.blocks)
+
 ###########################
 # AbstractArray Interface #
 ###########################
