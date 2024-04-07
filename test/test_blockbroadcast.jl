@@ -1,6 +1,7 @@
 using BlockArrays, FillArrays, Test
 import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 import InfiniteArrays
+using StaticArrays
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
@@ -129,6 +130,9 @@ import InfiniteArrays
         for i in 1:10
             @test b2[Block(i)] == b[Block(i)] + b[Block(i)]
         end
+
+        b = blockedrange(SVector{2}([1,2]))
+        @test b .+ b == 2:2:6
     end
 
     @testset "Special broadcast" begin
