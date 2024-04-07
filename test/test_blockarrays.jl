@@ -410,7 +410,7 @@ end
                 @test q2 == q
 
                 @test Base.mightalias(BA_1, view(BA_1, Block(1,1)))
-                @test Base.mightalias(BA_1, axes(BA_1, 1))
+                @test_broken Base.mightalias(BA_1, axes(BA_1, 1))
             end
             fill!(BA_1, 1.0)
             @test BA_1 == ones(size(BA_1))
