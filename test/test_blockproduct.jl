@@ -1,3 +1,5 @@
+module TestBlockProduct
+
 using BlockArrays, Test
 
 @testset "block product" begin
@@ -143,3 +145,5 @@ using BlockArrays, Test
         @test_throws MethodError BlockKron(a)
     end
 end
+
+end # module

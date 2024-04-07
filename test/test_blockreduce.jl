@@ -1,3 +1,5 @@
+module TestBlockReduce
+
 using BlockArrays, Test
 
 @testset "foldl" begin
@@ -25,3 +27,5 @@ end
     @test blockisequal(axes(A,2), axes(sum(A; dims=1),2))
     @test blockisequal(axes(A,1), axes(sum(A; dims=2),1))
 end
+
+end # module

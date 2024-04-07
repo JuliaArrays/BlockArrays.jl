@@ -1,3 +1,5 @@
+module TestBlocks
+
 using Test, BlockArrays
 
 @testset "blocks" begin
@@ -102,3 +104,5 @@ using Test, BlockArrays
         @test parent(m) === parent(b).blocks  # special path works
     end
 end
+
+end # module

@@ -1,3 +1,5 @@
+module TestBlockIndices
+
 using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
@@ -516,3 +518,5 @@ end
     @test !blockisequal(axB, axv)
     @test !blockisequal(axv, axB)
 end
+
+end # module

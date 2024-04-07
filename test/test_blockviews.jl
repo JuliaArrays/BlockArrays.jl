@@ -1,4 +1,7 @@
+module TestBlockViews
+
 using BlockArrays, ArrayLayouts, Test
+using FillArrays
 
 # useds to force SubArray return
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
@@ -348,3 +351,5 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test v[Block(1)] == a[Block(1)]
     end
 end
+
+end # module

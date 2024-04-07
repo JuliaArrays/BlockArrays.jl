@@ -1,3 +1,5 @@
+module TestBlockBroadcast
+
 using BlockArrays, FillArrays, Test
 import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
@@ -291,3 +293,5 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test w == reverse(v)
     end
 end
+
+end # module
