@@ -1,3 +1,5 @@
+module TestBlockBroadcast
+
 using BlockArrays, FillArrays, Test
 import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 import InfiniteArrays
@@ -304,3 +306,5 @@ using StaticArrays
         @test w == reverse(v)
     end
 end
+
+end # module
