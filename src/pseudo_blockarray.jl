@@ -192,6 +192,8 @@ AbstractArray{T,N}(A::PseudoBlockArray) where {T,N} = PseudoBlockArray(AbstractA
 
 copy(A::PseudoBlockArray) = PseudoBlockArray(copy(A.blocks), A.axes)
 
+Base.dataids(A::PseudoBlockArray) = Base.dataids(A.blocks)
+
 ###########################
 # AbstractArray Interface #
 ###########################
@@ -203,25 +205,25 @@ end
 to_axes(r::AbstractUnitRange) = r
 to_axes(n::Integer) = Base.oneto(n)
 
-@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
     PseudoBlockArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
     PseudoBlockArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
-    PseudoBlockArray{T}(undef, map(to_axes,axes))
-
-@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
-    PseudoBlockArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
-    PseudoBlockArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
     PseudoBlockArray{T}(undef, map(to_axes,axes))
 
-@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
     PseudoBlockArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
     PseudoBlockArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
+
+@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+    PseudoBlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::PseudoBlockArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
     PseudoBlockArray{T}(undef, map(to_axes,axes))
 
 @propagate_inbounds getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N} = block_arr.blocks[i...]
@@ -299,16 +301,6 @@ Base.reshape(parent::PseudoBlockArray, shp::Tuple{Union{Integer,Base.OneTo}, Var
 Base.reshape(parent::PseudoBlockArray, dims::Tuple{Int,Vararg{Int}}) =
     Base._reshape(parent, dims)
 
-function Base.showarg(io::IO, A::PseudoBlockArray, toplevel::Bool)
-    if toplevel
-        print(io, "PseudoBlockArray of ")
-        Base.showarg(io, A.blocks, true)
-    else
-        print(io, "::PseudoBlockArray{…,")
-        Base.showarg(io, A.blocks, false)
-        print(io, '}')
-    end
-end
 """
     resize!(a::PseudoBlockVector, N::Block) -> PseudoBlockVector
 
@@ -348,7 +340,7 @@ rowsupport(A::PseudoBlockArray, j) = rowsupport(A.blocks, j)
 ###
 
 for op in (:zeros, :ones)
-    @eval $op(::Type{T}, axs::Tuple{BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange}}}) where T = PseudoBlockArray($op(T, map(length,axs)...), axs)
+    @eval $op(::Type{T}, axs::Tuple{BlockedOneTo,Vararg{Union{Integer,AbstractUnitRange}}}) where T = PseudoBlockArray($op(T, map(length,axs)...), axs)
 end
 
 Base.replace_in_print_matrix(f::PseudoBlockVecOrMat, i::Integer, j::Integer, s::AbstractString) =

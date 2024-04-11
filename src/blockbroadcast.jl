@@ -35,10 +35,11 @@ sortedunion(a,b) = maybeinplacesort!(union(a,b))
 sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
+combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
 
-Base.Broadcast.axistype(a::BlockedUnitRange, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
-Base.Broadcast.axistype(a::BlockedUnitRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
-Base.Broadcast.axistype(a, b::BlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::AbstractBlockedUnitRange, b::AbstractBlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a::AbstractBlockedUnitRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
+Base.Broadcast.axistype(a, b::AbstractBlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 
 
 similar(bc::Broadcasted{<:AbstractBlockStyle{N}}, ::Type{T}) where {T,N} =
@@ -243,13 +244,13 @@ BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice1},false}}) where 
 
 
 # special cases for SubArrays which we want to broadcast by Block
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
 
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:BlockedUnitRange},BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:BlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:PseudoBlockArray,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = PseudoBlockStyle{N}()
 
 
 

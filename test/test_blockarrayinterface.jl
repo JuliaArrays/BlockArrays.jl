@@ -53,10 +53,16 @@ end
         @test H[Block(2, 3)] == A[2:3, 4:6]
         @test H[Block(3, 2)] == A[2:3, 4:6]'
 
-        @test sprint(show, "text/plain", UpperTriangular(A)) == "10×10 $UpperTriangular{ComplexF64, $(PseudoBlockMatrix{ComplexF64, Matrix{ComplexF64}, typeof(axes(A))})} with indices 1:1:10×1:1:10:\n 1.0+0.0im  │  11.0+0.0im  21.0+0.0im  │  31.0+0.0im  41.0+0.0im  51.0+0.0im  │  61.0+0.0im  71.0+0.0im  81.0+0.0im   91.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │  12.0+0.0im  22.0+0.0im  │  32.0+0.0im  42.0+0.0im  52.0+0.0im  │  62.0+0.0im  72.0+0.0im  82.0+0.0im   92.0+0.0im\n     ⋅      │       ⋅      23.0+0.0im  │  33.0+0.0im  43.0+0.0im  53.0+0.0im  │  63.0+0.0im  73.0+0.0im  83.0+0.0im   93.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │       ⋅           ⋅      │  34.0+0.0im  44.0+0.0im  54.0+0.0im  │  64.0+0.0im  74.0+0.0im  84.0+0.0im   94.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅      45.0+0.0im  55.0+0.0im  │  65.0+0.0im  75.0+0.0im  85.0+0.0im   95.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅      56.0+0.0im  │  66.0+0.0im  76.0+0.0im  86.0+0.0im   96.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │  67.0+0.0im  77.0+0.0im  87.0+0.0im   97.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅      78.0+0.0im  88.0+0.0im   98.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅           ⋅      89.0+0.0im   99.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅           ⋅           ⋅      100.0+0.0im"
+        U = UpperTriangular(A)
+        @test sprint(show, "text/plain", U) == "$(summary(U)):\n 1.0+0.0im  │  11.0+0.0im  21.0+0.0im  │  31.0+0.0im  41.0+0.0im  51.0+0.0im  │  61.0+0.0im  71.0+0.0im  81.0+0.0im   91.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │  12.0+0.0im  22.0+0.0im  │  32.0+0.0im  42.0+0.0im  52.0+0.0im  │  62.0+0.0im  72.0+0.0im  82.0+0.0im   92.0+0.0im\n     ⋅      │       ⋅      23.0+0.0im  │  33.0+0.0im  43.0+0.0im  53.0+0.0im  │  63.0+0.0im  73.0+0.0im  83.0+0.0im   93.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │       ⋅           ⋅      │  34.0+0.0im  44.0+0.0im  54.0+0.0im  │  64.0+0.0im  74.0+0.0im  84.0+0.0im   94.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅      45.0+0.0im  55.0+0.0im  │  65.0+0.0im  75.0+0.0im  85.0+0.0im   95.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅      56.0+0.0im  │  66.0+0.0im  76.0+0.0im  86.0+0.0im   96.0+0.0im\n ───────────┼──────────────────────────┼──────────────────────────────────────┼─────────────────────────────────────────────────\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │  67.0+0.0im  77.0+0.0im  87.0+0.0im   97.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅      78.0+0.0im  88.0+0.0im   98.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅           ⋅      89.0+0.0im   99.0+0.0im\n     ⋅      │       ⋅           ⋅      │       ⋅           ⋅           ⋅      │       ⋅           ⋅           ⋅      100.0+0.0im"
 
         V = view(A, Block.(1:2), Block.(1:2))
         @test blockisequal(axes(Symmetric(V)), axes(view(A, Block.(1:2), Block.(1:2))))
+
+        A = PseudoBlockArray{Int}(reshape([1:9;],3,3), 1:2, 1:2)
+        B = UpperTriangular(A)
+        str = sprint(show, "text/plain", B)
+        @test str == "$(summary(B)):\n 1  │  4  7\n ───┼──────\n ⋅  │  5  8\n ⋅  │  ⋅  9"
     end
 
     @testset "rect blocks" begin
@@ -132,11 +138,11 @@ end
     @test_throws BlockBoundsError A[Block(1, 3)]
     @test A == [1 2 0 0; 0 0 1 2]
     @test BlockArray(A) == A
-    @test sprint(show, "text/plain", A) == "2×2-blocked 2×4 $(BlockMatrix{Int, Diagonal{Matrix{Int}, Vector{Matrix{Int}}}, Tuple{BlockedUnitRange{Vector{Int}}, BlockedUnitRange{Vector{Int}}}}):\n 1  2  │  ⋅  ⋅\n ──────┼──────\n ⋅  ⋅  │  1  2"
+    @test sprint(show, "text/plain", A) == "$(summary(A)):\n 1  2  │  ⋅  ⋅\n ──────┼──────\n ⋅  ⋅  │  1  2"
 
     N = 3
     D = Diagonal(mortar(Fill.(-(0:N) - (0:N) .^ 2, 1:2:2N+1)))
-    @test axes(D) isa NTuple{2,BlockedUnitRange}
+    @test axes(D) isa NTuple{2,BlockedOneTo}
     @test blockisequal(axes(D, 1), axes(parent(D), 1))
     @test D == Diagonal(Vector(parent(D)))
     @test MemoryLayout(D) isa BlockArrays.DiagonalLayout{<:BlockArrays.BlockLayout}
@@ -144,9 +150,9 @@ end
 
 @testset "non-standard block axes" begin
     A = BlockArray([1 2; 3 4], Fill(1, 2), Fill(1, 2))
-    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:NTuple{2,BlockedUnitRange{<:AbstractRange}}}
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:NTuple{2,BlockedOneTo{<:AbstractRange}}}
     A = BlockArray([1 2; 3 4], Fill(1, 2), [1, 1])
-    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:Tuple{BlockedUnitRange{<:AbstractRange},BlockedUnitRange{Vector{Int}}}}
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:Tuple{BlockedOneTo{<:AbstractRange},BlockedOneTo{Vector{Int}}}}
 end
 
 @testset "block Fill" begin
@@ -189,9 +195,9 @@ end
 
     U = UpperTriangular(Ones((blockedrange([1, 2]), blockedrange([2, 1]))))
 
-    @test sprint(show, "text/plain", A) == "5-element $(Fill{Int, 1, Tuple{BlockedUnitRange{Vector{Int}}}}) with indices 1:1:5, with entries equal to 2"
-    @test sprint(show, "text/plain", B) == "3×3 $(Diagonal{Float64, Ones{Float64, 1, Tuple{BlockedUnitRange{Vector{Int}}}}}) with indices 1:1:3×1:1:3"
-    @test sprint(show, "text/plain", U) == "3×3 $(UpperTriangular{Float64, Ones{Float64, 2, Tuple{BlockedUnitRange{Vector{Int}}, BlockedUnitRange{Vector{Int}}}}}) with indices 1:1:3×1:1:3:\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
+    @test sprint(show, "text/plain", A) == "$(summary(A)), with entries equal to 2"
+    @test sprint(show, "text/plain", B) == summary(B)
+    @test sprint(show, "text/plain", U) == "$(summary(U)):\n 1.0  1.0  │  1.0\n ──────────┼─────\n  ⋅   1.0  │  1.0\n  ⋅    ⋅   │  1.0"
 
     @testset "views" begin
         # This in theory can be dropped because `view` returns the block, but we keep in case needed

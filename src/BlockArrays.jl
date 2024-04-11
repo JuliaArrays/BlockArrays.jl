@@ -7,7 +7,7 @@ export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlo
 export Block, getblock, getblock!, setblock!, eachblock, blocks
 export blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, BlockIndex
 export blocksizes, blocklengths, blocklasts, blockfirsts, blockisequal
-export BlockRange, blockedrange, BlockedUnitRange
+export BlockRange, blockedrange, BlockedUnitRange, BlockedOneTo
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
 export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat
@@ -74,6 +74,8 @@ include("blockarrayinterface.jl")
 @deprecate getblock!(X, A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} copyto!(X, view(A, Block(I)))
 @deprecate setblock!(A::AbstractBlockArray{T,N}, v, I::Vararg{Integer, N}) where {T,N} (A[Block(I...)] = v)
 
-
+if !isdefined(Base, :get_extension)
+    include("../ext/BlockArraysLazyArraysExt.jl")
+end
 
 end # module

@@ -57,7 +57,7 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
                                             idxs[1].indices[subidxs[1].indices]),
                                 reindex(tail(idxs), tail(subidxs))...)
 
-@propagate_inbounds reindex(idxs::Tuple{BlockedUnitRange, Vararg{Any}},
+@propagate_inbounds reindex(idxs::Tuple{AbstractBlockedUnitRange, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:Block}, Vararg{Any}}) =
     (BlockSlice(subidxs[1].block,
                                             idxs[1][subidxs[1].block]),

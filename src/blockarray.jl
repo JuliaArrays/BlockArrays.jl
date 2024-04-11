@@ -62,13 +62,16 @@ struct BlockArray{T, N, R <: AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N
     blocks::R
     axes::BS
 
-    global @inline _BlockArray(blocks::R, block_sizes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
-        new{T, N, R, BS}(blocks, block_sizes)
+    global @inline function _BlockArray(blocks::R, block_axes::BS) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:NTuple{N,AbstractUnitRange{Int}}}
+        Base.require_one_based_indexing(block_axes...)
+        Base.require_one_based_indexing(blocks)
+        new{T, N, R, BS}(blocks, block_axes)
+    end
 end
 
 # Auxiliary outer constructors
-@inline _BlockArray(blocks::R, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
-    _BlockArray(blocks, map(blockedrange, block_sizes))
+@inline _BlockArray(blocks::R, block_axes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}} =
+    _BlockArray(blocks, map(blockedrange, block_axes))
 
 # support non-concrete eltypes in blocks
 _BlockArray(blocks::R, block_axes::BS) where {N, R<:AbstractArray{<:AbstractArray{V,N} where V,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} =
@@ -428,18 +431,18 @@ end
 ###########################
 
 
-@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{Union{AbstractUnitRange{Int},Integer},BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{Union{AbstractUnitRange{Int},Integer},AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 
-@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{BlockedUnitRange,BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{Union{AbstractUnitRange{Int},Integer},BlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{Union{AbstractUnitRange{Int},Integer},AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{Int},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 
 @inline Base.similar(B::BlockArray, ::Type{T}) where {T} = mortar(similar.(blocks(B), T))
