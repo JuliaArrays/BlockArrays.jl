@@ -1,3 +1,5 @@
+module TestBlockIndices
+
 using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
@@ -84,9 +86,10 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
     @testset "BlockIndex" begin
         @test Block(1)[1] == BlockIndex((1,),(1,))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
-        @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1))
+        @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
+        @test BlockIndex((2,2,2),(2,)) == BlockIndex((2,2,2),(2,1,)) == BlockIndex((2,2,2),(2,1,1))
     end
 
     @testset "BlockRange" begin
@@ -100,6 +103,37 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test_throws BlockBoundsError Base.OneTo(5)[Block.(1:3)]
 
         @test intersect(Block.(2:5), Block.(3:6)) ≡ Block.(3:5)
+    end
+
+    @testset "view into CartesianIndices/ranges" begin
+        r = 2:10
+        @test view(r, Block(1)) === r
+        @test_throws BlockBoundsError view(r, Block(2))
+        C = CartesianIndices((2:10, 2:10))
+        ==ᵥ = VERSION >= v"1.10" ? (===) : (==)
+
+        @test view(C, Block(1,1)) ==ᵥ C
+        @test view(C, Block(1), Block(1)) == C
+        @test_throws BlockBoundsError view(C, Block(1), Block(2))
+        @test_throws BlockBoundsError view(C, Block(1,2))
+
+        B = BlockArray([1:3;], [2,1])
+        Cb = CartesianIndices(B)
+        @test view(Cb, Block(1)) ==ᵥ CartesianIndices((1:2,)) == Cb[Block(1)]
+        @test view(Cb, Block(2)) ==ᵥ CartesianIndices((3:3,)) == Cb[Block(2)]
+
+        B = BlockArray(reshape([1:9;],3,3), [2,1], [2,1])
+        Cb = CartesianIndices(B)
+        @test view(Cb, Block(1,1)) ==ᵥ CartesianIndices((1:2,1:2)) == Cb[Block(1,1)]
+        @test view(Cb, Block(1,2)) ==ᵥ CartesianIndices((1:2, 3:3)) == Cb[Block(1,2)]
+        @test view(Cb, Block(2,1)) ==ᵥ CartesianIndices((3:3,1:2)) == Cb[Block(2,1)]
+        @test view(Cb, Block(2,2)) ==ᵥ CartesianIndices((3:3, 3:3)) == Cb[Block(2,2)]
+        for i in 1:2, j in 1:2
+            @test view(Cb, Block(j), Block(i)) ==ᵥ view(Cb, Block(j, i))
+        end
+        # ensure that calls with mismatched ndims don't error
+        @test view(Cb, Block(1)) == view(Cb, to_indices(Cb, (Block(1),))...)
+        @test reshape(view(Cb, Block(1), Block(1), Block(1)), 2, 2) == view(Cb, Block(1), Block(1))
     end
 
     @testset "print" begin
@@ -202,6 +236,10 @@ end
         @test blocklasts(f) ≡ StepRangeLen(2,2,5)
         @test blocklengths(f) ≡ Fill(2,5)
 
+        f = blockedrange(Zeros{Int}(2))
+        @test blockfirsts(f) == [1,1]
+        @test blocklasts(f) == [0,0]
+
         r = blockedrange(Base.OneTo(5))
         @test (@inferred blocklengths(r)) == 1:5
         @test blocklasts(r) ≡ ArrayLayouts.RangeCumsum(Base.OneTo(5))
@@ -211,12 +249,23 @@ end
         b = blockedrange(Fill(2,3))
         c = blockedrange([2,2,2])
         @test convert(BlockedUnitRange, b) === b
-        @test blockisequal(convert(BlockedUnitRange, Base.OneTo(5)), blockedrange([5]))
-        @test blockisequal(convert(BlockedUnitRange, Base.Slice(Base.OneTo(5))), blockedrange([5]))
-        @test blockisequal(convert(BlockedUnitRange, Base.IdentityUnitRange(-2:2)), BlockArrays._BlockedUnitRange(-2,[2]))
-        @test convert(BlockedUnitRange{Vector{Int}}, c) === c
-        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, b),b)
-        @test blockisequal(convert(BlockedUnitRange{Vector{Int}}, Base.OneTo(5)), blockedrange([5]))
+        @test convert(typeof(b), b) === b
+        @test convert(BlockedUnitRange, c) === c
+        @test convert(typeof(c), c) === c
+        function test_type_and_blocks(T, r, res)
+            s = convert(T, r)
+            @test s isa T
+            @test blockisequal(s, res)
+        end
+        for T in (BlockedUnitRange, BlockedUnitRange{Vector{Int}})
+            test_type_and_blocks(T, blockedrange(5:5), blockedrange(5:5))
+            test_type_and_blocks(T, Base.OneTo(5), blockedrange([5]))
+            test_type_and_blocks(T, Base.Slice(Base.OneTo(5)), blockedrange([5]))
+            test_type_and_blocks(T, -2:2, BlockArrays._BlockedUnitRange(-2,[2]))
+            test_type_and_blocks(T, Base.IdentityUnitRange(-2:2), BlockArrays._BlockedUnitRange(-2,[2]))
+            test_type_and_blocks(T, b, b)
+            test_type_and_blocks(T, Base.OneTo(5), blockedrange([5]))
+        end
     end
 
     @testset "findblock" begin
@@ -389,6 +438,8 @@ end
 
 @testset "BlockSlice" begin
     b = BlockSlice(Block(5),1:3)
+    @test b[b] == b
+    @test b[b] isa BlockSlice{<:BlockIndexRange}
     @test b[Base.Slice(1:3)] ≡ b
     @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
     @test Block(b) ≡ Block(5)
@@ -397,6 +448,16 @@ end
         for b in (BlockSlice(Block(1), 1:1), BlockSlice(Block.(1:1), 1:1), BlockSlice(Block(1)[1:1], 1:1))
             @test convert(typeof(b), Base.OneTo(1)) ≡ b
         end
+    end
+
+    @testset "view into CartesianIndices/ranges" begin
+        C = CartesianIndices((1:3,))
+        r = 1:2
+        b = BlockSlice(Block(1), r)
+        @test view(C, b) === view(C, r)
+        @test view(1:10, b) === view(1:10, r)
+        C = CartesianIndices((1:3, 1:3))
+        @test view(C, b, b) === view(C, r, r)
     end
 end
 
@@ -446,3 +507,16 @@ end
     first(eachblock(B))[1,2] = 0
     @test B[1,2] == 0
 end
+
+@testset "blockisequal" begin
+    B = BlockArray(rand(4,4), [1,3], [1,3])
+    v = BlockArray(rand(4), [1,3])
+    axB = axes(B)
+    axv = axes(v)
+    @test blockisequal(axB, axB)
+    @test blockisequal(axv, axv)
+    @test !blockisequal(axB, axv)
+    @test !blockisequal(axv, axB)
+end
+
+end # module

@@ -1,3 +1,5 @@
+module TestBlockDeque
+
 using BlockArrays, Test
 
 @testset "block dequeue" begin
@@ -159,6 +161,14 @@ using BlockArrays, Test
         end
         @test A == []
         @test B == 5:-1:1
+
+        @testset "empty blocks" begin
+            B = BlockArray([1:6;], [1,2,3,0,0])
+            @test pop!(B) == 6
+            @test B == 1:5
+            @test !any(isempty, blocks(B))
+            @test blocksizes(B,1) == [1,2,2]
+        end
     end
 
     @testset "popfirst!" begin
@@ -169,5 +179,20 @@ using BlockArrays, Test
         end
         @test A == []
         @test B == 1:5
+
+        A = BlockArray([1:6;], [2,2,2])
+        @test popfirst!(A) == 1
+        @test A == 2:6
+        @test blocksizes(A,1) == [1,2,2]
+
+        @testset "empty blocks" begin
+            B = BlockArray([1:6;], [0,0,1,2,3])
+            @test popfirst!(B) == 1
+            @test B == 2:6
+            @test blocksizes(B,1) == [2,3]
+            @test !any(isempty, blocks(B))
+        end
     end
 end
+
+end # module

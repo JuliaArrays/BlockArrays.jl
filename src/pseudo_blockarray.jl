@@ -225,7 +225,10 @@ to_axes(n::Integer) = Base.oneto(n)
     PseudoBlockArray{T}(undef, map(to_axes,axes))
 
 @propagate_inbounds getindex(block_arr::PseudoBlockArray{T, N}, i::Vararg{Integer, N}) where {T,N} = block_arr.blocks[i...]
-@propagate_inbounds setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N} = setindex!(block_arr.blocks, v, i...)
+@propagate_inbounds function setindex!(block_arr::PseudoBlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
+    setindex!(block_arr.blocks, v, i...)
+    block_arr
+end
 
 ################################
 # AbstractBlockArray Interface #
@@ -345,7 +348,7 @@ rowsupport(A::PseudoBlockArray, j) = rowsupport(A.blocks, j)
 ###
 
 for op in (:zeros, :ones)
-    @eval $op(::Type{T}, axs::Tuple{BlockedUnitRange,Vararg{Any}}) where T = PseudoBlockArray($op(T, map(length,axs)...), axs)
+    @eval $op(::Type{T}, axs::Tuple{BlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange}}}) where T = PseudoBlockArray($op(T, map(length,axs)...), axs)
 end
 
 Base.replace_in_print_matrix(f::PseudoBlockVecOrMat, i::Integer, j::Integer, s::AbstractString) =
@@ -353,3 +356,9 @@ Base.replace_in_print_matrix(f::PseudoBlockVecOrMat, i::Integer, j::Integer, s::
 
 
 LinearAlgebra.norm(A::PseudoBlockArray, p::Real=2) = norm(A.blocks, p)
+
+###########################
+# FillArrays interface #
+###########################
+
+FillArrays.getindex_value(P::PseudoBlockArray) = FillArrays.getindex_value(P.blocks)

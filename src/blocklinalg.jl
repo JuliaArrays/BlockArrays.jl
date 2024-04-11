@@ -117,19 +117,6 @@ LinearAlgebra.fill!(V::SubArray{T,1,<:BlockArray,<:Tuple{BlockSlice1}}, x) where
 FillArrays.getindex_value(V::SubArray{T,1,<:BlockArray,<:Tuple{BlockSlice1}}) where T =
     FillArrays.getindex_value(view(parent(V), block(parentindices(V)[1])))
 
-sub_materialize(::ArrayLayouts.AbstractFillLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
-    Fill(FillArrays.getindex_value(V), ax)
-sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
-    Ones{eltype(V)}(ax)
-sub_materialize(::ArrayLayouts.ZerosLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
-    Zeros{eltype(V)}(ax)
-sub_materialize(::ArrayLayouts.AbstractFillLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
-    Fill(FillArrays.getindex_value(V), ax)
-sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
-    Ones{eltype(V)}(ax)
-sub_materialize(::ArrayLayouts.ZerosLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
-    Zeros{eltype(V)}(ax)
-
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Complex,MLAY,BLAY} = BlockLayout{MLAY,typeof(conjlayout(T,BLAY()))}()
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Real,MLAY,BLAY} = BlockLayout{MLAY,BLAY}()
 

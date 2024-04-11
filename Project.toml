@@ -1,6 +1,6 @@
 name = "BlockArrays"
 uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
-version = "0.16.39"
+version = "0.16.44-dev"
 
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
@@ -18,7 +18,7 @@ BlockArraysBandedMatricesExt = "SparseArrays"
 Aqua = "0.8"
 ArrayLayouts = "1.0.8"
 BandedMatrices = "1.0"
-Documenter = "0.27"
+Documenter = "1"
 FillArrays = "1"
 LinearAlgebra = "1.6"
 OffsetArrays = "1"

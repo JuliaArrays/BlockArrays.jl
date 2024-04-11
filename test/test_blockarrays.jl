@@ -1,4 +1,6 @@
-using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test
+module TestBlockArrays
+
+using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
@@ -17,33 +19,56 @@ end
         @testset "BlockArray Constructors" begin
             ret = BlockArray{Float64}(undef, 1:3)
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockVector{Float64}(undef, 1:3)
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, 1:3)
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret = BlockArray{Float64,1,Vector{OffsetVector{Float64,Vector{Float64}}}}(undef, 1:3)
+            fill!(ret, 0)
+            @test blocks(ret) isa Vector{OffsetVector{Float64,Vector{Float64}}}
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret = BlockArray{Float64,1,
+                        OffsetVector{OffsetVector{Float64,Vector{Float64}},
+                            Vector{OffsetVector{Float64,Vector{Float64}}}}}(undef, 1:3)
+            fill!(ret, 0)
+            @test blocks(ret) isa OffsetVector{OffsetVector{Float64,Vector{Float64}},
+                                    Vector{OffsetVector{Float64,Vector{Float64}}}}
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArray{Float64}(undef, (blockedrange(1:3),))
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockVector{Float64}(undef, (blockedrange(1:3),))
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArray{Float64,1,Vector{Vector{Float64}}}(undef, (blockedrange(1:3),))
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], 1:3)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (blockedrange(1:3),))
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = BlockArray{Float32}(undef_blocks, 1:3)
             @test eltype(ret.blocks) == Vector{Float32}
@@ -68,7 +93,8 @@ end
 
             ret = BlockArray{Float64}(undef, 1:3, 1:3)
             fill!(ret, 0)
-            @test Matrix(ret) == zeros(6,6)
+            @test size(ret) == (6,6)
+            @test all(iszero, ret)
 
             A = [1,2,3,4,5,6]
             @test A == BlockArray(A, 1:3) == BlockArray{Int}(A, 1:3) ==
@@ -80,20 +106,39 @@ end
             B = mortar(fill(S,2,2))
             A = Array(B)
             @test A isa Matrix
+
+            # test that BlockArrays may be created from immutable arrays
+            B = BlockArray(reshape(1:9,3,3), [2,1], [2,1])
+            @test blocksizes(B) == ([2,1], [2,1])
+            @test B == reshape([1:9;],3,3)
+            @test blocks(B) isa Matrix{Matrix{Int}}
+
+            @testset "zeros/ones" begin
+                br = blockedrange(2:3)
+                z = zeros(Float64, br)
+                @test all(iszero, z)
+                @test axes(z) == (br,)
+                o = ones(Float64, br)
+                @test all(isone, o)
+                @test axes(o) == (br,)
+            end
         end
 
         @testset "PseudoBlockArray constructors" begin
             ret = PseudoBlockArray{Float64}(undef, 1:3)
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = PseudoBlockVector{Float64}(undef, 1:3)
             fill!(ret, 0)
-            @test Array(ret)  == zeros(6)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
 
             ret = PseudoBlockArray{Float64}(undef, 1:3, 1:3)
             fill!(ret, 0)
-            @test Matrix(ret) == zeros(6,6)
+            @test size(ret) == (6,6)
+            @test all(iszero, ret)
 
             A = [1,2,3,4,5,6]
             @test_throws BoundsError PseudoBlockArray(A,10:20)
@@ -163,7 +208,10 @@ end
                 (spzeros(5, 3), spzeros(5, 4)),
             )
 
-            @test Array(ret) == zeros(8, 7)
+            a = Array(ret)
+            @test a isa Array
+            @test size(a) == (8, 7)
+            @test all(iszero, a)
             @test eltype(ret.blocks) <: SparseMatrixCSC
             @test axes(ret) == blockedrange.(([1, 2, 5], [3, 4]))
 
@@ -321,6 +369,25 @@ end
         @test blockcheckbounds(Bool, BA_4, 1, 1, 1)
         @test blockcheckbounds(Bool, BA_4, 1, 1, 1, 1)
         @test_throws BlockBoundsError blockcheckbounds(BA_3, 1, 2)
+
+        @testset for (T,F) in ((Fill, Fill(3,4,4)), (Ones, Ones(4,4)), (Zeros, Zeros(4,4)))
+            P = PseudoBlockArray(F, [1,3], [1,3])
+            V = P[axes(P)...]
+            @test V isa T
+            @test V == F
+            @test axes(P) == axes(V)
+            @test blocks.(axes(P)) == blocks.(axes(V))
+            V = P[axes(P,1), 1:2]
+            @test V isa T
+            @test size(V) == (size(P,1), 2)
+            @test blocks(axes(V,1)) == blocks(axes(P,1))
+            @test blocks(axes(V,2)) == blocks(1:2)
+            V = P[1:2, axes(P,2)]
+            @test V isa T
+            @test size(V) == (2, size(P,2))
+            @test blocks(axes(V,1)) == blocks(1:2)
+            @test blocks(axes(V,2)) == blocks(axes(P,2))
+        end
     end
 
     @testset "misc block tests" begin
@@ -480,24 +547,30 @@ end
     end
 
     @testset "replstring" begin
-        @test sprint(show, "text/plain", BlockArray(collect(1:4), [1,3])) == "2-blocked 4-element BlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
-        @test sprint(show, "text/plain", PseudoBlockArray(collect(1:4), [1,3])) == "2-blocked 4-element PseudoBlockVector{$Int}:\n 1\n ─\n 2\n 3\n 4"
-        @test sprint(show, "text/plain", BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 BlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-        @test sprint(show, "text/plain", PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])) == "2×2-blocked 4×4 PseudoBlockMatrix{$Int}:\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
-        @test sprint(show, "text/plain", BlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 BlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
-        @test sprint(show, "text/plain", PseudoBlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])) == "2×2×2-blocked 2×2×2 PseudoBlockArray{$Int, 3}:\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
+        A = BlockArray(collect(1:4), [1,3])
+        @test sprint(show, "text/plain", A) == "$(summary(A)):\n 1\n ─\n 2\n 3\n 4"
+        A = PseudoBlockArray(collect(1:4), [1,3])
+        @test sprint(show, "text/plain", A) == "$(summary(A)):\n 1\n ─\n 2\n 3\n 4"
+        A = BlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])
+        @test sprint(show, "text/plain", A) == "$(summary(A)):\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+        A = PseudoBlockArray(collect(reshape(1:16, 4, 4)), [1,3], [2,2])
+        @test sprint(show, "text/plain", A) == "$(summary(A)):\n 1  5  │   9  13\n ──────┼────────\n 2  6  │  10  14\n 3  7  │  11  15\n 4  8  │  12  16"
+        A = BlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])
+        @test sprint(show, "text/plain", A) == "$(summary(A)):\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
+        A = PseudoBlockArray(collect(reshape(1:8, 2, 2, 2)), [1,1], [1,1], [1,1])
+        @test sprint(show, "text/plain", A) == "$(summary(A)):\n[:, :, 1] =\n 1  3\n 2  4\n\n[:, :, 2] =\n 5  7\n 6  8"
         design = zeros(Int16,6,9);
         A = BlockArray(design,[6],[4,5])
-        @test sprint(show, "text/plain", A) == "1×2-blocked 6×9 BlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+        @test sprint(show, "text/plain", A) == "$(summary(A)):\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
         A = PseudoBlockArray(design,[6],[4,5])
-        @test sprint(show, "text/plain", A) == "1×2-blocked 6×9 PseudoBlockMatrix{Int16}:\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
+        @test sprint(show, "text/plain", A) == "$(summary(A)):\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0\n 0  0  0  0  │  0  0  0  0  0"
         D = PseudoBlockArray(Diagonal(1:3), [1,2], [2,1])
-        @test sprint(show, "text/plain", D) == "2×2-blocked 3×3 $(PseudoBlockMatrix{Int, Diagonal{Int, UnitRange{Int}}, Tuple{BlockedUnitRange{Vector{Int}}, BlockedUnitRange{Vector{Int}}}}):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
+        @test sprint(show, "text/plain", D) == "$(summary(D)):\n 1  ⋅  │  ⋅\n ──────┼───\n ⋅  2  │  ⋅\n ⋅  ⋅  │  3"
 
         a = BlockArray{Int}(undef_blocks, [1,2])
-        @test sprint(show, "text/plain", a) == "2-blocked 3-element BlockVector{Int64}:\n #undef\n ──────\n #undef\n #undef"
+        @test sprint(show, "text/plain", a) == "$(summary(a)):\n #undef\n ──────\n #undef\n #undef"
         B = BlockArray{Int}(undef_blocks, [1,2], [1,1])
-        @test sprint(show, "text/plain", B) == "2×2-blocked 3×2 BlockMatrix{Int64}:\n #undef  │  #undef\n ────────┼────────\n #undef  │  #undef\n #undef  │  #undef"
+        @test sprint(show, "text/plain", B) == "$(summary(B)):\n #undef  │  #undef\n ────────┼────────\n #undef  │  #undef\n #undef  │  #undef"
     end
 
     @testset "AbstractVector{Int} blocks" begin
@@ -517,6 +590,13 @@ end
         x = randn(size(A,2))
         y = similar(x)
         @test BLAS.gemv!('N', 2.0, A, x, 0.0, y) ≈ 2A*x
+    end
+
+    @testset "FillArrays interface" begin
+        P = PseudoBlockArray(Fill(3,4,4), [1,3], [1,3])
+        @test P[1:3, 2:3] === Fill(3,3,2)
+        @test P[1:3, 1] == Fill(3,3)
+        @test P[2, 1:3] == Fill(3,3)
     end
 
     @testset "lmul!/rmul!" begin
@@ -709,3 +789,5 @@ end
         @test size(a[:,1]) == (8,)
     end
 end
+
+end # module

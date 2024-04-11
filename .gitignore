@@ -7,5 +7,6 @@ docs/site/
 benchmark/*.md
 src/.DS_Store
 Manifest.toml
+Manifest-v*.*.toml
 .DS_Store
 build

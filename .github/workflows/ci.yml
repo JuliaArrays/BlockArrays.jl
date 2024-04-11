@@ -12,6 +12,11 @@ on:
       - 'LICENSE.md'
       - 'README.md'
       - '.github/workflows/TagBot.yml'
+
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   pre_job:
     # continue-on-error: true # Uncomment once integration is finished
@@ -33,7 +38,6 @@ jobs:
         version:
           - '1.6'
           - '1'
-          - '~1.10.0-0'
         os:
           - ubuntu-latest
           - macOS-latest
@@ -42,11 +46,11 @@ jobs:
           - x64
     steps:
       - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v1
+      - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         env:
           cache-name: cache-artifacts
         with:
@@ -59,23 +63,7 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: lcov.info
-  docs:
-    name: Documentation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v1
-        with:
-          version: '1'
-      - run: |
-          julia --project=docs -e '
-            using Pkg
-            Pkg.develop(PackageSpec(path=pwd()))
-            Pkg.instantiate()'
-      - run: julia --project=docs docs/make.jl
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
