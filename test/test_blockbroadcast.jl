@@ -1,5 +1,9 @@
+module TestBlockBroadcast
+
 using BlockArrays, FillArrays, Test
 import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
+import InfiniteArrays
+using StaticArrays
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
@@ -24,6 +28,18 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
         @test axes(A + A) == axes(A .+ A) == axes(A)
         @test axes(A .+ 1) == axes(A)
+
+        @testset "mismatched ndims" begin
+            u = BlockArray(randn(5), [2,3])
+            dest = zeros(size(u)..., 1)
+            @test (dest .= u) isa typeof(dest)
+            @test reshape(dest, size(u)) == u
+
+            u = BlockArray(randn(3,3), [1,2], [1,2])
+            dest = zeros(length(u))
+            @test (dest .= u) isa typeof(dest)
+            @test reshape(dest, size(u)) == u
+        end
     end
 
     @testset "PseudoBlockArray" begin
@@ -110,6 +126,17 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test (@. z = x + y + z; z) == (@. z2 = x2 + y2 + z2; z2)
     end
 
+    @testset "blockedrange" begin
+        b = blockedrange(InfiniteArrays.OneToInf())
+        b2 = b .+ b
+        for i in 1:10
+            @test b2[Block(i)] == b[Block(i)] + b[Block(i)]
+        end
+
+        b = blockedrange(SVector{2}([1,2]))
+        @test b .+ b == 2:2:6
+    end
+
     @testset "Special broadcast" begin
         v = mortar([1:3,4:7])
         @test broadcast(+, v) isa BlockVector{Int,Vector{UnitRange{Int}}}
@@ -180,6 +207,7 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
     @testset "type inference" begin
         u = BlockArray(randn(5), [2,3]);
+        A = zeros(size(u))
         @inferred(copyto!(similar(u), Base.broadcasted(exp, u)))
         @test exp.(u) == exp.(Vector(u))
     end
@@ -265,4 +293,18 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         C = B + B
         @test C[Block(1)] == 2B[Block(1)]
     end
+
+    @testset "utilities" begin
+        for v in ([2,3,1], 2:4)
+            w = BlockArrays.maybeinplacesort!(v)
+            @test issorted(w)
+            @test v === w
+        end
+        v = 3:-1:2
+        w = BlockArrays.maybeinplacesort!(v)
+        @test issorted(w)
+        @test w == reverse(v)
+    end
 end
+
+end # module

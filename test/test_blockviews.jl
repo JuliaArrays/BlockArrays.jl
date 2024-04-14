@@ -1,4 +1,7 @@
+module TestBlockViews
+
 using BlockArrays, ArrayLayouts, Test
+using FillArrays
 
 # useds to force SubArray return
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
@@ -140,7 +143,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         A = PseudoBlockArray(collect(1:6), 1:3)
         V = view(A, Block.(1:2))
         @test V == 1:3
-        @test axes(V,1) isa BlockArrays.BlockedUnitRange
+        @test axes(V,1) isa BlockArrays.BlockedOneTo
         @test blockaxes(V,1) == Block.(1:2)
         @test view(V, Block(2)[1:2]) == [2,3]
         V = view(A, Block.(2:3))
@@ -348,3 +351,5 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test v[Block(1)] == a[Block(1)]
     end
 end
+
+end # module

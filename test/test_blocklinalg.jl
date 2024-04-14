@@ -1,6 +1,10 @@
+module TestBlockLinalg
+
 using BlockArrays, ArrayLayouts, LinearAlgebra, Test
 import BlockArrays: BlockLayout
 import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
+
+bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
 @testset "Linear Algebra" begin
     @testset "BlockArray scalar * matrix" begin
@@ -248,3 +252,5 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
         @test mul!(view(copy(C),:,1:3), Ã, B̃, 1, 2) ≈ A*B + 2C
     end
 end
+
+end # module

@@ -96,17 +96,17 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{<:BlockSlice{BlockRange{1,T
     BlockLayout{typeof(sublayout(MLAY(),Tuple{II,Sl})), BLAY}()
 sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{Sl1,Sl2}}) where {MLAY,BLAY,Sl1<:Slice,Sl2<:Slice} =
     BlockLayout{typeof(sublayout(MLAY(),Tuple{Sl1,Sl2})), BLAY}()
-sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:BlockedUnitRange}}) where {N,MLAY,BLAY} =
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:AbstractBlockedUnitRange}}) where {N,MLAY,BLAY} =
     BlockLayout{typeof(sublayout(MLAY(),NTuple{N,Base.OneTo{Int}})), BLAY}()
 
 # materialize views, used for `getindex`
 sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
 
 # if it's not a block layout, best to use PseudoBlockArray to take advantage of strideness
-sub_materialize_axes(V, ::Tuple{BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize_axes(V, ::Tuple{BlockedUnitRange,BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize_axes(V, ::Tuple{AbstractUnitRange,BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize_axes(V, ::Tuple{BlockedUnitRange,AbstractUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}) = PseudoBlockArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}) = PseudoBlockArray(V)
 
 # Special for FillArrays.jl
 
@@ -116,19 +116,6 @@ LinearAlgebra.fill!(V::SubArray{T,1,<:BlockArray,<:Tuple{BlockSlice1}}, x) where
 
 FillArrays.getindex_value(V::SubArray{T,1,<:BlockArray,<:Tuple{BlockSlice1}}) where T =
     FillArrays.getindex_value(view(parent(V), block(parentindices(V)[1])))
-
-sub_materialize(::ArrayLayouts.AbstractFillLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
-    Fill(FillArrays.getindex_value(V), ax)
-sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
-    Ones{eltype(V)}(ax)
-sub_materialize(::ArrayLayouts.ZerosLayout, V, ax::Tuple{<:BlockedUnitRange,<:AbstractUnitRange}) =
-    Zeros{eltype(V)}(ax)
-sub_materialize(::ArrayLayouts.AbstractFillLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
-    Fill(FillArrays.getindex_value(V), ax)
-sub_materialize(::ArrayLayouts.OnesLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
-    Ones{eltype(V)}(ax)
-sub_materialize(::ArrayLayouts.ZerosLayout, V, ax::Tuple{<:AbstractUnitRange,<:BlockedUnitRange}) =
-    Zeros{eltype(V)}(ax)
 
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Complex,MLAY,BLAY} = BlockLayout{MLAY,typeof(conjlayout(T,BLAY()))}()
 conjlayout(::Type{T}, ::BlockLayout{MLAY,BLAY}) where {T<:Real,MLAY,BLAY} = BlockLayout{MLAY,BLAY}()

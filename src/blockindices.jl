@@ -103,14 +103,15 @@ Integer(index::Block{1}) = index.n[1]
 Number(index::Block{1}) = index.n[1]
 Tuple(index::Block) = Block.(index.n)
 
-# print
-Base.show(io::IO, B::Block{0,Int}) = print(io, "Block()")
-function Base.show(io::IO, B::Block{N,Int}) where N
-    print(io, "Block($(B.n[1])")
-    for n in Base.tail(B.n)
-        print(io, ", $n")
-    end
-    print(io, ")")
+
+# Some views may be computed eagerly without the SubArray wrapper
+@propagate_inbounds view(r::AbstractRange, B::Block{1}) = r[to_indices(r, (B,))...]
+@propagate_inbounds function view(C::CartesianIndices{N}, b1::Block{1}, B::Block{1}...) where {N}
+    blk = Block((b1, B...))
+    view(C, to_indices(C, (blk,))...)
+end
+@propagate_inbounds function view(C::CartesianIndices{N}, B::Block{N}) where {N}
+    view(C, to_indices(C, (B,))...)
 end
 
 """
@@ -154,29 +155,16 @@ end
 @inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
 @inline BlockIndex(a::Block, b::Int) = BlockIndex(a, (b,))
 
-@generated function BlockIndex(I::NTuple{N, Int}, α::NTuple{M, Int}) where {M,N}
-    @assert M < N
-    α_ex = Expr(:tuple, [k <= M ? :(α[$k]) : :(1) for k = 1:N]...)
-    return quote
-        $(Expr(:meta, :inline))
-        @inbounds α2 = $α_ex
-        BlockIndex(I, α2)
-    end
+@inline function BlockIndex(I::NTuple{N, Int}, α::NTuple{M, Int}) where {M,N}
+    M <= N || throw(ArgumentError("number of indices must not exceed the number of blocks"))
+    α2 = ntuple(k -> k <= M ? α[k] : 1, N)
+    BlockIndex(I, α2)
 end
 
 block(b::BlockIndex) = Block(b.I...)
 blockindex(b::BlockIndex{1}) = b.α[1]
 
 BlockIndex(indcs::NTuple{N,BlockIndex{1}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
-
-function Base.show(io::IO, B::BlockIndex)
-    show(io, Block(B.I...))
-    print(io, "[$(B.α[1])")
-    for α in Base.tail(B.α)
-        print(io, ", $α")
-    end
-    print(io, "]")
-end
 
 ##
 # checkindex
@@ -248,17 +236,6 @@ length(iter::BlockIndexRange) = prod(size(iter))
 
 Block(bs::BlockIndexRange) = bs.block
 
-function Base.show(io::IO, B::BlockIndexRange)
-    show(io, Block(B))
-    print(io, "[")
-    show(io, B.indices[1])
-    for α in Base.tail(B.indices)
-        print(io, ", ")
-        show(io, α)
-    end
-    print(io, "]")
-end
-
 
 # #################
 # # support for pointers
@@ -293,10 +270,17 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
     @eval $f(S::BlockSlice) = $f(S.indices)
 end
 
+_indices(B::BlockSlice) = B.indices
+_indices(B) = B
+
 @propagate_inbounds getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
-@propagate_inbounds getindex(S::BlockSlice{<:Block}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
-@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
-show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
+@propagate_inbounds getindex(S::BlockSlice{<:Block{1}}, k::AbstractUnitRange{Int}) =
+    BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
+@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1}}, k::AbstractUnitRange{Int}) =
+    BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
+
+# Avoid creating a SubArray wrapper in certain non-allocating cases
+@propagate_inbounds view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = view(C, map(x->x.indices, bs)...)
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 

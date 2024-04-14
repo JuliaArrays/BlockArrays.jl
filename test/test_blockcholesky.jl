@@ -1,3 +1,5 @@
+module TestBlockCholesky
+
 using BlockArrays, Test, LinearAlgebra, Random
 
 
@@ -60,3 +62,4 @@ Random.seed!(0)
     @test cholesky(E8; check=false).info == 8
 end
 
+end # module
