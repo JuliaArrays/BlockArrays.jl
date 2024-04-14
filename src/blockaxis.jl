@@ -54,19 +54,32 @@ struct BlockedUnitRange{T<:Integer,CS} <: AbstractBlockedUnitRange{T,CS}
     first::T
     lasts::CS
     # assume that lasts is sorted, no checks carried out here
-    global function _BlockedUnitRange(f, cs::AbstractVector)
+    global function _BlockedUnitRange(f::T, cs::CS) where {T,CS<:AbstractVector{T}}
         Base.require_one_based_indexing(cs)
-        return new{eltype(cs), typeof(cs)}(f, cs)
+        return new{T,CS}(f, cs)
     end
-    global function _BlockedUnitRange(f, cs::NTuple)
-        return new{eltype(cs), typeof(cs)}(f, cs)
+    global function _BlockedUnitRange(f::T, cs::CS) where {T,CS<:Tuple{T,Vararg{T}}}
+        return new{T,CS}(f, cs)
+    end
+    global function _BlockedUnitRange(f::T, cs::Tuple{}) where {T}
+        return new{T,Tuple{}}(f, cs)
     end
 end
 
+@inline function _BlockedUnitRange(f::T, cs::AbstractVector{S}) where {T,S}
+  U = promote_type(T, S)
+  return _BlockedUnitRange(convert(U, f), convert.(U, cs))
+end
+@inline function _BlockedUnitRange(f::T, cs::Tuple{S,Vararg{S}}) where {T,S}
+  U = promote_type(T, S)
+  return _BlockedUnitRange(convert(U, f), convert.(U, cs))
+end
+@inline function _BlockedUnitRange(f, cs::Tuple)
+  return _BlockedUnitRange(f, promote(cs...))
+end
 @inline _BlockedUnitRange(cs::AbstractVector) = _BlockedUnitRange(oneunit(eltype(cs)), cs)
 @inline _BlockedUnitRange(cs::NTuple) = _BlockedUnitRange(oneunit(eltype(cs)), cs)
 _BlockedUnitRange(cs::Tuple) = _BlockedUnitRange(promote(cs...))
-_BlockedUnitRange(f, cs::Tuple) = _BlockedUnitRange(f, promote(cs...))
 
 first(b::BlockedUnitRange) = b.first
 @inline blocklasts(a::BlockedUnitRange) = a.lasts
