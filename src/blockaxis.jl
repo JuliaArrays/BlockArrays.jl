@@ -36,7 +36,7 @@ a vector of block lengths to a `BlockedUnitRange`.
 # Examples
 ```jldoctest
 julia> blockedrange(2, [2,2,3]) # first value and block lengths
-3-blocked 7-element BlockedUnitRange{Vector{Int64}}:
+3-blocked 7-element BlockedUnitRange{Int64, Vector{Int64}}:
  2
  3
  ─
@@ -50,7 +50,7 @@ julia> blockedrange(2, [2,2,3]) # first value and block lengths
 
 See also [`BlockedOneTo`](@ref).
 """
-struct BlockedUnitRange{T<:Integer, CS} <: AbstractUnitRange{T}
+struct BlockedUnitRange{T<:Integer,CS} <: AbstractBlockedUnitRange{T,CS}
     first::T
     lasts::CS
     # assume that lasts is sorted, no checks carried out here
@@ -62,8 +62,6 @@ struct BlockedUnitRange{T<:Integer, CS} <: AbstractUnitRange{T}
         return new{eltype(cs), typeof(cs)}(f, cs)
     end
 end
-
-const DefaultBlockAxis = BlockedUnitRange{Int,Vector{Int}}
 
 @inline _BlockedUnitRange(cs::AbstractVector) = _BlockedUnitRange(oneunit(eltype(cs)), cs)
 @inline _BlockedUnitRange(cs::NTuple) = _BlockedUnitRange(oneunit(eltype(cs)), cs)
@@ -79,7 +77,6 @@ _blocklengths2blocklasts(blocks) = accumulate(+, blocks) # extra level to allow 
 # Use `cumsum` for fill arrays to output lazy `StepRangeLen` representation
 _blocklengths2blocklasts(blocks::Fill) = cumsum(blocks)
 _blocklengths2blocklasts(blocks::Ones) = cumsum(blocks)
-@inline blockedrange(blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(_blocklengths2blocklasts(blocks))
 
 @inline blockfirsts(a::AbstractBlockedUnitRange) = [first(a); @views(blocklasts(a)[1:end-1]) .+ oneunit(eltype(a))]
 
@@ -139,8 +136,6 @@ BlockedOneTo(::BlockedOneTo) = throw(ArgumentError("Forbidden due to ambiguity")
 
 axes(b::BlockedOneTo) = (b,)
 
-_blocklengths2blocklasts(blocks) = cumsum(blocks) # extra level to allow changing default cumsum behaviour
-
 """
     blockedrange(blocklengths::Union{Tuple, AbstractVector})
     blockedrange(first::Int, blocklengths::Union{Tuple, AbstractVector})
@@ -159,7 +154,7 @@ julia> blockedrange([1,2])
  3
 
 julia> blockedrange(2, (1,2))
-2-blocked 3-element BlockedUnitRange{Tuple{Int64, Int64}}:
+2-blocked 3-element BlockedUnitRange{Int64, Tuple{Int64, Int64}}:
  2
  ─
  3
@@ -167,7 +162,7 @@ julia> blockedrange(2, (1,2))
 ```
 """
 @inline blockedrange(blocks::Union{Tuple,AbstractVector}) = BlockedOneTo(_blocklengths2blocklasts(blocks))
-@inline blockedrange(f::Int, blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(f, f-1 .+ _blocklengths2blocklasts(blocks))
+@inline blockedrange(f::Integer, blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(f, f-oneunit(f) .+ _blocklengths2blocklasts(blocks))
 
 _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
