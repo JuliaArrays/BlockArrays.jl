@@ -69,6 +69,7 @@ include("show.jl")
 include("blockreduce.jl")
 include("blockdeque.jl")
 include("blockarrayinterface.jl")
+include("blockbanded.jl")
 
 @deprecate getblock(A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} view(A, Block(I))
 @deprecate getblock!(X, A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} copyto!(X, view(A, Block(I)))
