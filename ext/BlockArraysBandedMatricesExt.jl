@@ -1,8 +1,10 @@
 module BlockArraysBandedMatricesExt
 
 using BandedMatrices, BlockArrays
+using BlockArrays.ArrayLayouts
 import BandedMatrices: isbanded, AbstractBandedLayout, bandeddata, bandwidths
-import BlockArrays: blockcolsupport, blockrowsupport, sub_materialize
+import BlockArrays: blockcolsupport, blockrowsupport, AbstractBlockedUnitRange
+import ArrayLayouts: sub_materialize
 
 
 bandeddata(P::PseudoBlockMatrix) = bandeddata(P.blocks)
@@ -21,8 +23,8 @@ function blockrowsupport(::AbstractBandedLayout, B, k)
 end
 
 # ambiguity
-sub_materialize(::AbstractBandedLayout, V, ::Tuple{BlockedUnitRange,Base.OneTo{Int}}) = BandedMatrix(V)
-sub_materialize(::AbstractBandedLayout, V, ::Tuple{Base.OneTo{Int},BlockedUnitRange}) = BandedMatrix(V)
+sub_materialize(::AbstractBandedLayout, V, ::Tuple{AbstractBlockedUnitRange,Base.OneTo{Int}}) = BandedMatrix(V)
+sub_materialize(::AbstractBandedLayout, V, ::Tuple{Base.OneTo{Int},AbstractBlockedUnitRange}) = BandedMatrix(V)
 
 
 end
