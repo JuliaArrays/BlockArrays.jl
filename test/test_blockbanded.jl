@@ -1,3 +1,5 @@
+module TestBlockArraysBandedMatrices
+
 using BlockArrays, LinearAlgebra, BandedMatrices, Test
 using BlockArrays: BlockDiagonal, BlockBidiagonal, BlockTridiagonal, blockcolsupport, blockrowsupport
 using BandedMatrices: _BandedMatrix
@@ -63,4 +65,12 @@ using BandedMatrices: _BandedMatrix
             @test Q isa BandedMatrix
         end
     end
+
+    @testset "Banded PseudoMatrix" begin
+        A = PseudoBlockArray(brand(5,4,1,2), [3,2], [2,2])
+        @test bandwidths(A) == (1,2)
+        @test BandedMatrix(A) == A
+    end
 end
+
+end # module

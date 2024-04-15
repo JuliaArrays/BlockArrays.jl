@@ -77,6 +77,7 @@ include("blockbanded.jl")
 
 if !isdefined(Base, :get_extension)
     include("../ext/BlockArraysLazyArraysExt.jl")
+    include("../ext/BlockArraysBandedMatricesExt.jl")
 end
 
 end # module
