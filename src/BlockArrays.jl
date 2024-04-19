@@ -18,7 +18,7 @@ export khatri_rao, blockkron, BlockKron
 
 export blockappend!, blockpush!, blockpushfirst!, blockpop!, blockpopfirst!
 
-import Base: @propagate_inbounds, Array, to_indices, to_index,
+import Base: @propagate_inbounds, Array, AbstractArray, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
             getindex, setindex!, ndims, show, view,
@@ -27,13 +27,10 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             tail, reindex,
             RangeIndex, Int, Integer, Number, Tuple,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
-            BroadcastStyle, checkbounds, throw_boundserror,
+            BroadcastStyle, checkbounds,
             oneunit, ones, zeros, intersect, Slice, resize!
-using Base: ReshapedArray, dataids, oneto
-import Base: AbstractArray
 
-_maybetail(::Tuple{}) = ()
-_maybetail(t::Tuple) = tail(t)
+using Base: ReshapedArray, dataids, oneto
 
 import Base: (:), IteratorSize, iterate, axes1, strides, isempty
 import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, broadcastable
@@ -45,7 +42,7 @@ import ArrayLayouts: MatLdivVec, MatLmulVec, MatMulMatAdd, MatMulVecAdd, MemoryL
 import FillArrays: axes_print_matrix_row
 
 import LinearAlgebra: AbstractTriangular, AdjOrTrans, HermOrSym, RealHermSymComplexHerm, StructuredMatrixStyle,
-                      cholcopy, cholesky, cholesky!, lmul!, rmul!
+                      lmul!, rmul!
 
 
 if VERSION ≥ v"1.11.0-DEV.21"
@@ -56,6 +53,9 @@ else
                                               LinearAlgebra.LowerTriangular{T,S},
                                               LinearAlgebra.UnitLowerTriangular{T,S}}
 end
+
+_maybetail(::Tuple{}) = ()
+_maybetail(t::Tuple) = tail(t)
 
 include("blockindices.jl")
 include("blockaxis.jl")
