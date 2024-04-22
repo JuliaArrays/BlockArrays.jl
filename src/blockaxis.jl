@@ -100,6 +100,9 @@ _blocklengths2blocklasts(blocks::Ones) = cumsum(blocks)
     v[2:end] .= @views(blocklasts(a)[oneto(end-1)]) .+ oneunit(eltype(a))
     return v
 end
+@inline function blockfirsts(a::AbstractBlockedUnitRange{<:Any,<:Tuple})
+    return (first(a), (blocklasts(a)[oneto(end-1)] .+ oneunit(eltype(a)))...)
+end
 
 """
     BlockedOneTo

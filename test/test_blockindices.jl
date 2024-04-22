@@ -673,6 +673,26 @@ end
         @test blockaxes(s) == (Block.(1:2),)
         @test findblock(s,3) == Block(1)
         @test findblock(s,big(100_000_000)) == Block(2)
+
+        r = blockedrange(1, (2, 2, 2))
+        @test eltype(r) === Int
+        @test first(r) === 1
+        @test last(r) === 6
+        @test length(r) === 6
+        @test blockfirsts(r) === (1, 3, 5)
+        @test blocklasts(r) === (2, 4, 6)
+        @test blocklengths(r) == [2, 2, 2]
+    end
+
+    @testset "Empty Tuple" begin
+        r = blockedrange(1, ())
+        @test eltype(r) === Int
+        @test first(r) === 1
+        @test last(r) === 0
+        @test length(r) === 0
+        @test blockfirsts(r) === (1,)
+        @test blocklasts(r) === ()
+        @test blocklengths(r) == []
     end
 
     @testset "General element types" begin
@@ -731,6 +751,32 @@ end
         @test eltype(blockfirsts(r)) === elt
         @test eltype(blocklasts(r)) === elt
         @test eltype(blocklengths(r)) === elt
+    end
+
+    @testset "Promote element types" begin
+        for r in (blockedrange(UInt8(1), UInt16[2, 4]), blockedrange(UInt16(1), UInt8[2, 4]))
+            @test first(r) == 1
+            @test last(r) == 6
+            @test blockfirsts(r) == [1, 3]
+            @test blocklasts(r) == [2, 6]
+            @test eltype(r) === UInt16
+            @test typeof(first(r)) === UInt16
+            @test typeof(last(r)) === UInt16
+            @test eltype(blockfirsts(r)) === UInt16
+            @test eltype(blocklasts(r)) === UInt16
+            @test eltype(blocklengths(r)) === UInt16
+        end
+    end
+
+    @testset "Promote element Tuple types" begin
+        r = BlockArrays._BlockedUnitRange((UInt8(2), UInt16(5)))
+        @test eltype(r) == UInt16
+        @test first(r) === UInt16(1)
+        @test last(r) === UInt16(5)
+        @test blockfirsts(r) === (UInt16(1), UInt16(3))
+        @test blocklasts(r) === (UInt16(2), UInt16(5))
+        @test blocklengths(r) == [UInt16(2), UInt16(3)]
+        @test eltype(blocklengths(r)) === UInt16
     end
 
     @testset "blocksizes" begin
