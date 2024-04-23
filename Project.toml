@@ -11,11 +11,9 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [weakdeps]
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
-LazyArrays = "5078a376-72f3-5289-bfd5-ec5146d43c02"
 
 [extensions]
 BlockArraysBandedMatricesExt = "BandedMatrices"
-BlockArraysLazyArraysExt = "LazyArrays"
 
 [compat]
 Aqua = "0.8"
@@ -24,7 +22,6 @@ BandedMatrices = "1.0"
 Documenter = "1"
 FillArrays = "1"
 InfiniteArrays = "0.13"
-LazyArrays = "1"
 LinearAlgebra = "1.6"
 OffsetArrays = "1"
 Random = "1.6"
