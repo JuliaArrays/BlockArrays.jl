@@ -545,7 +545,7 @@ Base.BroadcastStyle(::Type{<:AbstractBlockedUnitRange{<:Any,R}}) where R = _broa
 # We want to use lazy types when possible
 ###
 
-const OneToCumsum = RangeCumsum{Int,OneTo{Int}}
+const OneToCumsum = RangeCumsum{Int,Base.OneTo{Int}}
 sortedunion(a::OneToCumsum, ::OneToCumsum) = a
 function sortedunion(a::RangeCumsum{<:Any,<:AbstractRange}, b::RangeCumsum{<:Any,<:AbstractRange})
     @assert a == b
