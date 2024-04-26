@@ -135,14 +135,20 @@ See also [`BlockedUnitRange`](@ref).
 struct BlockedOneTo{T<:Integer,CS} <: AbstractBlockedUnitRange{T,CS}
     lasts::CS
     # assume that lasts is sorted, no checks carried out here
-    function BlockedOneTo(lasts::CS) where {CS}
-        T = eltype(CS)
-        T == Bool && throw(ArgumentError("a Bool collection is not allowed as blocklasts"))
+    function BlockedOneTo(lasts::CS) where {T, CS<:AbstractVector{T}}
+        _throw_if_bool(T)
         Base.require_one_based_indexing(lasts)
         isempty(lasts) || first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
         new{T,CS}(lasts)
     end
+    function BlockedOneTo(lasts::CS) where {T, CS<:Tuple{T,Vararg{T}}}
+        _throw_if_bool(T)
+        first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
+        new{T,CS}(lasts)
+    end
 end
+_throw_if_bool(_) = nothing
+_throw_if_bool(::Type{Bool}) = throw(ArgumentError("a Bool collection is not allowed as blocklasts"))
 
 const DefaultBlockAxis = BlockedOneTo{Int, Vector{Int}}
 
