@@ -339,7 +339,8 @@ end
         @test findblock(b,1) == Block(1)
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
-        @test sprint(show, "text/plain", blockedrange(1, [1,2,2])) == "3-blocked 5-element BlockedUnitRange{$Int, Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        r = blockedrange(1, [1,2,2])
+        @test sprint(show, "text/plain", r) == "$(summary(r)):\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
     end
 
     @testset "BlockIndex type piracy (#108)" begin
@@ -511,8 +512,8 @@ end
         end
         test_type_and_blockequal(BlockedOneTo, Base.OneTo(5), blockedrange([5]))
         test_type_and_blockequal(BlockedOneTo, Base.Slice(Base.OneTo(5)), blockedrange([5]))
-        test_type_and_blockequal(BlockedOneTo{Vector{Int}}, b, b)
-        test_type_and_blockequal(BlockedOneTo{Vector{Int}}, Base.OneTo(5), blockedrange([5]))
+        test_type_and_blockequal(BlockedOneTo{Int,Vector{Int}}, b, b)
+        test_type_and_blockequal(BlockedOneTo{Int,Vector{Int}}, Base.OneTo(5), blockedrange([5]))
         test_type_and_blockequal(BlockedOneTo, blockedrange(1, [1,1,1]), blockedrange([1,1,1]))
     end
 
@@ -588,7 +589,7 @@ end
         @test Base.dataids(b) == Base.dataids(blocklasts(b))
         @test_throws ArgumentError BlockedOneTo(b)
 
-        @test summary(b) == "3-blocked 6-element BlockedOneTo{Vector{$Int}}"
+        @test summary(b) == "3-blocked 6-element BlockedOneTo{$Int, Vector{$Int}}"
     end
 
     @testset "OneTo interface" begin
@@ -606,7 +607,8 @@ end
         @test findblock(b,1) == Block(1)
         @test_throws BoundsError findblock(b,0)
         @test_throws BoundsError findblock(b,6)
-        @test sprint(show, "text/plain", blockedrange([1,2,2])) == "3-blocked 5-element BlockedOneTo{Vector{$Int}}:\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        r = blockedrange([1,2,2])
+        @test sprint(show, "text/plain", r) == "$(summary(r)):\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
     end
 
     @testset "checkindex" begin
@@ -789,6 +791,12 @@ end
     @testset "show" begin
         b = blockedrange([1,2])
         @test repr(b) == "$BlockedOneTo($([1,3]))"
+    end
+
+    @testset "non-Int eltypes" begin
+        @test blockedrange(UInt32[1,2]) isa BlockedOneTo{UInt32, Vector{UInt32}}
+        @test blockedrange(UInt32[1,2]) == blockedrange([1,2])
+        @test_throws ArgumentError BlockedOneTo([true])
     end
 end
 
