@@ -135,13 +135,13 @@ See also [`BlockedUnitRange`](@ref).
 struct BlockedOneTo{T<:Integer,CS} <: AbstractBlockedUnitRange{T,CS}
     lasts::CS
     # assume that lasts is sorted, no checks carried out here
-    function BlockedOneTo(lasts::CS) where {T, CS<:AbstractVector{T}}
+    function BlockedOneTo(lasts::CS) where {T<:Integer, CS<:AbstractVector{T}}
         _throw_if_bool(T)
         Base.require_one_based_indexing(lasts)
         isempty(lasts) || first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
         new{T,CS}(lasts)
     end
-    function BlockedOneTo(lasts::CS) where {T, CS<:Tuple{T,Vararg{T}}}
+    function BlockedOneTo(lasts::CS) where {T<:Integer, CS<:Tuple{T,Vararg{T}}}
         _throw_if_bool(T)
         first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
         new{T,CS}(lasts)
