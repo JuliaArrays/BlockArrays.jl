@@ -105,9 +105,9 @@ end
 end
 
 """
-    BlockedOneTo
+    BlockedOneTo{T, <:Union{AbstractVector{T}, NTuple{<:Any,T}}} where {T}
 
-Define an `AbstractUnitRange{Int}` that has been divided
+Define an `AbstractUnitRange{T}` that has been divided
 into blocks, which is used to represent `axes` of block arrays.
 This parallels `Base.OneTo` in that the first value is guaranteed
 to be `1`.
@@ -118,7 +118,7 @@ a vector of block lengths to a `BlockedUnitRange`.
 # Examples
 ```jldoctest
 julia> blockedrange([2,2,3]) # block lengths
-3-blocked 7-element BlockedOneTo{Vector{Int64}}:
+3-blocked 7-element BlockedOneTo{Int64, Vector{Int64}}:
  1
  2
  ─
@@ -132,18 +132,25 @@ julia> blockedrange([2,2,3]) # block lengths
 
 See also [`BlockedUnitRange`](@ref).
 """
-struct BlockedOneTo{CS} <: AbstractBlockedUnitRange{Int,CS}
+struct BlockedOneTo{T<:Integer,CS} <: AbstractBlockedUnitRange{T,CS}
     lasts::CS
     # assume that lasts is sorted, no checks carried out here
-    function BlockedOneTo{CS}(lasts) where {CS}
+    function BlockedOneTo(lasts::CS) where {T<:Integer, CS<:AbstractVector{T}}
+        _throw_if_bool(T)
         Base.require_one_based_indexing(lasts)
         isempty(lasts) || first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
-        new{CS}(lasts)
+        new{T,CS}(lasts)
+    end
+    function BlockedOneTo(lasts::CS) where {T<:Integer, CS<:Tuple{T,Vararg{T}}}
+        _throw_if_bool(T)
+        first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
+        new{T,CS}(lasts)
     end
 end
-BlockedOneTo(lasts) = BlockedOneTo{typeof(lasts)}(lasts)
+_throw_if_bool(_) = nothing
+_throw_if_bool(::Type{Bool}) = throw(ArgumentError("a Bool collection is not allowed as blocklasts"))
 
-const DefaultBlockAxis = BlockedOneTo{Vector{Int}}
+const DefaultBlockAxis = BlockedOneTo{Int, Vector{Int}}
 
 first(b::BlockedOneTo) = oneunit(eltype(b))
 @inline blocklasts(a::BlockedOneTo) = a.lasts
@@ -163,7 +170,7 @@ Otherwise, if only the block lengths are provided, `first` is assumed to be `1`.
 # Examples
 ```jldoctest
 julia> blockedrange([1,2])
-2-blocked 3-element BlockedOneTo{Vector{Int64}}:
+2-blocked 3-element BlockedOneTo{Int64, Vector{Int64}}:
  1
  ─
  2
@@ -200,14 +207,14 @@ Check if `a` and `b` have the same block structure.
 # Examples
 ```jldoctest
 julia> b1 = blockedrange([1,2])
-2-blocked 3-element BlockedOneTo{Vector{Int64}}:
+2-blocked 3-element BlockedOneTo{Int64, Vector{Int64}}:
  1
  ─
  2
  3
 
 julia> b2 = blockedrange([1,1,1])
-3-blocked 3-element BlockedOneTo{Vector{Int64}}:
+3-blocked 3-element BlockedOneTo{Int64, Vector{Int64}}:
  1
  ─
  2
@@ -253,11 +260,11 @@ Base.unitrange(b::AbstractBlockedUnitRange) = first(b):last(b)
 
 Base.promote_rule(::Type{<:AbstractBlockedUnitRange{T}}, ::Type{Base.OneTo{Int}}) where {T} = UnitRange{promote_type(T, Int)}
 
-function Base.convert(::Type{BlockedOneTo}, axis::AbstractUnitRange{Int})
+function Base.convert(::Type{BlockedOneTo}, axis::AbstractUnitRange{<:Integer})
     first(axis) == 1 || throw(ArgumentError("first element of range is not 1"))
     BlockedOneTo(blocklasts(axis))
 end
-function Base.convert(::Type{BlockedOneTo{CS}}, axis::AbstractUnitRange{Int}) where CS
+function Base.convert(::Type{BlockedOneTo{T, CS}}, axis::AbstractUnitRange{<:Integer}) where {T, CS}
     first(axis) == 1 || throw(ArgumentError("first element of range is not 1"))
     BlockedOneTo(convert(CS, blocklasts(axis)))
 end
@@ -475,7 +482,7 @@ Return the first index of each block of `a`.
 # Examples
 ```jldoctest
 julia> b = blockedrange([1,2,3])
-3-blocked 6-element BlockedOneTo{Vector{Int64}}:
+3-blocked 6-element BlockedOneTo{Int64, Vector{Int64}}:
  1
  ─
  2
@@ -501,7 +508,7 @@ Return the last index of each block of `a`.
 # Examples
 ```jldoctest
 julia> b = blockedrange([1,2,3])
-3-blocked 6-element BlockedOneTo{Vector{Int64}}:
+3-blocked 6-element BlockedOneTo{Int64, Vector{Int64}}:
  1
  ─
  2
@@ -527,7 +534,7 @@ Return the length of each block of `a`.
 # Examples
 ```jldoctest
 julia> b = blockedrange([1,2,3])
-3-blocked 6-element BlockedOneTo{Vector{Int64}}:
+3-blocked 6-element BlockedOneTo{Int64, Vector{Int64}}:
  1
  ─
  2
