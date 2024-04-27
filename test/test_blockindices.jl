@@ -411,6 +411,11 @@ end
 end
 
 @testset "BlockedOneTo" begin
+    @testset "constructor" begin
+        @test blockedrange((2,3)) isa BlockedOneTo{Int, NTuple{2,Int}}
+        @test blockedrange([2,3]) == blockedrange((2,3)) == 1:5
+    end
+
     @testset "promote" begin
         b = blockedrange([1,2,3])
         @test promote(b, 1:2) == (1:6, 1:2)
