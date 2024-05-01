@@ -151,7 +151,7 @@ julia> A = reshape(1:9, 3, 3)
  3  6  9
 
 julia> BlockArrays.blockvec(A)
-3-blocked 9-element PseudoBlockVector{Int64, UnitRange{Int64}, Tuple{BlockedOneTo{StepRangeLen{Int64, Int64, Int64, Int64}}}}:
+3-blocked 9-element PseudoBlockVector{Int64, UnitRange{Int64}, Tuple{BlockedOneTo{Int64, StepRangeLen{Int64, Int64, Int64, Int64}}}}:
  1
  2
  3
