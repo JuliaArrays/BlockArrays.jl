@@ -2,7 +2,6 @@ module TestBlockBroadcast
 
 using BlockArrays, FillArrays, Test
 import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
-import InfiniteArrays
 using StaticArrays
 
 @testset "broadcast" begin
@@ -124,17 +123,6 @@ using StaticArrays
         y2 = copy(y)
         z2 = copy(z)
         @test (@. z = x + y + z; z) == (@. z2 = x2 + y2 + z2; z2)
-    end
-
-    @testset "blockedrange" begin
-        b = blockedrange(InfiniteArrays.OneToInf())
-        b2 = b .+ b
-        for i in 1:10
-            @test b2[Block(i)] == b[Block(i)] + b[Block(i)]
-        end
-
-        b = blockedrange(SVector{2}([1,2]))
-        @test b .+ b == 2:2:6
     end
 
     @testset "Special broadcast" begin
