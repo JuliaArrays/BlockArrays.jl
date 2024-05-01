@@ -577,6 +577,13 @@ Base.BroadcastStyle(::Type{<:AbstractBlockedUnitRange{<:Any,R}}) where R = _broa
 # We want to use lazy types when possible
 ###
 
+const OneToCumsum = RangeCumsum{Int,Base.OneTo{Int}}
+sortedunion(a::OneToCumsum, ::OneToCumsum) = a
+function sortedunion(a::RangeCumsum{<:Any,<:AbstractRange}, b::RangeCumsum{<:Any,<:AbstractRange})
+    @assert a == b
+    a
+end
+
 _blocklengths2blocklasts(blocks::AbstractRange) = RangeCumsum(blocks)
 function blockfirsts(a::AbstractBlockedUnitRange{<:Any,Base.OneTo{Int}})
     first(a) == 1 || error("Offset axes not supported")

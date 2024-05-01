@@ -76,7 +76,6 @@ include("blockbanded.jl")
 @deprecate setblock!(A::AbstractBlockArray{T,N}, v, I::Vararg{Integer, N}) where {T,N} (A[Block(I...)] = v)
 
 if !isdefined(Base, :get_extension)
-    include("../ext/BlockArraysLazyArraysExt.jl")
     include("../ext/BlockArraysBandedMatricesExt.jl")
 end
 
