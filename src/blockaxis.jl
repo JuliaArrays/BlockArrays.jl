@@ -87,9 +87,6 @@ first(b::BlockedUnitRange) = b.first
 BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
 # Use `accumulate` instead of `cumsum` because it preserves the element type of the block lengths
 _blocklengths2blocklasts(blocks) = accumulate(+, blocks) # extra level to allow changing default accumulate behaviour
-# Use `cumsum` for fill arrays to output lazy `StepRangeLen` representation
-_blocklengths2blocklasts(blocks::Fill) = cumsum(blocks)
-_blocklengths2blocklasts(blocks::Ones) = cumsum(blocks)
 
 @inline blockfirsts(a::AbstractBlockedUnitRange) = [first(a); @views(blocklasts(a)[1:end-1]) .+ oneunit(eltype(a))]
 
