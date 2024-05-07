@@ -1,5 +1,4 @@
 module BlockArrays
-using Base.Cartesian
 using LinearAlgebra, ArrayLayouts, FillArrays
 
 # AbstractBlockArray interface exports
@@ -18,7 +17,7 @@ export khatri_rao, blockkron, BlockKron
 
 export blockappend!, blockpush!, blockpushfirst!, blockpop!, blockpopfirst!
 
-import Base: @propagate_inbounds, Array, to_indices, to_index,
+import Base: @propagate_inbounds, Array, AbstractArray, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
             getindex, setindex!, ndims, show, view,
@@ -27,22 +26,23 @@ import Base: @propagate_inbounds, Array, to_indices, to_index,
             tail, reindex,
             RangeIndex, Int, Integer, Number, Tuple,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
-            BroadcastStyle, checkbounds, throw_boundserror,
+            BroadcastStyle, checkbounds,
             oneunit, ones, zeros, intersect, Slice, resize!
-using Base: ReshapedArray, dataids, oneto
-import Base: AbstractArray
 
-_maybetail(::Tuple{}) = ()
-_maybetail(t::Tuple) = tail(t)
+using Base: ReshapedArray, dataids, oneto
 
 import Base: (:), IteratorSize, iterate, axes1, strides, isempty
 import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, broadcastable
-import LinearAlgebra: lmul!, rmul!, AbstractTriangular, HermOrSym, AdjOrTrans,
-                        StructuredMatrixStyle, cholesky, cholesky!, cholcopy, RealHermSymComplexHerm
-import ArrayLayouts: zero!, MatMulVecAdd, MatMulMatAdd, MatLmulVec, MatLdivVec,
-                        materialize!, MemoryLayout, sublayout, transposelayout, conjlayout,
-                        triangularlayout, triangulardata, _inv, _copyto!, axes_print_matrix_row,
-                        colsupport, rowsupport, sub_materialize, sub_materialize_axes, zero!
+
+import ArrayLayouts: MatLdivVec, MatLmulVec, MatMulMatAdd, MatMulVecAdd, MemoryLayout, _copyto!, _inv, colsupport,
+                     conjlayout, rowsupport, sub_materialize, sub_materialize_axes, sublayout, transposelayout,
+                     triangulardata, triangularlayout, zero!, materialize!
+
+import FillArrays: axes_print_matrix_row
+
+import LinearAlgebra: AbstractTriangular, AdjOrTrans, HermOrSym, RealHermSymComplexHerm, StructuredMatrixStyle,
+                      lmul!, rmul!
+
 
 if VERSION ≥ v"1.11.0-DEV.21"
     using LinearAlgebra: UpperOrLowerTriangular
@@ -52,6 +52,9 @@ else
                                               LinearAlgebra.LowerTriangular{T,S},
                                               LinearAlgebra.UnitLowerTriangular{T,S}}
 end
+
+_maybetail(::Tuple{}) = ()
+_maybetail(t::Tuple) = tail(t)
 
 include("blockindices.jl")
 include("blockaxis.jl")
