@@ -331,7 +331,7 @@ end
     blocksize(A::AbstractArray, i::Int)
 
 Return the tuple of the number of blocks along each
-dimension. See also size.
+dimension. See also size and blocksizes.
 
 # Examples
 ```jldoctest
