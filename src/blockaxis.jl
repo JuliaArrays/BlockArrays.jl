@@ -331,7 +331,7 @@ end
     blocksize(A::AbstractArray, i::Int)
 
 Return the tuple of the number of blocks along each
-dimension. See also size and blocksizes.
+dimension. See also size.
 
 # Examples
 ```jldoctest
@@ -353,34 +353,19 @@ blocksize(A) = map(length, blockaxes(A))
 blocksize(A,i) = length(blockaxes(A,i))
 @inline blocklength(t) = prod(blocksize(t))
 
-"""
-    blocksizes(A::AbstractArray)
-    blocksizes(A::AbstractArray, i::Int)
+struct BlockSizes{N,A<:AbstractArray{<:Any,N}} <: AbstractArray{NTuple{N,Int},N}
+  array::A
+end
+Base.size(a::BlockSizes) = blocksize(a.array)
+Base.axes(a::BlocksView) = map(br -> only(br.indices), blockaxes(a.array))
+Base.IteratorEltype(::Type{<:BlockSizes}) = Base.EltypeUnknown()
+@propagate_inbounds getindex(a::BlockSizes{N}, i::Vararg{Int,N}) where {N} =
+    size(view(a.array, Block.(i)...))
+@propagate_inbounds function setindex!(a::BlockSizes{N}, b, i::Vararg{Int,N}) where {N}
+    error("Not implemented")
+end
 
-Return the tuple of the sizes of blocks along each
-dimension. See also size and blocksize.
-
-# Examples
-```jldoctest
-julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
-2×3-blocked 3×3 BlockMatrix{Float64}:
- 1.0  │  1.0  │  1.0
- 1.0  │  1.0  │  1.0
- ─────┼───────┼─────
- 1.0  │  1.0  │  1.0
-
-julia> blocksizes(A)
-([2, 1], [1, 1, 1])
-
-julia> blocksizes(A,2)
-3-element Vector{Int64}:
- 1
- 1
- 1
-```
-"""
-blocksizes(A) = map(blocklengths, axes(A))
-blocksizes(A,i) = blocklengths(axes(A,i))
+blocksizes(a::AbstractArray) = BlockSizes(a)
 
 axes(b::AbstractBlockedUnitRange) = (BlockedOneTo(blocklasts(b) .- (first(b)-oneunit(eltype(b)))),)
 unsafe_indices(b::AbstractBlockedUnitRange) = axes(b)
