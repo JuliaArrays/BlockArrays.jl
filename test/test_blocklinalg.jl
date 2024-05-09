@@ -101,12 +101,14 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         v = BlockArray(rand(6), 1:3)
         w = A * v
         @test w isa BlockArray
-        @test blocksizes(w,1) == fill(2, 3)
+        @test blocklengths(axes(w,1)) == fill(2, 3)
+        @test blocksizes(w) == [(2,), (2,), (2,)]
         @test w ≈ Array(A) * v ≈ A * Array(v) ≈ Array(A) * Array(v)
 
         z = A * w
         @test z isa BlockArray
-        @test blocksizes(z,1) == fill(2, 3)
+        @test blocklengths(axes(z,1)) == fill(2, 3)
+        @test blocksizes(z) == [(2,), (2,), (2,)]
         @test z ≈ Array(A) * w ≈ A * Array(w) ≈ Array(A) * Array(w)
     end
 

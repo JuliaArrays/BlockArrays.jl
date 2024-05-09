@@ -787,10 +787,21 @@ end
     end
 
     @testset "blocksizes" begin
-        x = blockedrange(2:4)
-        @test blocksizes(x,1) === 2:4
-        y = blockedrange([2:4;])
-        @test blocksizes(x,1) == blocksizes(y,1)
+        v = Array(reshape(1:20, (5, 4)))
+        A = BlockArray(v, [2, 3], [3, 1])
+        @test blocklengths.(axes(A)) == ([2, 3], [3, 1])
+        bs = blocksizes(A)
+        @test bs == [(2, 3) (2, 1); (3, 3) (3, 1)]
+        @test bs[1, 1] == (2, 3)
+        @test bs[2, 1] == (3, 3)
+        @test bs[1, 2] == (2, 1)
+        @test bs[2, 2] == (3, 1)
+        @test bs[1] == (2, 3)
+        @test bs[2] == (3, 3)
+        @test bs[3] == (2, 1)
+        @test bs[4] == (3, 1)
+        @test size(bs) == (2, 2)
+        @test axes(bs) == (1:2, 1:2)
     end
 
     @testset "show" begin
