@@ -167,7 +167,8 @@ using BlockArrays, Test
             @test pop!(B) == 6
             @test B == 1:5
             @test !any(isempty, blocks(B))
-            @test blocksizes(B,1) == [1,2,2]
+            @test blocklengths(axes(B,1)) == [1,2,2]
+            @test blocksizes(B) == [(1,), (2,), (2,)]
         end
     end
 
@@ -183,13 +184,15 @@ using BlockArrays, Test
         A = BlockArray([1:6;], [2,2,2])
         @test popfirst!(A) == 1
         @test A == 2:6
-        @test blocksizes(A,1) == [1,2,2]
+        @test blocklengths(axes(A,1)) == [1,2,2]
+        @test blocksizes(A) == [(1,), (2,), (2,)]
 
         @testset "empty blocks" begin
             B = BlockArray([1:6;], [0,0,1,2,3])
             @test popfirst!(B) == 1
             @test B == 2:6
-            @test blocksizes(B,1) == [2,3]
+            @test blocklengths(axes(B,1)) == [2,3]
+            @test blocksizes(B) == [(2,), (3,)]
             @test !any(isempty, blocks(B))
         end
     end
