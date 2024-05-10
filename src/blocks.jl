@@ -108,8 +108,8 @@ julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
  ─────┼───────┼─────
  1.0  │  1.0  │  1.0
 
-julia> blocksizes(A)
-2×3 BlockArrays.BlockSizes{2, BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedOneTo{Int64, Vector{Int64}}, BlockedOneTo{Int64, Vector{Int64}}}}}:
+julia> collect(blocksizes(A))
+2×3 Matrix{Tuple{Int64, Int64}}:
  (2, 1)  (2, 1)  (2, 1)
  (1, 1)  (1, 1)  (1, 1)
 
@@ -127,7 +127,7 @@ Base.length(bs::BlockSizes) = blocklength(bs.array)
 Base.axes(bs::BlockSizes) = map(br -> only(br.indices), blockaxes(bs.array))
 Base.IteratorEltype(::Type{<:BlockSizes}) = Base.EltypeUnknown()
 Base.IteratorSize(::Type{<:BlockSizes{N}}) where {N} = Base.HasShape{N}()
-Base.iterate(bs::BlockSizes, i=1) = (@inline; (i - 1)%UInt < length(bs)%UInt ? (@inbounds bs[i], i + 1) : nothing)
+Base.iterate(bs::BlockSizes, i=1) = ((i - 1)%UInt < length(bs)%UInt ? (@inbounds bs[i], i + 1) : nothing)
 @propagate_inbounds getindex(a::BlockSizes{N}, i::Vararg{Int,N}) where {N} =
     size(view(a.array, Block.(i)...))
 @propagate_inbounds getindex(a::BlockSizes, i::Int) =
