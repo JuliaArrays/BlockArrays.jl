@@ -353,44 +353,6 @@ blocksize(A) = map(length, blockaxes(A))
 blocksize(A,i) = length(blockaxes(A,i))
 @inline blocklength(t) = prod(blocksize(t))
 
-struct BlockSizes{N,A<:AbstractArray{<:Any,N}} <: AbstractArray{NTuple{N,Int},N}
-  array::A
-end
-Base.size(a::BlockSizes) = blocksize(a.array)
-Base.axes(a::BlockSizes) = map(br -> only(br.indices), blockaxes(a.array))
-Base.IteratorEltype(::Type{<:BlockSizes}) = Base.EltypeUnknown()
-@propagate_inbounds getindex(a::BlockSizes{N}, i::Vararg{Int,N}) where {N} =
-    size(view(a.array, Block.(i)...))
-@propagate_inbounds function setindex!(a::BlockSizes{N}, b, i::Vararg{Int,N}) where {N}
-    error("Not implemented")
-end
-
-"""
-    blocksizes(A::AbstractArray)
-
-Return an iterator over the sizes of each block.
-See also size and blocksize.
-
-# Examples
-```jldoctest
-julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
-2×3-blocked 3×3 BlockMatrix{Float64}:
- 1.0  │  1.0  │  1.0
- 1.0  │  1.0  │  1.0
- ─────┼───────┼─────
- 1.0  │  1.0  │  1.0
-
-julia> blocksizes(A)
-2×3 BlockArrays.BlockSizes{2, BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedOneTo{Int64, Vector{Int64}}, BlockedOneTo{Int64, Vector{Int64}}}}}:
- (2, 1)  (2, 1)  (2, 1)
- (1, 1)  (1, 1)  (1, 1)
-
-julia> blocksizes(A)[2, 2]
-(1, 1)
-```
-"""
-blocksizes(A::AbstractArray) = BlockSizes(A)
-
 axes(b::AbstractBlockedUnitRange) = (BlockedOneTo(blocklasts(b) .- (first(b)-oneunit(eltype(b)))),)
 unsafe_indices(b::AbstractBlockedUnitRange) = axes(b)
 # ::Integer works around case where blocklasts might return different type

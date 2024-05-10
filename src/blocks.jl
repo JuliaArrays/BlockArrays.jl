@@ -92,3 +92,43 @@ This is broken for now. See: https://github.com/JuliaArrays/BlockArrays.jl/issue
     copyto!(a[i...], b)
     a
 end
+
+"""
+    blocksizes(A::AbstractArray)
+
+Return an iterator over the sizes of each block.
+See also size and blocksize.
+
+# Examples
+```jldoctest
+julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
+2×3-blocked 3×3 BlockMatrix{Float64}:
+ 1.0  │  1.0  │  1.0
+ 1.0  │  1.0  │  1.0
+ ─────┼───────┼─────
+ 1.0  │  1.0  │  1.0
+
+julia> blocksizes(A)
+2×3 BlockArrays.BlockSizes{2, BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedOneTo{Int64, Vector{Int64}}, BlockedOneTo{Int64, Vector{Int64}}}}}:
+ (2, 1)  (2, 1)  (2, 1)
+ (1, 1)  (1, 1)  (1, 1)
+
+julia> blocksizes(A)[2, 2]
+(1, 1)
+```
+"""
+blocksizes(A::AbstractArray) = BlockSizes(A)
+
+struct BlockSizes{N,A<:AbstractArray{<:Any,N}}
+    array::A
+end
+Base.size(bs::BlockSizes) = blocksize(bs.array)
+Base.length(bs::BlockSizes) = blocklength(bs.array)
+Base.axes(bs::BlockSizes) = map(br -> only(br.indices), blockaxes(bs.array))
+Base.IteratorEltype(::Type{<:BlockSizes}) = Base.EltypeUnknown()
+Base.IteratorSize(::Type{<:BlockSizes{N}}) where {N} = Base.HasShape{N}()
+Base.iterate(bs::BlockSizes, i=1) = (@inline; (i - 1)%UInt < length(bs)%UInt ? (@inbounds bs[i], i + 1) : nothing)
+@propagate_inbounds getindex(a::BlockSizes{N}, i::Vararg{Int,N}) where {N} =
+    size(view(a.array, Block.(i)...))
+@propagate_inbounds getindex(a::BlockSizes, i::Int) =
+    size(view(a.array, Block(i)))
