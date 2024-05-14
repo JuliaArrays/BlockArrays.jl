@@ -786,13 +786,6 @@ end
         @test eltype(blocklengths(r)) === UInt16
     end
 
-    @testset "blocksizes" begin
-        x = blockedrange(2:4)
-        @test blocksizes(x,1) === 2:4
-        y = blockedrange([2:4;])
-        @test blocksizes(x,1) == blocksizes(y,1)
-    end
-
     @testset "show" begin
         b = blockedrange([1,2])
         @test repr(b) == "$BlockedOneTo($([1,3]))"

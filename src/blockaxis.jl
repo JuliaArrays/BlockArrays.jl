@@ -353,35 +353,6 @@ blocksize(A) = map(length, blockaxes(A))
 blocksize(A,i) = length(blockaxes(A,i))
 @inline blocklength(t) = prod(blocksize(t))
 
-"""
-    blocksizes(A::AbstractArray)
-    blocksizes(A::AbstractArray, i::Int)
-
-Return the tuple of the sizes of blocks along each
-dimension. See also size and blocksize.
-
-# Examples
-```jldoctest
-julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
-2×3-blocked 3×3 BlockMatrix{Float64}:
- 1.0  │  1.0  │  1.0
- 1.0  │  1.0  │  1.0
- ─────┼───────┼─────
- 1.0  │  1.0  │  1.0
-
-julia> blocksizes(A)
-([2, 1], [1, 1, 1])
-
-julia> blocksizes(A,2)
-3-element Vector{Int64}:
- 1
- 1
- 1
-```
-"""
-blocksizes(A) = map(blocklengths, axes(A))
-blocksizes(A,i) = blocklengths(axes(A,i))
-
 axes(b::AbstractBlockedUnitRange) = (BlockedOneTo(blocklasts(b) .- (first(b)-oneunit(eltype(b)))),)
 unsafe_indices(b::AbstractBlockedUnitRange) = axes(b)
 # ::Integer works around case where blocklasts might return different type

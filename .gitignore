@@ -9,4 +9,5 @@ src/.DS_Store
 Manifest.toml
 Manifest-v*.*.toml
 .DS_Store
+.*.swp
 build

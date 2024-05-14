@@ -76,7 +76,7 @@ BlocksView(a::AbstractArray{S,N}) where {S,N} =
 Base.IteratorEltype(::Type{<:BlocksView}) = Base.EltypeUnknown()
 
 Base.size(a::BlocksView) = blocksize(a.array)
-Base.axes(a::BlocksView) = map(br -> only(br.indices), blockaxes(a.array))
+Base.axes(a::BlocksView) = map(br -> Int.(br), blockaxes(a.array))
 
 #=
 This is broken for now. See: https://github.com/JuliaArrays/BlockArrays.jl/issues/120
@@ -92,3 +92,48 @@ This is broken for now. See: https://github.com/JuliaArrays/BlockArrays.jl/issue
     copyto!(a[i...], b)
     a
 end
+
+"""
+    blocksizes(A::AbstractArray)
+    blocksizes(A::AbstractArray, d::Integer)
+
+Return an iterator over the sizes of each block.
+See also size and blocksize.
+
+# Examples
+```jldoctest
+julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
+2×3-blocked 3×3 BlockMatrix{Float64}:
+ 1.0  │  1.0  │  1.0
+ 1.0  │  1.0  │  1.0
+ ─────┼───────┼─────
+ 1.0  │  1.0  │  1.0
+
+julia> blocksizes(A)
+2×3 BlockArrays.BlockSizes{Tuple{Int64, Int64}, 2, BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedOneTo{Int64, Vector{Int64}}, BlockedOneTo{Int64, Vector{Int64}}}}}:
+ (2, 1)  (2, 1)  (2, 1)
+ (1, 1)  (1, 1)  (1, 1)
+
+julia> blocksizes(A)[1,2]
+(2, 1)
+
+julia> blocksizes(A,2)
+3-element Vector{Int64}:
+ 1
+ 1
+ 1
+```
+"""
+blocksizes(A::AbstractArray) = BlockSizes(A)
+blocksizes(A::AbstractArray, d::Integer) = blocklengths(axes(A, d))
+
+struct BlockSizes{T,N,A<:AbstractArray{<:Any,N}} <: AbstractArray{T,N}
+    array::A
+end
+BlockSizes(a::AbstractArray{<:Any,N}) where {N} =
+    BlockSizes{Tuple{eltype.(axes(a))...},N,typeof(a)}(a)
+
+size(bs::BlockSizes) = blocksize(bs.array)
+axes(bs::BlockSizes) = map(br -> Int.(br), blockaxes(bs.array))
+@propagate_inbounds getindex(a::BlockSizes{T,N}, i::Vararg{Int,N}) where {T,N} =
+    size(view(a.array, Block.(i)...))
