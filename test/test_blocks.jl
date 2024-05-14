@@ -110,31 +110,22 @@ end
         v = Array(reshape(1:20, (5, 4)))
         A = BlockArray(v, [2, 3], [3, 1])
         @test blocklengths.(axes(A)) == ([2, 3], [3, 1])
-        bs = blocksizes(A)
-        @test size(bs) == (2, 2)
-        @test length(bs) == 4
-        @test axes(bs) == (1:2, 1:2)
-        @test bs[1, 1] == (2, 3)
-        @test bs[2, 1] == (3, 3)
-        @test bs[1, 2] == (2, 1)
-        @test bs[2, 2] == (3, 1)
-        @test bs[1] == (2, 3)
-        @test bs[2] == (3, 3)
-        @test bs[3] == (2, 1)
-        @test bs[4] == (3, 1)
-
-        # Iteration
-        @test Base.IteratorEltype(typeof(bs)) === Base.EltypeUnknown()
-        @test Base.IteratorSize(typeof(bs)) === Base.HasShape{2}()
-        for bs_mat in (
-            collect(bs),
-            [b for b in bs]
-        )
-            @test bs_mat isa Matrix{Tuple{Int,Int}}
-            @test bs_mat == [(2, 3) (2, 1); (3, 3) (3, 1)]
-            @test eltype(bs_mat) === Tuple{Int,Int}
-            @test size(bs_mat) == (2, 2)
-        end
+        bs = @inferred(blocksizes(A))
+        @test @inferred(size(bs)) == (2, 2)
+        @test @inferred(length(bs)) == 4
+        @test @inferred(axes(bs)) == (1:2, 1:2)
+        @test @inferred(eltype(bs)) === Tuple{Int,Int}
+        @test bs == [(2, 3) (2, 1); (3, 3) (3, 1)]
+        @test @inferred(bs[1, 1]) == (2, 3)
+        @test @inferred(bs[2, 1]) == (3, 3)
+        @test @inferred(bs[1, 2]) == (2, 1)
+        @test @inferred(bs[2, 2]) == (3, 1)
+        @test @inferred(bs[1]) == (2, 3)
+        @test @inferred(bs[2]) == (3, 3)
+        @test @inferred(bs[3]) == (2, 1)
+        @test @inferred(bs[4]) == (3, 1)
+        @test blocksizes(A, 1) == [2, 3]
+        @test blocksizes(A, 2) == [3, 1]
     end
 end
 

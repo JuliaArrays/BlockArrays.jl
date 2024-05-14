@@ -110,7 +110,7 @@ end
             # test that BlockArrays may be created from immutable arrays
             B = BlockArray(reshape(1:9,3,3), [2,1], [2,1])
             @test blocklengths.(axes(B)) == ([2,1], [2,1])
-            @test collect(blocksizes(B)) == [(2,2) (2,1); (1,2) (1,1)]
+            @test blocksizes(B) == [(2,2) (2,1); (1,2) (1,1)]
             @test B == reshape([1:9;],3,3)
             @test blocks(B) isa Matrix{Matrix{Int}}
 
