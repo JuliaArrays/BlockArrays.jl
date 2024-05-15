@@ -122,19 +122,19 @@ axes_print_matrix_row(::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}, io, X
 Base.print_matrix_row(io::IO, X::AbstractBlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString, idxlast::Integer=last(axes(X, 2))) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
-function _show_typeof(io::IO, a::PseudoBlockVector{T,Vector{T},Tuple{DefaultBlockAxis}}) where T
-    print(io, "PseudoBlockVector{")
+function _show_typeof(io::IO, a::BlockedVector{T,Vector{T},Tuple{DefaultBlockAxis}}) where T
+    print(io, "BlockedVector{")
     show(io, T)
     print(io, '}')
 end
 
-function _show_typeof(io::IO, a::PseudoBlockMatrix{T,Matrix{T},NTuple{2,DefaultBlockAxis}}) where T
-    print(io, "PseudoBlockMatrix{")
+function _show_typeof(io::IO, a::BlockedMatrix{T,Matrix{T},NTuple{2,DefaultBlockAxis}}) where T
+    print(io, "BlockedMatrix{")
     show(io, T)
     print(io, '}')
 end
 
-function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,DefaultBlockAxis}}) where {T,N}
+function _show_typeof(io::IO, a::BlockedArray{T,N,Array{T,N},NTuple{N,DefaultBlockAxis}}) where {T,N}
     Base.show_type_name(io, typeof(a).name)
     print(io, '{')
     show(io, T)
@@ -143,12 +143,12 @@ function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,Defaul
     print(io, '}')
 end
 
-function Base.showarg(io::IO, A::PseudoBlockArray, toplevel::Bool)
+function Base.showarg(io::IO, A::BlockedArray, toplevel::Bool)
     if toplevel
-        print(io, "PseudoBlockArray of ")
+        print(io, "BlockedArray of ")
         Base.showarg(io, A.blocks, true)
     else
-        print(io, "::PseudoBlockArray{…,")
+        print(io, "::BlockedArray{…,")
         Base.showarg(io, A.blocks, false)
         print(io, '}')
     end

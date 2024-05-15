@@ -12,7 +12,7 @@ g = addgroup!(SUITE, "indexing")
 g_size = addgroup!(SUITE, "size")
 
 for n = (5,)
-    for BT in (BlockArray, PseudoBlockArray)
+    for BT in (BlockArray, BlockedArray)
         block_vec = BT(rand(n),       [1,3,1])
         block_mat = BT(rand(n,n),     [1,3,1], [4,1])
         block_arr = BT(rand(n,n,n),   [1,3,1], [4,1], [3, 2])

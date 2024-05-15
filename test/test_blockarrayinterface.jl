@@ -6,7 +6,7 @@ using BlockArrays, LinearAlgebra, FillArrays, Test, ArrayLayouts
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
 @testset "missing fallback block axes" begin
-    @test_throws ArgumentError invoke(axes, Tuple{AbstractBlockArray}, PseudoBlockArray{ComplexF64}(undef, (1:4), (2:5)))
+    @test_throws ArgumentError invoke(axes, Tuple{AbstractBlockArray}, BlockedArray{ComplexF64}(undef, (1:4), (2:5)))
 end
 
 @testset "Array block interface" begin
@@ -35,7 +35,7 @@ end
 
 @testset "Triangular/Symmetric/Hermitian block arrays" begin
     @testset "square blocks" begin
-        A = PseudoBlockArray{ComplexF64}(undef, 1:4, 1:4)
+        A = BlockedArray{ComplexF64}(undef, 1:4, 1:4)
         A .= reshape(1:length(A), size(A))
         U = UpperTriangular(A)
         S = Symmetric(A)
@@ -60,14 +60,14 @@ end
         V = view(A, Block.(1:2), Block.(1:2))
         @test blockisequal(axes(Symmetric(V)), axes(view(A, Block.(1:2), Block.(1:2))))
 
-        A = PseudoBlockArray{Int}(reshape([1:9;],3,3), 1:2, 1:2)
+        A = BlockedArray{Int}(reshape([1:9;],3,3), 1:2, 1:2)
         B = UpperTriangular(A)
         str = sprint(show, "text/plain", B)
         @test str == "$(summary(B)):\n 1  │  4  7\n ───┼──────\n ⋅  │  5  8\n ⋅  │  ⋅  9"
     end
 
     @testset "rect blocks" begin
-        A = PseudoBlockArray{ComplexF64}(undef, 1:3, fill(3, 2))
+        A = BlockedArray{ComplexF64}(undef, 1:3, fill(3, 2))
         A .= randn(6, 6) .+ im * randn(6, 6)
         U = UpperTriangular(A)
         S = Symmetric(A)
@@ -96,7 +96,7 @@ end
     end
 
     @testset "getindex ambiguity" begin
-        A = PseudoBlockArray{ComplexF64}(undef, 1:4, 1:4)
+        A = BlockedArray{ComplexF64}(undef, 1:4, 1:4)
         A .= reshape(1:length(A), size(A)) .+ im
         S = Symmetric(A)
         H = Hermitian(A)
@@ -111,7 +111,7 @@ end
 end
 
 @testset "Adjoint/Transpose block arrays" begin
-    A = PseudoBlockArray{ComplexF64}(undef, (1:4), (2:5))
+    A = BlockedArray{ComplexF64}(undef, (1:4), (2:5))
     A .= randn.() .+ randn.() .* im
 
     @test blocksize(A') == (4, 4)

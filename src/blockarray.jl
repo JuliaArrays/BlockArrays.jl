@@ -546,16 +546,16 @@ end
 
 # Temporary work around
 Base.reshape(block_array::BlockArray, axes::NTuple{N,AbstractUnitRange{Int}}) where N =
-    reshape(PseudoBlockArray(block_array), axes)
+    reshape(BlockedArray(block_array), axes)
 Base.reshape(block_array::BlockArray, dims::Tuple{Int,Vararg{Int}}) =
-    reshape(PseudoBlockArray(block_array), dims)
+    reshape(BlockedArray(block_array), dims)
 Base.reshape(block_array::BlockArray, axes::Tuple{Union{Integer,Base.OneTo}, Vararg{Union{Integer,Base.OneTo}}}) =
-    reshape(PseudoBlockArray(block_array), axes)
+    reshape(BlockedArray(block_array), axes)
 Base.reshape(block_array::BlockArray, dims::Tuple{Vararg{Union{Int,Colon}}}) =
-    reshape(PseudoBlockArray(block_array), dims)
+    reshape(BlockedArray(block_array), dims)
 
 """
-    resize!(a::BlockVector, N::Block) -> PseudoBlockVector
+    resize!(a::BlockVector, N::Block) -> BlockedVector
 
 Resize `a` to contain the first `N` blocks, returning a new `BlockVector` sharing
 memory with `a`. If `N` is smaller than the current

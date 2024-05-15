@@ -45,7 +45,7 @@ using BandedMatrices: _BandedMatrix
 
     @testset "Block-BandedMatrix" begin
         a = blockedrange(1:5)
-        B = _BandedMatrix(PseudoBlockArray(randn(5,length(a)),(Base.OneTo(5),a)), a, 3, 1)
+        B = _BandedMatrix(BlockedArray(randn(5,length(a)),(Base.OneTo(5),a)), a, 3, 1)
         @test blockcolsupport(B,Block(1)) == Block.(1:3)
         @test blockcolsupport(B,Block(3)) == Block.(2:4)
         @test blockrowsupport(B,Block(1)) == Block.(1:2)
@@ -66,8 +66,8 @@ using BandedMatrices: _BandedMatrix
         end
     end
 
-    @testset "Banded PseudoMatrix" begin
-        A = PseudoBlockArray(brand(5,4,1,2), [3,2], [2,2])
+    @testset "Banded BlockedMatrix" begin
+        A = BlockedArray(brand(5,4,1,2), [3,2], [2,2])
         @test bandwidths(A) == (1,2)
         @test BandedMatrix(A) == A
     end

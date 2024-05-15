@@ -7,8 +7,8 @@ import BlockArrays: blockcolsupport, blockrowsupport, AbstractBlockedUnitRange
 import ArrayLayouts: sub_materialize
 
 
-bandeddata(P::PseudoBlockMatrix) = bandeddata(P.blocks)
-bandwidths(P::PseudoBlockMatrix) = bandwidths(P.blocks)
+bandeddata(P::BlockedMatrix) = bandeddata(P.blocks)
+bandwidths(P::BlockedMatrix) = bandwidths(P.blocks)
 
 function blockcolsupport(::AbstractBandedLayout, B, j)
     m,n = axes(B)

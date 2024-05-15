@@ -5,7 +5,7 @@ using BlockArrays, Test
 @testset "block dequeue" begin
     @testset "blockappend!(::BlockVector, _)" begin
         @testset for compatible in [false, true],
-            srctype in [:BlockVector, :PseudoBlockVector, :PseudoBlockVector2, :Vector]
+            srctype in [:BlockVector, :BlockedVector, :BlockedVector2, :Vector]
 
             dest = mortar([[1, 2, 3], [4, 5]])
 
@@ -17,10 +17,10 @@ using BlockArrays, Test
             end
             if srctype === :BlockVector
                 src = mortar([T[6, 7], T[8, 9]])
-            elseif srctype === :PseudoBlockVector
-                src = PseudoBlockVector(T[6:9;], [4])
-            elseif srctype === :PseudoBlockVector2
-                src = PseudoBlockVector(T[6:9;], [2, 2])
+            elseif srctype === :BlockedVector
+                src = BlockedVector(T[6:9;], [4])
+            elseif srctype === :BlockedVector2
+                src = BlockedVector(T[6:9;], [2, 2])
             elseif srctype === :Vector
                 src = T[6:9;]
             else
@@ -42,7 +42,7 @@ using BlockArrays, Test
             end
 
             src[1] = 666
-            if compatible && srctype !== :PseudoBlockVector2
+            if compatible && srctype !== :BlockedVector2
                 @test dest[6] == 666
             else
                 @test dest[6] == 6

@@ -65,12 +65,12 @@ Base.popfirst!
 ```
 
 
-## PseudoBlockArray
+## BlockedArray
 
 ```@docs
-PseudoBlockArray
-PseudoBlockVector
-PseudoBlockMatrix
+BlockedArray
+BlockedVector
+BlockedMatrix
 Base.resize!
 ```
 

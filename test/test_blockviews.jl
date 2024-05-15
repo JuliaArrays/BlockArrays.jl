@@ -8,7 +8,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
 @testset "Block Views" begin
     @testset "block slice" begin
-        A = PseudoBlockArray(1:6,1:3)
+        A = BlockedArray(1:6,1:3)
         b = parentindices(bview(A, Block(2)))[1] # A BlockSlice
 
         @test first(b) == 2
@@ -34,7 +34,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         # backend tests
         @test_throws ArgumentError Base.to_index(A, Block(1))
 
-        A = PseudoBlockArray(collect(1:6), 1:3)
+        A = BlockedArray(collect(1:6), 1:3)
         @test view(A, Block(2)) == [2,3]
         view(A, Block(2))[2] = -1
         @test A[3] == -1
@@ -43,7 +43,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         # backend tests
         @test_throws ArgumentError Base.to_index(A, Block(1))
 
-        A = PseudoBlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
+        A = BlockedArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
         V = view(A, Block(2), Block(3))
         @test size(V) == (2, 5)
         V[1,1] = -1
@@ -60,7 +60,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
         # test mixed blocks and other indices
         @test view(A, Block(2), 2) == [8,9]
-        @test similar(A, (Base.OneTo(5), axes(A,2))) isa PseudoBlockArray{Int}
+        @test similar(A, (Base.OneTo(5), axes(A,2))) isa BlockedArray{Int}
         @test view(A, Block(2), :) == A[2:3,:]
 
         @test view(A, 2, Block(1)) == [2,8,14]
@@ -77,7 +77,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test_throws BlockBoundsError view(V, Block(2,1))
 
 
-        A = PseudoBlockArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)
+        A = BlockedArray(reshape(collect(1:(6^3)),6,6,6), 1:3, 1:3, 1:3)
         V = view(A, Block(2), Block(3), Block(1))
         @test size(V) == (2, 3, 1)
         V[1,1,1] = -3
@@ -124,7 +124,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test unsafe_load(pointer(V)) == V[1,1]
 
 
-        A = PseudoBlockArray(reshape(Vector{Float64}(1:(6^2)),6,6), 1:3, 1:3)
+        A = BlockedArray(reshape(Vector{Float64}(1:(6^2)),6,6), 1:3, 1:3)
 
         V = view(A, Block(1,2))
         @test Base.unsafe_convert(Ptr{Float64}, V) == Base.unsafe_convert(Ptr{Float64}, view(A.blocks, 1:1, 2:3))
@@ -140,7 +140,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
     end
 
     @testset "block indx range of block range" begin
-        A = PseudoBlockArray(collect(1:6), 1:3)
+        A = BlockedArray(collect(1:6), 1:3)
         V = view(A, Block.(1:2))
         @test V == 1:3
         @test axes(V,1) isa BlockArrays.BlockedOneTo
@@ -163,29 +163,29 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
     end
 
     @testset "subarray implements block interface" begin
-        A = PseudoBlockArray(reshape(Vector{Float64}(1:(6^2)),6,6), 1:3, 1:3)
+        A = BlockedArray(reshape(Vector{Float64}(1:(6^2)),6,6), 1:3, 1:3)
 
         V = view(A, Block(2,3))
-        @test PseudoBlockArray(V) isa PseudoBlockArray
+        @test BlockedArray(V) isa BlockedArray
         @test BlockArray(V) isa BlockArray
-        @test PseudoBlockArray(V) == BlockArray(V) == V
+        @test BlockedArray(V) == BlockArray(V) == V
 
         V = view(A, Block(2), Block.(2:3))
-        @test PseudoBlockArray(V) isa PseudoBlockArray
+        @test BlockedArray(V) isa BlockedArray
         @test BlockArray(V) isa BlockArray
-        @test PseudoBlockArray(V) == BlockArray(V) == V
+        @test BlockedArray(V) == BlockArray(V) == V
         @test blocksize(V) == (1,2)
 
         V = view(A, Block.(2:3), Block(3))
-        @test PseudoBlockArray(V) isa PseudoBlockArray
+        @test BlockedArray(V) isa BlockedArray
         @test BlockArray(V) isa BlockArray
-        @test PseudoBlockArray(V) == BlockArray(V) == V
+        @test BlockedArray(V) == BlockArray(V) == V
         @test blocksize(V) == (2,1)
 
         V = view(A, Block.(2:3), Block.(1:2))
-        @test PseudoBlockArray(V) isa PseudoBlockArray
+        @test BlockedArray(V) isa BlockedArray
         @test BlockArray(V) isa BlockArray
-        @test PseudoBlockArray(V) == BlockArray(V) == V
+        @test BlockedArray(V) == BlockArray(V) == V
         @test blocksize(V) == (2,2)
     end
 
@@ -209,8 +209,8 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         A = BlockArray(randn(6), 1:3)
         @test A[Block.(2:3)] isa BlockArray
         @test A[Block.(2:3)] == A[2:end]
-        A = PseudoBlockArray(randn(6), 1:3)
-        @test A[Block.(2:3)] isa PseudoBlockArray
+        A = BlockedArray(randn(6), 1:3)
+        @test A[Block.(2:3)] isa BlockedArray
         @test A[Block.(2:3)] == A[2:end]
     end
 
@@ -263,39 +263,39 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
     @testset "sub_materialize cases" begin
         a = BlockArray(randn(6), 1:3)
-        b = PseudoBlockArray(randn(6), 1:3)
+        b = BlockedArray(randn(6), 1:3)
         @test a[Block.(1:2)] isa BlockArray
-        @test b[Block.(1:2)] isa PseudoBlockArray
+        @test b[Block.(1:2)] isa BlockedArray
         @test a[1:3] isa Array
         @test b[1:3] isa Array
         A = BlockArray(randn(6,6), 1:3, fill(3,2))
-        B = PseudoBlockArray(randn(6,6), 1:3, fill(3,2))
+        B = BlockedArray(randn(6,6), 1:3, fill(3,2))
         @test A[Block.(1:2),Block.(1:2)] isa BlockArray
-        @test B[Block.(1:2),Block.(1:2)] isa PseudoBlockArray
-        @test A[Block.(1:2),1:3] isa PseudoBlockArray
-        @test B[Block.(1:2),1:3] isa PseudoBlockArray
-        @test A[1:3,Block.(1:2)] isa PseudoBlockArray
-        @test B[1:3,Block.(1:2)] isa PseudoBlockArray
+        @test B[Block.(1:2),Block.(1:2)] isa BlockedArray
+        @test A[Block.(1:2),1:3] isa BlockedArray
+        @test B[Block.(1:2),1:3] isa BlockedArray
+        @test A[1:3,Block.(1:2)] isa BlockedArray
+        @test B[1:3,Block.(1:2)] isa BlockedArray
         @test A[Block.(1:2),:] isa BlockArray
-        @test B[Block.(1:2),:] isa PseudoBlockArray
+        @test B[Block.(1:2),:] isa BlockedArray
         @test blockisequal(axes(A,2),axes(A[Block.(1:2),:],2))
         @test blockisequal(axes(B,2),axes(B[Block.(1:2),:],2))
         @test A[:,Block.(1:2)] isa BlockArray
-        @test B[:,Block.(1:2)] isa PseudoBlockArray
+        @test B[:,Block.(1:2)] isa BlockedArray
         @test blockisequal(axes(A,1),axes(A[:,Block.(1:2)],1))
         @test blockisequal(axes(B,1),axes(B[:,Block.(1:2)],1))
         @test A[:,:] isa BlockArray
-        @test B[:,:] isa PseudoBlockArray
+        @test B[:,:] isa BlockedArray
         @test blockisequal(axes(A),axes(A[:,:]))
         @test blockisequal(axes(B),axes(B[:,:]))
         @test A[1:3,1:3] isa Array
         @test B[1:3,1:3] isa Array
         A = BlockArray(randn(6,6,6), 1:3, fill(3,2),1:3)
-        B = PseudoBlockArray(randn(6,6,6), 1:3, fill(3,2),1:3)
+        B = BlockedArray(randn(6,6,6), 1:3, fill(3,2),1:3)
         @test A[Block.(1:2),Block.(1:2),Block.(1:2)] isa BlockArray
-        @test B[Block.(1:2),Block.(1:2),Block.(1:2)] isa PseudoBlockArray
+        @test B[Block.(1:2),Block.(1:2),Block.(1:2)] isa BlockedArray
         @test A[1:3,Block.(1:2),1:3] isa BlockArray
-        @test B[1:3,Block.(1:2),1:3] isa PseudoBlockArray
+        @test B[1:3,Block.(1:2),1:3] isa BlockedArray
     end
 
     @testset "BlockArray BlockRange view" begin
