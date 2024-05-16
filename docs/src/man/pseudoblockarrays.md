@@ -1,4 +1,4 @@
-# PseudoBlockArrays
+# BlockedArrays
 
 ```@meta
 DocTestSetup = quote
@@ -8,22 +8,22 @@ DocTestSetup = quote
 end
 ```
 
-A `PseudoBlockArray` is similar to a [`BlockArray`](@ref) except the full array is stored
+A `BlockedArray` is similar to a [`BlockArray`](@ref) except the full array is stored
 contiguously instead of block by block. This means that is not possible to insert and retrieve
-blocks without copying data. On the other hand, converting a `PseudoBlockArray` to the "full" underlying array is instead instant since
+blocks without copying data. On the other hand, converting a `BlockedArray` to the "full" underlying array is instead instant since
 it can just return the wrapped array.
 
 When iteratively solving a set of equations with a gradient method the Jacobian typically has a block structure. It can be convenient
-to use a `PseudoBlockArray` to build up the Jacobian block by block and then pass the resulting matrix to
+to use a `BlockedArray` to build up the Jacobian block by block and then pass the resulting matrix to
 a direct solver using `Matrix`.
 
-## Creating PseudoBlockArrays
+## Creating BlockedArrays
 
-Creating a `PseudoBlockArray` works in the same way as a `BlockArray`.
+Creating a `BlockedArray` works in the same way as a `BlockArray`.
 
 ```jldoctest A
-julia> pseudo = PseudoBlockArray(reshape([1:9;], 3, 3), [1,2], [2,1])
-2×2-blocked 3×3 PseudoBlockMatrix{Int64}:
+julia> pseudo = BlockedArray(reshape([1:9;], 3, 3), [1,2], [2,1])
+2×2-blocked 3×3 BlockedMatrix{Int64}:
  1  4  │  7
  ──────┼───
  2  5  │  8
@@ -38,8 +38,8 @@ This "takes ownership" of the passed in array so no copy of the array is made.
 A block array can be created with uninitialized entries using the `BlockArray{T}(undef, block_sizes...)`
 function. The block_sizes are each an `AbstractVector{Int}` which determines the size of the blocks in that dimension. We here create a `[1,2]×[3,2]` block matrix of `Float32`s:
 ```julia
-julia> PseudoBlockArray{Float32}(undef, [1,2], [3,2])
-2×2-blocked 3×5 PseudoBlockMatrix{Float32}:
+julia> BlockedArray{Float32}(undef, [1,2], [3,2])
+2×2-blocked 3×5 BlockedMatrix{Float32}:
  1.02295e-43  0.0          1.09301e-43  │  0.0          1.17709e-43
  ───────────────────────────────────────┼──────────────────────────
  0.0          1.06499e-43  0.0          │  1.14906e-43  0.0
@@ -79,9 +79,9 @@ The underlying array is accessed with `Array` just like for `BlockArray`.
 
 ## Views of blocks
 
-We can also view and modify views of blocks of `PseudoBlockArray` using the `view` syntax:
+We can also view and modify views of blocks of `BlockedArray` using the `view` syntax:
 ```jldoctest
-julia> A = PseudoBlockArray(ones(6), 1:3);
+julia> A = BlockedArray(ones(6), 1:3);
 
 julia> view(A, Block(2))
 2-element view(::Vector{Float64}, 2:3) with eltype Float64:

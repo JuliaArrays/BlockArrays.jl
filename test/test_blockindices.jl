@@ -858,7 +858,7 @@ end
 @testset "eachblock" begin
     v = Array(reshape(1:6, (2, 3)))
     A = BlockArray(v, [1,1], [2,1])
-    B = PseudoBlockArray(v, [1,1], [2,1])
+    B = BlockedArray(v, [1,1], [2,1])
 
     # test that contents match
     @test collect(eachblock(A)) == collect(eachblock(B)) == A.blocks

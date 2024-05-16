@@ -17,9 +17,9 @@ using Test, BlockArrays
         @test blocks(mortar(matrix_blocks)) === matrix_blocks
     end
 
-    @testset "blocks(::PseudoBlockVector)" begin
+    @testset "blocks(::BlockedVector)" begin
         v0 = rand(3)
-        vb = PseudoBlockArray(v0, [1, 2])
+        vb = BlockedArray(v0, [1, 2])
         @test size(blocks(vb)) == (2,)
         blocks(vb)[1] = [123]
         @test v0[1] == 123
@@ -27,16 +27,16 @@ using Test, BlockArrays
 
         # toplevel = true:
         str = sprint(show, "text/plain", blocks(vb))
-        @test occursin("blocks of PseudoBlockArray of", str)
+        @test occursin("blocks of BlockedArray of", str)
 
         # toplevel = false:
         str = sprint(show, "text/plain", view(blocks(vb), 1:1))
-        @test occursin("::BlocksView{…,::PseudoBlockArray{…,", str)
+        @test occursin("::BlocksView{…,::BlockedArray{…,", str)
     end
 
-    @testset "blocks(::PseudoBlockMatrix)" begin
+    @testset "blocks(::BlockedMatrix)" begin
         m0 = rand(2, 4)
-        mb = PseudoBlockArray(m0, [1, 1], [2, 1, 1])
+        mb = BlockedArray(m0, [1, 1], [2, 1, 1])
         @test size(blocks(mb)) == (2, 3)
         blocks(mb)[1, 1] = [123 456]
         @test m0[1, 1] == 123
@@ -50,11 +50,11 @@ using Test, BlockArrays
 
         # toplevel = true:
         str = sprint(show, "text/plain", blocks(mb))
-        @test occursin("blocks of PseudoBlockArray of", str)
+        @test occursin("blocks of BlockedArray of", str)
 
         # toplevel = false:
         str = sprint(show, "text/plain", view(blocks(mb), 1:1, 1:1))
-        @test occursin("::BlocksView{…,::PseudoBlockArray{…,", str)
+        @test occursin("::BlocksView{…,::BlockedArray{…,", str)
     end
 
     @testset "blocks(::Vector)" begin

@@ -125,8 +125,8 @@ It can be used to index into `BlockArrays` in the following manner:
 ```jldoctest
 julia> arr = Array(reshape(1:25, (5,5)));
 
-julia> a = PseudoBlockArray(arr, [3,2], [1,4])
-2×2-blocked 5×5 PseudoBlockMatrix{Int64}:
+julia> a = BlockedArray(arr, [3,2], [1,4])
+2×2-blocked 5×5 BlockedMatrix{Int64}:
  1  │   6  11  16  21
  2  │   7  12  17  22
  3  │   8  13  18  23

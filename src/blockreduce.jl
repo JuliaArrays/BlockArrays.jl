@@ -11,10 +11,10 @@ Base.mapreduce(f::F, op::OP, B::BlockVector; kw...) where {F, OP} =
         mapreduce(f, op, block; kw...)
     end
 
-Base.mapfoldl(f::F, op::OP, B::PseudoBlockArray; kw...) where {F, OP} =
+Base.mapfoldl(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
     mapfoldl(f, op, B.blocks; kw...)
 
-Base.mapreduce(f::F, op::OP, B::PseudoBlockArray; kw...) where {F, OP} =
+Base.mapreduce(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
     mapreduce(f, op, B.blocks; kw...)
 
 # support sum, need to return something analogous to Base.OneTo(1) but same type

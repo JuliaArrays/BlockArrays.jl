@@ -9,7 +9,7 @@ export blocksizes, blocklengths, blocklasts, blockfirsts, blockisequal
 export BlockRange, blockedrange, BlockedUnitRange, BlockedOneTo
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
-export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat
+export BlockedArray, BlockedMatrix, BlockedVector, BlockedVecOrMat
 
 export undef_blocks, undef, findblock, findblockindex
 
