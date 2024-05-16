@@ -39,7 +39,7 @@ A block array layout is specified its _block sizes_ – a tuple of `AbstractArra
 ## Manual Outline
 
 ```@contents
-Pages = ["man/abstractblockarrayinterface.md", "man/blockarrays.md", "man/pseudoblockarrays.md"]
+Pages = ["man/abstractblockarrayinterface.md", "man/blockarrays.md", "man/blockedarrays.md"]
 Depth = 2
 ```
 

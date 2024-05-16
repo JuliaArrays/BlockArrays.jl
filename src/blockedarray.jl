@@ -246,17 +246,17 @@ end
     return view(block_arr.blocks, range...)
 end
 
-@propagate_inbounds function _pseudoblockindex_getindex(block_arr, blockindex)
+@propagate_inbounds function _blockedindex_getindex(block_arr, blockindex)
     I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
     block_arr.blocks[I...]
 end
 
 @propagate_inbounds getindex(block_arr::BlockedArray{T,N}, blockindex::BlockIndex{N}) where {T,N} =
-    _pseudoblockindex_getindex(block_arr, blockindex)
+    _blockedindex_getindex(block_arr, blockindex)
 
 
 @propagate_inbounds getindex(block_arr::BlockedVector{T}, blockindex::BlockIndex{1}) where T =
-    _pseudoblockindex_getindex(block_arr, blockindex)
+    _blockedindex_getindex(block_arr, blockindex)
 
 ########
 # Misc #
@@ -293,9 +293,9 @@ function ArrayLayouts.rmul!(block_array::BlockedArray, α::Number)
     block_array
 end
 
-_pseudo_reshape(block_array, axes) = BlockedArray(reshape(block_array.blocks,map(length,axes)),axes)
+_blocked_reshape(block_array, axes) = BlockedArray(reshape(block_array.blocks,map(length,axes)),axes)
 Base.reshape(block_array::BlockedArray, axes::NTuple{N,AbstractUnitRange{Int}}) where N =
-    _pseudo_reshape(block_array, axes)
+    _blocked_reshape(block_array, axes)
 Base.reshape(parent::BlockedArray, shp::Tuple{Union{Integer,Base.OneTo}, Vararg{Union{Integer,Base.OneTo}}}) =
     reshape(parent, Base.to_shape(shp))
 Base.reshape(parent::BlockedArray, dims::Tuple{Int,Vararg{Int}}) =

@@ -60,7 +60,7 @@ include("blockindices.jl")
 include("blockaxis.jl")
 include("abstractblockarray.jl")
 include("blockarray.jl")
-include("pseudo_blockarray.jl")
+include("blockedarray.jl")
 include("views.jl")
 include("blocks.jl")
 
