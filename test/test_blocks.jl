@@ -17,9 +17,9 @@ using Test, BlockArrays
         @test blocks(mortar(matrix_blocks)) === matrix_blocks
     end
 
-    @testset "blocks(::PseudoBlockVector)" begin
+    @testset "blocks(::BlockedVector)" begin
         v0 = rand(3)
-        vb = PseudoBlockArray(v0, [1, 2])
+        vb = BlockedArray(v0, [1, 2])
         @test size(blocks(vb)) == (2,)
         blocks(vb)[1] = [123]
         @test v0[1] == 123
@@ -27,16 +27,16 @@ using Test, BlockArrays
 
         # toplevel = true:
         str = sprint(show, "text/plain", blocks(vb))
-        @test occursin("blocks of PseudoBlockArray of", str)
+        @test occursin("blocks of BlockedArray of", str)
 
         # toplevel = false:
         str = sprint(show, "text/plain", view(blocks(vb), 1:1))
-        @test occursin("::BlocksView{…,::PseudoBlockArray{…,", str)
+        @test occursin("::BlocksView{…,::BlockedArray{…,", str)
     end
 
-    @testset "blocks(::PseudoBlockMatrix)" begin
+    @testset "blocks(::BlockedMatrix)" begin
         m0 = rand(2, 4)
-        mb = PseudoBlockArray(m0, [1, 1], [2, 1, 1])
+        mb = BlockedArray(m0, [1, 1], [2, 1, 1])
         @test size(blocks(mb)) == (2, 3)
         blocks(mb)[1, 1] = [123 456]
         @test m0[1, 1] == 123
@@ -50,11 +50,11 @@ using Test, BlockArrays
 
         # toplevel = true:
         str = sprint(show, "text/plain", blocks(mb))
-        @test occursin("blocks of PseudoBlockArray of", str)
+        @test occursin("blocks of BlockedArray of", str)
 
         # toplevel = false:
         str = sprint(show, "text/plain", view(blocks(mb), 1:1, 1:1))
-        @test occursin("::BlocksView{…,::PseudoBlockArray{…,", str)
+        @test occursin("::BlocksView{…,::BlockedArray{…,", str)
     end
 
     @testset "blocks(::Vector)" begin
@@ -102,6 +102,30 @@ using Test, BlockArrays
         m[1, 1][1, 1] = 111
         @test b[1, 1] == 111
         @test parent(m) === parent(b).blocks  # special path works
+    end
+end
+
+@testset "blocksizes" begin
+    @testset "blocksizes" begin
+        v = Array(reshape(1:20, (5, 4)))
+        A = BlockArray(v, [2, 3], [3, 1])
+        @test blocklengths.(axes(A)) == ([2, 3], [3, 1])
+        bs = @inferred(blocksizes(A))
+        @test @inferred(size(bs)) == (2, 2)
+        @test @inferred(length(bs)) == 4
+        @test @inferred(axes(bs)) == (1:2, 1:2)
+        @test @inferred(eltype(bs)) === Tuple{Int,Int}
+        @test bs == [(2, 3) (2, 1); (3, 3) (3, 1)]
+        @test @inferred(bs[1, 1]) == (2, 3)
+        @test @inferred(bs[2, 1]) == (3, 3)
+        @test @inferred(bs[1, 2]) == (2, 1)
+        @test @inferred(bs[2, 2]) == (3, 1)
+        @test @inferred(bs[1]) == (2, 3)
+        @test @inferred(bs[2]) == (3, 3)
+        @test @inferred(bs[3]) == (2, 1)
+        @test @inferred(bs[4]) == (3, 1)
+        @test blocksizes(A, 1) == [2, 3]
+        @test blocksizes(A, 2) == [3, 1]
     end
 end
 

@@ -78,7 +78,7 @@ end
 similar(M::MulAdd{<:AbstractBlockLayout,<:AbstractBlockLayout}, ::Type{T}, axes) where {T} =
     similar(BlockArray{T}, axes)
 
-@inline MemoryLayout(::Type{<:PseudoBlockArray{T,N,R}}) where {T,N,R} = MemoryLayout(R)
+@inline MemoryLayout(::Type{<:BlockedArray{T,N,R}}) where {T,N,R} = MemoryLayout(R)
 @inline MemoryLayout(::Type{<:BlockArray{T,N,R}}) where {T,N,D,R<:AbstractArray{D,N}} =
     BlockLayout{typeof(MemoryLayout(R)),typeof(MemoryLayout(D))}()
 
@@ -96,17 +96,17 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{<:BlockSlice{BlockRange{1,T
     BlockLayout{typeof(sublayout(MLAY(),Tuple{II,Sl})), BLAY}()
 sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:Tuple{Sl1,Sl2}}) where {MLAY,BLAY,Sl1<:Slice,Sl2<:Slice} =
     BlockLayout{typeof(sublayout(MLAY(),Tuple{Sl1,Sl2})), BLAY}()
-sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:BlockedUnitRange}}) where {N,MLAY,BLAY} =
+sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:AbstractBlockedUnitRange}}) where {N,MLAY,BLAY} =
     BlockLayout{typeof(sublayout(MLAY(),NTuple{N,Base.OneTo{Int}})), BLAY}()
 
 # materialize views, used for `getindex`
 sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
 
-# if it's not a block layout, best to use PseudoBlockArray to take advantage of strideness
-sub_materialize_axes(V, ::Tuple{BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize_axes(V, ::Tuple{BlockedUnitRange,BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize_axes(V, ::Tuple{AbstractUnitRange,BlockedUnitRange}) = PseudoBlockArray(V)
-sub_materialize_axes(V, ::Tuple{BlockedUnitRange,AbstractUnitRange}) = PseudoBlockArray(V)
+# if it's not a block layout, best to use BlockedArray to take advantage of strideness
+sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange}) = BlockedArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange}) = BlockedArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}) = BlockedArray(V)
+sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}) = BlockedArray(V)
 
 # Special for FillArrays.jl
 
@@ -130,7 +130,7 @@ transposelayout(::BlockLayout{MLAY,BLAY}) where {MLAY,BLAY} =
 function _copyto!(_, ::AbstractBlockLayout, dest::AbstractVector, src::AbstractVector)
     if !blockisequal(axes(dest), axes(src))
         # impose block structure
-        copyto!(PseudoBlockArray(dest, axes(src)), src)
+        copyto!(BlockedArray(dest, axes(src)), src)
         return dest
     end
 
@@ -143,7 +143,7 @@ end
 function _copyto!(_, ::AbstractBlockLayout, dest::AbstractMatrix, src::AbstractMatrix)
     if !blockisequal(axes(dest), axes(src))
         # impose block structure
-        copyto!(PseudoBlockArray(dest, axes(src)), src)
+        copyto!(BlockedArray(dest, axes(src)), src)
         return dest
     end
 
@@ -214,8 +214,8 @@ function materialize!(M::MatMulVecAdd{<:AbstractBlockLayout,<:AbstractStridedLay
     end
 
     # impose block structure
-    y = PseudoBlockArray(y_in, (axes(A,1),))
-    x = PseudoBlockArray(x_in, (axes(A,2),))
+    y = BlockedArray(y_in, (axes(A,1),))
+    x = BlockedArray(x_in, (axes(A,2),))
     _block_muladd!(α, A, x, β, y)
     y_in
 end
@@ -243,23 +243,23 @@ end
 
 function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractBlockLayout,<:AbstractColumnMajor})
     α, A, X, β, Y_in = M.α, M.A, M.B, M.β, M.C
-    Y = PseudoBlockArray(Y_in, (axes(A,1), axes(X,2)))
+    Y = BlockedArray(Y_in, (axes(A,1), axes(X,2)))
     _block_muladd!(α, A, X, β, Y)
     Y_in
 end
 
 function materialize!(M::MatMulMatAdd{<:AbstractBlockLayout,<:AbstractColumnMajor,<:AbstractColumnMajor})
     α, A, X_in, β, Y_in = M.α, M.A, M.B, M.β, M.C
-    X = PseudoBlockArray(X_in, (axes(A,2), axes(X_in,2)))
-    Y = PseudoBlockArray(Y_in, (axes(A,1), axes(X_in,2)))
+    X = BlockedArray(X_in, (axes(A,2), axes(X_in,2)))
+    Y = BlockedArray(Y_in, (axes(A,1), axes(X_in,2)))
     _block_muladd!(α, A, X, β, Y)
     Y_in
 end
 
 function materialize!(M::MatMulMatAdd{<:AbstractColumnMajor,<:AbstractBlockLayout,<:AbstractColumnMajor})
     α, A_in, X, β, Y_in = M.α, M.A, M.B, M.β, M.C
-    A = PseudoBlockArray(A_in, (axes(A_in,1),axes(X,1)))
-    Y = PseudoBlockArray(Y_in, (axes(A,1),axes(X,2)))
+    A = BlockedArray(A_in, (axes(A_in,1),axes(X,1)))
+    Y = BlockedArray(Y_in, (axes(A,1),axes(X,2)))
     _block_muladd!(α, A, X, β, Y)
     Y_in
 end
@@ -282,7 +282,7 @@ _triangular_matrix(::Val{'L'}, ::Val{'U'}, A) = UnitLowerTriangular(A)
 
 function _matchingblocks_triangular_mul!(::Val{'U'}, UNIT, A::AbstractMatrix{T}, dest) where T
     # impose block structure
-    b = PseudoBlockArray(dest, (axes(A,1),))
+    b = BlockedArray(dest, (axes(A,1),))
     for K = blockaxes(A,1)
         b_2 = view(b, K)
         Ũ = _triangular_matrix(Val('U'), UNIT, view(A, K,K))
@@ -297,7 +297,7 @@ end
 
 function _matchingblocks_triangular_mul!(::Val{'L'}, UNIT, A::AbstractMatrix{T}, dest) where T
     # impose block structure
-    b = PseudoBlockArray(dest, (axes(A,1),))
+    b = BlockedArray(dest, (axes(A,1),))
 
     N = blocksize(A,1)
 
@@ -322,8 +322,8 @@ end
     if hasmatchingblocks(U)
         _matchingblocks_triangular_mul!(Val(UPLO), Val(UNIT), triangulardata(U), x)
     else # use default
-        x_1 = PseudoBlockArray(copy(x), (axes(U,2),))
-        x_2 = PseudoBlockArray(x, (axes(U,1),))
+        x_1 = BlockedArray(copy(x), (axes(U,2),))
+        x_2 = BlockedArray(x, (axes(U,1),))
         _block_muladd!(one(T), U, x_1, zero(T), x_2)
     end
 end
@@ -345,7 +345,7 @@ for UNIT in ('U', 'N')
             @boundscheck size(A,1) == size(dest,1) || throw(BoundsError())
 
             # impose block structure
-            b = PseudoBlockArray(dest, (axes(A,1),))
+            b = BlockedArray(dest, (axes(A,1),))
 
             N = blocksize(A,1)
 
@@ -379,7 +379,7 @@ for UNIT in ('U', 'N')
             @boundscheck size(A,1) == size(dest,1) || throw(BoundsError())
 
             # impose block structure
-            b = PseudoBlockArray(dest, (axes(A,1),))
+            b = BlockedArray(dest, (axes(A,1),))
 
             N = blocksize(A,1)
 
@@ -401,11 +401,11 @@ for UNIT in ('U', 'N')
     end
 end
 
-# For now, use PseudoBlockArray
-_inv(::AbstractBlockLayout, axes, A) = BlockArray(inv(PseudoBlockArray(A)))
+# For now, use BlockedArray
+_inv(::AbstractBlockLayout, axes, A) = BlockArray(inv(BlockedArray(A)))
 
 for op in (:exp, :log, :sqrt)
     @eval begin
-       $op(A::PseudoBlockMatrix) = PseudoBlockMatrix($op(A.blocks), axes(A))
+       $op(A::BlockedMatrix) = BlockedMatrix($op(A.blocks), axes(A))
     end
 end

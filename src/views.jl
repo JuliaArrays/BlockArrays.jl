@@ -57,7 +57,7 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
                                             idxs[1].indices[subidxs[1].indices]),
                                 reindex(tail(idxs), tail(subidxs))...)
 
-@propagate_inbounds reindex(idxs::Tuple{BlockedUnitRange, Vararg{Any}},
+@propagate_inbounds reindex(idxs::Tuple{AbstractBlockedUnitRange, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:Block}, Vararg{Any}}) =
     (BlockSlice(subidxs[1].block,
                                             idxs[1][subidxs[1].block]),
@@ -76,7 +76,7 @@ _splatmap(f, t::Tuple) = (f(t[1])..., _splatmap(f, tail(t))...)
 end
 
 @propagate_inbounds function Base.unsafe_view(
-        A::PseudoBlockArray{<:Any, N},
+        A::BlockedArray{<:Any, N},
         I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
     return view(A.blocks, map(x -> x.indices, I)...)
 end
@@ -173,7 +173,7 @@ view(A::AdjOrTrans{<:Any,<:BlockArray}, K::Block{1}, J::Block{1}) = view(A, Bloc
 @propagate_inbounds getindex(v::LinearAlgebra.AdjOrTransAbsVec, ::Colon, is::AbstractArray{<:Block{1}}) = LinearAlgebra.wrapperop(v)(v.parent[is])
 
 
-unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,PseudoBlockArray{T,N,AT},<:Tuple{Vararg{BlockOrRangeIndex}}}) where {T,N,AT} =
+unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,BlockedArray{T,N,AT},<:Tuple{Vararg{BlockOrRangeIndex}}}) where {T,N,AT} =
     unsafe_convert(Ptr{T}, V.parent) + (Base.first_index(V)-1)*sizeof(T)
 
 # support for strided array interface for subblocks. Typically

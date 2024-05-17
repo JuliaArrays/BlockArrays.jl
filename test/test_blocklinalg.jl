@@ -24,11 +24,11 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test V*view(b,4:6) ≈ V*b[4:6] ≈ Matrix(V) * b[4:6]
         @test all(muladd!(1.0,V,view(b,4:6),0.0,similar(b,2)) .=== BLAS.gemv!('N', 1.0, Matrix(V), b[4:6], 0.0, similar(b,2)))
 
-        @test A*b isa PseudoBlockVector
+        @test A*b isa BlockedVector
         @test A*BlockVector(b,1:3) isa BlockVector
         @test blockisequal(axes(A*b,1), axes(A,1))
         @test A*b ≈ Matrix(A)*b ≈ A*BlockVector(b,1:3)
-        @test all(A*b .=== A*PseudoBlockVector(b,1:3))
+        @test all(A*b .=== A*BlockedVector(b,1:3))
 
         V = view(A, Block.(1:2), Block(3))
         @test MemoryLayout(V) isa BlockLayout{DenseColumnMajor,DenseColumnMajor}
@@ -49,8 +49,8 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test A^2 ≈ A*A ≈ Matrix(A)^2
     end
 
-    @testset "PseudoBlockArray matrix * vector" begin
-        A = PseudoBlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
+    @testset "BlockedArray matrix * vector" begin
+        A = BlockedArray{Float64}(randn(6,6), fill(2,3), 1:3)
         b = randn(6)
         @test MemoryLayout(A) isa DenseColumnMajor
         V = view(A,Block(2,3))
@@ -60,10 +60,10 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test V*view(b,4:6) ≈ V*b[4:6] ≈ Matrix(V) * b[4:6]
         @test all(muladd!(1.0,V,view(b,4:6),0.0,similar(b,2)) .=== BLAS.gemv!('N', 1.0, Matrix(V), b[4:6], 0.0, similar(b,2)))
 
-        @test A*b isa PseudoBlockVector
+        @test A*b isa BlockedVector
         @test blockisequal(axes(A*b,1), axes(A,1))
         @test A*b ≈ Matrix(A)*b ≈ A*BlockVector(b,1:3)
-        @test all(A*b .=== A*PseudoBlockVector(b,1:3))
+        @test all(A*b .=== A*BlockedVector(b,1:3))
 
         V = view(A, Block.(1:2), Block(3))
         @test MemoryLayout(V) isa ColumnMajor
@@ -90,10 +90,10 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
         @test A*B isa BlockMatrix
         @test A*B ≈ Matrix(A)*B ≈ A*Matrix(B) ≈ Matrix(A)*Matrix(B) ≈
-                PseudoBlockArray(A)*B ≈ A*PseudoBlockArray(B)
+                BlockedArray(A)*B ≈ A*BlockedArray(B)
 
-        @test all(PseudoBlockArray(A)*PseudoBlockArray(B) .=== PseudoBlockArray(A)*Matrix(B) .===
-                    Matrix(A)*PseudoBlockArray(B) .=== Matrix(A)*Matrix(B))
+        @test all(BlockedArray(A)*BlockedArray(B) .=== BlockedArray(A)*Matrix(B) .===
+                    Matrix(A)*BlockedArray(B) .=== Matrix(A)*Matrix(B))
     end
 
     @testset "BlockMatrix * BlockVector" begin
@@ -101,12 +101,14 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         v = BlockArray(rand(6), 1:3)
         w = A * v
         @test w isa BlockArray
-        @test blocksizes(w,1) == fill(2, 3)
+        @test blocklengths(axes(w,1)) == fill(2, 3)
+        @test blocksizes(w) == [(2,), (2,), (2,)]
         @test w ≈ Array(A) * v ≈ A * Array(v) ≈ Array(A) * Array(v)
 
         z = A * w
         @test z isa BlockArray
-        @test blocksizes(z,1) == fill(2, 3)
+        @test blocklengths(axes(z,1)) == fill(2, 3)
+        @test blocksizes(z) == [(2,), (2,), (2,)]
         @test z ≈ Array(A) * w ≈ A * Array(w) ≈ Array(A) * Array(w)
     end
 
@@ -168,7 +170,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test mul(UpperTriangular(V),b[2:3]) ≈ UpperTriangular(V)*b[2:3] ≈ UpperTriangular(Matrix(V))*b[2:3]
 
         @testset "bug in view pointer" begin
-            b2 = PseudoBlockArray(b,(axes(A,1),))
+            b2 = BlockedArray(b,(axes(A,1),))
             @test Base.unsafe_convert(Ptr{Float64}, b) == Base.unsafe_convert(Ptr{Float64}, b2) ==
                     Base.unsafe_convert(Ptr{Float64}, view(b2,Block(1)))
         end
@@ -198,15 +200,15 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
     end
 
     @testset "inv" begin
-        A = PseudoBlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
+        A = BlockedArray{Float64}(randn(6,6), fill(2,3), 1:3)
         F = factorize(A)
 
         B = randn(6,6)
         @test ldiv!(F, copy(B)) ≈ Matrix(A) \ B
-        B̃ = PseudoBlockArray(copy(B),1:3,fill(2,3))
+        B̃ = BlockedArray(copy(B),1:3,fill(2,3))
         @test ldiv!(F, B̃) ≈ A\B ≈ Matrix(A) \ B
 
-        @test inv(A) isa PseudoBlockArray
+        @test inv(A) isa BlockedArray
         @test inv(A) ≈ inv(Matrix(A))
         @test inv(A)*A ≈ Matrix(I,6,6)
 
@@ -242,9 +244,9 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
     @testset "5-arg mul! (#174)" begin
         A = BlockArray(rand(4, 5), [1,3], [2,3])
-        Ã = PseudoBlockArray(A)
+        Ã = BlockedArray(A)
         B = BlockArray(rand(5, 3), [2,3], [1,1,1])
-        B̃ = PseudoBlockArray(B)
+        B̃ = BlockedArray(B)
         C = randn(4,3)
         @test mul!(view(copy(C),:,1:3), A, B, 1, 2) ≈ A*B + 2C
         @test mul!(view(copy(C),:,1:3), A, B̃, 1, 2) ≈ A*B + 2C

@@ -109,32 +109,32 @@ function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},NTuple{N,Def
 end
 
 # LayoutArray with blocked axes will dispatch to here
-axes_print_matrix_row(::Tuple{BlockedUnitRange}, io, X, A, i, cols, sep) =
+axes_print_matrix_row(::Tuple{AbstractBlockedUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
-axes_print_matrix_row(::NTuple{2,BlockedUnitRange}, io, X, A, i, cols, sep) =
+axes_print_matrix_row(::NTuple{2,AbstractBlockedUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
-axes_print_matrix_row(::Tuple{AbstractUnitRange,BlockedUnitRange}, io, X, A, i, cols, sep) =
+axes_print_matrix_row(::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
-axes_print_matrix_row(::Tuple{BlockedUnitRange,AbstractUnitRange}, io, X, A, i, cols, sep) =
-        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
-
-# Need to handled BlockedUnitRange, which is not a LayoutVector
-Base.print_matrix_row(io::IO, X::BlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString, idxlast::Integer=last(axes(X, 2))) =
+axes_print_matrix_row(::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}, io, X, A, i, cols, sep) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
-function _show_typeof(io::IO, a::PseudoBlockVector{T,Vector{T},Tuple{DefaultBlockAxis}}) where T
-    print(io, "PseudoBlockVector{")
+# Need to handled AbstractBlockedUnitRange, which is not a LayoutVector
+Base.print_matrix_row(io::IO, X::AbstractBlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString, idxlast::Integer=last(axes(X, 2))) =
+        _blockarray_print_matrix_row(io, X, A, i, cols, sep)
+
+function _show_typeof(io::IO, a::BlockedVector{T,Vector{T},Tuple{DefaultBlockAxis}}) where T
+    print(io, "BlockedVector{")
     show(io, T)
     print(io, '}')
 end
 
-function _show_typeof(io::IO, a::PseudoBlockMatrix{T,Matrix{T},NTuple{2,DefaultBlockAxis}}) where T
-    print(io, "PseudoBlockMatrix{")
+function _show_typeof(io::IO, a::BlockedMatrix{T,Matrix{T},NTuple{2,DefaultBlockAxis}}) where T
+    print(io, "BlockedMatrix{")
     show(io, T)
     print(io, '}')
 end
 
-function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,DefaultBlockAxis}}) where {T,N}
+function _show_typeof(io::IO, a::BlockedArray{T,N,Array{T,N},NTuple{N,DefaultBlockAxis}}) where {T,N}
     Base.show_type_name(io, typeof(a).name)
     print(io, '{')
     show(io, T)
@@ -143,12 +143,77 @@ function _show_typeof(io::IO, a::PseudoBlockArray{T,N,Array{T,N},NTuple{N,Defaul
     print(io, '}')
 end
 
-## Cumsum
+function Base.showarg(io::IO, A::BlockedArray, toplevel::Bool)
+    if toplevel
+        print(io, "BlockedArray of ")
+        Base.showarg(io, A.blocks, true)
+    else
+        print(io, "::BlockedArray{…,")
+        Base.showarg(io, A.blocks, false)
+        print(io, '}')
+    end
+end
 
-Base.show(io::IO, mimetype::MIME"text/plain", a::BlockedUnitRange) =
+# Utility function to print elements of tuples as a comma-separated list
+function print_tuple_elements(io::IO, @nospecialize(t))
+    if !isempty(t)
+        print(io, t[1])
+        for n in t[2:end]
+            print(io, ", ", n)
+        end
+    end
+    return nothing
+end
+
+# Block
+
+_typename(::Block{N,Int}) where {N} = "Block"
+_typename(x::Block) = typeof(x)
+
+function Base.show(io::IO, B::Block)
+    print(io, _typename(B))
+    print(io, "(")
+    print_tuple_elements(io, B.n)
+    print(io, ")")
+end
+
+# Block indices
+
+function Base.show(io::IO, B::BlockIndex)
+    show(io, Block(B.I...))
+    print(io, "[")
+    print_tuple_elements(io, B.α)
+    print(io, "]")
+end
+
+function Base.show(io::IO, B::BlockIndexRange)
+    show(io, Block(B))
+    print(io, "[")
+    print_tuple_elements(io, B.indices)
+    print(io, "]")
+end
+Base.show(io::IO, ::MIME"text/plain", B::BlockIndexRange) = show(io, B)
+
+Base.show(io::IO, mimetype::MIME"text/plain", a::AbstractBlockedUnitRange) =
     Base.invoke(show, Tuple{typeof(io),MIME"text/plain",AbstractArray},io, mimetype, a)
+
+show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
+
+function Base.showarg(io::IO, @nospecialize(a::BlocksView), toplevel::Bool)
+    if toplevel
+        print(io, "blocks of ")
+        Base.showarg(io, a.array, true)
+    else
+        print(io, "::BlocksView{…,")
+        Base.showarg(io, a.array, false)
+        print(io, '}')
+    end
+end
 
 # BlockRange
 
 Base.show(io::IO, br::BlockRange) = print(io, "BlockRange(", join(br.indices, ", "), ")")
 Base.show(io::IO, ::MIME"text/plain", br::BlockRange) = show(io, br)
+
+# AbstractBlockedUnitRange
+Base.show(io::IO, b::BlockedOneTo) = print(io, BlockedOneTo, "(", blocklasts(b), ")")

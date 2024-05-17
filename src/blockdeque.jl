@@ -39,7 +39,7 @@ end
 
 function blockappend!(
     dest::BlockVector{<:Any,<:AbstractArray{T}},
-    src::PseudoBlockVector{<:Any,T},
+    src::BlockedVector{<:Any,T},
 ) where {T}
     if blocklength(src) == 1
         return _blockpush!(dest, src.blocks)

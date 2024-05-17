@@ -6,10 +6,10 @@ export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlo
 export Block, getblock, getblock!, setblock!, eachblock, blocks
 export blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, BlockIndex
 export blocksizes, blocklengths, blocklasts, blockfirsts, blockisequal
-export BlockRange, blockedrange, BlockedUnitRange
+export BlockRange, blockedrange, BlockedUnitRange, BlockedOneTo
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
-export PseudoBlockArray, PseudoBlockMatrix, PseudoBlockVector, PseudoBlockVecOrMat
+export BlockedArray, BlockedMatrix, BlockedVector, BlockedVecOrMat
 
 export undef_blocks, undef, findblock, findblockindex
 
@@ -60,7 +60,7 @@ include("blockindices.jl")
 include("blockaxis.jl")
 include("abstractblockarray.jl")
 include("blockarray.jl")
-include("pseudo_blockarray.jl")
+include("blockedarray.jl")
 include("views.jl")
 include("blocks.jl")
 
@@ -72,11 +72,14 @@ include("show.jl")
 include("blockreduce.jl")
 include("blockdeque.jl")
 include("blockarrayinterface.jl")
+include("blockbanded.jl")
 
 @deprecate getblock(A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} view(A, Block(I))
 @deprecate getblock!(X, A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} copyto!(X, view(A, Block(I)))
 @deprecate setblock!(A::AbstractBlockArray{T,N}, v, I::Vararg{Integer, N}) where {T,N} (A[Block(I...)] = v)
 
-
+if !isdefined(Base, :get_extension)
+    include("../ext/BlockArraysBandedMatricesExt.jl")
+end
 
 end # module
