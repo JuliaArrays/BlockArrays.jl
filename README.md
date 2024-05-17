@@ -68,7 +68,9 @@ We are excited to release v1.0! There are some important breaking changes from p
 
 - `BlockedArray` replaces `PseudoBlockArray`.
 - Axes are now typically `BlockedOneTo` instead of `BlockUnitRange`.
-- Support for some simple block-banded matrices has been moved here from BlockBandedMatrices.jl
+- Support for some simple block-banded matrices has been moved here from BlockBandedMatrices.jl.
+- The definition of `blocksizes(array::AbstractArray)` is changed from `blocklengths.(axes(array))` to an iterator of size `blocksize(array)` over the sizes of each block of `array`.
+- `BlockedUnitRange` is now parametrized by the element type instead of hardcoded to `Int`.
 
 ## Contributing
 
