@@ -2,7 +2,7 @@ module BlockArraysBandedMatricesExt
 
 using BandedMatrices, BlockArrays
 using BlockArrays.ArrayLayouts
-import BandedMatrices: isbanded, AbstractBandedLayout, bandeddata, bandwidths
+import BandedMatrices: isbanded, AbstractBandedLayout, BandedColumns, bandeddata, bandwidths
 import BlockArrays: blockcolsupport, blockrowsupport, AbstractBlockedUnitRange
 import ArrayLayouts: sub_materialize
 
@@ -26,6 +26,69 @@ end
 sub_materialize(::AbstractBandedLayout, V, ::Tuple{AbstractBlockedUnitRange,Base.OneTo{Int}}) = BandedMatrix(V)
 sub_materialize(::AbstractBandedLayout, V, ::Tuple{Base.OneTo{Int},AbstractBlockedUnitRange}) = BandedMatrix(V)
 sub_materialize(::AbstractBandedLayout, V, ::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange}) = BandedMatrix(V)
+
+
+# _copyto!
+
+function _copyto!(_, ::BlockLayout{<:BandedColumns}, dest::AbstractMatrix, src::AbstractMatrix)
+    if !blockisequal(axes(dest), axes(src))
+        copyto!(BlockedArray(dest, axes(src)), src)
+        return dest
+    end
+
+    srcB = blocks(src)
+    srcD = bandeddata(srcB)
+
+    dl, du = colblockbandwidths(dest)
+    sl, su = bandwidths(srcB)
+    M,N = size(srcB)
+    # Source matrix must fit within bands of destination matrix
+    all(dl .≥ min(sl,M-1)) && all(du .≥ min(su,N-1)) || throw(BandError(dest))
+
+    for J = 1:N
+        for K = max(1,J-du[J]):min(J-su-1,M)
+            zero!(view(dest,Block(K),Block(J)))
+        end
+        for K = max(1,J-su):min(J+sl,M)
+            copyto!(view(dest,Block(K),Block(J)), srcD[K-J+su+1,J])
+        end
+        for K = max(1,J+sl+1):min(J+dl[J],M)
+            zero!(view(dest,Block(K),Block(J)))
+        end
+    end
+    dest
+end
+
+function _copyto!(_, ::BlockLayout{<:AbstractBandedLayout}, dest::AbstractMatrix, src::AbstractMatrix)
+    if !blockisequal(axes(dest), axes(src))
+        copyto!(BlockedArray(dest, axes(src)), src)
+        return dest
+    end
+
+    srcB = blocks(src)
+
+    dl, du = colblockbandwidths(dest)
+    sl, su = bandwidths(srcB)
+    M,N = size(srcB)
+    # Source matrix must fit within bands of destination matrix
+    all(dl .≥ min(sl,M-1)) && all(du .≥ min(su,N-1)) || throw(BandError(dest))
+
+    for J = 1:N
+        for K = max(1,J-du[J]):min(J-su-1,M)
+            zero!(view(dest,Block(K),Block(J)))
+        end
+        for K = max(1,J-su):min(J+sl,M)
+            copyto!(view(dest,Block(K),Block(J)), inbands_getindex(srcB, K, J))
+        end
+        for K = max(1,J+sl+1):min(J+dl[J],M)
+            zero!(view(dest,Block(K),Block(J)))
+        end
+    end
+    dest
+end
+
+## WARNING: type piracy
+BroadcastStyle(::Type{<:SubArray{<:Any,2,<:BlockedMatrix{<:Any,<:Diagonal}, <:Tuple{<:BlockSlice1,<:BlockSlice1}}}) = BandedStyle()
 
 
 end
