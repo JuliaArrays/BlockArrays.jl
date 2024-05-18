@@ -1,7 +1,7 @@
 module TestBlockArraysBandedMatrices
 
 using BlockArrays, LinearAlgebra, BandedMatrices, Test
-using BlockArrays: BlockDiagonal, BlockBidiagonal, BlockTridiagonal, blockcolsupport, blockrowsupport
+using BlockArrays: BlockDiagonal, BlockBidiagonal, BlockTridiagonal, blockcolsupport, blockrowsupport, BlockLayout
 using BandedMatrices: _BandedMatrix
 
 
@@ -70,6 +70,23 @@ using BandedMatrices: _BandedMatrix
         A = BlockedArray(brand(5,4,1,2), [3,2], [2,2])
         @test bandwidths(A) == (1,2)
         @test BandedMatrix(A) == A
+        @test copyto!(similar(A), A) == A
+    end
+
+    @testset "block banded" begin
+        B = BandedMatrix{Matrix{Float64}}(undef, (3, 4), (1,2))
+        for k = axes(B,1), j = max(1,k-1):min(4,k+2)
+            B[k,j] = randn(2,2)
+        end
+        A = BlockArrays._BlockArray(B, (blockedrange(fill(2,3)), blockedrange(fill(2,4))))
+        @test copyto!(zeros(size(A)), A) == Matrix(A)
+    end
+
+    @testset "Blocked Diagonal" begin
+        A = BlockedMatrix(Diagonal(1:5), [2,3], [2,2,1])
+        @test A[Block(2,2)] isa BandedMatrix
+        @test bandwidths(A[Block(2,2)]) == (0,0)
+        @test A[Block.(1:2), Block.(2:3)] isa BandedMatrix
     end
 end
 
