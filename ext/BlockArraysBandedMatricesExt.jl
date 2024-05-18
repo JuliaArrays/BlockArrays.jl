@@ -25,6 +25,7 @@ end
 # ambiguity
 sub_materialize(::AbstractBandedLayout, V, ::Tuple{AbstractBlockedUnitRange,Base.OneTo{Int}}) = BandedMatrix(V)
 sub_materialize(::AbstractBandedLayout, V, ::Tuple{Base.OneTo{Int},AbstractBlockedUnitRange}) = BandedMatrix(V)
+sub_materialize(::AbstractBandedLayout, V, ::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange}) = BandedMatrix(V)
 
 
 end
