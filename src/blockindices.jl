@@ -257,7 +257,7 @@ the indices over which the Block spans.
 
 This mimics the relationship between `Colon` and `Base.Slice`.
 """
-struct BlockSlice{BB,INDS<:AbstractUnitRange{T},T<:Integer} <: AbstractUnitRange{T}
+struct BlockSlice{BB,T<:Integer,INDS<:AbstractUnitRange{T}} <: AbstractUnitRange{T}
     block::BB
     indices::INDS
 end
@@ -409,9 +409,9 @@ intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1
 
 # needed for scalar-like broadcasting
 
-BlockSlice{Block{1,BT},RT}(a::Base.OneTo) where {BT,RT<:AbstractUnitRange} =
-    BlockSlice(Block(convert(BT, 1)), convert(RT, a))::BlockSlice{Block{1,BT},RT}
-BlockSlice{BlockRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} =
-    BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},RT}
-BlockSlice{BlockIndexRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} =
-    BlockSlice(BlockIndexRange(Block(1), convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockIndexRange{1,Tuple{BT}},RT}
+BlockSlice{Block{1,BT},T,RT}(a::Base.OneTo) where {BT,T,RT<:AbstractUnitRange} =
+    BlockSlice(Block(convert(BT, 1)), convert(RT, a))::BlockSlice{Block{1,BT},T,RT}
+BlockSlice{BlockRange{1,Tuple{BT}},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange} =
+    BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},T,RT}
+BlockSlice{BlockIndexRange{1,Tuple{BT}},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange} =
+    BlockSlice(BlockIndexRange(Block(1), convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockIndexRange{1,Tuple{BT}},T,RT}
