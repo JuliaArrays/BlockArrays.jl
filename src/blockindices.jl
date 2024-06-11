@@ -181,7 +181,7 @@ end
 checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N =
     all(checkbounds.(Bool, Ref(A), I))
 
-struct BlockIndexRange{N,R<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractArray{BlockIndex{N},N}
+struct BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer}}}} <: AbstractArray{BlockIndex{N},N}
     block::Block{N,Int}
     indices::R
 end
@@ -193,19 +193,19 @@ represents a cartesian range inside a block.
 """
 BlockIndexRange
 
-BlockIndexRange(block::Block{N}, inds::NTuple{N,AbstractUnitRange{Int}}) where {N} =
+BlockIndexRange(block::Block{N}, inds::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {N} =
     BlockIndexRange{N,typeof(inds)}(inds)
-BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
+BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where {N} =
     BlockIndexRange(block,inds)
 
 block(R::BlockIndexRange) = R.block
 
-getindex(B::Block{N}, inds::Vararg{Int,N}) where N = BlockIndex(B,inds)
-getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where N = BlockIndexRange(B,inds)
+getindex(B::Block{N}, inds::Vararg{Integer,N}) where N = BlockIndex(B,inds)
+getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndexRange(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
-@propagate_inbounds getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{Int}) = BlockIndexRange(B.block, B.indices[1][kr])
+@propagate_inbounds getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{<:Integer}) = BlockIndexRange(B.block, B.indices[1][kr])
 @propagate_inbounds getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))
@@ -257,7 +257,7 @@ the indices over which the Block spans.
 
 This mimics the relationship between `Colon` and `Base.Slice`.
 """
-struct BlockSlice{BB,INDS<:AbstractUnitRange{Int}} <: AbstractUnitRange{Int}
+struct BlockSlice{BB,INDS<:AbstractUnitRange{T},T<:Integer} <: AbstractUnitRange{T}
     block::BB
     indices::INDS
 end
@@ -274,9 +274,9 @@ _indices(B::BlockSlice) = B.indices
 _indices(B) = B
 
 @propagate_inbounds getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
-@propagate_inbounds getindex(S::BlockSlice{<:Block{1}}, k::AbstractUnitRange{Int}) =
+@propagate_inbounds getindex(S::BlockSlice{<:Block{1}}, k::AbstractUnitRange{<:Integer}) =
     BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
-@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1}}, k::AbstractUnitRange{Int}) =
+@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1}}, k::AbstractUnitRange{<:Integer}) =
     BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
 
 # Avoid creating a SubArray wrapper in certain non-allocating cases
