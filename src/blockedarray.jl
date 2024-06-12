@@ -147,13 +147,13 @@ BlockedVector(blocks::AbstractVector, block_sizes::AbstractVector{<:Integer}) = 
 BlockedMatrix(blocks::AbstractMatrix, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) = BlockedArray(blocks, baxes)
 BlockedMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) = BlockedArray(blocks, block_sizes...)
 
-BlockedArray{T}(λ::UniformScaling, baxes::Vararg{AbstractUnitRange{<:Integer}, 2}) where T = BlockedArray{T}(Matrix(λ, map(length,baxes)...), baxes)
+BlockedArray{T}(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) where T = BlockedArray{T}(Matrix(λ, map(length,baxes)...), baxes)
 BlockedArray{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockedArray{T}(λ, map(blockedrange,block_sizes))
 BlockedArray(λ::UniformScaling{T}, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockedArray{T}(λ, block_sizes...)
-BlockedArray(λ::UniformScaling{T}, baxes::Vararg{AbstractUnitRange{<:Integer}, 2}) where T = BlockedArray{T}(λ, baxes)
-BlockedMatrix(λ::UniformScaling, baxes::Vararg{AbstractUnitRange{<:Integer}, 2}) = BlockedArray(λ, baxes)
+BlockedArray(λ::UniformScaling{T}, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) where T = BlockedArray{T}(λ, baxes)
+BlockedMatrix(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) = BlockedArray(λ, baxes)
 BlockedMatrix(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) = BlockedArray(λ, block_sizes...)
-BlockedMatrix{T}(λ::UniformScaling, baxes::Vararg{AbstractUnitRange{<:Integer}, 2}) where T = BlockedArray{T}(λ, baxes)
+BlockedMatrix{T}(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) where T = BlockedArray{T}(λ, baxes)
 BlockedMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockedArray{T}(λ, block_sizes...)
 
 
