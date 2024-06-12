@@ -144,7 +144,7 @@ BlockedArray{T}(blocks::AbstractArray{<:Any, N}, block_sizes::Vararg{AbstractVec
 
 BlockedVector(blocks::AbstractVector, baxes::Tuple{AbstractUnitRange{<:Integer}}) = BlockedArray(blocks, baxes)
 BlockedVector(blocks::AbstractVector, block_sizes::AbstractVector{<:Integer}) = BlockedArray(blocks, block_sizes)
-BlockedMatrix(blocks::AbstractMatrix, baxes::Vararg{AbstractUnitRange{<:Integer}, 2}) = BlockedArray(blocks, baxes)
+BlockedMatrix(blocks::AbstractMatrix, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) = BlockedArray(blocks, baxes)
 BlockedMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) = BlockedArray(blocks, block_sizes...)
 
 BlockedArray{T}(λ::UniformScaling, baxes::Vararg{AbstractUnitRange{<:Integer}, 2}) where T = BlockedArray{T}(Matrix(λ, map(length,baxes)...), baxes)

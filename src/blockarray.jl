@@ -273,17 +273,17 @@ BlockArray(arr::AbstractArray{T, N}, baxes::Tuple{Vararg{AbstractUnitRange{<:Int
 
 BlockVector(blocks::AbstractVector, baxes::Tuple{AbstractUnitRange{<:Integer}}) = BlockArray(blocks, baxes)
 BlockVector(blocks::AbstractVector, block_sizes::AbstractVector{<:Integer}) = BlockArray(blocks, block_sizes)
-BlockMatrix(blocks::AbstractMatrix, baxes::NTuple{2,AbstractUnitRange{<:Integer}}) = BlockArray(blocks, baxes)
-BlockMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{<:Integer},2}) = BlockArray(blocks, block_sizes...)
+BlockMatrix(blocks::AbstractMatrix, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) = BlockArray(blocks, baxes)
+BlockMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) = BlockArray(blocks, block_sizes...)
 
-BlockArray{T}(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},2}}) where T = BlockArray{T}(Matrix(λ, map(length,baxes)...), baxes)
+BlockArray{T}(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) where T = BlockArray{T}(Matrix(λ, map(length,baxes)...), baxes)
 BlockArray{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockArray{T}(λ, map(blockedrange,block_sizes))
 BlockArray(λ::UniformScaling{T}, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockArray{T}(λ, block_sizes...)
-BlockArray(λ::UniformScaling{T}, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},2}}) where T = BlockArray{T}(λ, baxes)
-BlockMatrix(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},2}}) = BlockArray(λ, baxes)
-BlockMatrix(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer},2}) = BlockArray(λ, block_sizes...)
-BlockMatrix{T}(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},2}}) where T = BlockArray{T}(λ, baxes)
-BlockMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer},2}) where T = BlockArray{T}(λ, block_sizes...)
+BlockArray(λ::UniformScaling{T}, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) where T = BlockArray{T}(λ, baxes)
+BlockMatrix(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) = BlockArray(λ, baxes)
+BlockMatrix(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) = BlockArray(λ, block_sizes...)
+BlockMatrix{T}(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) where T = BlockArray{T}(λ, baxes)
+BlockMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockArray{T}(λ, block_sizes...)
 
 """
     mortar(blocks::AbstractArray)
