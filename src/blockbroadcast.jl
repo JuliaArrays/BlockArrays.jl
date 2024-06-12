@@ -244,13 +244,13 @@ BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice1},false}}) where 
 
 
 # special cases for SubArrays which we want to broadcast by Block
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
 
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
 
 
 
