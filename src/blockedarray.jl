@@ -296,9 +296,9 @@ end
 _blocked_reshape(block_array, axes) = BlockedArray(reshape(block_array.blocks,map(length,axes)),axes)
 Base.reshape(block_array::BlockedArray, axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where N =
     _blocked_reshape(block_array, axes)
-Base.reshape(parent::BlockedArray, shp::Tuple{Union{Integer,Base.OneTo}, Vararg{Union{Integer,Base.OneTo}}}) =
+Base.reshape(parent::BlockedArray, shp::Tuple{Union{Int,Base.OneTo}, Vararg{Union{Int,Base.OneTo}}}) =
     reshape(parent, Base.to_shape(shp))
-Base.reshape(parent::BlockedArray, dims::Tuple{Integer,Vararg{Integer}}) =
+Base.reshape(parent::BlockedArray, dims::Tuple{Int,Vararg{Int}}) =
     Base._reshape(parent, dims)
 
 """
