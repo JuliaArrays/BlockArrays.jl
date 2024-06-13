@@ -242,7 +242,7 @@ julia> B
     initialized_blocks_BlockArray(R, block_sizes...)
 
 
-@inline BlockArray{T,N,R,BS}(::UndefInitializer, sizes::NTuple{N,Int}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} =
+@inline BlockArray{T,N,R,BS}(::UndefInitializer, sizes::Tuple{Vararg{Integer, N}}) where {T, N, R<:AbstractArray{<:AbstractArray{T,N},N}, BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} =
     BlockArray{T,N,R,BS}(undef, convert(BS, map(Base.OneTo, sizes)))
 
 function BlockArray{T}(arr::AbstractArray{V, N}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T,V,N}

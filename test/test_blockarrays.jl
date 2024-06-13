@@ -62,11 +62,26 @@ end
             @test size(ret) == (6,)
             @test all(iszero, ret)
 
+            ax = blockedrange(1:3)
+            ret = BlockArray{Float64,1,Vector{Vector{Float64}},Tuple{typeof(ax)}}(undef, (ax,))
+            fill!(ret, 0)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret = BlockArray{Float64,1,Vector{Vector{Float64}},Tuple{Base.OneTo{Int}}}(undef, (3,))
+            fill!(ret, 0)
+            @test size(ret) == (3,)
+            @test all(iszero, ret)
+
             ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], 1:3)
             @test size(ret) == (6,)
             @test all(iszero, ret)
 
             ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (blockedrange(1:3),))
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret = BlockArrays._BlockArray(Vector[[0.0],[0.0,0.0],[0.0,0.0,0.0]], (blockedrange(1:3),))
             @test size(ret) == (6,)
             @test all(iszero, ret)
 
@@ -240,6 +255,11 @@ end
             @test all(iszero, a)
             @test eltype(ret.blocks) <: SparseMatrixCSC
             @test axes(ret) == blockedrange.(([1, 2, 5], [3, 4]))
+
+            ret = @inferred mortar([[1, 2], [3, 4, 5]], (blockedrange([2, 3]),))
+            @test eltype(ret) == Int
+            @test axes(ret) == (blockedrange([2, 3]),)
+            @test ret == 1:5
 
             test_error_message("must have ndims consistent with ndims = 1") do
                 mortar([ones(2,2)])
