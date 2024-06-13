@@ -127,7 +127,7 @@ end
             # non-Int block lengths
             blocklen = big(10)^30
             blks = [Fill(1.0, blocklen), Fill(2.0, blocklen)]
-            ret = BlockArray{eltype(eltype(blks)),ndims(blks),typeof(blks)}(undef_blocks, [blocklen, blocklen])
+            ret = BlockArray{Float64,1,typeof(blks)}(undef_blocks, [blocklen,blocklen])
             ret[Block(1)] = blks[1]
             ret[Block(2)] = blks[2]
             @test size(ret) == (2blocklen,)
@@ -169,6 +169,20 @@ end
                 @test BlockedMatrix(M) == M
                 @test BlockedArray(M) == M
             end
+
+            # non-Int block lengths
+            blocklen = big(10)^30
+            blks = [Fill(1.0, blocklen), Fill(2.0, blocklen)]
+            ret = BlockedArray{Float64,1,eltype(blks)}(undef_blocks, [blocklen,blocklen])
+            ret[Block(1)] = blks[1]
+            ret[Block(2)] = blks[2]
+            @test size(ret) == (2blocklen,)
+            @test blocksize(ret) == (2,)
+            @test blocklengths.(axes(ret)) == ([blocklen,blocklen],)
+            @test ret[Block(1)] == Fill(1.0, blocklen)
+            @test ret[Block(2)] == Fill(2.0, blocklen)
+            @test ret[1] == 1.0
+            @test ret[blocklen + 1] == 2.0
         end
 
         @testset "similar" begin
