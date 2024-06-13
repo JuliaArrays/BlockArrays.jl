@@ -172,17 +172,14 @@ end
 
             # non-Int block lengths
             blocklen = big(10)^30
-            blks = [Fill(1.0, blocklen), Fill(2.0, blocklen)]
-            ret = BlockedArray{Float64,1,eltype(blks)}(undef_blocks, [blocklen,blocklen])
-            ret[Block(1)] = blks[1]
-            ret[Block(2)] = blks[2]
+            ret = BlockedArray(1:2blocklen, [blocklen,blocklen])
             @test size(ret) == (2blocklen,)
             @test blocksize(ret) == (2,)
             @test blocklengths.(axes(ret)) == ([blocklen,blocklen],)
-            @test ret[Block(1)] == Fill(1.0, blocklen)
-            @test ret[Block(2)] == Fill(2.0, blocklen)
-            @test ret[1] == 1.0
-            @test ret[blocklen + 1] == 2.0
+            @test ret[Block(1)] == 1:blocklen
+            @test ret[Block(2)] == (blocklen+1):2blocklen
+            @test ret[1] == 1
+            @test ret[2blocklen] == 2blocklen
         end
 
         @testset "similar" begin
