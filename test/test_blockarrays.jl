@@ -186,12 +186,6 @@ end
             @test all(iszero, ret)
 
             ax = blockedrange(1:3)
-            ret = BlockedArray{Float64,1,Vector{Float64},Tuple{typeof(ax)}}(undef, 1:3)
-            fill!(ret, 0)
-            @test size(ret) == (6,)
-            @test all(iszero, ret)
-
-            ax = blockedrange(1:3)
             ret = BlockedArray{Float64,1,Vector{Float64},Tuple{typeof(ax)}}(undef, (ax,))
             fill!(ret, 0)
             @test size(ret) == (6,)
