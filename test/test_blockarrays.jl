@@ -165,6 +165,10 @@ end
             @test size(ret) == (6,)
             @test all(iszero, ret)
 
+            ret2 = BlockedArray{Float64}(ret, (blockedrange(1:3),))
+            @test size(ret2) == (6,)
+            @test all(iszero, ret2)
+
             ret = BlockedVector{Float64}(undef, 1:3)
             fill!(ret, 0)
             @test size(ret) == (6,)

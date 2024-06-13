@@ -181,9 +181,13 @@ end
 checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{<:BlockIndex{N}}) where N =
     all(checkbounds.(Bool, Ref(A), I))
 
-struct BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer}}}} <: AbstractArray{BlockIndex{N},N}
-    block::Block{N,Int}
+struct BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}},I<:Tuple{Vararg{Integer,N}},BI<:Integer} <: AbstractArray{BlockIndex{N,NTuple{N,BI},I},N}
+    block::Block{N,BI}
     indices::R
+    function BlockIndexRange(block::Block{N,BI}, inds::R) where {N,BI<:Integer,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}}
+        I = Tuple{eltype.(inds)...}
+        return new{N,R,I,BI}(block,inds)
+    end
 end
 
 """
@@ -193,8 +197,6 @@ represents a cartesian range inside a block.
 """
 BlockIndexRange
 
-BlockIndexRange(block::Block{N}, inds::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {N} =
-    BlockIndexRange{N,typeof(inds)}(inds)
 BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where {N} =
     BlockIndexRange(block,inds)
 
@@ -210,7 +212,7 @@ getindex(B::Block{1}, inds::Base.Slice) = B
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))
 eltype(::Type{BlockIndexRange{N}}) where {N} = BlockIndex{N}
-eltype(::Type{BlockIndexRange{N,R}}) where {N,R} = BlockIndex{N}
+eltype(::Type{BlockIndexRange{N,R,I,BI}}) where {N,R,I,BI} = BlockIndex{N,NTuple{N,BI},I}
 IteratorSize(::Type{<:BlockIndexRange}) = Base.HasShape{1}()
 
 
@@ -413,5 +415,5 @@ BlockSlice{Block{1,BT},T,RT}(a::Base.OneTo) where {BT,T,RT<:AbstractUnitRange} =
     BlockSlice(Block(convert(BT, 1)), convert(RT, a))::BlockSlice{Block{1,BT},T,RT}
 BlockSlice{BlockRange{1,Tuple{BT}},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange} =
     BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},T,RT}
-BlockSlice{BlockIndexRange{1,Tuple{BT}},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange} =
-    BlockSlice(BlockIndexRange(Block(1), convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockIndexRange{1,Tuple{BT}},T,RT}
+BlockSlice{BlockIndexRange{1,Tuple{BT},I,BI},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange,I,BI} =
+    BlockSlice(BlockIndexRange(Block(BI(1)), convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockIndexRange{1,Tuple{BT},I,BI},T,RT}
