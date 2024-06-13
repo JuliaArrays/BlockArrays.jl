@@ -141,21 +141,21 @@ julia> a[BlockIndex((2,2), (2,3))]
 20
 ```
 """
-struct BlockIndex{N}
-    I::NTuple{N, Int}
-    α::NTuple{N, Int}
+struct BlockIndex{N,TI<:Tuple{Vararg{Integer,N}},Tα<:Tuple{Vararg{Integer,N}}}
+    I::TI
+    α::Tα
 end
 
 @inline BlockIndex(a::NTuple{N,Block{1}}, b::Tuple) where N = BlockIndex(Int.(a), b)
 
-@inline BlockIndex(a::Int, b::Int) = BlockIndex((a,), (b,))
-@inline BlockIndex(a::Tuple, b::Int) = BlockIndex(a, (b,))
-@inline BlockIndex(a::Int, b::Tuple) = BlockIndex((a,), b)
+@inline BlockIndex(a::Integer, b::Integer) = BlockIndex((a,), (b,))
+@inline BlockIndex(a::Tuple, b::Integer) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Integer, b::Tuple) = BlockIndex((a,), b)
 
 @inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
-@inline BlockIndex(a::Block, b::Int) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Block, b::Integer) = BlockIndex(a, (b,))
 
-@inline function BlockIndex(I::NTuple{N, Int}, α::NTuple{M, Int}) where {M,N}
+@inline function BlockIndex(I::Tuple{Vararg{Integer,N}}, α::Tuple{Vararg{Integer,M}}) where {M,N}
     M <= N || throw(ArgumentError("number of indices must not exceed the number of blocks"))
     α2 = ntuple(k -> k <= M ? α[k] : 1, N)
     BlockIndex(I, α2)
@@ -164,7 +164,7 @@ end
 block(b::BlockIndex) = Block(b.I...)
 blockindex(b::BlockIndex{1}) = b.α[1]
 
-BlockIndex(indcs::NTuple{N,BlockIndex{1}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
+BlockIndex(indcs::Tuple{Vararg{BlockIndex{1},N}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
 
 ##
 # checkindex
@@ -178,7 +178,7 @@ BlockIndex(indcs::NTuple{N,BlockIndex{1}}) where N = BlockIndex(block.(indcs), b
     checkbounds(Bool, B, blockindex(I)...)
 end
 
-checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N =
+checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{<:BlockIndex{N}}) where N =
     all(checkbounds.(Bool, Ref(A), I))
 
 struct BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer}}}} <: AbstractArray{BlockIndex{N},N}
@@ -285,7 +285,7 @@ _indices(B) = B
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
 
-struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractArray{Block{N,Int},N}
+struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{<:Integer}}} <: AbstractArray{Block{N,Int},N}
     indices::R
     BlockRange{N,R}(inds::R) where {N,R} = new{N,R}(inds)
 end
@@ -330,9 +330,9 @@ function BlockRange(inds::Tuple{BlockRange,Vararg{BlockRange}})
     BlockRange(combine_indices(inds))
 end
 
-BlockRange(inds::Tuple{Vararg{AbstractUnitRange{Int}}}) =
+BlockRange(inds::Tuple{Vararg{AbstractUnitRange{<:Integer}}}) =
     BlockRange{length(inds),typeof(inds)}(inds)
-BlockRange(inds::Vararg{AbstractUnitRange{Int}}) = BlockRange(inds)
+BlockRange(inds::Vararg{AbstractUnitRange{<:Integer}}) = BlockRange(inds)
 
 BlockRange() = BlockRange(())
 BlockRange(sizes::Tuple{Integer, Vararg{Integer}}) = BlockRange(map(oneto, sizes))
@@ -343,8 +343,8 @@ BlockRange(B::AbstractArray) = BlockRange(blockaxes(B))
 (:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
 (:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
 broadcasted(::DefaultArrayStyle{1}, ::Type{Block}, r::AbstractUnitRange) = BlockRange((r,))
-broadcasted(::DefaultArrayStyle{1}, ::Type{Int}, block_range::BlockRange{1}) = first(block_range.indices)
-broadcasted(::DefaultArrayStyle{0}, ::Type{Int}, block::Block{1}) = Int(block)
+broadcasted(::DefaultArrayStyle{1}, ::Type{<:Integer}, block_range::BlockRange{1}) = first(block_range.indices)
+broadcasted(::DefaultArrayStyle{0}, type::Type{<:Integer}, block::Block{1}) = type(block)
 
 
 # AbstractArray implementation
