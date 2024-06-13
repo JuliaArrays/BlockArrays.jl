@@ -553,6 +553,8 @@ Base.reshape(block_array::BlockArray, axes::Tuple{Union{Integer,Base.OneTo}, Var
     reshape(BlockedArray(block_array), axes)
 Base.reshape(block_array::BlockArray, dims::Tuple{Vararg{Union{Integer,Colon}}}) =
     reshape(BlockedArray(block_array), dims)
+Base.reshape(block_array::BlockArray, dims::Tuple{Vararg{Union{Int,Colon}}}) =
+    reshape(BlockedArray(block_array), dims)
 
 """
     resize!(a::BlockVector, N::Block) -> BlockedVector

@@ -160,6 +160,11 @@ end
             @test size(ret) == (6,)
             @test all(iszero, ret)
 
+            ret = BlockedArray{Float64}(undef, (blockedrange(1:3),))
+            fill!(ret, 0)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
             ret = BlockedVector{Float64}(undef, 1:3)
             fill!(ret, 0)
             @test size(ret) == (6,)
@@ -168,6 +173,28 @@ end
             ret = BlockedArray{Float64}(undef, 1:3, 1:3)
             fill!(ret, 0)
             @test size(ret) == (6,6)
+            @test all(iszero, ret)
+
+            ret = BlockedArray{Float64,1,Vector{Float64}}(undef, 1:3)
+            fill!(ret, 0)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret = BlockedArray{Float64,1,Vector{Float64}}(undef, (blockedrange(1:3),))
+            fill!(ret, 0)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ax = blockedrange(1:3)
+            ret = BlockedArray{Float64,1,Vector{Float64},Tuple{typeof(ax)}}(undef, 1:3)
+            fill!(ret, 0)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ax = blockedrange(1:3)
+            ret = BlockedArray{Float64,1,Vector{Float64},Tuple{typeof(ax)}}(undef, (ax,))
+            fill!(ret, 0)
+            @test size(ret) == (6,)
             @test all(iszero, ret)
 
             A = [1,2,3,4,5,6]
@@ -731,6 +758,7 @@ end
         @test reshape(A, Val(2)) == BlockedArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
         @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
         @test reshape(A, 2, 3) == reshape(A, Base.OneTo(2), 3) == reshape(Vector(A), 2, 3)
+        @test reshape(A, 2, 3) == reshape(A, 2, :) == reshape(A, UInt(2), :)
 
         @test_throws DimensionMismatch reshape(A,3)
 
@@ -739,6 +767,7 @@ end
         @test reshape(A, Val(2)) == BlockedArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
         @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
         @test reshape(A, 2, 3) == reshape(A, Base.OneTo(2), 3) == reshape(Vector(A), 2, 3)
+        @test reshape(A, 2, 3) == reshape(A, 2, :) == reshape(A, UInt(2), :)
     end
 
     @testset "*" begin
