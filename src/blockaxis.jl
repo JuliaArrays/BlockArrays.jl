@@ -553,11 +553,11 @@ function sortedunion(a::RangeCumsum{<:Any,<:AbstractRange}, b::RangeCumsum{<:Any
 end
 
 _blocklengths2blocklasts(blocks::AbstractRange) = RangeCumsum(blocks)
-function blockfirsts(a::AbstractBlockedUnitRange{<:Any,Base.OneTo{<:Integer}})
+function blockfirsts(a::AbstractBlockedUnitRange{<:Any,<:Base.OneTo{<:Integer}})
     first(a) == 1 || error("Offset axes not supported")
     Base.OneTo{eltype(a)}(length(blocklasts(a)))
 end
-function blocklengths(a::AbstractBlockedUnitRange{<:Any,Base.OneTo{<:Integer}})
+function blocklengths(a::AbstractBlockedUnitRange{<:Any,<:Base.OneTo{<:Integer}})
     first(a) == 1 || error("Offset axes not supported")
     Ones{eltype(a)}(length(blocklasts(a)))
 end
