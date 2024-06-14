@@ -147,7 +147,7 @@ end
 _throw_if_bool(_) = nothing
 _throw_if_bool(::Type{Bool}) = throw(ArgumentError("a Bool collection is not allowed as blocklasts"))
 
-const DefaultBlockAxis{T<:Integer} = BlockedOneTo{T, Vector{T}}
+const DefaultBlockAxis = BlockedOneTo{Int, Vector{Int}}
 
 first(b::BlockedOneTo) = oneunit(eltype(b))
 @inline blocklasts(a::BlockedOneTo) = a.lasts
