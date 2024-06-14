@@ -29,7 +29,7 @@ function _BlockedUnitRange end
 """
     BlockedUnitRange
 
-is an `AbstractUnitRange{Int}` that has been divided into blocks.
+is an `AbstractUnitRange{<:Integer}` that has been divided into blocks.
 Construction is typically via `blockedrange` which converts
 a vector of block lengths to a `BlockedUnitRange`.
 
@@ -147,7 +147,7 @@ end
 _throw_if_bool(_) = nothing
 _throw_if_bool(::Type{Bool}) = throw(ArgumentError("a Bool collection is not allowed as blocklasts"))
 
-const DefaultBlockAxis = BlockedOneTo{Int, Vector{Int}}
+const DefaultBlockAxis{T<:Integer} = BlockedOneTo{T, Vector{T}}
 
 first(b::BlockedOneTo) = oneunit(eltype(b))
 @inline blocklasts(a::BlockedOneTo) = a.lasts
@@ -158,9 +158,9 @@ axes(b::BlockedOneTo) = (b,)
 
 """
     blockedrange(blocklengths::Union{Tuple, AbstractVector})
-    blockedrange(first::Int, blocklengths::Union{Tuple, AbstractVector})
+    blockedrange(first::Integer, blocklengths::Union{Tuple, AbstractVector})
 
-Return a blocked `AbstractUnitRange{Int}` with the block sizes being `blocklengths`.
+Return a blocked `AbstractUnitRange{<:Integer}` with the block sizes being `blocklengths`.
 If `first` is provided, this is used as the first value of the range.
 Otherwise, if only the block lengths are provided, `first` is assumed to be `1`.
 
@@ -197,7 +197,7 @@ end
 length(a::AbstractBlockedUnitRange) = isempty(blocklasts(a)) ? zero(eltype(a)) : Integer(last(blocklasts(a))-first(a)+oneunit(eltype(a)))
 
 """
-    blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int})
+    blockisequal(a::AbstractUnitRange{<:Integer}, b::AbstractUnitRange{<:Integer})
 
 Check if `a` and `b` have the same block structure.
 
@@ -225,7 +225,7 @@ julia> blockisequal(b1, b2)
 false
 ```
 """
-blockisequal(a::AbstractUnitRange{Int}, b::AbstractUnitRange{Int}) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
+blockisequal(a::AbstractUnitRange{<:Integer}, b::AbstractUnitRange{<:Integer}) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
 blockisequal(a, b, c, d...) = blockisequal(a,b) && blockisequal(b,c,d...)
 """
     blockisequal(a::Tuple, b::Tuple)
@@ -242,12 +242,12 @@ _shift_blocklengths(::AbstractBlockedUnitRange, bl, f) = bl
 _shift_blocklengths(::Any, bl, f) = bl .+ (f - 1)
 const OneBasedRanges = Union{Base.OneTo, Base.Slice{<:Base.OneTo}, Base.IdentityUnitRange{<:Base.OneTo}}
 _shift_blocklengths(::OneBasedRanges, bl, f) = bl
-function Base.convert(::Type{BlockedUnitRange}, axis::AbstractUnitRange{Int})
+function Base.convert(::Type{BlockedUnitRange}, axis::AbstractUnitRange{<:Integer})
     bl = blocklasts(axis)
     f = first(axis)
     _BlockedUnitRange(f, _shift_blocklengths(axis, bl, f))
 end
-function Base.convert(::Type{BlockedUnitRange{T,CS}}, axis::AbstractUnitRange{Int}) where {T,CS}
+function Base.convert(::Type{BlockedUnitRange{T,CS}}, axis::AbstractUnitRange{<:Integer}) where {T,CS}
     bl = blocklasts(axis)
     f = first(axis)
     _BlockedUnitRange(convert(T, f), convert(CS, _shift_blocklengths(axis, bl, f)))
@@ -255,7 +255,7 @@ end
 
 Base.unitrange(b::AbstractBlockedUnitRange) = first(b):last(b)
 
-Base.promote_rule(::Type{<:AbstractBlockedUnitRange{T}}, ::Type{Base.OneTo{Int}}) where {T} = UnitRange{promote_type(T, Int)}
+Base.promote_rule(::Type{<:AbstractBlockedUnitRange{T}}, ::Type{Base.OneTo{S}}) where {T,S} = UnitRange{promote_type(T, S)}
 
 function Base.convert(::Type{BlockedOneTo}, axis::AbstractUnitRange{<:Integer})
     first(axis) == 1 || throw(ArgumentError("first element of range is not 1"))
@@ -383,7 +383,7 @@ end
     _BlockedUnitRange(cs[k-1]+oneunit(eltype(b)),cs[k:j])
 end
 
-@propagate_inbounds function getindex(b::AbstractBlockedUnitRange, KR::BlockRange{1,Tuple{Base.OneTo{Int}}})
+@propagate_inbounds function getindex(b::AbstractBlockedUnitRange, KR::BlockRange{1,<:Tuple{Base.OneTo{<:Integer}}})
     cs = blocklasts(b)
     _getindex(b, blocklengths) = _BlockedUnitRange(first(b), blocklengths)
     _getindex(b::BlockedOneTo, blocklengths) = BlockedOneTo(blocklengths)
@@ -415,8 +415,8 @@ Base.dataids(b::AbstractBlockedUnitRange) = Base.dataids(blocklasts(b))
 ###
 # BlockedUnitRange interface
 ###
-Base.checkindex(::Type{Bool}, b::BlockRange, K::Int) = checkindex(Bool, Int.(b), K)
-Base.checkindex(::Type{Bool}, b::AbstractUnitRange{Int}, K::Block{1}) = checkindex(Bool, blockaxes(b,1), Int(K))
+Base.checkindex(::Type{Bool}, b::BlockRange, K::Integer) = checkindex(Bool, Integer.(b), K)
+Base.checkindex(::Type{Bool}, b::AbstractUnitRange{<:Integer}, K::Block{1}) = checkindex(Bool, blockaxes(b,1), Integer(K))
 
 function Base.checkindex(::Type{Bool}, axis::AbstractBlockedUnitRange, ind::BlockIndexRange{1})
     checkindex(Bool, axis, first(ind)) && checkindex(Bool, axis, last(ind))
@@ -425,19 +425,19 @@ function Base.checkindex(::Type{Bool}, axis::AbstractBlockedUnitRange, ind::Bloc
     checkindex(Bool, axis, block(ind)) && checkbounds(Bool, axis[block(ind)], blockindex(ind))
 end
 
-@propagate_inbounds function getindex(b::AbstractUnitRange{Int}, K::Block{1})
+@propagate_inbounds function getindex(b::AbstractUnitRange{<:Integer}, K::Block{1})
     @boundscheck K == Block(1) || throw(BlockBoundsError(b, K))
     b
 end
 
-@propagate_inbounds function getindex(b::AbstractUnitRange{Int}, K::BlockRange)
+@propagate_inbounds function getindex(b::AbstractUnitRange{<:Integer}, K::BlockRange)
     @boundscheck K == Block.(1:1) || throw(BlockBoundsError(b, K))
     b
 end
 
-blockaxes(b::AbstractUnitRange{Int}) = (Block.(Base.OneTo(1)),)
+blockaxes(b::AbstractUnitRange{T}) where {T<:Integer} = (Block.(Base.OneTo(one(T))),)
 
-function findblock(b::AbstractUnitRange{Int}, k::Integer)
+function findblock(b::AbstractUnitRange{<:Integer}, k::Integer)
     @boundscheck k in axes(b,1) || throw(BoundsError(b,k))
     Block(1)
 end
@@ -545,7 +545,7 @@ Base.BroadcastStyle(::Type{<:AbstractBlockedUnitRange{<:Any,R}}) where R = _broa
 # We want to use lazy types when possible
 ###
 
-const OneToCumsum = RangeCumsum{Int,Base.OneTo{Int}}
+const OneToCumsum{T<:Integer} = RangeCumsum{T,Base.OneTo{T}}
 sortedunion(a::OneToCumsum, ::OneToCumsum) = a
 function sortedunion(a::RangeCumsum{<:Any,<:AbstractRange}, b::RangeCumsum{<:Any,<:AbstractRange})
     @assert a == b
@@ -553,11 +553,11 @@ function sortedunion(a::RangeCumsum{<:Any,<:AbstractRange}, b::RangeCumsum{<:Any
 end
 
 _blocklengths2blocklasts(blocks::AbstractRange) = RangeCumsum(blocks)
-function blockfirsts(a::AbstractBlockedUnitRange{<:Any,Base.OneTo{Int}})
+function blockfirsts(a::AbstractBlockedUnitRange{<:Any,Base.OneTo{<:Integer}})
     first(a) == 1 || error("Offset axes not supported")
     Base.OneTo{eltype(a)}(length(blocklasts(a)))
 end
-function blocklengths(a::AbstractBlockedUnitRange{<:Any,Base.OneTo{Int}})
+function blocklengths(a::AbstractBlockedUnitRange{<:Any,Base.OneTo{<:Integer}})
     first(a) == 1 || error("Offset axes not supported")
     Ones{eltype(a)}(length(blocklasts(a)))
 end
