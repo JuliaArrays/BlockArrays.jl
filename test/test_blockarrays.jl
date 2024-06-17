@@ -62,11 +62,26 @@ end
             @test size(ret) == (6,)
             @test all(iszero, ret)
 
+            ax = blockedrange(1:3)
+            ret = BlockArray{Float64,1,Vector{Vector{Float64}},Tuple{typeof(ax)}}(undef, (ax,))
+            fill!(ret, 0)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret = BlockArray{Float64,1,Vector{Vector{Float64}},Tuple{Base.OneTo{Int}}}(undef, (3,))
+            fill!(ret, 0)
+            @test size(ret) == (3,)
+            @test all(iszero, ret)
+
             ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], 1:3)
             @test size(ret) == (6,)
             @test all(iszero, ret)
 
             ret = BlockArrays._BlockArray([[0.0],[0.0,0.0],[0.0,0.0,0.0]], (blockedrange(1:3),))
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret = BlockArrays._BlockArray(Vector[[0.0],[0.0,0.0],[0.0,0.0,0.0]], (blockedrange(1:3),))
             @test size(ret) == (6,)
             @test all(iszero, ret)
 
@@ -123,6 +138,20 @@ end
                 @test all(isone, o)
                 @test axes(o) == (br,)
             end
+
+            # non-Int block lengths
+            blocklen = big(10)^30
+            blks = [Fill(1.0, blocklen), Fill(2.0, blocklen)]
+            ret = BlockArray{Float64,1,typeof(blks)}(undef_blocks, [blocklen,blocklen])
+            ret[Block(1)] = blks[1]
+            ret[Block(2)] = blks[2]
+            @test size(ret) == (2blocklen,)
+            @test blocksize(ret) == (2,)
+            @test blocklengths.(axes(ret)) == ([blocklen,blocklen],)
+            @test ret[Block(1)] == Fill(1.0, blocklen)
+            @test ret[Block(2)] == Fill(2.0, blocklen)
+            @test ret[1] == 1.0
+            @test ret[blocklen + 1] == 2.0
         end
 
         @testset "BlockedArray constructors" begin
@@ -130,6 +159,15 @@ end
             fill!(ret, 0)
             @test size(ret) == (6,)
             @test all(iszero, ret)
+
+            ret = BlockedArray{Float64}(undef, (blockedrange(1:3),))
+            fill!(ret, 0)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret2 = BlockedArray{Float64}(ret, (blockedrange(1:3),))
+            @test size(ret2) == (6,)
+            @test all(iszero, ret2)
 
             ret = BlockedVector{Float64}(undef, 1:3)
             fill!(ret, 0)
@@ -139,6 +177,22 @@ end
             ret = BlockedArray{Float64}(undef, 1:3, 1:3)
             fill!(ret, 0)
             @test size(ret) == (6,6)
+            @test all(iszero, ret)
+
+            ret = BlockedArray{Float64,1,Vector{Float64}}(undef, 1:3)
+            fill!(ret, 0)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ret = BlockedArray{Float64,1,Vector{Float64}}(undef, (blockedrange(1:3),))
+            fill!(ret, 0)
+            @test size(ret) == (6,)
+            @test all(iszero, ret)
+
+            ax = blockedrange(1:3)
+            ret = BlockedArray{Float64,1,Vector{Float64},Tuple{typeof(ax)}}(undef, (ax,))
+            fill!(ret, 0)
+            @test size(ret) == (6,)
             @test all(iszero, ret)
 
             A = [1,2,3,4,5,6]
@@ -155,6 +209,17 @@ end
                 @test BlockedMatrix(M) == M
                 @test BlockedArray(M) == M
             end
+
+            # non-Int block lengths
+            blocklen = big(10)^30
+            ret = BlockedArray(1:2blocklen, [blocklen,blocklen])
+            @test size(ret) == (2blocklen,)
+            @test blocksize(ret) == (2,)
+            @test blocklengths.(axes(ret)) == ([blocklen,blocklen],)
+            @test ret[Block(1)] == 1:blocklen
+            @test ret[Block(2)] == (blocklen+1):2blocklen
+            @test ret[1] == 1
+            @test ret[2blocklen] == 2blocklen
         end
 
         @testset "similar" begin
@@ -215,6 +280,11 @@ end
             @test all(iszero, a)
             @test eltype(ret.blocks) <: SparseMatrixCSC
             @test axes(ret) == blockedrange.(([1, 2, 5], [3, 4]))
+
+            ret = @inferred mortar([[1, 2], [3, 4, 5]], (blockedrange([2, 3]),))
+            @test eltype(ret) == Int
+            @test axes(ret) == (blockedrange([2, 3]),)
+            @test ret == 1:5
 
             test_error_message("must have ndims consistent with ndims = 1") do
                 mortar([ones(2,2)])
@@ -686,6 +756,7 @@ end
         @test reshape(A, Val(2)) == BlockedArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
         @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
         @test reshape(A, 2, 3) == reshape(A, Base.OneTo(2), 3) == reshape(Vector(A), 2, 3)
+        @test reshape(A, 2, 3) == reshape(A, 2, :) == reshape(A, UInt(2), :)
 
         @test_throws DimensionMismatch reshape(A,3)
 
@@ -694,6 +765,7 @@ end
         @test reshape(A, Val(2)) == BlockedArray(reshape(1:6,6,1), (blockedrange(1:3), Base.OneTo(1)))
         @test reshape(A, (blockedrange(Fill(2,3)),))[Block(1)] == 1:2
         @test reshape(A, 2, 3) == reshape(A, Base.OneTo(2), 3) == reshape(Vector(A), 2, 3)
+        @test reshape(A, 2, 3) == reshape(A, 2, :) == reshape(A, UInt(2), :)
     end
 
     @testset "*" begin

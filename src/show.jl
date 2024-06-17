@@ -87,19 +87,19 @@ function _blockarray_print_matrix_row(io::IO,
     end
 end
 
-function _show_typeof(io::IO, a::BlockVector{T,Vector{Vector{T}},Tuple{DefaultBlockAxis}}) where T
+function _show_typeof(io::IO, a::BlockVector{T,Vector{Vector{T}},<:Tuple{BlockedOneTo{<:Integer}}}) where T
     print(io, "BlockVector{")
     show(io, T)
     print(io, '}')
 end
 
-function _show_typeof(io::IO, a::BlockMatrix{T,Matrix{Matrix{T}},NTuple{2,DefaultBlockAxis}}) where T
+function _show_typeof(io::IO, a::BlockMatrix{T,Matrix{Matrix{T}},<:Tuple{Vararg{BlockedOneTo{<:Integer},2}}}) where T
     print(io, "BlockMatrix{")
     show(io, T)
     print(io, '}')
 end
 
-function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},NTuple{N,DefaultBlockAxis}}) where {T,N}
+function _show_typeof(io::IO, a::BlockArray{T,N,Array{Array{T,N},N},<:Tuple{Vararg{BlockedOneTo{<:Integer},N}}}) where {T,N}
     Base.show_type_name(io, typeof(a).name)
     print(io, '{')
     show(io, T)
@@ -122,19 +122,19 @@ axes_print_matrix_row(::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}, io, X
 Base.print_matrix_row(io::IO, X::AbstractBlockedUnitRange, A::Vector, i::Integer, cols::AbstractVector, sep::AbstractString, idxlast::Integer=last(axes(X, 2))) =
         _blockarray_print_matrix_row(io, X, A, i, cols, sep)
 
-function _show_typeof(io::IO, a::BlockedVector{T,Vector{T},Tuple{DefaultBlockAxis}}) where T
+function _show_typeof(io::IO, a::BlockedVector{T,Vector{T},<:Tuple{BlockedOneTo{<:Integer}}}) where T
     print(io, "BlockedVector{")
     show(io, T)
     print(io, '}')
 end
 
-function _show_typeof(io::IO, a::BlockedMatrix{T,Matrix{T},NTuple{2,DefaultBlockAxis}}) where T
+function _show_typeof(io::IO, a::BlockedMatrix{T,Matrix{T},<:Tuple{Vararg{BlockedOneTo{<:Integer},2}}}) where T
     print(io, "BlockedMatrix{")
     show(io, T)
     print(io, '}')
 end
 
-function _show_typeof(io::IO, a::BlockedArray{T,N,Array{T,N},NTuple{N,DefaultBlockAxis}}) where {T,N}
+function _show_typeof(io::IO, a::BlockedArray{T,N,Array{T,N},<:Tuple{Vararg{BlockedOneTo{<:Integer},N}}}) where {T,N}
     Base.show_type_name(io, typeof(a).name)
     print(io, '{')
     show(io, T)

@@ -90,6 +90,10 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
         @test BlockIndex((2,2,2),(2,)) == BlockIndex((2,2,2),(2,1,)) == BlockIndex((2,2,2),(2,1,1))
+        @test BlockIndex(2,(2,)) === BlockIndex((2,),(2,))
+        @test BlockIndex(UInt(2),(2,)) === BlockIndex((UInt(2),),(2,))
+        @test BlockIndex(Block(2),2) === BlockIndex(Block(2),(2,))
+        @test BlockIndex(Block(2),UInt(2)) === BlockIndex(Block(2),(UInt(2),))
     end
 
     @testset "BlockRange" begin
@@ -251,16 +255,18 @@ end
     end
 
     @testset "convert" begin
-        b = blockedrange(1, Fill(2,3))
-        c = blockedrange(1, [2,2,2])
-        @test oftype(b, b) === b
-        @test blockisequal(convert(BlockedUnitRange, Base.OneTo(5)), blockedrange(1, [5]))
-        @test blockisequal(convert(BlockedUnitRange, Base.Slice(Base.OneTo(5))), blockedrange(1, [5]))
-        @test blockisequal(convert(BlockedUnitRange, Base.IdentityUnitRange(-2:2)), BlockArrays._BlockedUnitRange(-2,[2]))
-        @test convert(BlockedUnitRange{Int,Vector{Int}}, c) === c
-        @test blockisequal(convert(BlockedUnitRange{Int,Vector{Int}}, b),b)
-        @test blockisequal(convert(BlockedUnitRange{Int,Vector{Int}}, Base.OneTo(5)), blockedrange(1, [5]))
-        @test blockisequal(convert(BlockedUnitRange, BlockedOneTo(1:3)), blockedrange(1, [1,1,1]))
+        for elt in (Int, UInt)
+            b = blockedrange(elt(1), Fill(elt(2),3))
+            c = blockedrange(elt(1), elt[2,2,2])
+            @test oftype(b, b) === b
+            @test blockisequal(convert(BlockedUnitRange, Base.OneTo(5)), blockedrange(1, [5]))
+            @test blockisequal(convert(BlockedUnitRange, Base.Slice(Base.OneTo(5))), blockedrange(1, [5]))
+            @test blockisequal(convert(BlockedUnitRange, Base.IdentityUnitRange(-2:2)), BlockArrays._BlockedUnitRange(-2,[2]))
+            @test convert(BlockedUnitRange{elt,Vector{elt}}, c) === c
+            @test blockisequal(convert(BlockedUnitRange{Int,Vector{Int}}, b),b)
+            @test blockisequal(convert(BlockedUnitRange{Int,Vector{Int}}, Base.OneTo(5)), blockedrange(1, [5]))
+            @test blockisequal(convert(BlockedUnitRange, BlockedOneTo(1:3)), blockedrange(1, [1,1,1]))
+        end
     end
 
     @testset "findblock" begin

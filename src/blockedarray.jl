@@ -40,10 +40,10 @@ julia> A
  0  0  0
 ```
 """
-struct BlockedArray{T, N, R<:AbstractArray{T,N}, BS<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractBlockArray{T, N}
+struct BlockedArray{T, N, R<:AbstractArray{T,N}, BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} <: AbstractBlockArray{T, N}
     blocks::R
     axes::BS
-    function BlockedArray{T,N,R,BS}(blocks::R, axes::BS) where {T,N,R,BS<:NTuple{N,AbstractUnitRange{Int}}}
+    function BlockedArray{T,N,R,BS}(blocks::R, axes::BS) where {T,N,R,BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}}
         checkbounds(blocks,axes...)
         return new{T,N,R,BS}(blocks, axes)
     end
@@ -99,62 +99,62 @@ const BlockedVector{T} = BlockedArray{T, 1}
 const BlockedVecOrMat{T} = Union{BlockedMatrix{T}, BlockedVector{T}}
 
 # Auxiliary outer constructors
-@inline BlockedArray(blocks::R, baxes::BS) where {T,N,R<:AbstractArray{T,N},BS<:NTuple{N,AbstractUnitRange{Int}}} =
+@inline BlockedArray(blocks::R, baxes::BS) where {T,N,R<:AbstractArray{T,N},BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} =
     BlockedArray{T, N, R,BS}(blocks, baxes)
 
-@inline BlockedArray{T}(blocks::R, baxes::BS) where {T,N,R<:AbstractArray{T,N},BS<:NTuple{N,AbstractUnitRange{Int}}} =
+@inline BlockedArray{T}(blocks::R, baxes::BS) where {T,N,R<:AbstractArray{T,N},BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} =
     BlockedArray{T, N, R,BS}(blocks, baxes)
 
-@inline BlockedArray{T}(blocks::AbstractArray{<:Any,N}, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N} =
+@inline BlockedArray{T}(blocks::AbstractArray{<:Any,N}, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T,N} =
     BlockedArray{T}(convert(AbstractArray{T,N}, blocks), baxes)
 
-@inline BlockedArray(blocks::BlockedArray, baxes::BS) where {N,BS<:NTuple{N,AbstractUnitRange{Int}}} =
+@inline BlockedArray(blocks::BlockedArray, baxes::BS) where {N,BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} =
     BlockedArray(blocks.blocks, baxes)
 
-@inline BlockedArray{T}(blocks::BlockedArray, baxes::BS) where {T,N,BS<:NTuple{N,AbstractUnitRange{Int}}} =
+@inline BlockedArray{T}(blocks::BlockedArray, baxes::BS) where {T,N,BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} =
     BlockedArray{T}(blocks.blocks, baxes)
 
-BlockedArray(blocks::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
+BlockedArray(blocks::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     BlockedArray(blocks, map(blockedrange,block_sizes))
 
-BlockedArray{T}(blocks::AbstractArray{<:Any, N}, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
+BlockedArray{T}(blocks::AbstractArray{<:Any, N}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     BlockedArray{T}(blocks, map(blockedrange,block_sizes))
 
-@inline BlockedArray{T,N,R,BS}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T,N,R,BS<:NTuple{N,AbstractUnitRange{Int}}} =
+@inline BlockedArray{T,N,R,BS}(::UndefInitializer, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T,N,R,BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} =
     BlockedArray{T,N,R,BS}(R(undef, length.(baxes)), convert(BS, baxes))
 
-@inline BlockedArray{T}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N} =
+@inline BlockedArray{T}(::UndefInitializer, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T, N} =
     BlockedArray(similar(Array{T, N}, length.(baxes)), baxes)
 
-@inline BlockedArray{T, N}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N} =
+@inline BlockedArray{T, N}(::UndefInitializer, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T, N} =
     BlockedArray{T}(undef, baxes)
 
-@inline BlockedArray{T, N, R}(::UndefInitializer, baxes::NTuple{N,AbstractUnitRange{Int}}) where {T, N, R <: AbstractArray{T, N}} =
+@inline BlockedArray{T, N, R}(::UndefInitializer, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T, N, R <: AbstractArray{T, N}} =
     BlockedArray(similar(R, length.(baxes)), baxes)
 
-@inline BlockedArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
+@inline BlockedArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     BlockedArray{T}(undef, map(blockedrange,block_sizes))
 
-@inline BlockedArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N} =
+@inline BlockedArray{T, N}(::UndefInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     BlockedArray{T, N}(undef, map(blockedrange,block_sizes))
 
-@inline BlockedArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{Int}, N}) where {T, N, R <: AbstractArray{T, N}} =
+@inline BlockedArray{T, N, R}(::UndefInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R <: AbstractArray{T, N}} =
     BlockedArray{T, N, R}(undef, map(blockedrange,block_sizes))
 
 
-BlockedVector(blocks::AbstractVector, baxes::Tuple{AbstractUnitRange{Int}}) = BlockedArray(blocks, baxes)
-BlockedVector(blocks::AbstractVector, block_sizes::AbstractVector{Int}) = BlockedArray(blocks, block_sizes)
-BlockedMatrix(blocks::AbstractMatrix, baxes::NTuple{2,AbstractUnitRange{Int}}) = BlockedArray(blocks, baxes)
-BlockedMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{Int},2}) = BlockedArray(blocks, block_sizes...)
+BlockedVector(blocks::AbstractVector, baxes::Tuple{AbstractUnitRange{<:Integer}}) = BlockedArray(blocks, baxes)
+BlockedVector(blocks::AbstractVector, block_sizes::AbstractVector{<:Integer}) = BlockedArray(blocks, block_sizes)
+BlockedMatrix(blocks::AbstractMatrix, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) = BlockedArray(blocks, baxes)
+BlockedMatrix(blocks::AbstractMatrix, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) = BlockedArray(blocks, block_sizes...)
 
-BlockedArray{T}(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = BlockedArray{T}(Matrix(λ, map(length,baxes)...), baxes)
-BlockedArray{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int}, 2}) where T = BlockedArray{T}(λ, map(blockedrange,block_sizes))
-BlockedArray(λ::UniformScaling{T}, block_sizes::Vararg{AbstractVector{Int}, 2}) where T = BlockedArray{T}(λ, block_sizes...)
-BlockedArray(λ::UniformScaling{T}, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = BlockedArray{T}(λ, baxes)
-BlockedMatrix(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) = BlockedArray(λ, baxes)
-BlockedMatrix(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) = BlockedArray(λ, block_sizes...)
-BlockedMatrix{T}(λ::UniformScaling, baxes::NTuple{2,AbstractUnitRange{Int}}) where T = BlockedArray{T}(λ, baxes)
-BlockedMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{Int},2}) where T = BlockedArray{T}(λ, block_sizes...)
+BlockedArray{T}(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) where T = BlockedArray{T}(Matrix(λ, map(length,baxes)...), baxes)
+BlockedArray{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockedArray{T}(λ, map(blockedrange,block_sizes))
+BlockedArray(λ::UniformScaling{T}, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockedArray{T}(λ, block_sizes...)
+BlockedArray(λ::UniformScaling{T}, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) where T = BlockedArray{T}(λ, baxes)
+BlockedMatrix(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) = BlockedArray(λ, baxes)
+BlockedMatrix(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) = BlockedArray(λ, block_sizes...)
+BlockedMatrix{T}(λ::UniformScaling, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) where T = BlockedArray{T}(λ, baxes)
+BlockedMatrix{T}(λ::UniformScaling, block_sizes::Vararg{AbstractVector{<:Integer}, 2}) where T = BlockedArray{T}(λ, block_sizes...)
 
 
 # Convert AbstractArrays that conform to block array interface
@@ -205,25 +205,25 @@ end
 to_axes(r::AbstractUnitRange) = r
 to_axes(n::Integer) = Base.oneto(n)
 
-@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
-    BlockedArray{T}(undef, map(to_axes,axes))
-
-@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
-    BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
-    BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{Union{Integer,AbstractUnitRange{<:Integer}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
 
-@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{Int}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{Int}}}}) where T =
+@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{<:Integer}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+    BlockedArray{T}(undef, map(to_axes,axes))
+
+@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+    BlockedArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+    BlockedArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{<:Integer}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
 
 @propagate_inbounds getindex(block_arr::BlockedArray{T, N}, i::Vararg{Integer, N}) where {T,N} = block_arr.blocks[i...]
@@ -294,9 +294,9 @@ function ArrayLayouts.rmul!(block_array::BlockedArray, α::Number)
 end
 
 _blocked_reshape(block_array, axes) = BlockedArray(reshape(block_array.blocks,map(length,axes)),axes)
-Base.reshape(block_array::BlockedArray, axes::NTuple{N,AbstractUnitRange{Int}}) where N =
+Base.reshape(block_array::BlockedArray, axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where N =
     _blocked_reshape(block_array, axes)
-Base.reshape(parent::BlockedArray, shp::Tuple{Union{Integer,Base.OneTo}, Vararg{Union{Integer,Base.OneTo}}}) =
+Base.reshape(parent::BlockedArray, shp::Tuple{Union{Int,Base.OneTo}, Vararg{Union{Int,Base.OneTo}}}) =
     reshape(parent, Base.to_shape(shp))
 Base.reshape(parent::BlockedArray, dims::Tuple{Int,Vararg{Int}}) =
     Base._reshape(parent, dims)

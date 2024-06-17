@@ -82,7 +82,7 @@ julia> itr = SubBlockIterator(subblock_lasts, block_lasts)
 SubBlockIterator([1, 3, 6], [1, 3, 4, 6])
 
 julia> collect(itr)
-4-element Vector{BlockArrays.BlockIndexRange{1, Tuple{UnitRange{Int64}}}}:
+4-element Vector{BlockArrays.BlockIndexRange{1, Tuple{UnitRange{Int64}}, Tuple{Int64}, Int64}}:
  Block(1)[1:1]
  Block(2)[1:2]
  Block(3)[1:1]
@@ -95,7 +95,7 @@ struct SubBlockIterator
 end
 
 Base.IteratorEltype(::Type{<:SubBlockIterator}) = Base.HasEltype()
-Base.eltype(::Type{<:SubBlockIterator}) = BlockIndexRange{1,Tuple{UnitRange{Int64}}}
+Base.eltype(::Type{<:SubBlockIterator}) = BlockIndexRange{1,Tuple{UnitRange{Int}},Tuple{Int},Int}
 
 Base.IteratorSize(::Type{<:SubBlockIterator}) = Base.HasLength()
 Base.length(it::SubBlockIterator) = length(it.block_lasts)
@@ -244,13 +244,13 @@ BroadcastStyle(::Type{<:SubArray{T,N,Arr,<:NTuple{N,BlockSlice1},false}}) where 
 
 
 # special cases for SubArrays which we want to broadcast by Block
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:Any,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockStyle{N}()
 
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:AbstractBlockedUnitRange},BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
-BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
+BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{Any,BlockSlice{<:Any,<:Any,<:AbstractBlockedUnitRange},Vararg{Any}}} = BlockedStyle{N}()
 
 
 
