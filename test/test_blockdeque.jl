@@ -1,9 +1,11 @@
+module TestBlockDeque
+
 using BlockArrays, Test
 
 @testset "block dequeue" begin
     @testset "blockappend!(::BlockVector, _)" begin
         @testset for compatible in [false, true],
-            srctype in [:BlockVector, :PseudoBlockVector, :PseudoBlockVector2, :Vector]
+            srctype in [:BlockVector, :BlockedVector, :BlockedVector2, :Vector]
 
             dest = mortar([[1, 2, 3], [4, 5]])
 
@@ -15,10 +17,10 @@ using BlockArrays, Test
             end
             if srctype === :BlockVector
                 src = mortar([T[6, 7], T[8, 9]])
-            elseif srctype === :PseudoBlockVector
-                src = PseudoBlockVector(T[6:9;], [4])
-            elseif srctype === :PseudoBlockVector2
-                src = PseudoBlockVector(T[6:9;], [2, 2])
+            elseif srctype === :BlockedVector
+                src = BlockedVector(T[6:9;], [4])
+            elseif srctype === :BlockedVector2
+                src = BlockedVector(T[6:9;], [2, 2])
             elseif srctype === :Vector
                 src = T[6:9;]
             else
@@ -40,7 +42,7 @@ using BlockArrays, Test
             end
 
             src[1] = 666
-            if compatible && srctype !== :PseudoBlockVector2
+            if compatible && srctype !== :BlockedVector2
                 @test dest[6] == 666
             else
                 @test dest[6] == 6
@@ -165,7 +167,8 @@ using BlockArrays, Test
             @test pop!(B) == 6
             @test B == 1:5
             @test !any(isempty, blocks(B))
-            @test blocksizes(B,1) == [1,2,2]
+            @test blocklengths(axes(B,1)) == [1,2,2]
+            @test blocksizes(B) == [(1,), (2,), (2,)]
         end
     end
 
@@ -181,14 +184,18 @@ using BlockArrays, Test
         A = BlockArray([1:6;], [2,2,2])
         @test popfirst!(A) == 1
         @test A == 2:6
-        @test blocksizes(A,1) == [1,2,2]
+        @test blocklengths(axes(A,1)) == [1,2,2]
+        @test blocksizes(A) == [(1,), (2,), (2,)]
 
         @testset "empty blocks" begin
             B = BlockArray([1:6;], [0,0,1,2,3])
             @test popfirst!(B) == 1
             @test B == 2:6
-            @test blocksizes(B,1) == [2,3]
+            @test blocklengths(axes(B,1)) == [2,3]
+            @test blocksizes(B) == [(2,), (3,)]
             @test !any(isempty, blocks(B))
         end
     end
 end
+
+end # module

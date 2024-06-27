@@ -9,6 +9,10 @@ on:
       - 'README.md'
       - '.github/workflows/TagBot.yml'
 
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   pre_job:
     # continue-on-error: true # Uncomment once integration is finished
@@ -32,11 +36,13 @@ jobs:
         package:
           - {repo: BlockBandedMatrices.jl, group: JuliaLinearAlgebra}
           - {repo: ApproxFunBase.jl, group: JuliaApproximation}
+          - {repo: LazyArrays.jl, group: JuliaLinearAlgebra}
+          - {repo: LazyBandedMatrices.jl, group: JuliaLinearAlgebra}
           # - {repo: InfiniteLinearAlgebra.jl, group: JuliaLinearAlgebra}
 
     steps:
       - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v1
+      - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.julia-version }}
           arch: x64

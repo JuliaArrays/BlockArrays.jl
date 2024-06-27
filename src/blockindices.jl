@@ -103,14 +103,15 @@ Integer(index::Block{1}) = index.n[1]
 Number(index::Block{1}) = index.n[1]
 Tuple(index::Block) = Block.(index.n)
 
-# print
-Base.show(io::IO, B::Block{0,Int}) = print(io, "Block()")
-function Base.show(io::IO, B::Block{N,Int}) where N
-    print(io, "Block($(B.n[1])")
-    for n in Base.tail(B.n)
-        print(io, ", $n")
-    end
-    print(io, ")")
+
+# Some views may be computed eagerly without the SubArray wrapper
+@propagate_inbounds view(r::AbstractRange, B::Block{1}) = r[to_indices(r, (B,))...]
+@propagate_inbounds function view(C::CartesianIndices{N}, b1::Block{1}, B::Block{1}...) where {N}
+    blk = Block((b1, B...))
+    view(C, to_indices(C, (blk,))...)
+end
+@propagate_inbounds function view(C::CartesianIndices{N}, B::Block{N}) where {N}
+    view(C, to_indices(C, (B,))...)
 end
 
 """
@@ -124,8 +125,8 @@ It can be used to index into `BlockArrays` in the following manner:
 ```jldoctest
 julia> arr = Array(reshape(1:25, (5,5)));
 
-julia> a = PseudoBlockArray(arr, [3,2], [1,4])
-2×2-blocked 5×5 PseudoBlockMatrix{Int64}:
+julia> a = BlockedArray(arr, [3,2], [1,4])
+2×2-blocked 5×5 BlockedMatrix{Int64}:
  1  │   6  11  16  21
  2  │   7  12  17  22
  3  │   8  13  18  23
@@ -140,43 +141,30 @@ julia> a[BlockIndex((2,2), (2,3))]
 20
 ```
 """
-struct BlockIndex{N}
-    I::NTuple{N, Int}
-    α::NTuple{N, Int}
+struct BlockIndex{N,TI<:Tuple{Vararg{Integer,N}},Tα<:Tuple{Vararg{Integer,N}}}
+    I::TI
+    α::Tα
 end
 
 @inline BlockIndex(a::NTuple{N,Block{1}}, b::Tuple) where N = BlockIndex(Int.(a), b)
 
-@inline BlockIndex(a::Int, b::Int) = BlockIndex((a,), (b,))
-@inline BlockIndex(a::Tuple, b::Int) = BlockIndex(a, (b,))
-@inline BlockIndex(a::Int, b::Tuple) = BlockIndex((a,), b)
+@inline BlockIndex(a::Integer, b::Integer) = BlockIndex((a,), (b,))
+@inline BlockIndex(a::Tuple, b::Integer) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Integer, b::Tuple) = BlockIndex((a,), b)
 
 @inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
-@inline BlockIndex(a::Block, b::Int) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Block, b::Integer) = BlockIndex(a, (b,))
 
-@generated function BlockIndex(I::NTuple{N, Int}, α::NTuple{M, Int}) where {M,N}
-    @assert M < N
-    α_ex = Expr(:tuple, [k <= M ? :(α[$k]) : :(1) for k = 1:N]...)
-    return quote
-        $(Expr(:meta, :inline))
-        @inbounds α2 = $α_ex
-        BlockIndex(I, α2)
-    end
+@inline function BlockIndex(I::Tuple{Vararg{Integer,N}}, α::Tuple{Vararg{Integer,M}}) where {M,N}
+    M <= N || throw(ArgumentError("number of indices must not exceed the number of blocks"))
+    α2 = ntuple(k -> k <= M ? α[k] : 1, N)
+    BlockIndex(I, α2)
 end
 
 block(b::BlockIndex) = Block(b.I...)
 blockindex(b::BlockIndex{1}) = b.α[1]
 
-BlockIndex(indcs::NTuple{N,BlockIndex{1}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
-
-function Base.show(io::IO, B::BlockIndex)
-    show(io, Block(B.I...))
-    print(io, "[$(B.α[1])")
-    for α in Base.tail(B.α)
-        print(io, ", $α")
-    end
-    print(io, "]")
-end
+BlockIndex(indcs::Tuple{Vararg{BlockIndex{1},N}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
 
 ##
 # checkindex
@@ -190,12 +178,16 @@ end
     checkbounds(Bool, B, blockindex(I)...)
 end
 
-checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{BlockIndex{N}}) where N =
+checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{<:BlockIndex{N}}) where N =
     all(checkbounds.(Bool, Ref(A), I))
 
-struct BlockIndexRange{N,R<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractArray{BlockIndex{N},N}
-    block::Block{N,Int}
+struct BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}},I<:Tuple{Vararg{Integer,N}},BI<:Integer} <: AbstractArray{BlockIndex{N,NTuple{N,BI},I},N}
+    block::Block{N,BI}
     indices::R
+    function BlockIndexRange(block::Block{N,BI}, inds::R) where {N,BI<:Integer,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}}
+        I = Tuple{eltype.(inds)...}
+        return new{N,R,I,BI}(block,inds)
+    end
 end
 
 """
@@ -205,24 +197,22 @@ represents a cartesian range inside a block.
 """
 BlockIndexRange
 
-BlockIndexRange(block::Block{N}, inds::NTuple{N,AbstractUnitRange{Int}}) where {N} =
-    BlockIndexRange{N,typeof(inds)}(inds)
-BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where {N} =
+BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where {N} =
     BlockIndexRange(block,inds)
 
 block(R::BlockIndexRange) = R.block
 
-getindex(B::Block{N}, inds::Vararg{Int,N}) where N = BlockIndex(B,inds)
-getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{Int},N}) where N = BlockIndexRange(B,inds)
+getindex(B::Block{N}, inds::Vararg{Integer,N}) where N = BlockIndex(B,inds)
+getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndexRange(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
-@propagate_inbounds getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{Int}) = BlockIndexRange(B.block, B.indices[1][kr])
+@propagate_inbounds getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{<:Integer}) = BlockIndexRange(B.block, B.indices[1][kr])
 @propagate_inbounds getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))
 eltype(::Type{BlockIndexRange{N}}) where {N} = BlockIndex{N}
-eltype(::Type{BlockIndexRange{N,R}}) where {N,R} = BlockIndex{N}
+eltype(::Type{BlockIndexRange{N,R,I,BI}}) where {N,R,I,BI} = BlockIndex{N,NTuple{N,BI},I}
 IteratorSize(::Type{<:BlockIndexRange}) = Base.HasShape{1}()
 
 
@@ -248,17 +238,6 @@ length(iter::BlockIndexRange) = prod(size(iter))
 
 Block(bs::BlockIndexRange) = bs.block
 
-function Base.show(io::IO, B::BlockIndexRange)
-    show(io, Block(B))
-    print(io, "[")
-    show(io, B.indices[1])
-    for α in Base.tail(B.indices)
-        print(io, ", ")
-        show(io, α)
-    end
-    print(io, "]")
-end
-
 
 # #################
 # # support for pointers
@@ -280,7 +259,7 @@ the indices over which the Block spans.
 
 This mimics the relationship between `Colon` and `Base.Slice`.
 """
-struct BlockSlice{BB,INDS<:AbstractUnitRange{Int}} <: AbstractUnitRange{Int}
+struct BlockSlice{BB,T<:Integer,INDS<:AbstractUnitRange{T}} <: AbstractUnitRange{T}
     block::BB
     indices::INDS
 end
@@ -293,15 +272,22 @@ for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
     @eval $f(S::BlockSlice) = $f(S.indices)
 end
 
+_indices(B::BlockSlice) = B.indices
+_indices(B) = B
+
 @propagate_inbounds getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
-@propagate_inbounds getindex(S::BlockSlice{<:Block}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
-@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange}, k::AbstractUnitRange{Int}) = BlockSlice(S.block[k],S.indices[k])
-show(io::IO, r::BlockSlice) = print(io, "BlockSlice(", r.block, ",", r.indices, ")")
+@propagate_inbounds getindex(S::BlockSlice{<:Block{1}}, k::AbstractUnitRange{<:Integer}) =
+    BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
+@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1}}, k::AbstractUnitRange{<:Integer}) =
+    BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
+
+# Avoid creating a SubArray wrapper in certain non-allocating cases
+@propagate_inbounds view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = view(C, map(x->x.indices, bs)...)
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
 
-struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{Int}}} <: AbstractArray{Block{N,Int},N}
+struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{<:Integer}}} <: AbstractArray{Block{N,Int},N}
     indices::R
     BlockRange{N,R}(inds::R) where {N,R} = new{N,R}(inds)
 end
@@ -346,9 +332,9 @@ function BlockRange(inds::Tuple{BlockRange,Vararg{BlockRange}})
     BlockRange(combine_indices(inds))
 end
 
-BlockRange(inds::Tuple{Vararg{AbstractUnitRange{Int}}}) =
+BlockRange(inds::Tuple{Vararg{AbstractUnitRange{<:Integer}}}) =
     BlockRange{length(inds),typeof(inds)}(inds)
-BlockRange(inds::Vararg{AbstractUnitRange{Int}}) = BlockRange(inds)
+BlockRange(inds::Vararg{AbstractUnitRange{<:Integer}}) = BlockRange(inds)
 
 BlockRange() = BlockRange(())
 BlockRange(sizes::Tuple{Integer, Vararg{Integer}}) = BlockRange(map(oneto, sizes))
@@ -359,8 +345,8 @@ BlockRange(B::AbstractArray) = BlockRange(blockaxes(B))
 (:)(start::Block{1}, stop::Block{1}) = BlockRange((first(start.n):first(stop.n),))
 (:)(start::Block, stop::Block) = throw(ArgumentError("Use `BlockRange` to construct a cartesian range of blocks"))
 broadcasted(::DefaultArrayStyle{1}, ::Type{Block}, r::AbstractUnitRange) = BlockRange((r,))
-broadcasted(::DefaultArrayStyle{1}, ::Type{Int}, block_range::BlockRange{1}) = first(block_range.indices)
-broadcasted(::DefaultArrayStyle{0}, ::Type{Int}, block::Block{1}) = Int(block)
+broadcasted(::DefaultArrayStyle{1}, ::Type{<:Integer}, block_range::BlockRange{1}) = first(block_range.indices)
+broadcasted(::DefaultArrayStyle{0}, type::Type{<:Integer}, block::Block{1}) = type(block)
 
 
 # AbstractArray implementation
@@ -425,9 +411,9 @@ intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1
 
 # needed for scalar-like broadcasting
 
-BlockSlice{Block{1,BT},RT}(a::Base.OneTo) where {BT,RT<:AbstractUnitRange} =
-    BlockSlice(Block(convert(BT, 1)), convert(RT, a))::BlockSlice{Block{1,BT},RT}
-BlockSlice{BlockRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} =
-    BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},RT}
-BlockSlice{BlockIndexRange{1,Tuple{BT}},RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,RT<:AbstractUnitRange} =
-    BlockSlice(BlockIndexRange(Block(1), convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockIndexRange{1,Tuple{BT}},RT}
+BlockSlice{Block{1,BT},T,RT}(a::Base.OneTo) where {BT,T,RT<:AbstractUnitRange} =
+    BlockSlice(Block(convert(BT, 1)), convert(RT, a))::BlockSlice{Block{1,BT},T,RT}
+BlockSlice{BlockRange{1,Tuple{BT}},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange} =
+    BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},T,RT}
+BlockSlice{BlockIndexRange{1,Tuple{BT},I,BI},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange,I,BI} =
+    BlockSlice(BlockIndexRange(Block(BI(1)), convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockIndexRange{1,Tuple{BT},I,BI},T,RT}

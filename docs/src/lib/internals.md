@@ -21,6 +21,8 @@ Pages = ["internals.md"]
 ```@docs
 blockcolsupport
 blockrowsupport
+blockedrange
+BlockedOneTo
 BlockedUnitRange
 BlockRange
 BlockIndexRange

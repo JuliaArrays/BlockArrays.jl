@@ -13,7 +13,7 @@ makedocs(
         "Manual" => [
             "man/abstractblockarrayinterface.md",
             "man/blockarrays.md",
-            "man/pseudoblockarrays.md",
+            "man/blockedarrays.md",
         ],
         "API" => [
             "lib/public.md",

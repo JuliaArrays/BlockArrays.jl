@@ -1,3 +1,5 @@
+module TestBlockRange
+
 using BlockArrays, Test
 
 @testset "block range" begin
@@ -80,11 +82,11 @@ end
 	@test Block(Bi) == B
 	@test collect(Bi) == [BlockIndex((2,), 2), BlockIndex((2,), 3)]
 
-	A = PseudoBlockArray(rand(4), [1,3])
+	A = BlockedArray(rand(4), [1,3])
 
 	@test A[Bi] == A[3:4]
 
-    A = PseudoBlockArray(rand(4,4), [1,3],[2,2])
+    A = BlockedArray(rand(4,4), [1,3],[2,2])
 	@test A[Bi,Block(1)] == A[3:4,1:2]
     @test A[Bi,Block(1)[2:2]] == A[3:4,2:2]
 
@@ -99,3 +101,5 @@ end
         @test size(bi) == (2,2)
     end
 end
+
+end # module

@@ -1,5 +1,8 @@
+module TestBlockBroadcast
+
 using BlockArrays, FillArrays, Test
 import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
+using StaticArrays
 
 @testset "broadcast" begin
     @testset "BlockArray" begin
@@ -24,24 +27,36 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
         @test axes(A + A) == axes(A .+ A) == axes(A)
         @test axes(A .+ 1) == axes(A)
+
+        @testset "mismatched ndims" begin
+            u = BlockArray(randn(5), [2,3])
+            dest = zeros(size(u)..., 1)
+            @test (dest .= u) isa typeof(dest)
+            @test reshape(dest, size(u)) == u
+
+            u = BlockArray(randn(3,3), [1,2], [1,2])
+            dest = zeros(length(u))
+            @test (dest .= u) isa typeof(dest)
+            @test reshape(dest, size(u)) == u
+        end
     end
 
-    @testset "PseudoBlockArray" begin
-        A = PseudoBlockArray(randn(6), 1:3)
+    @testset "BlockedArray" begin
+        A = BlockedArray(randn(6), 1:3)
 
-        @test BlockArrays.BroadcastStyle(typeof(A)) == BlockArrays.PseudoBlockStyle{1}()
+        @test BlockArrays.BroadcastStyle(typeof(A)) == BlockArrays.BlockedStyle{1}()
 
 
         @test exp.(A) == exp.(Vector(A))
         @test axes(A,1).lasts == axes(exp.(A),1).lasts
 
-        @test A+A isa PseudoBlockArray
+        @test A+A isa BlockedArray
         @test axes(A + A,1).lasts == axes(A .+ A,1).lasts == axes(A,1).lasts
         @test axes(A .+ 1,1).lasts == axes(A,1).lasts
 
-        B = PseudoBlockArray(randn(6,6), 1:3,1:3)
+        B = BlockedArray(randn(6,6), 1:3,1:3)
 
-        @test BlockArrays.BroadcastStyle(typeof(B)) == BlockArrays.PseudoBlockStyle{2}()
+        @test BlockArrays.BroadcastStyle(typeof(B)) == BlockArrays.BlockedStyle{2}()
 
         @test exp.(B) == exp.(Matrix(B))
         @test axes(B) == axes(exp.(B))
@@ -52,16 +67,16 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test A .+ 1 .+ B == Vector(A) .+ 1 .+ B == Vector(A) .+ 1 .+ Matrix(B)
 
         @testset "preserve structure" begin
-             x = PseudoBlockArray(1:6, Fill(3,2))
-             @test x + x isa PseudoBlockVector{Int,<:AbstractRange}
-             @test 2x + x isa PseudoBlockVector{Int,<:AbstractRange}
-             @test 2 .* (x .+ 1) isa PseudoBlockVector{Int,<:AbstractRange}
+             x = BlockedArray(1:6, Fill(3,2))
+             @test x + x isa BlockedVector{Int,<:AbstractRange}
+             @test 2x + x isa BlockedVector{Int,<:AbstractRange}
+             @test 2 .* (x .+ 1) isa BlockedVector{Int,<:AbstractRange}
         end
     end
 
     @testset "Mixed" begin
         A = BlockArray(randn(6), 1:3)
-        B = PseudoBlockArray(randn(6), 1:3)
+        B = BlockedArray(randn(6), 1:3)
 
         @test A + B isa BlockArray
         @test B + A isa BlockArray
@@ -72,8 +87,8 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
         @test A + C isa BlockVector{Float64}
         @test C + A isa BlockVector{Float64}
-        @test B + C isa PseudoBlockVector{Float64}
-        @test C + B isa PseudoBlockVector{Float64}
+        @test B + C isa BlockedVector{Float64}
+        @test C + B isa BlockedVector{Float64}
 
         @test blocksize(A+C) == blocksize(C+A) == blocksize(A)
         @test blocksize(B+C) == blocksize(C+B) == blocksize(B)
@@ -169,7 +184,7 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         @test axes(b) ≡ axes(b .+ b)
         @test axes(a .+ b,1) ≡ BlockArrays._BlockedUnitRange(1, 1:6)
 
-        @test a .+ PseudoBlockArray(b) == PseudoBlockArray(a) .+ b
+        @test a .+ BlockedArray(b) == BlockedArray(a) .+ b
 
         A = BlockArray(randn(6), 1:3)
         @test blockisequal(axes(A .* Zeros(6)), axes(A .* zeros(6)))
@@ -180,55 +195,56 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
 
     @testset "type inference" begin
         u = BlockArray(randn(5), [2,3]);
+        A = zeros(size(u))
         @inferred(copyto!(similar(u), Base.broadcasted(exp, u)))
         @test exp.(u) == exp.(Vector(u))
     end
 
     @testset "adjtrans" begin
-        a = PseudoBlockArray(randn(6), [2,3])
+        a = BlockedArray(randn(6), [2,3])
         b = BlockArray(a)
 
-        @test Base.BroadcastStyle(typeof(a')) isa BlockArrays.PseudoBlockStyle{2}
+        @test Base.BroadcastStyle(typeof(a')) isa BlockArrays.BlockedStyle{2}
         @test Base.BroadcastStyle(typeof(b')) isa BlockArrays.BlockStyle{2}
 
         @test exp.(a') == exp.(b') == exp.(transpose(a)) == exp.(transpose(b)) == exp.(Vector(a)')
-        @test exp.(a') isa PseudoBlockArray
-        @test exp.(transpose(a)) isa PseudoBlockArray
+        @test exp.(a') isa BlockedArray
+        @test exp.(transpose(a)) isa BlockedArray
         @test exp.(b') isa BlockArray
         @test exp.(transpose(b)) isa BlockArray
     end
 
     @testset "subarray" begin
         @testset "vector" begin
-            a = PseudoBlockArray(randn(6), [2,3])
+            a = BlockedArray(randn(6), [2,3])
             b = BlockArray(a)
 
             v = view(a,Block.(1:2))
             w = view(b,Block.(1:2))
 
-            @test Base.BroadcastStyle(typeof(v)) isa BlockArrays.PseudoBlockStyle{1}
+            @test Base.BroadcastStyle(typeof(v)) isa BlockArrays.BlockedStyle{1}
             @test Base.BroadcastStyle(typeof(w)) isa BlockArrays.BlockStyle{1}
 
             @test exp.(v) == exp.(w) == exp.(Vector(v))
-            @test exp.(v) isa PseudoBlockArray
+            @test exp.(v) isa BlockedArray
             @test exp.(w) isa BlockArray
         end
 
         @testset "matrix" begin
-            A = PseudoBlockArray(randn(6,3), [2,3],[1,2])
+            A = BlockedArray(randn(6,3), [2,3],[1,2])
             B = BlockArray(A)
 
             v = view(A,1:3,Block.(1:2))
             w = view(B,1:3,Block.(1:2))
 
-            @test Base.BroadcastStyle(typeof(v)) isa BlockArrays.PseudoBlockStyle{2}
+            @test Base.BroadcastStyle(typeof(v)) isa BlockArrays.BlockedStyle{2}
             @test Base.BroadcastStyle(typeof(w)) isa BlockArrays.BlockStyle{2}
 
             @test exp.(v) == exp.(w) == exp.(Matrix(v))
-            @test exp.(v) isa PseudoBlockArray
+            @test exp.(v) isa BlockedArray
             @test exp.(w) isa BlockArray
 
-            @test Base.BroadcastStyle(typeof(view(A,Block.(1:2),Block.(1:2)))) isa BlockArrays.PseudoBlockStyle{2}
+            @test Base.BroadcastStyle(typeof(view(A,Block.(1:2),Block.(1:2)))) isa BlockArrays.BlockedStyle{2}
             @test Base.BroadcastStyle(typeof(view(B,Block.(1:2),Block.(1:2)))) isa BlockArrays.BlockStyle{2}
         end
     end
@@ -265,4 +281,18 @@ import BlockArrays: SubBlockIterator, BlockIndexRange, Diagonal
         C = B + B
         @test C[Block(1)] == 2B[Block(1)]
     end
+
+    @testset "utilities" begin
+        for v in ([2,3,1], 2:4)
+            w = BlockArrays.maybeinplacesort!(v)
+            @test issorted(w)
+            @test v === w
+        end
+        v = 3:-1:2
+        w = BlockArrays.maybeinplacesort!(v)
+        @test issorted(w)
+        @test w == reverse(v)
+    end
 end
+
+end # module
