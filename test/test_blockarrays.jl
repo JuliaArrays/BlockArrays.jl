@@ -318,6 +318,28 @@ end
             @test all(isone, M)
         end
 
+        @testset "zero dim" begin
+            ret = BlockArray{Float64}(undef)
+            fill!(ret, 0)
+            @test size(ret) == ()
+            @test_broken all(iszero, ret)
+            @test_broken ret[Block()] == 0
+            @test_broken ret[] == 0
+
+            @test_broken BlockArrays._BlockArray(ones())
+
+            ret = BlockedArray{Float64}(undef)
+            fill!(ret, 0)
+            @test size(ret) == ()
+            @test all(iszero, ret)
+            @test_broken ret[Block()] == 0
+
+            ret = BlockedArray(zeros())
+            @test size(ret) == ()
+            @test all(iszero, ret)
+            @test_broken ret[Block()] == 0
+        end
+
         @testset "BlockVector" begin
             a_data = [1,2,3]
             a = BlockVector(a_data,[1,2])
