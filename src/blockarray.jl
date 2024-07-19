@@ -265,6 +265,12 @@ function BlockArray{T}(arr::AbstractArray{T, N}, baxes::Tuple{Vararg{AbstractUni
     return _BlockArray(blocks, baxes)
 end
 
+function BlockArray{T}(arr::AbstractArray{T, 0}, ::Tuple{}) where T
+    blocks = Array{Array{T, 0},0}(undef)
+    fill!(blocks, arr)
+    return _BlockArray(blocks)
+end
+
 BlockArray{T}(arr::AbstractArray{<:Any, N}, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T,N} =
     BlockArray{T}(convert(AbstractArray{T, N}, arr), baxes)
 
@@ -461,6 +467,10 @@ const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds v = block_arr[findblockindex.(axes(block_arr), i)...]
     return v
+end
+
+@inline function getindex(block_arr::BlockArray{T, 0}) where T
+    return blocks(block_arr)[][]
 end
 
 @inline function setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
