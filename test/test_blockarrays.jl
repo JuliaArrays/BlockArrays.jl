@@ -322,11 +322,16 @@ end
             ret = BlockArray{Float64}(undef)
             fill!(ret, 0)
             @test size(ret) == ()
-            @test_broken all(iszero, ret)
-            @test_broken ret[Block()] == 0
-            @test_broken ret[] == 0
+            @test all(iszero, ret)
+            @test ret[Block()] == zeros()
+            @test ret[] == 0
+            @test view(ret, Block()) == zeros()
 
-            @test_broken BlockArrays._BlockArray(ones())
+            ret = BlockArrays.BlockArray(zeros())
+            @test size(ret) == ()
+            @test all(iszero, ret)
+            @test ret[Block()] == zeros()
+            @test ret[] == 0
 
             ret = BlockedArray{Float64}(undef)
             fill!(ret, 0)
