@@ -326,6 +326,8 @@ end
             @test ret[Block()] == zeros()
             @test ret[] == 0
             @test view(ret, Block()) == zeros()
+            ret[] = 1
+            @test ret[] == 1
 
             ret = BlockArrays.BlockArray(zeros())
             @test size(ret) == ()
@@ -337,7 +339,10 @@ end
             fill!(ret, 0)
             @test size(ret) == ()
             @test all(iszero, ret)
+            @test ret[] == 0
             @test ret[Block()] == zeros()
+            ret[] = 1
+            @test ret[] == 1
 
             ret = BlockedArray(zeros())
             @test size(ret) == ()

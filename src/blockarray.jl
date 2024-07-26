@@ -479,6 +479,11 @@ end
     return block_arr
 end
 
+@inline function setindex!(block_arr::BlockArray{<:Any, 0}, v)
+    blocks(block_arr)[][] = v
+end
+
+
 ############
 # Indexing #
 ############
