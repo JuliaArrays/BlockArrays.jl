@@ -13,22 +13,26 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
     @test (2a)[] == 4
     @test a + a isa BlockArray{Float64,0}
     @test a + a == 2a
-    @test_broken a .* a isa BlockArray{Float64,0}
-    @test (a .* a)[] == 4
-    @test_broken a .^ 2 isa BlockArray{Float64,0}
-    @test (a .^ 2)[] == 4
     @test norm(a) == 2
+
+    # same behavior as Array
+    @test a .* a isa Float64
+    @test a .* a == 4
+    @test a .^ 2 isa Float64
+    @test a .^ 2 == 4
 
     a = BlockedArray{Float64}(2*ones())
     @test 2a isa BlockedArray{Float64,0}
     @test (2a)[] == 4
     @test a + a isa BlockedArray{Float64,0}
     @test a + a == 2a
-    @test_broken a .* a isa BlockedArray{Float64,0}
-    @test (a .* a)[] == 4
-    @test_broken a .^ 2 isa BlockedArray{Float64,0}
-    @test (a .^ 2)[] == 4
     @test norm(a) == 2
+
+    # same behavior as Array
+    @test a .* a isa Float64
+    @test a .* a == 4
+    @test a .^ 2 isa Float64
+    @test a .^ 2 == 4
     end
 
     @testset "BlockArray scalar * matrix" begin
