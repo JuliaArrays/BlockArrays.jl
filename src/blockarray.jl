@@ -542,6 +542,11 @@ end
 ########
 # Misc #
 ########
+function Base.Array(zerodim::BlockArray{T, 0}) where {T}
+    arr = Array{T}(undef)
+    arr[] = zerodim[]
+    return arr
+end
 
 function Base.Array(block_array::BlockArray{T, N, R}) where {T,N,R}
     arr = Array{eltype(T)}(undef, size(block_array))

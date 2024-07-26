@@ -326,12 +326,12 @@ end
             @test ret[Block()] == zeros()
             @test ret[] == 0
             @test view(ret, Block()) == zeros()
+            @test Array(ret) == zeros()
             ret[] = 1
             @test ret[] == 1
             @test view(ret) == ones()
             view(ret)[] = 0
             @test ret[] == 0
-            @test_broken Array(ret) == zeros()
 
             ret = BlockArrays.BlockArray(zeros())
             @test size(ret) == ()
@@ -344,9 +344,12 @@ end
             @test all(iszero, ret)
             @test ret[] == 0
             @test ret[Block()] == zeros()
+            @test Array(ret) == zeros()
             ret[] = 1
             @test ret[] == 1
-            @test Array(ret) == ones()
+            @test_broken view(ret) == ones()
+            @test_broken view(ret)[] = 0
+            @test_broken ret[] == 0
 
             ret = BlockedArray(zeros())
             @test size(ret) == ()
