@@ -337,12 +337,12 @@ end
             fill!(ret, 0)
             @test size(ret) == ()
             @test all(iszero, ret)
-            @test_broken ret[Block()] == 0
+            @test ret[Block()] == zeros()
 
             ret = BlockedArray(zeros())
             @test size(ret) == ()
             @test all(iszero, ret)
-            @test_broken ret[Block()] == 0
+            @test ret[Block()] == zeros()
         end
 
         @testset "BlockVector" begin

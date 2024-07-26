@@ -69,28 +69,43 @@ _splatmap(f, t::Tuple) = (f(t[1])..., _splatmap(f, tail(t))...)
 # De-reference blocks before creating a view to avoid taking `global2blockindex`
 # path in `AbstractBlockStyle` broadcasting.
 @propagate_inbounds function Base.unsafe_view(
-        A::BlockArray{<:Any, N},
-        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+    A::BlockArray,
+    I1::BlockSlice{<:BlockIndexRange{1}},
+    Is::Vararg{BlockSlice{<:BlockIndexRange{1}}},
+)
+    I = (I1, Is...)
+    @assert ndims(A) == length(I)
     B = view(A, map(block, I)...)
     return view(B, _splatmap(x -> x.block.indices, I)...)
 end
 
 @propagate_inbounds function Base.unsafe_view(
-        A::BlockedArray{<:Any, N},
-        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
-    return view(A.blocks, map(x -> x.indices, I)...)
+    A::BlockedArray,
+    I1::BlockSlice{<:BlockIndexRange{1}},
+    Is::Vararg{BlockSlice{<:BlockIndexRange{1}}},
+)
+    I = (I1, Is...)
+    @assert ndims(A) == length(I), return view(A.blocks, map(x -> x.indices, I)...)
 end
 
-@propagate_inbounds  function Base.unsafe_view(
-        A::ReshapedArray{<:Any, N, <:AbstractBlockArray{<:Any, M}},
-        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N, M}
+@propagate_inbounds function Base.unsafe_view(
+    A::ReshapedArray{<:Any,N,<:AbstractBlockArray{<:Any,M}},
+    I1::BlockSlice{<:BlockIndexRange{1}},
+    Is::Vararg{BlockSlice{<:BlockIndexRange{1}}},
+) where {N,M}
     # Note: assuming that I[M+1:end] are verified to be singletons
+    I = (I1, Is...)
+    @assert ndims(A) == length(I)
     return reshape(view(A.parent, I[1:M]...), Val(N))
 end
 
-@propagate_inbounds  function Base.unsafe_view(
-        A::Array{<:Any, N},
-        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+@propagate_inbounds function Base.unsafe_view(
+    A::Array,
+    I1::BlockSlice{<:BlockIndexRange{1}},
+    Is::Vararg{BlockSlice{<:BlockIndexRange{1}}},
+)
+    I = (I1, Is...)
+    @assert ndims(A) == length(I)
     return view(A, map(x -> x.indices, I)...)
 end
 
