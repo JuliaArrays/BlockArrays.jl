@@ -99,6 +99,7 @@ const BlockedVector{T} = BlockedArray{T, 1}
 const BlockedVecOrMat{T} = Union{BlockedMatrix{T}, BlockedVector{T}}
 
 # Auxiliary outer constructors
+BlockedArray(x::Number, ::Tuple{}) = x  # zero dimensional
 @inline BlockedArray(blocks::R, baxes::BS) where {T,N,R<:AbstractArray{T,N},BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} =
     BlockedArray{T, N, R,BS}(blocks, baxes)
 

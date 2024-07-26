@@ -15,9 +15,9 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
     @test norm(a) == 1
 
     a = BlockedArray{Float64}(ones())
-    @test_broken 2a isa BlockedArray{Float64,0}
-    @test_broken (2a)[] == 2
-    @test_broken a + a == 2a
+    @test 2a isa BlockedArray{Float64,0}
+    @test (2a)[] == 2
+    @test a + a == 2a
     @test norm(a) == 1
     end
 
