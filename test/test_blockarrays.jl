@@ -347,9 +347,9 @@ end
             @test Array(ret) == zeros()
             ret[] = 1
             @test ret[] == 1
-            @test_broken view(ret) == ones()
-            @test_broken view(ret)[] = 0
-            @test_broken ret[] == 0
+            @test view(ret) == ones()
+            view(ret)[] = 0
+            @test ret[] == 0
 
             ret = BlockedArray(zeros())
             @test size(ret) == ()

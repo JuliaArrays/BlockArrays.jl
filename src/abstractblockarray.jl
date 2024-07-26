@@ -187,7 +187,7 @@ viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block
     blkind = BlockRange(blocksize(block_arr))[Int(block)]
     view(block_arr, blkind)
 end
-@inline view(zerodim::AbstractBlockArray{<:Any,0}) = view(blocks(zerodim)[])
+@inline view(zerodim::AbstractBlockArray{<:Any,0}) = view(zerodim.blocks[])
 @inline view(block_arr::AbstractBlockVector, block::Block{1}) = viewblock(block_arr, block)
 @propagate_inbounds view(block_arr::AbstractBlockArray, block::Block{1}...) = view(block_arr, Block(block))
 

@@ -240,6 +240,7 @@ end
 ############
 # Indexing #
 ############
+@inline view(block_arr::BlockedArray{<:Any, 0}) = view(block_arr.blocks)
 
 @inline function viewblock(block_arr::BlockedArray, block)
     range = getindex.(axes(block_arr), Block.(block.n))
