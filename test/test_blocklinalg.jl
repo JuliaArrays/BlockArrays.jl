@@ -8,17 +8,23 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
 @testset "Linear Algebra" begin
     @testset "zerodim" begin
-    a = BlockArray{Float64}(ones())
+    a = BlockArray{Float64}(2*ones())
     @test 2a isa BlockArray{Float64,0}
-    @test (2a)[] == 2
+    @test (2a)[] == 4
+    @test a + a isa BlockArray{Float64,0}
     @test a + a == 2a
-    @test norm(a) == 1
+    @test_broken a .* a isa BlockArray{Float64,0}
+    @test_broken a .* a == 2a
+    @test norm(a) == 2
 
-    a = BlockedArray{Float64}(ones())
+    a = BlockedArray{Float64}(2*ones())
     @test 2a isa BlockedArray{Float64,0}
-    @test (2a)[] == 2
+    @test (2a)[] == 4
+    @test a + a isa BlockedArray{Float64,0}
     @test a + a == 2a
-    @test norm(a) == 1
+    @test_broken a .* a isa BlockedArray{Float64,0}
+    @test_broken a .* a == 2a
+    @test norm(a) == 2
     end
 
     @testset "BlockArray scalar * matrix" begin
