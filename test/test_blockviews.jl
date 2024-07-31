@@ -21,6 +21,9 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test collect(b) == [2,3]
         @test b[1] == 2
         @test b[1:2] == 2:3
+
+        rba = reshape(BlockedArray(collect(1:4),[2,2]), (2,2))
+        @test view(rba, Block(1,1)[1:1,1:1]) == ones(1,1)
     end
 
     @testset "block view" begin
