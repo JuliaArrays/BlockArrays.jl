@@ -567,6 +567,8 @@ end
 # Temporary work around
 Base.reshape(block_array::BlockArray, axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where N =
     reshape(BlockedArray(block_array), axes)
+Base.reshape(block_array::BlockArray, ::Tuple{}) =
+    reshape(BlockedArray(block_array), ())  # zerodim
 Base.reshape(block_array::BlockArray, dims::Tuple{Int,Vararg{Int}}) =
     reshape(BlockedArray(block_array), dims)
 Base.reshape(block_array::BlockArray, axes::Tuple{Union{Integer,Base.OneTo}, Vararg{Union{Integer,Base.OneTo}}}) =

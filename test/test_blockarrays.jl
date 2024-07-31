@@ -319,7 +319,11 @@ end
         end
 
         @testset "zero dim" begin
+            zerodim = ones()
+            @test view(zerodim) isa AbstractArray{Float64, 0}  #  check no type-piracy
+
             ret = BlockArray{Float64}(undef)
+            @test ret isa BlockArray{Float64, 0}
             fill!(ret, 0)
             @test size(ret) == ()
             @test all(iszero, ret)
@@ -334,11 +338,17 @@ end
             @test ret[] == 0
 
             ret = BlockArrays.BlockArray(zeros())
+            @test ret isa BlockArray{Float64, 0}
             @test size(ret) == ()
             @test all(iszero, ret)
             @test ret[Block()] == zeros()
 
+            ret = BlockArrays.BlockArray(zeros(1,1))
+            @test reshape(ret, ()) isa AbstractBlockArray{Float64, 0}  # may be BlockedArray
+            @test size(reshape(ret, ())) == ()
+
             ret = BlockedArray{Float64}(undef)
+            @test ret isa BlockedArray{Float64, 0}
             fill!(ret, 0)
             @test size(ret) == ()
             @test all(iszero, ret)
@@ -355,6 +365,10 @@ end
             @test size(ret) == ()
             @test all(iszero, ret)
             @test ret[Block()] == zeros()
+
+            ret = BlockArrays.BlockedArray(zeros(1,1))
+            @test reshape(ret, ()) isa BlockedArray{Float64, 0}
+            @test size(reshape(ret, ())) == ()
         end
 
         @testset "BlockVector" begin

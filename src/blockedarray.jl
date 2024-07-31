@@ -302,6 +302,8 @@ Base.reshape(parent::BlockedArray, shp::Tuple{Union{Int,Base.OneTo}, Vararg{Unio
     reshape(parent, Base.to_shape(shp))
 Base.reshape(parent::BlockedArray, dims::Tuple{Int,Vararg{Int}}) =
     Base._reshape(parent, dims)
+Base.reshape(block_array::BlockedArray, ::Tuple{}) =
+    _blocked_reshape(block_array, ())  # zero dim
 
 """
     resize!(a::BlockedVector, N::Block) -> BlockedVector
