@@ -99,6 +99,7 @@ const BlockedVector{T} = BlockedArray{T, 1}
 const BlockedVecOrMat{T} = Union{BlockedMatrix{T}, BlockedVector{T}}
 
 # Auxiliary outer constructors
+BlockedArray(x::Number, ::Tuple{}) = x  # zero dimensional
 @inline BlockedArray(blocks::R, baxes::BS) where {T,N,R<:AbstractArray{T,N},BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} =
     BlockedArray{T, N, R,BS}(blocks, baxes)
 
@@ -240,6 +241,7 @@ end
 ############
 # Indexing #
 ############
+@inline view(block_arr::BlockedArray{<:Any, 0}) = view(block_arr.blocks)
 
 @inline function viewblock(block_arr::BlockedArray, block)
     range = getindex.(axes(block_arr), Block.(block.n))
@@ -300,6 +302,8 @@ Base.reshape(parent::BlockedArray, shp::Tuple{Union{Int,Base.OneTo}, Vararg{Unio
     reshape(parent, Base.to_shape(shp))
 Base.reshape(parent::BlockedArray, dims::Tuple{Int,Vararg{Int}}) =
     Base._reshape(parent, dims)
+Base.reshape(block_array::BlockedArray, ::Tuple{}) =
+    _blocked_reshape(block_array, ())  # zero dim
 
 """
     resize!(a::BlockedVector, N::Block) -> BlockedVector

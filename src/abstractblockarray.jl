@@ -101,6 +101,7 @@ end
 
 blockcheckbounds(A::AbstractArray{T, N}, i::Block{N}) where {T,N} = blockcheckbounds(A, i.n...)
 blockcheckbounds(A::AbstractArray{T, N}, i::Vararg{Block{1},N}) where {T,N} = blockcheckbounds(A, Int.(i)...)
+blockcheckbounds(::AbstractArray{T, 0}) where {T} = true
 blockcheckbounds(A::AbstractVector{T}, i::Block{1}) where {T} = blockcheckbounds(A, Int(i))
 
 """
@@ -186,6 +187,7 @@ viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block
     blkind = BlockRange(blocksize(block_arr))[Int(block)]
     view(block_arr, blkind)
 end
+@inline view(zerodim::AbstractBlockArray{<:Any,0}) = view(zerodim.blocks[])
 @inline view(block_arr::AbstractBlockVector, block::Block{1}) = viewblock(block_arr, block)
 @propagate_inbounds view(block_arr::AbstractBlockArray, block::Block{1}...) = view(block_arr, Block(block))
 

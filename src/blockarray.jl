@@ -265,6 +265,12 @@ function BlockArray{T}(arr::AbstractArray{T, N}, baxes::Tuple{Vararg{AbstractUni
     return _BlockArray(blocks, baxes)
 end
 
+function BlockArray{T}(arr::AbstractArray{T, 0}, ::Tuple{}) where T
+    blocks = Array{Array{T, 0},0}(undef)
+    fill!(blocks, arr)
+    return _BlockArray(blocks)
+end
+
 BlockArray{T}(arr::AbstractArray{<:Any, N}, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T,N} =
     BlockArray{T}(convert(AbstractArray{T, N}, arr), baxes)
 
@@ -463,11 +469,20 @@ const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
     return v
 end
 
+@inline function getindex(block_arr::BlockArray{T, 0}) where T
+    return blocks(block_arr)[][]
+end
+
 @inline function setindex!(block_arr::BlockArray{T, N}, v, i::Vararg{Integer, N}) where {T,N}
     @boundscheck checkbounds(block_arr, i...)
     @inbounds block_arr[findblockindex.(axes(block_arr), i)...] = v
     return block_arr
 end
+
+@inline function setindex!(block_arr::BlockArray{<:Any, 0}, v)
+    blocks(block_arr)[][] = v
+end
+
 
 ############
 # Indexing #
@@ -527,6 +542,11 @@ end
 ########
 # Misc #
 ########
+function Base.Array(zerodim::BlockArray{T, 0}) where {T}
+    arr = Array{T}(undef)
+    arr[] = zerodim[]
+    return arr
+end
 
 function Base.Array(block_array::BlockArray{T, N, R}) where {T,N,R}
     arr = Array{eltype(T)}(undef, size(block_array))
@@ -547,6 +567,8 @@ end
 # Temporary work around
 Base.reshape(block_array::BlockArray, axes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where N =
     reshape(BlockedArray(block_array), axes)
+Base.reshape(block_array::BlockArray, ::Tuple{}) =
+    reshape(BlockedArray(block_array), ())  # zerodim
 Base.reshape(block_array::BlockArray, dims::Tuple{Int,Vararg{Int}}) =
     reshape(BlockedArray(block_array), dims)
 Base.reshape(block_array::BlockArray, axes::Tuple{Union{Integer,Base.OneTo}, Vararg{Union{Integer,Base.OneTo}}}) =

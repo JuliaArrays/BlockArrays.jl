@@ -7,6 +7,34 @@ import ArrayLayouts: DenseRowMajor, ColumnMajor, StridedLayout
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
 @testset "Linear Algebra" begin
+    @testset "zerodim" begin
+    a = BlockArray{Float64}(2*ones())
+    @test 2a isa BlockArray{Float64,0}
+    @test (2a)[] == 4
+    @test a + a isa BlockArray{Float64,0}
+    @test a + a == 2a
+    @test norm(a) == 2
+
+    # same behavior as Array
+    @test a .* a isa Float64
+    @test a .* a == 4
+    @test a .^ 2 isa Float64
+    @test a .^ 2 == 4
+
+    a = BlockedArray{Float64}(2*ones())
+    @test 2a isa BlockedArray{Float64,0}
+    @test (2a)[] == 4
+    @test a + a isa BlockedArray{Float64,0}
+    @test a + a == 2a
+    @test norm(a) == 2
+
+    # same behavior as Array
+    @test a .* a isa Float64
+    @test a .* a == 4
+    @test a .^ 2 isa Float64
+    @test a .^ 2 == 4
+    end
+
     @testset "BlockArray scalar * matrix" begin
         A = BlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
         @test 2A == A*2 == 2Matrix(A)

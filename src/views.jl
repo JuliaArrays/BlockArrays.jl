@@ -88,9 +88,13 @@ end
     return reshape(view(A.parent, I[1:M]...), Val(N))
 end
 
-@propagate_inbounds  function Base.unsafe_view(
-        A::Array{<:Any, N},
-        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+@propagate_inbounds function Base.unsafe_view(
+    A::Array,
+    I1::BlockSlice{<:BlockIndexRange{1}},
+    Is::Vararg{BlockSlice{<:BlockIndexRange{1}}},
+)
+    I = (I1, Is...)
+    @assert ndims(A) == length(I)
     return view(A, map(x -> x.indices, I)...)
 end
 
