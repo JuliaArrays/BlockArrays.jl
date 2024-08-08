@@ -1,7 +1,6 @@
 module TestBlockArrays
 
-using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays
-using Images: RGB
+using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays, Colors
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
