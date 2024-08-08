@@ -1,6 +1,6 @@
 module TestBlockArrays
 
-using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays
+using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays, Images
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
@@ -885,6 +885,10 @@ end
         Base.print_array(io, d)
         s2 = String(take!(io))
         @test s1 == s2
+
+        img1 = rand(RGB, 3,2); img2 = rand(RGB, 3, 3);
+        m2 = mortar([[img1] [img2]])
+        @test isnothing(show(io, "image/png", m))
     end
 
     @testset "Array indexing" begin
