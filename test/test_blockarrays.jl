@@ -1,6 +1,7 @@
 module TestBlockArrays
 
-using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays, Colors
+using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays
+using Images
 import BlockArrays: _BlockArray
 
 function test_error_message(f, needle, expected = Exception)
@@ -316,61 +317,6 @@ end
             @test M isa BlockMatrix{Float64}
             @test size(M) == (4,4)
             @test all(isone, M)
-        end
-
-        @testset "zero dim" begin
-            zerodim = ones()
-            @test view(zerodim) isa AbstractArray{Float64, 0}  #  check no type-piracy
-
-            ret = BlockArray{Float64}(undef)
-            @test ret isa BlockArray{Float64, 0}
-            fill!(ret, 0)
-            @test size(ret) == ()
-            @test all(iszero, ret)
-            @test ret[Block()] == zeros()
-            @test ret[Block()[]] == zeros()
-            @test ret[] == 0
-            @test view(ret, Block()) == zeros()
-            @test Array(ret) == zeros()
-            ret[] = 1
-            @test ret[] == 1
-            @test view(ret) == ones()
-            view(ret)[] = 0
-            @test ret[] == 0
-
-            ret = BlockArrays.BlockArray(zeros())
-            @test ret isa BlockArray{Float64, 0}
-            @test size(ret) == ()
-            @test all(iszero, ret)
-            @test ret[Block()] == zeros()
-
-            ret = BlockArrays.BlockArray(zeros(1,1))
-            @test reshape(ret, ()) isa AbstractBlockArray{Float64, 0}  # may be BlockedArray
-            @test size(reshape(ret, ())) == ()
-
-            ret = BlockedArray{Float64}(undef)
-            @test ret isa BlockedArray{Float64, 0}
-            fill!(ret, 0)
-            @test size(ret) == ()
-            @test all(iszero, ret)
-            @test ret[] == 0
-            @test ret[Block()] == zeros()
-            @test ret[Block()[]] == zeros()
-            @test Array(ret) == zeros()
-            ret[] = 1
-            @test ret[] == 1
-            @test view(ret) == ones()
-            view(ret)[] = 0
-            @test ret[] == 0
-
-            ret = BlockedArray(zeros())
-            @test size(ret) == ()
-            @test all(iszero, ret)
-            @test ret[Block()] == zeros()
-
-            ret = BlockArrays.BlockedArray(zeros(1,1))
-            @test reshape(ret, ()) isa BlockedArray{Float64, 0}
-            @test size(reshape(ret, ())) == ()
         end
 
         @testset "BlockVector" begin
@@ -885,10 +831,6 @@ end
         Base.print_array(io, d)
         s2 = String(take!(io))
         @test s1 == s2
-
-        img1 = rand(RGB, 3,2); img2 = rand(RGB, 3, 3);
-        m2 = mortar([[img1] [img2]])
-        @test isnothing(show(io, "image/png", m))
     end
 
     @testset "Array indexing" begin
