@@ -3,6 +3,7 @@ module TestBlockArrays
 using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays
 using Images
 import BlockArrays: _BlockArray
+const Fill = FillArrays.Fill
 
 function test_error_message(f, needle, expected = Exception)
     err = nothing
