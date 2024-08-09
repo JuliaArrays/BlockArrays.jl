@@ -549,7 +549,7 @@ function Base.Array(zerodim::BlockArray{T, 0}) where {T}
 end
 
 function Base.Array(block_array::BlockArray{T, N, R}) where {T,N,R}
-    arr = Array{eltype(T)}(undef, size(block_array))
+    arr = Array{T}(undef, size(block_array))
     for block_index in Iterators.product(blockaxes(block_array)...)
         indices = getindex.(axes(block_array), block_index)
         arr[indices...] = @view block_array[block_index...]
