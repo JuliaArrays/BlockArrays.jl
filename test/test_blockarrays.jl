@@ -320,7 +320,7 @@ end
             @test all(isone, M)
         end
 
-        @testset "zero dim"
+        @testset "zero dim" begin
             zerodim = ones()
             @test view(zerodim) isa AbstractArray{Float64, 0}  #  check no type-piracy
 
