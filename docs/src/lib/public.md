@@ -40,6 +40,9 @@ blocksizes
 blocks
 eachblock
 blockcheckbounds
+blockcolsupport
+blockrowsupport
+blockedrange
 ```
 
 ## BlockArray
