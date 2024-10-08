@@ -19,9 +19,6 @@ Pages = ["internals.md"]
 ## Internals
 
 ```@docs
-blockcolsupport
-blockrowsupport
-blockedrange
 BlockedOneTo
 BlockedUnitRange
 BlockRange
