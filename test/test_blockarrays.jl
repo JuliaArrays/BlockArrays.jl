@@ -248,6 +248,9 @@ end
             @test similar(randn(6,5), Float64, (3,blockedrange(1:3))) isa BlockedMatrix
             @test similar(typeof(view(randn(5),1:3)), (blockedrange(1:3),)) isa BlockedVector
             @test similar(view(randn(5),1:3), Int, (blockedrange(1:3),)) isa BlockedVector{Int}
+
+            b = BlockVector([1,2,3,4,5,6,7,8,9,10], (BlockedOneTo(5:5:10),))
+            @test zero(b) isa typeof(b)
         end
 
         @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])
