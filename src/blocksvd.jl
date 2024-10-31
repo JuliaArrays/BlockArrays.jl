@@ -6,7 +6,7 @@ In the generic case, the SVD does not preserve this structure, and can mix up th
 In the case of `BlockDiagonal` however, the structure is preserved and carried over to the structure of `S`.
 =#
 
-LinearAlgebra.eigencopy_oftype(A::AbstractBlockMatrix, S) = BlockedArray(Array{S}(A), blocksizes(A, 1), blocksizes(A, 2))
+LinearAlgebra.eigencopy_oftype(A::AbstractBlockMatrix, S) = BlockedArray{S}(A)
 
 function LinearAlgebra.eigencopy_oftype(A::BlockDiagonal, S)
     diag = map(Base.Fix2(LinearAlgebra.eigencopy_oftype, S), A.blocks.diag)
