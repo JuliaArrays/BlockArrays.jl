@@ -66,6 +66,7 @@ include("blocks.jl")
 
 include("blockbroadcast.jl")
 include("blockcholesky.jl")
+include("blocksvd.jl")
 include("blocklinalg.jl")
 include("blockproduct.jl")
 include("show.jl")
