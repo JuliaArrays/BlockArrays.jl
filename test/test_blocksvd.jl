@@ -1,6 +1,7 @@
 module TestBlockSVD
 
 using BlockArrays, Test, LinearAlgebra, Random
+using BlockArrays: BlockDiagonal
 
 Random.seed!(0)
 
@@ -68,6 +69,39 @@ end
     @test S_blocked ≈ S
     @test Vt_blocked ≈ Vt
     @test U_blocked * Diagonal(S_blocked) * Vt_blocked ≈ y
+end
+
+@testset "BlockDiagonal SVD ($T)" for T in eltypes
+    blocksz = (2, 3, 1)
+    y = BlockDiagonal([rand(T, d, d) for d in blocksz])
+    x = Array(y)
+    
+    USV = svd(x)
+    U, S, Vt = USV.U, USV.S, USV.Vt
+    
+    # https://github.com/JuliaArrays/BlockArrays.jl/issues/425
+    # USV_blocked = @inferred svd(y)
+    USV_block = svd(y)
+    U_block, S_block, Vt_block = USV_block.U, USV_block.S, USV_block.Vt
+
+    # test types
+    @test U_block isa BlockDiagonal
+    @test eltype(U_block) == float(T)
+    @test S_block isa BlockVector
+    @test eltype(S_block) == real(float(T))
+    @test Vt_block isa BlockDiagonal
+    @test eltype(Vt_block) == float(T)
+
+    # test structure
+    @test blocksizes(U_block, 1) == blocksizes(y, 1)
+    @test length(blocksizes(U_block, 2)) == length(blocksz)
+    @test blocksizes(Vt_block, 2) == blocksizes(y, 2)
+    @test length(blocksizes(Vt_block, 1)) == length(blocksz)
+
+    # test correctness: SVD is not unique, so cannot compare to dense
+    @test U_block * BlockDiagonal(Diagonal.(S_block.blocks)) * Vt_block ≈ y
+    @test U_block' * U_block ≈ LinearAlgebra.I
+    @test Vt_block * Vt_block' ≈ LinearAlgebra.I
 end
 
 end # module
