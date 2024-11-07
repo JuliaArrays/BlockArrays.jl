@@ -127,6 +127,14 @@ end
         @test blocksizes(A, 1) == [2, 3]
         @test blocksizes(A, 2) == [3, 1]
     end
+
+    @testset "Inference: issue #425" begin
+        x = BlockedArray(rand(4, 4), [2, 2], [2, 2])
+        bs1 = @inferred (x -> blocksizes(x, 1))(x)
+        @test bs1 == [2,2]
+        bs4 = @inferred (x -> blocksizes(x, 4))(x)
+        @test bs4 == 1:1
+    end
 end
 
 end # module

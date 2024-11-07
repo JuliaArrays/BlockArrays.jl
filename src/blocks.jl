@@ -125,7 +125,7 @@ julia> blocksizes(A,2)
 ```
 """
 blocksizes(A::AbstractArray) = BlockSizes(A)
-blocksizes(A::AbstractArray, d::Integer) = blocklengths(axes(A, d))
+@inline blocksizes(A::AbstractArray, d::Integer) = blocklengths(axes(A, d))
 
 struct BlockSizes{T,N,A<:AbstractArray{<:Any,N}} <: AbstractArray{T,N}
     array::A
