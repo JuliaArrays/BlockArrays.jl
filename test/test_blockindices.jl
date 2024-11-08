@@ -19,7 +19,7 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test ndims(B) == ndims(Block{1,Int}) == 0
         @test !isempty(B)
         @test collect(B) == [B]
-        @test B .+ 1 == Block(4)
+        @test B + 1 == Block(4)
         @test iterate(B) == (B, nothing)
         @test Int.(B) == 3
     end
@@ -84,6 +84,7 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
     end
 
     @testset "BlockIndex" begin
+        @test Block()[] == BlockIndex()
         @test Block(1)[1] == BlockIndex((1,),(1,))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
