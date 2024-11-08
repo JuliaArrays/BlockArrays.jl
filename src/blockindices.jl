@@ -147,11 +147,12 @@ struct BlockIndex{N,TI<:Tuple{Vararg{Integer,N}},Tα<:Tuple{Vararg{Integer,N}}}
 end
 
 @inline BlockIndex(a::NTuple{N,Block{1}}, b::Tuple) where N = BlockIndex(Int.(a), b)
+@inline BlockIndex(::Tuple{}, b::Tuple{}) = BlockIndex{0,Tuple{},Tuple{}}((), ())
 
 @inline BlockIndex(a::Integer, b::Integer) = BlockIndex((a,), (b,))
 @inline BlockIndex(a::Tuple, b::Integer) = BlockIndex(a, (b,))
 @inline BlockIndex(a::Integer, b::Tuple) = BlockIndex((a,), b)
-@inline BlockIndex(::Tuple{}, b::Tuple{}) = BlockIndex{0,Tuple{},Tuple{}}((), ())
+@inline BlockIndex() = BlockIndex((), ())
 
 @inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
 @inline BlockIndex(a::Block, b::Integer) = BlockIndex(a, (b,))
