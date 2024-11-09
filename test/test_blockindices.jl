@@ -85,7 +85,6 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
 
     @testset "BlockIndex" begin
         @test Block()[] == BlockIndex()
-        @test Block()[CartesianIndex()] == BlockIndex()
         @test Block(1)[1] == BlockIndex((1,),(1,))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))

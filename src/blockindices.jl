@@ -56,7 +56,6 @@ broadcastable(x::Block) = Ref(x)
 ndims(::Type{<:Block}) = 0
 ndims(::Block) = 0
 eltype(::Type{B}) where B<:Block = B
-getindex(B::Block, ::CartesianIndex{0}) = BlockIndex()
 
 # The following code is taken from CartesianIndex
 @inline (+)(index::Block{N}) where {N} = Block{N}(map(+, index.n))
