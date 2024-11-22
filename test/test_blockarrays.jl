@@ -333,7 +333,7 @@ end
             @test size(ret) == ()
             @test all(iszero, ret)
             @test ret[Block()] == zeros()
-            @test ret[Block()[]] == zeros()
+            @test ret[Block()[]] == 0
             @test ret[] == 0
             @test view(ret, Block()) == zeros()
             @test Array(ret) == zeros()
@@ -360,7 +360,7 @@ end
             @test all(iszero, ret)
             @test ret[] == 0
             @test ret[Block()] == zeros()
-            @test ret[Block()[]] == zeros()
+            @test ret[Block()[]] == 0
             @test Array(ret) == zeros()
             ret[] = 1
             @test ret[] == 1
