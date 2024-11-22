@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        julia-version: ['1.11.0']
+        julia-version: ['1']
         os: [ubuntu-latest]
         package:
           - {repo: BlockBandedMatrices.jl, group: JuliaLinearAlgebra}
