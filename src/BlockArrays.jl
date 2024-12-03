@@ -78,8 +78,4 @@ include("blockbanded.jl")
 @deprecate getblock!(X, A::AbstractBlockArray{T,N}, I::Vararg{Integer, N}) where {T,N} copyto!(X, view(A, Block(I)))
 @deprecate setblock!(A::AbstractBlockArray{T,N}, v, I::Vararg{Integer, N}) where {T,N} (A[Block(I...)] = v)
 
-if !isdefined(Base, :get_extension)
-    include("../ext/BlockArraysBandedMatricesExt.jl")
-end
-
 end # module
