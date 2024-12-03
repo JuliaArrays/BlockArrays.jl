@@ -36,9 +36,8 @@ jobs:
         package:
           - {repo: BlockBandedMatrices.jl, group: JuliaLinearAlgebra}
           - {repo: ApproxFunBase.jl, group: JuliaApproximation}
-          - {repo: LazyArrays.jl, group: JuliaArrays}
           - {repo: LazyBandedMatrices.jl, group: JuliaLinearAlgebra}
-          # - {repo: InfiniteLinearAlgebra.jl, group: JuliaLinearAlgebra}
+          - {repo: InfiniteLinearAlgebra.jl, group: JuliaLinearAlgebra}
 
     steps:
       - uses: actions/checkout@v4
