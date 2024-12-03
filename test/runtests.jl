@@ -1,8 +1,10 @@
 using BlockArrays, LinearAlgebra, Test
 
 using Aqua
+downstream_test = "--downstream_integration_test" in ARGS
 @testset "Project quality" begin
-    Aqua.test_all(BlockArrays, ambiguities=false)
+    Aqua.test_all(BlockArrays, ambiguities=false,
+        stale_deps=!downstream_test)
 end
 
 using Documenter
