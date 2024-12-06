@@ -52,11 +52,10 @@ last(b::Block) = b
 iterate(x::Block) = (x, nothing)
 iterate(x::Block, ::Any) = nothing
 isempty(x::Block) = false
-broadcastable(x::Block) = x
+broadcastable(x::Block) = Ref(x)
 ndims(::Type{<:Block}) = 0
 ndims(::Block) = 0
 eltype(::Type{B}) where B<:Block = B
-getindex(B::Block, ::CartesianIndex{0}) = B
 
 # The following code is taken from CartesianIndex
 @inline (+)(index::Block{N}) where {N} = Block{N}(map(+, index.n))
@@ -147,10 +146,12 @@ struct BlockIndex{N,TI<:Tuple{Vararg{Integer,N}},Tα<:Tuple{Vararg{Integer,N}}}
 end
 
 @inline BlockIndex(a::NTuple{N,Block{1}}, b::Tuple) where N = BlockIndex(Int.(a), b)
+@inline BlockIndex(::Tuple{}, b::Tuple{}) = BlockIndex{0,Tuple{},Tuple{}}((), ())
 
 @inline BlockIndex(a::Integer, b::Integer) = BlockIndex((a,), (b,))
 @inline BlockIndex(a::Tuple, b::Integer) = BlockIndex(a, (b,))
 @inline BlockIndex(a::Integer, b::Tuple) = BlockIndex((a,), b)
+@inline BlockIndex() = BlockIndex((), ())
 
 @inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
 @inline BlockIndex(a::Block, b::Integer) = BlockIndex(a, (b,))
@@ -202,7 +203,7 @@ BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) w
 
 block(R::BlockIndexRange) = R.block
 
-getindex(::Block{0}) = Block()
+getindex(::Block{0}) = BlockIndex()
 getindex(B::Block{N}, inds::Vararg{Integer,N}) where N = BlockIndex(B,inds)
 getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndexRange(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
