@@ -10,7 +10,7 @@
 
 A block array is a partition of an array into blocks or subarrays, see [wikipedia](https://en.wikipedia.org/wiki/Block_matrix) for a more extensive description. This package has two purposes. Firstly, it defines an interface for an `AbstractBlockArray` block arrays that can be shared among types representing different types of block arrays. The advantage to this is that it provides a consistent API for block arrays.
 
-Secondly, it also implements two different type of block arrays that follow the `AbstractBlockArray` interface. The type `BlockArray` stores each block contiguously while the type `BlockedArray` stores the full matrix contiguously. This means that `BlockArray` supports fast non copying extraction and insertion of blocks while `BlockedArray` supports fast access to the full matrix to use in in for example a linear solver.
+Secondly, it also implements two different type of block arrays that follow the `AbstractBlockArray` interface. The type `BlockArray` stores each block contiguously while the type `BlockedArray` stores the full matrix contiguously. This means that `BlockArray` supports fast non copying extraction and insertion of blocks while `BlockedArray` supports fast access to the full matrix to use in — for example — a linear solver.
 
 A simple way to produce `BlockArray`s is via `mortar`, which combines an array of arrays into a `BlockArray`:
 ```julia
