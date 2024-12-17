@@ -48,7 +48,7 @@ function _blockarray_print_matrix_row(io::IO,
         print(io, l, prettysx, r)
 
         # Jump forward
-        n_chars += length(l) + length(prettysx) + length(r) + 2
+        n_chars += length(l) + textwidth(Base.ANSIIterator(prettysx)) + length(r) + 2
 
         cumul += 1
         if ndims(X) == 2
