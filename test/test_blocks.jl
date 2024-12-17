@@ -41,7 +41,7 @@ using Test, BlockArrays
         
         strip_ansi(s) = reduce(*, filter(c->!(c isa Base.ANSIDelimiter), 
                                          map(last, Base.ANSIIterator(s))))
-        reference_str = "2×2-blocked 3×3 BlockMatrix{MyString}:\n \e[31mabc\e[39m ascii!  │  \e[32m\e[1m123\e[22m\e[39m         γ       \n ────────────┼──────────────────────\n γ           │  ⛵⛵⛵⛵⛵  \e[31mx\e[39m ascii!\n \e[32m\e[1m1\e[22m\e[39m           │  ⛵⛵⛵      \e[32m\e[1m4\e[22m\e[39m       "
+        reference_str = "2×2-blocked 3×3 BlockMatrix{$(@__MODULE__)MyString}:\n \e[31mabc\e[39m ascii!  │  \e[32m\e[1m123\e[22m\e[39m         γ       \n ────────────┼──────────────────────\n γ           │  ⛵⛵⛵⛵⛵  \e[31mx\e[39m ascii!\n \e[32m\e[1m1\e[22m\e[39m           │  ⛵⛵⛵      \e[32m\e[1m4\e[22m\e[39m       "
         @test strip_ansi(sprint(show, "text/plain", B; context=stdout)) == strip_ansi(reference_str)
         @test strip_ansi(sprint(show, "text/plain", B)) == strip_ansi(reference_str)
     end
