@@ -17,6 +17,35 @@ using Test, BlockArrays
         @test blocks(mortar(matrix_blocks)) === matrix_blocks
     end
 
+    @testset "blocks::BlockMatrix{::MyString}" begin
+        # test printing with ANSI escape sequences & textwidth(::Char) ≠ 1
+        struct MyString
+            s::String
+        end
+        function Base.show(io::IO, x::MyString)
+            if all(isnumeric, x.s)
+                printstyled(io, x.s; bold=true, color=:green)
+            elseif all(isascii, x.s)
+                printstyled(io, x.s, color=:red)
+                print(io, " ascii!")
+            else
+                print(io, x.s)
+            end
+        end
+
+        B = BlockArray(undef_blocks, Matrix{MyString}, [1,2], [1,2])
+        B[Block(1), Block(1)] = [MyString("abc");;]
+        B[Block(1), Block(2)] = [MyString("123") MyString("γ");]
+        B[Block(2), Block(1)] = [MyString("γ"); MyString("1");;]
+        B[Block(2), Block(2)] = [MyString("⛵⛵⛵⛵⛵") MyString("x"); MyString("⛵⛵⛵") MyString("4")]
+        
+        strip_ansi(s) = reduce(*, filter(c->!(c isa Base.ANSIDelimiter), 
+                                         map(last, Base.ANSIIterator(s))))
+        reference_str = "2×2-blocked 3×3 BlockMatrix{$(@__MODULE__).MyString}:\n \e[31mabc\e[39m ascii!  │  \e[32m\e[1m123\e[22m\e[39m         γ       \n ────────────┼──────────────────────\n γ           │  ⛵⛵⛵⛵⛵  \e[31mx\e[39m ascii!\n \e[32m\e[1m1\e[22m\e[39m           │  ⛵⛵⛵      \e[32m\e[1m4\e[22m\e[39m       "
+        @test strip_ansi(sprint(show, "text/plain", B; context=stdout)) == strip_ansi(reference_str)
+        @test strip_ansi(sprint(show, "text/plain", B)) == strip_ansi(reference_str)
+    end
+
     @testset "blocks(::BlockedVector)" begin
         v0 = rand(3)
         vb = BlockedArray(v0, [1, 2])
