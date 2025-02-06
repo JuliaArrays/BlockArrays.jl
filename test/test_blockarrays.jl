@@ -925,11 +925,19 @@ end
         @test size(a[:,1]) == (8,)
     end
 
-    @testset "Block-vector indexing" begin
-        for B = (BlockArray(I, fill(2,4), fill(2,5)), BlockedArray(I, fill(2,4), fill(2,5)))
+    @testset "Block-vector indexing (#184)" begin
+        a = BlockArray(1:6, [1,2,2,1])
+        @test a[Block.(2:3)] == a[collect(Block.(2:3))]
+
+        for B in (BlockArray(I, fill(2,4), fill(2,5)), BlockedArray(I, fill(2,4), fill(2,5)))
             @test B[[Block(1),Block(2)], [Block(1),Block(2)]] == view(B, [Block(1),Block(2)], [Block(1), Block(2)]) == view(B, Block.(1:2), [Block(1), Block(2)])  == view(B, Block.(1:2), Block.(1:2))
             @test B[[Block(1),Block(3)], [Block(1), Block(5)]] == view(B, [Block(1),Block(3)], [Block(1), Block(5)])
         end
+    end
+    @testset "BlockIndex-vector indexing (#358)" begin
+        a = BlockArray(randn(6, 6), [3, 3], [3, 3])
+        @test a[[Block(1)[1:2], Block(2)[1:2]], [Block(1)[1:2], Block(2)[1:2]]] == [a[Block(1,1)[1:2,1:2]] a[Block(1,2)[1:2,1:2]]; a[Block(2,1)[1:2,1:2]] a[Block(2,2)[1:2,1:2]]]
+        @test a[[Block(1)[1], Block(2)[2]], [Block(1)[1:2], Block(2)[1:2]]] == [a[Block(1)[1],Block(1)[1:2]]' a[Block(1)[1], Block(2)[1:2]]'; a[Block(2)[2],Block(1)[1:2]]' a[Block(2)[2], Block(2)[1:2]]']
     end
 end
 
