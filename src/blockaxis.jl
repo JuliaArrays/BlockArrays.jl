@@ -397,6 +397,8 @@ end
 
 @propagate_inbounds getindex(b::AbstractBlockedUnitRange, KR::BlockSlice) = b[KR.block]
 
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:Block{1}}) = mortar([b[K] for K in KR])
+
 _searchsortedfirst(a::AbstractVector, k) = searchsortedfirst(a, k)
 function _searchsortedfirst(a::Tuple, k)
     k ≤ first(a) && return 1

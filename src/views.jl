@@ -7,8 +7,12 @@ Returns the indices associated with a block as a `BlockSlice`.
 """
 function unblock(A, inds, I)
     B = first(I)
-    BlockSlice(B,inds[1][B])
+    _blockslice(B, inds[1][B])
 end
+
+_blockslice(B, a::AbstractBlockedUnitRange) = BlockSlice(B, a)
+_blockslice(B, a) = a # drop block structure
+
 # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
 # similar to `ones(2)[1:1, 1:1]`.
 # Need to check the length of I in case its empty
@@ -24,6 +28,8 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
     (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
 @inline to_indices(A, inds, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where R =
     (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+@inline to_indices(A, inds, I::Tuple{AbstractVector{Block{1,R}}, Vararg{Any}}) where R =
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)    
 @inline to_indices(A, inds, I::Tuple{BlockIndex{1}, Vararg{Any}}) =
     (inds[1][I[1]], to_indices(A, _maybetail(inds), tail(I))...)
 @inline to_indices(A, inds, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where R =
@@ -44,6 +50,7 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
 @inline to_indices(A, I::Tuple{BlockIndexRange, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{Block, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{BlockRange, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{AbstractVector{<:Block{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
 
 @propagate_inbounds reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
