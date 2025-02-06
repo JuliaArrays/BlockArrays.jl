@@ -252,9 +252,9 @@ Block(bs::BlockIndexRange) = bs.block
 
 
 """
-    BlockSlice(indices)
+    BlockSlice(block, indices)
 
-Represent an AbstractUnitRange of indices that attaches a block.
+Represent an AbstractUnitRange{<:Integer} of indices that attaches a block.
 
 Upon calling `to_indices()`, Blocks are converted to BlockSlice objects to represent
 the indices over which the Block spans.

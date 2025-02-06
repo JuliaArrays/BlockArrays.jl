@@ -888,4 +888,9 @@ end
     @test !blockisequal(axv, axB)
 end
 
+@testset "BlockIndices" begin
+    a = BlockedOneTo(1:3)
+    @test a[[Block(1),Block(3)]] == a[Block.(1:2:3)] == [1,3]
+end
+
 end # module
