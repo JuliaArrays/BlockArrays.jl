@@ -9,15 +9,29 @@ using BlockArrays, Adapt, Test
     end
 
     @testset "Adapt Block Arrays" begin
-        a = BlockArray(randn(4, 4), [2, 2], [2, 2])
-        @test blockisequal(adapt(Array, a), a)
-        @test adapt(Array, view(a, :, :)) isa SubArray
-        @test blockisequal(parent(adapt(Array, view(a, :, :))), a)
+        A = BlockArray(randn(4, 4), [2, 2], [2, 2])
+        Ã = adapt(Array, A)
+        @test Ã == A
+        @test Ã isa BlockArray{Float64}
+        @test blockisequal(axes(Ã), axes(A))
+        V = view(A, :, :)
+        Ṽ = adapt(Array, V)
+        @test Ṽ  == V
+        @test Ṽ isa SubArray
+        @test parent(Ṽ) isa BlockArray{Float64}
+        @test blockisequal(axes(parent(Ṽ)), axes(A))
 
-        a = BlockedArray(randn(4, 4), [2, 2], [2, 2])
-        @test blockisequal(adapt(Array, a), a)
-        @test adapt(Array, view(a, :, :)) isa SubArray
-        @test blockisequal(parent(adapt(Array, view(a, :, :))), a)
+        A = BlockedArray(randn(4, 4), [2, 2], [2, 2])
+        Ã = adapt(Array, A)
+        @test Ã == A
+        @test Ã isa BlockedArray{Float64}
+        @test blockisequal(axes(Ã), axes(A))
+        V = view(A, :, :)
+        Ṽ = adapt(Array, V)
+        @test Ṽ  == V
+        @test Ṽ isa SubArray
+        @test parent(Ṽ) isa BlockedArray{Float64}
+        @test blockisequal(axes(parent(Ṽ)), axes(A))
     end
 end
 
