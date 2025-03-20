@@ -11,7 +11,7 @@ using BlockArrays, Adapt, Test
     @testset "Adapt Block Arrays" begin
         a = BlockArray(randn(4, 4), [2, 2], [2, 2])
         @test blockisequal(adapt(Array, a), a)
-        @tet adapt(Array, view(a, :, :)) isa SubArray
+        @test adapt(Array, view(a, :, :)) isa SubArray
         @test blockisequal(parent(adapt(Array, view(a, :, :))), a)
 
         a = BlockedArray(randn(4, 4), [2, 2], [2, 2])
