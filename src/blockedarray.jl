@@ -244,12 +244,12 @@ end
 @inline view(block_arr::BlockedArray{<:Any, 0}) = view(block_arr.blocks)
 
 @inline function viewblock(block_arr::BlockedArray, block)
-    range = getindex.(axes(block_arr), Block.(block.n))
+    range = map(getindex, axes(block_arr), map(Block, block.n))
     return view(block_arr.blocks, range...)
 end
 
 @propagate_inbounds function _blockedindex_getindex(block_arr, blockindex)
-    I = getindex.(axes(block_arr), getindex.(Block.(blockindex.I), blockindex.α))
+    I = map(getindex, axes(block_arr), map(getindex, map(Block,blockindex.I), blockindex.α))
     block_arr.blocks[I...]
 end
 
