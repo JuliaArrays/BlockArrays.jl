@@ -73,6 +73,17 @@ using BlockArrays, Test
         @test BlockRange(1:3) == collect(BlockRange(1:3)) == [Block(1),Block(2),Block(3)]
         @test BlockRange(1:3,1:2) == collect(BlockRange(1:3,1:2))
     end
+
+    # non Int64 range
+    r = blockedrange([Int32(1)])
+    @test convert(AbstractUnitRange{Int64}, r) isa BlockedOneTo{Int64}
+    v = mortar([[1]], (r,))
+    @test Int.(v) == v
+
+    r = blockedrange([Int32(1)])[Block(1):Block(1)]
+    @test convert(AbstractUnitRange{Int64}, r) isa BlockedUnitRange{Int64}
+    v = mortar([[1]], (r,))
+    @test Int.(v) == v
 end
 
 @testset "block index range" begin

@@ -101,6 +101,10 @@ end
     return (first(a), (blocklasts(a)[oneto(end-1)] .+ oneunit(eltype(a)))...)
 end
 
+function Base.AbstractUnitRange{T}(r::BlockedUnitRange) where {T}
+    return _BlockedUnitRange(convert(T,first(r)), convert.(T,blocklasts(r)))
+end
+
 """
     BlockedOneTo{T, <:Union{AbstractVector{T}, NTuple{<:Any,T}}} where {T}
 
@@ -155,6 +159,10 @@ first(b::BlockedOneTo) = oneunit(eltype(b))
 BlockedOneTo(::BlockedOneTo) = throw(ArgumentError("Forbidden due to ambiguity"))
 
 axes(b::BlockedOneTo) = (b,)
+
+function Base.AbstractUnitRange{T}(r::BlockedOneTo) where {T}
+    return BlockedOneTo(convert.(T,blocklasts(r)))
+end
 
 """
     blockedrange(blocklengths::Union{Tuple, AbstractVector})

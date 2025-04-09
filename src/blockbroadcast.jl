@@ -100,7 +100,7 @@ Base.eltype(::Type{<:SubBlockIterator}) = BlockIndexRange{1,Tuple{UnitRange{Int}
 Base.IteratorSize(::Type{<:SubBlockIterator}) = Base.HasLength()
 Base.length(it::SubBlockIterator) = length(it.block_lasts)
 
-SubBlockIterator(arr::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N =
+SubBlockIterator(arr::AbstractArray, bs::NTuple{N,AbstractUnitRange}, dim::Integer) where N =
     SubBlockIterator(blocklasts(axes(arr, dim)), blocklasts(bs[dim]))
 
 function Base.iterate(it::SubBlockIterator, (i, j) = (1,1))
@@ -113,10 +113,10 @@ function Base.iterate(it::SubBlockIterator, (i, j) = (1,1))
     return (bir, (i + 1, j))
 end
 
-subblocks(::Any, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N =
+subblocks(::Any, bs::NTuple{N,AbstractUnitRange}, dim::Integer) where N =
     (nothing for _ in blockaxes(bs[dim], 1))
 
-function subblocks(arr::AbstractArray, bs::NTuple{N,AbstractUnitRange{Int}}, dim::Integer) where N
+function subblocks(arr::AbstractArray, bs::NTuple{N,AbstractUnitRange}, dim::Integer) where N
     return SubBlockIterator(arr, bs, dim)
 end
 
