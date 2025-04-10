@@ -203,6 +203,9 @@ function Base.similar(block_array::BlockedArray{T,N}, ::Type{T2}) where {T,N,T2}
     BlockedArray(similar(block_array.blocks, T2), axes(block_array))
 end
 
+# specific zero dim
+Base.similar(::BlockedArray, ::Type{T}, ::Tuple{}) where {T} = BlockedArray{T}(undef)
+
 to_axes(r::AbstractUnitRange) = r
 to_axes(n::Integer) = Base.oneto(n)
 
