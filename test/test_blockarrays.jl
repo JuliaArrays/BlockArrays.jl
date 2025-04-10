@@ -343,13 +343,18 @@ end
             view(ret)[] = 0
             @test ret[] == 0
 
-            ret = BlockArrays.BlockArray(zeros())
+            ret = BlockArray(zeros())
             @test ret isa BlockArray{Float64, 0}
             @test size(ret) == ()
             @test all(iszero, ret)
             @test ret[Block()] == zeros()
 
-            ret = BlockArrays.BlockArray(zeros(1,1))
+            @test similar(ret) isa BlockArray{Float64, 0}
+            @test similar(ret, Float32) isa BlockArray{Float32, 0}
+            @test similar(ret, Float32, ()) isa BlockArray{Float32, 0}
+            @test similar(ret, Float32, (blockedrange([1]),)) isa BlockVector{Float32}
+
+            ret = BlockArray(zeros(1,1))
             @test reshape(ret, ()) isa AbstractBlockArray{Float64, 0}  # may be BlockedArray
             @test size(reshape(ret, ())) == ()
 
@@ -373,7 +378,12 @@ end
             @test all(iszero, ret)
             @test ret[Block()] == zeros()
 
-            ret = BlockArrays.BlockedArray(zeros(1,1))
+            @test similar(ret) isa BlockedArray{Float64, 0}
+            @test similar(ret, Float32) isa BlockedArray{Float32, 0}
+            @test similar(ret, Float32, ()) isa BlockedArray{Float32, 0}
+            @test similar(ret, Float32, (blockedrange([1]),)) isa BlockedVector{Float32}
+
+            ret = BlockedArray(zeros(1,1))
             @test reshape(ret, ()) isa BlockedArray{Float64, 0}
             @test size(reshape(ret, ())) == ()
         end
