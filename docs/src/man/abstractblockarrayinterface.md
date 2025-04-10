@@ -14,7 +14,7 @@ the block axis interface.
 | `findblock(A, k)`      | return the block that contains the `k`th entry of `A` 
 
 
-# The `AbstractBlockArray` interface
+# [The `AbstractBlockArray` interface](@id abstract_block_array_interface)
 
 An arrays block structure is inferred from an axes, and therefore every array
 is in some sense already a block array:
