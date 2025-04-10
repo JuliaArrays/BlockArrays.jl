@@ -325,6 +325,7 @@ end
 
         @testset "zero dim" begin
             zerodim = ones()
+            r = blockedrange([1])
             @test view(zerodim) isa AbstractArray{Float64, 0}  #  check no type-piracy
 
             ret = BlockArray{Float64}(undef)
@@ -352,7 +353,8 @@ end
             @test similar(ret) isa BlockArray{Float64, 0}
             @test similar(ret, Float32) isa BlockArray{Float32, 0}
             @test similar(ret, Float32, ()) isa BlockArray{Float32, 0}
-            @test similar(ret, Float32, (blockedrange([1]),)) isa BlockVector{Float32}
+            @test similar(ret, Float32, (r,)) isa BlockVector{Float32}
+            @test similar(BlockArray(zeros(r)), Float32, ()) isa BlockArray{Float32, 0}
 
             ret = BlockArray(zeros(1,1))
             @test reshape(ret, ()) isa AbstractBlockArray{Float64, 0}  # may be BlockedArray
@@ -382,6 +384,7 @@ end
             @test similar(ret, Float32) isa BlockedArray{Float32, 0}
             @test similar(ret, Float32, ()) isa BlockedArray{Float32, 0}
             @test similar(ret, Float32, (blockedrange([1]),)) isa BlockedVector{Float32}
+            @test similar(zeros(r), Float32, ()) isa BlockedArray{Float32, 0}
 
             ret = BlockedArray(zeros(1,1))
             @test reshape(ret, ()) isa BlockedArray{Float64, 0}
