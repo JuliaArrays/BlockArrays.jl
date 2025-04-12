@@ -453,6 +453,10 @@ end
 
 @inline Base.similar(B::BlockArray, ::Type{T}) where {T} = _BlockArray(similar.(blocks(B), T), axes(B))
 
+# specific 0-dim
+@inline Base.similar(B::BlockArray{<:Any,0}, ::Type{T}) where {T} = BlockArray(similar(only(blocks(B)), T), ())
+@inline Base.similar(::BlockArray, ::Type{T}, ::Tuple{}) where {T} = BlockArray{T}(undef)
+
 const OffsetAxis = Union{Integer, UnitRange, Base.OneTo, Base.IdentityUnitRange}
 
 # avoid ambiguities
