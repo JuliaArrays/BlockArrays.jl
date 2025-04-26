@@ -288,6 +288,16 @@ _indices(B) = B
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
+struct BlockInds{BB,T<:Integer,INDS<:AbstractVector{T}} <: AbstractVector{T}
+    block::BB
+    indices::INDS
+end
+
+for f in (:axes, :size)
+    @eval $f(S::BlockInds) = $f(S.indices)
+end
+
+@propagate_inbounds getindex(S::BlockInds, i::Integer) = getindex(S.indices, i)
 
 struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{<:Integer}}} <: AbstractArray{Block{N,Int},N}
     indices::R

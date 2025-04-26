@@ -11,7 +11,7 @@ function unblock(A, inds, I)
 end
 
 _blockslice(B, a::AbstractUnitRange) = BlockSlice(B, a)
-_blockslice(B, a) = a # drop block structure
+_blockslice(B, a) = BlockInds(B, a)
 
 # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
 # similar to `ones(2)[1:1, 1:1]`.
