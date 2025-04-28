@@ -203,6 +203,8 @@ BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) w
 
 block(R::BlockIndexRange) = R.block
 
+copy(R::BlockIndexRange) = BlockIndexRange(R.block, copy.(R.indices))
+
 getindex(::Block{0}) = BlockIndex()
 getindex(B::Block{N}, inds::Vararg{Integer,N}) where N = BlockIndex(B,inds)
 getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndexRange(B,inds)

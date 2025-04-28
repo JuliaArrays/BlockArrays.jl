@@ -861,6 +861,11 @@ end
         @test A[Block(1)[1], Block(1)[1:1]] == BlockArray(A)[Block(1)[1], Block(1)[1:1]] == A[1,1:1]
     end
 
+    @testset "BlockIndexRange blocks" begin
+        a = mortar([Block(1)[1:2], Block(2)[2:3]])
+        @test a[Block(1)] === Block(1)[1:2]
+        @test a[Block(2)] === Block(2)[2:3]
+    end
     @testset "permutedims" begin
         for a in (BlockArray(randn(3), [1,2]), BlockedArray(randn(3), [1,2]))
             @test permutedims(a) == permutedims(Vector(a))

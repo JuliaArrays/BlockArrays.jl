@@ -95,6 +95,7 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test BlockIndex(UInt(2),(2,)) === BlockIndex((UInt(2),),(2,))
         @test BlockIndex(Block(2),2) === BlockIndex(Block(2),(2,))
         @test BlockIndex(Block(2),UInt(2)) === BlockIndex(Block(2),(UInt(2),))
+        @test copy(Block(1)[1:2]) === BlockIndexRange(Block(1),1:2)
     end
 
     @testset "BlockRange" begin
