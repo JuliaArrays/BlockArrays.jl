@@ -296,7 +296,7 @@ Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 Represents blocked indices attached to a collection of corresponding blocks.
 
 Upon calling `to_indices()`, a collection of blocks are converted to BlockedSlice objects to represent
-the indices over which the Blocks span.
+the indices over which the blocks span.
 
 This mimics the relationship between `Colon` and `Base.Slice`, `Block` and `BlockSlice`, etc.
 """
