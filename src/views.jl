@@ -150,10 +150,11 @@ block(A::Block) = A
 @inline view(block_arr::AbstractBlockArray{<:Any,N}, blocks::Vararg{BlockSlice1, N}) where N =
     view(block_arr, map(block,blocks)...)
 
-const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}}}
+const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}},BlockedSlice}
 # view(V::SubArray{<:Any,N,NTuple{N,BlockSlices}},
 
 _block_reindex(b::BlockSlice, i::Block{1}) = b.block[Int(i)]
+_block_reindex(b::BlockedSlice, i::Block{1}) = b.blocks[Int(i)]
 _block_reindex(b::Slice, i::Block{1}) = i
 
 @inline view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlices}}, block::Block{N}) where N =

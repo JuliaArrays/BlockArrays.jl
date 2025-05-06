@@ -29,6 +29,8 @@ using BlockArrays, Test
     @test I isa BlockArrays.BlockedSlice{<:Vector{<:Block{1}}}
     @test V[Block(1)] == 4:6
     @test V[Block(2)] == 2:3
+    @test view(V, Block(1)) === view(A, Block(3))
+    @test view(V, Block(2)) === view(A, Block(2))
 
     A = BlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
 
