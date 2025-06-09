@@ -20,8 +20,10 @@ blockedbroadcaststyle(::AbstractArrayStyle{N}) where {N} = BlockedStyle{N}()
 
 BroadcastStyle(::Type{<:BlockArray{<:Any,N,Blocks}}) where {N,Blocks} = blockbroadcaststyle(BroadcastStyle(Blocks))
 BroadcastStyle(::Type{<:BlockedArray{<:Any,N,Blocks}}) where {N,Blocks} = blockedbroadcaststyle(BroadcastStyle(Blocks))
-BroadcastStyle(::Type{<:AdjOrTrans{<:Any,<:BlockArray{<:Any,N,Blocks}}}) where {N,Blocks} = blockbroadcaststyle(BroadcastStyle(Blocks))
-BroadcastStyle(::Type{<:AdjOrTrans{<:Any,<:BlockedArray{<:Any,N,Blocks}}}) where {N,Blocks} = blockedbroadcaststyle(BroadcastStyle(Blocks))
+BroadcastStyle(::Type{<:Adjoint{T,<:BlockArray{<:Any,N,Blocks}}}) where {T,N,Blocks} = blockbroadcaststyle(BroadcastStyle(Adjoint{T,Blocks}))
+BroadcastStyle(::Type{<:Transpose{T,<:BlockArray{<:Any,N,Blocks}}}) where {T,N,Blocks} = blockbroadcaststyle(BroadcastStyle(Transpose{T,Blocks}))
+BroadcastStyle(::Type{<:Adjoint{T,<:BlockedArray{<:Any,N,Blocks}}}) where {T,N,Blocks} = blockedbroadcaststyle(BroadcastStyle(Adjoint{T,Blocks}))
+BroadcastStyle(::Type{<:Transpose{T,<:BlockedArray{<:Any,N,Blocks}}}) where {T,N,Blocks} = blockedbroadcaststyle(BroadcastStyle(Transpose{T,Blocks}))
 
 BroadcastStyle(::DefaultArrayStyle{N}, b::AbstractBlockStyle{M}) where {M,N} = typeof(b)(Val(max(M,N)))
 BroadcastStyle(a::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = typeof(a)(Val(max(M,N)))
