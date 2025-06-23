@@ -86,16 +86,24 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
     @testset "BlockIndex" begin
         @test Block()[] == BlockIndex()
         @test Block(1)[1] == BlockIndex((1,),(1,))
+        @test Block(1)[Block(1)] == BlockIndex((1,),(Block(1),))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
+        @test Block(1)[[1,3]] == BlockIndexRange(Block(1),([1,3],))
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
+        @test Block(1,1)[[1,3],1:2] == BlockIndexRange(Block(1,1),([1,3],1:2))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
+        @test Block(1)[[1,3,5]][2:3] == BlockIndexRange(Block(1),[3,5])
+        @test Block(1)[2:4][[1,3]] == BlockIndexRange(Block(1),[2,4])
         @test BlockIndex((2,2,2),(2,)) == BlockIndex((2,2,2),(2,1,)) == BlockIndex((2,2,2),(2,1,1))
         @test BlockIndex(2,(2,)) === BlockIndex((2,),(2,))
         @test BlockIndex(UInt(2),(2,)) === BlockIndex((UInt(2),),(2,))
         @test BlockIndex(Block(2),2) === BlockIndex(Block(2),(2,))
         @test BlockIndex(Block(2),UInt(2)) === BlockIndex(Block(2),(UInt(2),))
+        @test BlockIndex(Block(2),Block(2)) === BlockIndex(Block(2),(Block(2),))
         @test copy(Block(1)[1:2]) === BlockIndexRange(Block(1),1:2)
+        @test copy(Block(1)[[1,3]]) == BlockIndexRange(Block(1),[1,3])
+        @test copy(Block(1)[[1,3]]) ≢ BlockIndexRange(Block(1),[1,3])
     end
 
     @testset "BlockRange" begin
