@@ -270,6 +270,7 @@ struct BlockSlice{BB,T<:Integer,INDS<:AbstractUnitRange{T}} <: AbstractUnitRange
 end
 
 Block(bs::BlockSlice{<:Block}) = bs.block
+Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
 
 for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
@@ -289,8 +290,6 @@ _indices(B) = B
 # Avoid creating a SubArray wrapper in certain non-allocating cases
 @propagate_inbounds view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = view(C, map(x->x.indices, bs)...)
 
-Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
-
 """
     NoncontiguousBlockSlice(blocks, indices)
 
@@ -309,6 +308,7 @@ struct NoncontiguousBlockSlice{BB,T,INDS<:AbstractVector{T}} <: AbstractVector{T
 end
 
 Block(bs::NoncontiguousBlockSlice{<:Block}) = bs.block
+Block(bs::NoncontiguousBlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
 for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
           :unsafe_length, :start)
@@ -329,8 +329,6 @@ struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{<:Integer}}} <: AbstractArray{
     indices::R
     BlockRange{N,R}(inds::R) where {N,R} = new{N,R}(inds)
 end
-
-Block(bs::NoncontiguousBlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
 # The following is adapted from Julia v0.7 base/multidimensional.jl
 # definition of CartesianRange
