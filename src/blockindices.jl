@@ -211,7 +211,7 @@ getindex(B::Block{N}, inds::Vararg{AbstractVector,N}) where N = BlockIndexRange(
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
-@propagate_inbounds getindex(B::BlockIndexRange{1}, kr::AbstractVector) = BlockIndexRange(B.block, B.indices[1][kr])
+@propagate_inbounds getindex(B::BlockIndexRange{N}, kr::Vararg{AbstractVector,N}) where N = BlockIndexRange(B.block, map(getindex, B.indices, kr))
 @propagate_inbounds getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))
