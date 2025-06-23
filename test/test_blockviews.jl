@@ -2,6 +2,7 @@ module TestBlockViews
 
 using BlockArrays, ArrayLayouts, Test
 using FillArrays
+import BlockArrays: NoncontiguousBlockSlice
 
 # useds to force SubArray return
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
@@ -217,6 +218,22 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test A[Block.(2:3)] == A[2:end]
     end
 
+    @testset "getindex and view with Block-vector" begin
+        A = BlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
+        V = view(A, [Block(3),Block(2)], [Block(3),Block(2)])
+        @test V[Block(1,1)] == A[Block(3,3)]
+        @test V[Block(2,1)] == A[Block(2,3)]
+        @test V[Block(1,2)] == A[Block(3,2)]
+        @test V[Block(2,2)] == A[Block(2,2)]
+        I = parentindices(V)
+        @test I[1] isa NoncontiguousBlockSlice{<:Vector{<:Block{1}}}
+        @test I[2] isa NoncontiguousBlockSlice{<:Vector{<:Block{1}}}
+        @test view(V, Block(1,1)) === view(A, Block(3,3))
+        @test view(V, Block(2,1)) === view(A, Block(2,3))
+        @test view(V, Block(1,2)) === view(A, Block(3,2))
+        @test view(V, Block(2,2)) === view(A, Block(2,2))
+    end
+
     @testset "non-allocation blocksize" begin
         A = BlockArray(randn(5050), 1:100)
         @test blocksize(A) == (100,)
@@ -314,7 +331,7 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test a[Block(1)[1:3]] ≡ view(a,Block(1)[1:3]) ≡ view(v,Block(1)[1:3]) ≡ 7:9
     end
 
-    @testset "blockrange-of-blockreange" begin
+    @testset "blockrange-of-blockrange" begin
         a = mortar([7:9,5:6])
         v = view(a,Block.(1:2))
         @test view(v, Block(1)) ≡ 7:9
