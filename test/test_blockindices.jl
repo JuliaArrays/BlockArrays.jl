@@ -864,10 +864,18 @@ end
     @test BlockArrays._indices(b) === 2:4
 
     b = NoncontiguousBlockSlice(Block(3)[[2,4,6]], [3,5,7])
-    @test b[2:3] == NoncontiguousBlockSlice(Block(3)[[4,6]], [5,7])
-    @test b[[1,3]] == NoncontiguousBlockSlice(Block(3)[[2,6]], [3,7])
+    @test b isa NoncontiguousBlockSlice{<:BlockIndexRange{1}}
     @test Block(b) === Block(3)
     @test BlockArrays._indices(b) == [3,5,7]
+    @test b[2:3] == NoncontiguousBlockSlice(Block(3)[[4,6]], [5,7])
+    @test b[2:3] isa NoncontiguousBlockSlice{<:BlockIndexRange{1}}
+    @test Block(b) === Block(3)
+    @test Block(b[2:3]) === Block(3)
+    @test BlockArrays._indices(b[2:3]) == [5,7]
+    @test b[[1,3]] == NoncontiguousBlockSlice(Block(3)[[2,6]], [3,7])
+    @test b[[1,3]] isa NoncontiguousBlockSlice{<:BlockIndexRange{1}}
+    @test Block(b[[1,3]]) === Block(3)
+    @test BlockArrays._indices(b[[1,3]]) == [3,7]
 end
 
 #=

@@ -320,7 +320,7 @@ _indices(B::NoncontiguousBlockSlice) = B.indices
 @propagate_inbounds getindex(S::NoncontiguousBlockSlice, i::Integer) = getindex(S.indices, i)
 @propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:Block{1}}, k::AbstractVector{<:Integer}) =
     NoncontiguousBlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
-@propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:BlockIndexRange{1,Tuple{AbstractVector}}}, k::AbstractVector{<:Integer}) =
+@propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:BlockIndexRange{1,<:Tuple{AbstractVector}}}, k::AbstractVector{<:Integer}) =
     NoncontiguousBlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
 @propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:AbstractVector{<:Block{1}}}, k::Block{1}) =
     BlockSlice(S.block[Int(k)], getindex(S.indices, k))
