@@ -861,6 +861,22 @@ end
         @test A[Block(1)[1], Block(1)[1:1]] == BlockArray(A)[Block(1)[1], Block(1)[1:1]] == A[1,1:1]
     end
 
+    @testset "Non-contiguous BlockIndexRange" begin
+        a = BlockedArray(randn(5), [2,3])
+        @test a[Block(2)[[1,3]]] == a[[3,5]]
+        A = BlockedArray(randn(5,5), [2,3], [2,3])
+        @test A[Block(2,2)[[1,3],[2,3]]] == A[[3,5],[4,5]]
+        @test A[Block(2,2)[[1,3],1:2]] == A[[3,5],3:4]
+    end
+
+    @testset "Nested block indexing" begin
+        a = BlockedArray(randn(4), [2,2])
+        b = BlockedArray(randn(4), [2,2])
+        A = mortar([a,b])
+        @test A[Block(2)[Block(1)]] == A[Block(2)][Block(1)] == b[Block(1)]
+        @test A[Block(2)[Block(1)[2]]] == A[Block(2)][Block(1)[2]] == b[Block(1)[2]]
+    end
+
     @testset "BlockIndexRange blocks" begin
         a = mortar([Block(1)[1:2], Block(3)[2:3]])
         @test a[Block(1)] === Block(1)[1:2]

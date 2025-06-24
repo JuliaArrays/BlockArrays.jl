@@ -2,7 +2,7 @@ module TestBlockIndices
 
 using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
-import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
+import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, NoncontiguousBlockSlice
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -86,16 +86,27 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
     @testset "BlockIndex" begin
         @test Block()[] == BlockIndex()
         @test Block(1)[1] == BlockIndex((1,),(1,))
+        @test Block(1)[Block(1)] == BlockIndex((1,),(Block(1),))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
+        @test Block(1)[[1,3]] == BlockIndexRange(Block(1),([1,3],))
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
+        @test Block(1,1)[[1,3],1:2] == BlockIndexRange(Block(1,1),([1,3],1:2))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
+        @test Block(1)[[1,3,5]][[1,3]] == BlockIndexRange(Block(1),[1,5])
+        @test Block(1)[[1,3,5]][2:3] == BlockIndexRange(Block(1),[3,5])
+        @test Block(1)[2:4][[1,3]] == BlockIndexRange(Block(1),[2,4])
+        @test Block(1,1)[1:3,1:3][1:2,1:2] == BlockIndexRange(Block(1,1),1:2,1:2)
+        @test Block(1,1)[1:3,1:3][1:2,[1,3]] == BlockIndexRange(Block(1,1),1:2,[1,3])
         @test BlockIndex((2,2,2),(2,)) == BlockIndex((2,2,2),(2,1,)) == BlockIndex((2,2,2),(2,1,1))
         @test BlockIndex(2,(2,)) === BlockIndex((2,),(2,))
         @test BlockIndex(UInt(2),(2,)) === BlockIndex((UInt(2),),(2,))
         @test BlockIndex(Block(2),2) === BlockIndex(Block(2),(2,))
         @test BlockIndex(Block(2),UInt(2)) === BlockIndex(Block(2),(UInt(2),))
+        @test BlockIndex(Block(2),Block(2)) === BlockIndex(Block(2),(Block(2),))
         @test copy(Block(1)[1:2]) === BlockIndexRange(Block(1),1:2)
+        @test copy(Block(1)[[1,3]]) == BlockIndexRange(Block(1),[1,3])
+        @test copy(Block(1)[[1,3]]) ≢ BlockIndexRange(Block(1),[1,3])
     end
 
     @testset "BlockRange" begin
@@ -566,6 +577,7 @@ end
         b = blockedrange([1,2,3])
         @test b[Block(3)[2]] == b[Block(3)][2] == 5
         @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
+        @test b[Block(3)[[3,2]]] == b[Block(3)][[3,2]] == [6,5]
     end
 
     @testset "BlockRange indexing" begin
@@ -814,6 +826,10 @@ end
     @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
     @test Block(b) ≡ Block(5)
 
+    bi = BlockSlice(Block(2)[2:4],3:5)
+    @test Block(bi) ≡ Block(2)
+    @test bi[2:3] ≡ BlockSlice(Block(2)[3:4],4:5)
+
     @testset "OneTo converts" begin
         for b in (BlockSlice(Block(1), 1:1), BlockSlice(Block.(1:1), 1:1), BlockSlice(Block(1)[1:1], 1:1))
             @test convert(typeof(b), Base.OneTo(1)) ≡ b
@@ -829,6 +845,37 @@ end
         C = CartesianIndices((1:3, 1:3))
         @test view(C, b, b) === view(C, r, r)
     end
+end
+
+@testset "NoncontiguousBlockSlice" begin
+    b = NoncontiguousBlockSlice([Block(2),Block(1)], mortar([3:5,1:2]))
+    @test length(b) == 5
+    for i in eachindex(b.indices)
+        @test b[i] === b.indices[i]
+    end
+    @test b[Block(1)] === BlockSlice(Block(2), 3:5)
+    @test b[Block(2)] === BlockSlice(Block(1), 1:2)
+    @test BlockArrays._indices(b) == mortar([3:5,1:2])
+
+    b = NoncontiguousBlockSlice(Block(3), 2:4)
+    @test b[2:3] == NoncontiguousBlockSlice(Block(3)[3:4], 3:4)
+    @test b[[1,3]] == NoncontiguousBlockSlice(Block(3)[[1,3]], [2,4])
+    @test Block(b) === Block(3)
+    @test BlockArrays._indices(b) === 2:4
+
+    b = NoncontiguousBlockSlice(Block(3)[[2,4,6]], [3,5,7])
+    @test b isa NoncontiguousBlockSlice{<:BlockIndexRange{1}}
+    @test Block(b) === Block(3)
+    @test BlockArrays._indices(b) == [3,5,7]
+    @test b[2:3] == NoncontiguousBlockSlice(Block(3)[[4,6]], [5,7])
+    @test b[2:3] isa NoncontiguousBlockSlice{<:BlockIndexRange{1}}
+    @test Block(b) === Block(3)
+    @test Block(b[2:3]) === Block(3)
+    @test BlockArrays._indices(b[2:3]) == [5,7]
+    @test b[[1,3]] == NoncontiguousBlockSlice(Block(3)[[2,6]], [3,7])
+    @test b[[1,3]] isa NoncontiguousBlockSlice{<:BlockIndexRange{1}}
+    @test Block(b[[1,3]]) === Block(3)
+    @test BlockArrays._indices(b[[1,3]]) == [3,7]
 end
 
 #=

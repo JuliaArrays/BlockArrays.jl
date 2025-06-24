@@ -140,7 +140,7 @@ julia> a[BlockIndex((2,2), (2,3))]
 20
 ```
 """
-struct BlockIndex{N,TI<:Tuple{Vararg{Integer,N}},Tα<:Tuple{Vararg{Integer,N}}}
+struct BlockIndex{N,TI<:Tuple{Vararg{Any,N}},Tα<:Tuple{Vararg{Any,N}}}
     I::TI
     α::Tα
 end
@@ -148,15 +148,15 @@ end
 @inline BlockIndex(a::NTuple{N,Block{1}}, b::Tuple) where N = BlockIndex(Int.(a), b)
 @inline BlockIndex(::Tuple{}, b::Tuple{}) = BlockIndex{0,Tuple{},Tuple{}}((), ())
 
-@inline BlockIndex(a::Integer, b::Integer) = BlockIndex((a,), (b,))
-@inline BlockIndex(a::Tuple, b::Integer) = BlockIndex(a, (b,))
-@inline BlockIndex(a::Integer, b::Tuple) = BlockIndex((a,), b)
+@inline BlockIndex(a, b) = BlockIndex((a,), (b,))
+@inline BlockIndex(a::Tuple, b) = BlockIndex(a, (b,))
+@inline BlockIndex(a, b::Tuple) = BlockIndex((a,), b)
 @inline BlockIndex() = BlockIndex((), ())
 
 @inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
-@inline BlockIndex(a::Block, b::Integer) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Block, b) = BlockIndex(a, (b,))
 
-@inline function BlockIndex(I::Tuple{Vararg{Integer,N}}, α::Tuple{Vararg{Integer,M}}) where {M,N}
+@inline function BlockIndex(I::Tuple{Vararg{Any,N}}, α::Tuple{Vararg{Any,M}}) where {M,N}
     M <= N || throw(ArgumentError("number of indices must not exceed the number of blocks"))
     α2 = ntuple(k -> k <= M ? α[k] : 1, N)
     BlockIndex(I, α2)
@@ -182,10 +182,10 @@ end
 checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{<:BlockIndex{N}}) where N =
     all(checkbounds.(Bool, Ref(A), I))
 
-struct BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}},I<:Tuple{Vararg{Integer,N}},BI<:Integer} <: AbstractArray{BlockIndex{N,NTuple{N,BI},I},N}
+struct BlockIndexRange{N,R<:Tuple{Vararg{AbstractVector,N}},I<:Tuple{Vararg{Any,N}},BI} <: AbstractArray{BlockIndex{N,NTuple{N,BI},I},N}
     block::Block{N,BI}
     indices::R
-    function BlockIndexRange(block::Block{N,BI}, inds::R) where {N,BI<:Integer,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}}
+    function BlockIndexRange(block::Block{N,BI}, inds::R) where {N,BI<:Integer,R<:Tuple{Vararg{AbstractVector,N}}}
         I = Tuple{eltype.(inds)...}
         return new{N,R,I,BI}(block,inds)
     end
@@ -198,7 +198,7 @@ represents a cartesian range inside a block.
 """
 BlockIndexRange
 
-BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where {N} =
+BlockIndexRange(block::Block{N}, inds::Vararg{AbstractVector,N}) where {N} =
     BlockIndexRange(block,inds)
 
 block(R::BlockIndexRange) = R.block
@@ -206,12 +206,12 @@ block(R::BlockIndexRange) = R.block
 copy(R::BlockIndexRange) = BlockIndexRange(R.block, map(copy, R.indices))
 
 getindex(::Block{0}) = BlockIndex()
-getindex(B::Block{N}, inds::Vararg{Integer,N}) where N = BlockIndex(B,inds)
-getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndexRange(B,inds)
+getindex(B::Block{N}, inds::Vararg{Any,N}) where N = BlockIndex(B,inds)
+getindex(B::Block{N}, inds::Vararg{AbstractVector,N}) where N = BlockIndexRange(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
-@propagate_inbounds getindex(B::BlockIndexRange{1}, kr::AbstractUnitRange{<:Integer}) = BlockIndexRange(B.block, B.indices[1][kr])
+@propagate_inbounds getindex(B::BlockIndexRange{N}, kr::Vararg{AbstractVector,N}) where N = BlockIndexRange(B.block, map(getindex, B.indices, kr))
 @propagate_inbounds getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))
@@ -256,10 +256,11 @@ Block(bs::BlockIndexRange) = bs.block
 """
     BlockSlice(block, indices)
 
-Represent an AbstractUnitRange{<:Integer} of indices that attaches a block.
+Represents an AbstractUnitRange{<:Integer} of indices attached to a block,
+a subblock, or a range of blocks.
 
 Upon calling `to_indices()`, Blocks are converted to BlockSlice objects to represent
-the indices over which the Block spans.
+the indices over which the block, subblock, or range of blocks spans.
 
 This mimics the relationship between `Colon` and `Base.Slice`.
 """
@@ -269,6 +270,7 @@ struct BlockSlice{BB,T<:Integer,INDS<:AbstractUnitRange{T}} <: AbstractUnitRange
 end
 
 Block(bs::BlockSlice{<:Block}) = bs.block
+Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
 
 for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
@@ -282,20 +284,51 @@ _indices(B) = B
 @propagate_inbounds getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
 @propagate_inbounds getindex(S::BlockSlice{<:Block{1}}, k::AbstractUnitRange{<:Integer}) =
     BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
-@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1}}, k::AbstractUnitRange{<:Integer}) =
+@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1,<:Tuple{AbstractUnitRange{<:Integer}}}}, k::AbstractUnitRange{<:Integer}) =
     BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
 
 # Avoid creating a SubArray wrapper in certain non-allocating cases
 @propagate_inbounds view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = view(C, map(x->x.indices, bs)...)
 
-Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
+"""
+    NoncontiguousBlockSlice(blocks, indices)
 
+Represents an AbstractVector of indices attached to a (potentially non-contiguous) subblock,
+set of blocks, or set of subblocks. This is the generalization of `BlockSlice` to
+non-contiguous slices.
+
+Upon calling `to_indices()`, a collection of blocks are converted to NoncontiguousBlockSlice objects to represent
+the indices over which the blocks span.
+
+This mimics the relationship between `Colon` and `Base.Slice`, `Block` and `BlockSlice`, etc.
+"""
+struct NoncontiguousBlockSlice{BB,T,INDS<:AbstractVector{T}} <: AbstractVector{T}
+    block::BB
+    indices::INDS
+end
+
+Block(bs::NoncontiguousBlockSlice{<:Block}) = bs.block
+Block(bs::NoncontiguousBlockSlice{<:BlockIndexRange}) = Block(bs.block)
+
+for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
+          :unsafe_length, :start)
+    @eval $f(S::NoncontiguousBlockSlice) = $f(S.indices)
+end
+
+_indices(B::NoncontiguousBlockSlice) = B.indices
+
+@propagate_inbounds getindex(S::NoncontiguousBlockSlice, i::Integer) = getindex(S.indices, i)
+@propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:Block{1}}, k::AbstractVector{<:Integer}) =
+    NoncontiguousBlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
+@propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:BlockIndexRange{1,<:Tuple{AbstractVector}}}, k::AbstractVector{<:Integer}) =
+    NoncontiguousBlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
+@propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:AbstractVector{<:Block{1}}}, k::Block{1}) =
+    BlockSlice(S.block[Int(k)], getindex(S.indices, k))
 
 struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{<:Integer}}} <: AbstractArray{Block{N,Int},N}
     indices::R
     BlockRange{N,R}(inds::R) where {N,R} = new{N,R}(inds)
 end
-
 
 # The following is adapted from Julia v0.7 base/multidimensional.jl
 # definition of CartesianRange
