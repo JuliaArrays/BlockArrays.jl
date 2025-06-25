@@ -323,6 +323,40 @@ end
         end
     end
 
+    @testset "BlockedUnitRange indexing" begin
+        a = 2:10
+        b = blockedrange(2, [1,2,3])
+        @test a[b] == blockedrange(3, [1,2,3])
+        @test a[b] isa BlockedUnitRange
+        @test first(a[b]) == 3
+        @test blocklengths(a[b]) == [1,2,3]
+        @test_throws BoundsError a[blockedrange(5, [1,2,3])]
+
+        a = blockedrange(2, [4,5])
+        b = blockedrange(2, [1,2,3])
+        @test a[b] == blockedrange(3, [1,2,3])
+        @test a[b] isa BlockedUnitRange
+        @test first(a[b]) == 3
+        @test blocklengths(a[b]) == [1,2,3]
+        @test_throws BoundsError a[blockedrange(5, [1,2,3])]
+
+        a = Base.OneTo(9)
+        b = blockedrange([1,2,3])
+        @test a[b] == blockedrange([1,2,3])
+        @test a[b] isa BlockedOneTo
+        @test first(a[b]) == 1
+        @test blocklengths(a[b]) == [1,2,3]
+        @test_throws BoundsError a[blockedrange([1,2,3,4])]
+
+        a = blockedrange([4,5])
+        b = blockedrange([1,2,3])
+        @test a[b] == blockedrange([1,2,3])
+        @test a[b] isa BlockedOneTo
+        @test first(a[b]) == 1
+        @test blocklengths(a[b]) == [1,2,3]
+        @test_throws BoundsError a[blockedrange([1,2,3,4])]
+    end
+
     @testset "misc" begin
         b = blockedrange(1, [1,2,3])
         @test axes(b) == Base.unsafe_indices(b) == (b,)
