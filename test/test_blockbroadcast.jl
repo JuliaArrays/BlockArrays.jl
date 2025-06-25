@@ -193,6 +193,24 @@ using StaticArrays
         @test blockisequal(axes(A .* Ones(axes(A))), axes(Ones(axes(A)) .* A), axes(A .* ones(6)))
     end
 
+    @testset "Blocked unit range broadcast" begin
+        r = blockedrange([2,3])
+        @test r .+ 3 == blockedrange(4, [2,3])
+        @test blocklengths(r .+ 3) == [2,3]
+        @test 3 .+ r == blockedrange(4, [2,3])
+        @test blocklengths(3 .+ r .+ 3) == [2,3]
+        @test r .- 3 == blockedrange(-2, [2,3])
+        @test blocklengths(r .- 3) == [2,3]
+
+        r = blockedrange(2, [2,3])
+        @test r .+ 3 == blockedrange(5, [2,3])
+        @test blocklengths(r .+ 3) == [2,3]
+        @test 3 .+ r == blockedrange(5, [2,3])
+        @test blocklengths(3 .+ r .+ 3) == [2,3]
+        @test r .- 3 == blockedrange(-1, [2,3])
+        @test blocklengths(r .- 3) == [2,3]
+    end
+
     @testset "type inference" begin
         u = BlockArray(randn(5), [2,3]);
         A = zeros(size(u))
