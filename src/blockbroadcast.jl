@@ -271,3 +271,13 @@ for op in (:*, :\)
         broadcasted(::AbstractBlockStyle, ::typeof($op), a::AbstractArray{T}, b::Ones{V}) where {T,V} = LinearAlgebra.copy_oftype(a, Base.promote_op(*, T, V))
     end
 end
+
+
+
+###
+# Ranges
+###
+
+broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractBlockedUnitRange, x::Integer) = _BlockedUnitRange(first(r) + x, blocklasts(r) .+ x)
+broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Integer, r::AbstractBlockedUnitRange) = _BlockedUnitRange(x + first(r), x .+ blocklasts(r))
+broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::AbstractBlockedUnitRange, x::Integer) = _BlockedUnitRange(first(r) - x, blocklasts(r) .- x)
