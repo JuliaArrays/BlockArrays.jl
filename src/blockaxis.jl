@@ -105,6 +105,16 @@ function Base.AbstractUnitRange{T}(r::BlockedUnitRange) where {T}
     return _BlockedUnitRange(convert(T,first(r)), convert.(T,blocklasts(r)))
 end
 
+# See: https://github.com/JuliaLang/julia/blob/b06d26075bf7b3f4e7f1b64b120f5665d8ed76f9/base/range.jl#L991-L1004
+function Base.getindex(r::AbstractUnitRange, s::AbstractBlockedUnitRange{T}) where {T<:Integer}
+    @boundscheck checkbounds(r, s)
+
+    f = first(r)
+    start = oftype(f, f + first(s) - firstindex(r))
+    lens = map(Base.Fix1(oftype, f), blocklengths(s))
+    return blockedrange(start, lens)
+end
+
 """
     BlockedOneTo{T, <:Union{AbstractVector{T}, NTuple{<:Any,T}}} where {T}
 
@@ -162,6 +172,16 @@ axes(b::BlockedOneTo) = (b,)
 
 function Base.AbstractUnitRange{T}(r::BlockedOneTo) where {T}
     return BlockedOneTo(convert.(T,blocklasts(r)))
+end
+
+# See: https://github.com/JuliaLang/julia/blob/b06d26075bf7b3f4e7f1b64b120f5665d8ed76f9/base/range.jl#L1006-L1010
+function getindex(r::Base.OneTo{T}, s::BlockedOneTo) where T
+    @inline
+    @boundscheck checkbounds(r, s)
+    return BlockedOneTo(T.(blocklasts(s)))
+end
+function getindex(r::BlockedOneTo{T}, s::BlockedOneTo) where T
+    return Base.OneTo(r)[s]
 end
 
 """
