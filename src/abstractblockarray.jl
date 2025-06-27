@@ -88,7 +88,7 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64
 """
 @inline function blockcheckbounds(A::AbstractArray, i...)
     blockcheckbounds(Bool, A, i...) || throw(BlockBoundsError(A, i))
-    return nothing
+    nothing
 end
 
 # linear block indexing
@@ -100,19 +100,24 @@ end
     blockcheckbounds_indices(Bool, blockaxes(A), i)
 end
 
-checkbounds(A::AbstractArray{T, N}, i::Block{N}) where {T,N} = blockcheckbounds(A, i)
-checkbounds(A::AbstractArray{T}, i1::Block{1}, irest::Block{1}...) where {T} = blockcheckbounds(A, i1, irest...)
-checkbounds(A::AbstractArray{T, N}, i::AbstractArray{<:Block{N}}) where {T,N} = blockcheckbounds(A, i)
-checkbounds(A::AbstractArray{T}, i1::AbstractVector{<:Block{1}}, irest::AbstractVector{<:Block{1}}) where {T} =
-    blockcheckbounds(A, i1, irest...)
+# Used to ensure a `BlockBoundsError` is thrown instead of a `BoundsError`,
+# see https://github.com/JuliaArrays/BlockArrays.jl/issues/458
+checkbounds(A::AbstractArray{T, N}, I::Block{N}) where {T,N} = blockcheckbounds(A, I)
+checkbounds(A::AbstractArray{T}, I1::Block{1}, Irest::Block{1}...) where {T} = blockcheckbounds(A, I1, Irest...)
+checkbounds(A::AbstractArray{T}, I1::AbstractVector{<:Block{1}}, Irest::AbstractVector{<:Block{1}}...) where {T} =
+    blockcheckbounds(A, I1, Irest...)
 
-blockcheckbounds(A::AbstractArray{T, N}, i::Block{N}) where {T,N} = blockcheckbounds(A, i.n...)
-blockcheckbounds(A::AbstractArray{T, N}, i::Vararg{Block{1},N}) where {T,N} = blockcheckbounds(A, Int.(i)...)
-blockcheckbounds(::AbstractArray{T, 0}) where {T} = true
-blockcheckbounds(A::AbstractVector{T}, i::Block{1}) where {T} = blockcheckbounds(A, Int(i))
+blockcheckbounds(::Type{Bool}, A::AbstractArray{T, N}, I::Block{N}) where {T,N} = blockcheckbounds(Bool, A, Int.(Tuple(I))...)
+blockcheckbounds(::Type{Bool}, A::AbstractArray{T, N}, I::Vararg{Block{1},N}) where {T,N} =
+    blockcheckbounds(Bool, A, Int.(I)...)
+blockcheckbounds(::Type{Bool}, ::AbstractArray{T, 0}) where {T} = true
+blockcheckbounds(::Type{Bool}, A::AbstractVector{T}, I::Block{1}) where {T} = blockcheckbounds(Bool, A, Int(I))
+blockcheckbounds(::Type{Bool}, A::AbstractArray{T,N}, I::Vararg{AbstractVector{<:Block{1}},N}) where {T,N} =
+    blockcheckbounds(Bool, A, map(i -> Int.(i), I)...)
 
-blockcheckbounds(A::AbstractArray{T,N}, I::Vararg{BlockRange{1},N}) where {T,N} = blockcheckbounds(A, map(i -> Int.(i), I)...)
-blockcheckbounds(A::AbstractArray{T,N}, I::BlockRange{N}) where {T,N} = blockcheckbounds(A, I.indices...)
+blockcheckbounds(::Type{Bool}, A::AbstractArray{T,N}, I::Vararg{BlockRange{1},N}) where {T,N} =
+    blockcheckbounds(Bool, A, map(i -> Int.(i), I)...)
+blockcheckbounds(::Type{Bool}, A::AbstractArray{T,N}, I::BlockRange{N}) where {T,N} = blockcheckbounds(Bool, A, I.indices...)
 
 """
     blockcheckbounds_indices(Bool, IA::Tuple{Vararg{BlockRange{1}}}, I::Tuple)

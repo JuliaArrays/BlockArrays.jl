@@ -173,8 +173,6 @@ BlockIndex(indcs::Tuple{Vararg{BlockIndex{1},N}}) where N = BlockIndex(block.(in
 ##
 
 @inline checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::Block{N}) where N = blockcheckbounds(Bool, A, I.n...)
-checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractArray{<:Block{N}}) where N =
-    all(i -> checkbounds(Bool, A, i), I)
 
 @inline function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndex{N}) where N
     bl = block(I)
@@ -433,24 +431,16 @@ intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1
 ##
 
 # Used to ensure a `BlockBoundsError` is thrown instead of a `BoundsError`,
-# see https://github.com/JuliaArrays/BlockArrays.jl/issues/458.
-function checkbounds(A::AbstractArray{<:Any,N}, I::BlockRange{N}) where N
-    return blockcheckbounds(A, I.indices...)
-end
-function checkbounds(A::AbstractArray, I1::BlockRange{1}, Irest::BlockRange{1}...)
-    return blockcheckbounds(A, map(I -> Int.(I), (I1, Irest...))...)
-end
-function checkbounds(A::AbstractArray, I1::AbstractVector{<:Block{1}}, Irest::AbstractVector{<:Block{1}}...)
-    return blockcheckbounds(A, map(I -> Int.(I), (I1, Irest...))...)
-end
+# see https://github.com/JuliaArrays/BlockArrays.jl/issues/458
+checkbounds(A::AbstractArray{<:Any,N}, I::BlockRange{N}) where N = blockcheckbounds(A, I)
+checkbounds(A::AbstractArray, I1::BlockRange{1}, Irest::BlockRange{1}...) =
+    blockcheckbounds(A, I1, Irest...)
 
 # Convert Block inputs to integers.
-function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockRange{N}) where N
-    return blockcheckbounds(Bool, A, I.indices...)
-end
-function checkbounds(::Type{Bool}, A::AbstractArray, I1::AbstractVector{<:Block{1}}, Irest::AbstractVector{<:Block{1}}...)
-    return blockcheckbounds(Bool, A, map(I -> Int.(I), (I1, Irest...))...)
-end
+checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockRange{N}) where N =
+    blockcheckbounds(Bool, A, I.indices...)
+checkbounds(::Type{Bool}, A::AbstractArray, I1::AbstractVector{<:Block{1}}, Irest::AbstractVector{<:Block{1}}...) =
+    blockcheckbounds(Bool, A, map(I -> Int.(I), (I1, Irest...))...)
 
 # needed for scalar-like broadcasting
 
