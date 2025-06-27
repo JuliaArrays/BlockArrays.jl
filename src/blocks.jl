@@ -7,7 +7,7 @@ Return the array-of-arrays view to `a` such that
 blocks(a)[i₁, i₂, ..., iₙ] == a[Block(i₁), Block(i₂), ..., Block(iₙ)]
 ```
 
-This function does not copy the blocks and give a mutable viwe to the original
+This function does not copy the blocks and give a mutable view to the original
 array.  This is an "inverse" of [`mortar`](@ref).
 
 # Examples
