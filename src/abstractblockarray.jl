@@ -88,6 +88,7 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64
 """
 @inline function blockcheckbounds(A::AbstractArray, i...)
     blockcheckbounds(Bool, A, i...) || throw(BlockBoundsError(A, i))
+    return nothing
 end
 
 # linear block indexing
@@ -99,15 +100,24 @@ end
     blockcheckbounds_indices(Bool, blockaxes(A), i)
 end
 
+checkbounds(A::AbstractArray{T, N}, i::Block{N}) where {T,N} = blockcheckbounds(A, i)
+checkbounds(A::AbstractArray{T}, i1::Block{1}, irest::Block{1}...) where {T} = blockcheckbounds(A, i1, irest...)
+checkbounds(A::AbstractArray{T, N}, i::AbstractArray{<:Block{N}}) where {T,N} = blockcheckbounds(A, i)
+checkbounds(A::AbstractArray{T}, i1::AbstractVector{<:Block{1}}, irest::AbstractVector{<:Block{1}}) where {T} =
+    blockcheckbounds(A, i1, irest...)
+
 blockcheckbounds(A::AbstractArray{T, N}, i::Block{N}) where {T,N} = blockcheckbounds(A, i.n...)
 blockcheckbounds(A::AbstractArray{T, N}, i::Vararg{Block{1},N}) where {T,N} = blockcheckbounds(A, Int.(i)...)
 blockcheckbounds(::AbstractArray{T, 0}) where {T} = true
 blockcheckbounds(A::AbstractVector{T}, i::Block{1}) where {T} = blockcheckbounds(A, Int(i))
 
-"""
-    blockcheckbounds_indices(Bool, IA::Tuple{Vararg{BlockRange{1}}}, I::Tuple{Vararg{Integer}})
+blockcheckbounds(A::AbstractArray{T,N}, I::Vararg{BlockRange{1},N}) where {T,N} = blockcheckbounds(A, map(i -> Int.(i), I)...)
+blockcheckbounds(A::AbstractArray{T,N}, I::BlockRange{N}) where {T,N} = blockcheckbounds(A, I.indices...)
 
-Return true if the "requested" indices in the tuple `Block.(I)` fall within the bounds of the "permitted"
+"""
+    blockcheckbounds_indices(Bool, IA::Tuple{Vararg{BlockRange{1}}}, I::Tuple)
+
+Return true if the "requested" indices in the tuple `map(i -> Block.(i), I)` fall within the bounds of the "permitted"
 indices specified by the tuple `IA`. This function recursively consumes elements of these tuples
 in a 1-for-1 fashion.
 
@@ -124,6 +134,12 @@ julia> BlockArrays.blockcheckbounds_indices(Bool, blockaxes(B), (1,2))
 true
 
 julia> BlockArrays.blockcheckbounds_indices(Bool, blockaxes(B), (4,1))
+false
+
+julia> BlockArrays.blockcheckbounds_indices(Bool, blockaxes(B), (1:2,2:3))
+true
+
+julia> BlockArrays.blockcheckbounds_indices(Bool, blockaxes(B), (1:2,2:4))
 false
 ```
 """
@@ -143,9 +159,9 @@ end
 end
 
 """
-    blockcheckindex(Bool, inds::BlockRange{1}, index::Integer)
+    blockcheckindex(Bool, inds::BlockRange{1}, index)
 
-Return `true` if `Block(index)` is within the bounds of `inds`.
+Return `true` if `Block.(index)` is within the bounds of `inds`.
 
 # Examples
 ```jldoctest
@@ -154,9 +170,15 @@ true
 
 julia> BlockArrays.blockcheckindex(Bool, BlockRange(1:2), 3)
 false
+
+julia> BlockArrays.blockcheckindex(Bool, BlockRange(1:3), 2:3)
+true
+
+julia> BlockArrays.blockcheckindex(Bool, BlockRange(1:3), 2:4)
+false
 ```
 """
-@inline blockcheckindex(::Type{Bool}, inds::BlockRange{1}, i::Integer) = Block(i) in inds
+@inline blockcheckindex(::Type{Bool}, inds::BlockRange{1}, i) = checkindex(Bool, Int.(inds), i)
 
 @propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Block{N}) where {T,N} =
     setindex!(block_arr, v, Block.(block.n)...)
