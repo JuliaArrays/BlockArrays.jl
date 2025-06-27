@@ -201,6 +201,10 @@ BlockIndexRange
 BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where {N} =
     BlockIndexRange(block,inds)
 
+function BlockIndexRange(inds::Tuple{BlockIndexRange{1},Vararg{BlockIndexRange{1}}})
+    BlockIndexRange(Block(block.(inds)), map(ind -> ind.indices[1], inds))
+end
+
 block(R::BlockIndexRange) = R.block
 
 copy(R::BlockIndexRange) = BlockIndexRange(R.block, map(copy, R.indices))
