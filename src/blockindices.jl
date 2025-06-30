@@ -302,7 +302,7 @@ end
 
 # deleted code that isn't used, such as 0-dimensional case
 """
-    BlockRange(axes::Tuple{AbstractUnitRange{Vararg{Int}}})
+    BlockRange(axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}})
     BlockRange(sizes::Tuple{Vararg{Integer}})
 
 Represent a Cartesian range of blocks.
