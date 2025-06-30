@@ -92,7 +92,7 @@ end
 
 # linear block indexing
 @inline function blockcheckbounds(::Type{Bool}, A::AbstractArray, i)
-    blockcheckindex(Bool, BlockRange(blocklength(A)), i)
+    blockcheckindex(Bool, BlockRange((blocklength(A),)), i)
 end
 # cartesian block indexing
 @inline function blockcheckbounds(::Type{Bool}, A::AbstractArray, i...)

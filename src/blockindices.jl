@@ -338,11 +338,8 @@ end
 
 BlockRange(inds::Tuple{Vararg{AbstractUnitRange{<:Integer}}}) =
     BlockRange{length(inds),typeof(inds)}(inds)
-BlockRange(inds::Vararg{AbstractUnitRange{<:Integer}}) = BlockRange(inds)
 
-BlockRange() = BlockRange(())
 BlockRange(sizes::Tuple{Integer, Vararg{Integer}}) = BlockRange(map(oneto, sizes))
-BlockRange(sizes::Vararg{Integer}) = BlockRange(sizes)
 
 BlockRange(B::AbstractArray) = BlockRange(blockaxes(B))
 
@@ -411,13 +408,13 @@ _in(b, ::Tuple{}, ::Tuple{}, ::Tuple{}) = b
 @inline _in(b, i, start, stop) = _in(b & (start[1] <= i[1] <= stop[1]), tail(i), tail(start), tail(stop))
 
 # We sometimes need intersection of BlockRange to return a BlockRange
-intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1], b.indices[1]))
+intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange((intersect(a.indices[1], b.indices[1]),))
 
 # needed for scalar-like broadcasting
 
 BlockSlice{Block{1,BT},T,RT}(a::Base.OneTo) where {BT,T,RT<:AbstractUnitRange} =
     BlockSlice(Block(convert(BT, 1)), convert(RT, a))::BlockSlice{Block{1,BT},T,RT}
 BlockSlice{BlockRange{1,Tuple{BT}},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange} =
-    BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},T,RT}
+    BlockSlice(BlockRange((convert(BT, Base.OneTo(1)),)), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},T,RT}
 BlockSlice{BlockIndexRange{1,Tuple{BT},I,BI},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange,I,BI} =
     BlockSlice(BlockIndexRange(Block(BI(1)), convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockIndexRange{1,Tuple{BT},I,BI},T,RT}

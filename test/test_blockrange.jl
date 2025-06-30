@@ -4,8 +4,8 @@ using BlockArrays, Test
 
 @testset "block range" begin
     # test backend code
-    @test BlockRange((1:3),) == BlockRange{1,Tuple{UnitRange{Int}}}((1:3,))
-    @test BlockRange(1:3) == BlockRange((1:3),)
+    @test BlockRange((1:3,)) == BlockRange{1,Tuple{UnitRange{Int}}}((1:3,))
+    @test BlockRange(1:3) === BlockRange(Base.OneTo(1))
     @test_throws ArgumentError Block(1,1):Block(2,2)
 
     @test eltype(Block.(1:2)) == Block{1,Int}
@@ -69,9 +69,9 @@ using BlockArrays, Test
     @test V ==  A[Block.(1:2), Block.(2:3)]
 
     @testset "iterator" begin
-        @test BlockRange()[] == collect(BlockRange())[] == Block()
-        @test BlockRange(1:3) == collect(BlockRange(1:3)) == [Block(1),Block(2),Block(3)]
-        @test BlockRange(1:3,1:2) == collect(BlockRange(1:3,1:2))
+        @test BlockRange(())[] == collect(BlockRange(()))[] == Block()
+        @test BlockRange((1:3,)) == collect(BlockRange((1:3,))) == [Block(1),Block(2),Block(3)]
+        @test BlockRange((1:3,1:2)) == collect(BlockRange((1:3,1:2)))
     end
 
     # non Int64 range
