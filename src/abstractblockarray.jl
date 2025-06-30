@@ -118,7 +118,7 @@ The actual bounds-checking is performed by [`blockcheckindex`](@ref).
 julia> B = BlockArray(zeros(6,6), 1:3, 1:3);
 
 julia> blockaxes(B)
-(BlockRange(Base.OneTo(3)), BlockRange(Base.OneTo(3)))
+(BlockRange((3,)), BlockRange((3,)))
 
 julia> BlockArrays.blockcheckbounds_indices(Bool, blockaxes(B), (1,2))
 true
