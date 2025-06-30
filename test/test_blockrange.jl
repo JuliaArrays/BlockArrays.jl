@@ -6,7 +6,13 @@ using BlockArrays, Test
     # test backend code
     @test BlockRange((1:3,)) == BlockRange{1,Tuple{UnitRange{Int}}}((1:3,))
     @test BlockRange(1:3) === BlockRange(Base.OneTo(1))
+    @test BlockRange(blockedrange([2,3])) === BlockRange((Base.OneTo(2),))
+    @test BlockRange(blockedrange(2,[2,3])) === BlockRange((Base.OneTo(2),))
     @test_throws ArgumentError Block(1,1):Block(2,2)
+    @test_throws MethodError BlockRange(1:3, 1:3)
+    @test_throws MethodError BlockRange(3)
+    @test_throws MethodError BlockRange(3, 3)
+    @test_throws MethodError BlockRange()
 
     @test eltype(Block.(1:2)) == Block{1,Int}
     @test eltype(typeof(Block.(1:2))) == Block{1,Int}

@@ -157,10 +157,14 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test sprint(show, "text/plain", BlockIndex((1,2), (3,4))) == "Block(1, 2)[3, 4]"
         @test sprint(show, "text/plain", BlockArrays.BlockIndexRange(Block(1), 3:4)) == "Block(1)[3:4]"
 
-        @test sprint(show, "text/plain", BlockRange(())) == "BlockRange()"
-        @test sprint(show, "text/plain", BlockRange((1:2,))) == "BlockRange(1:2)"
-        @test sprint(show, "text/plain", BlockRange((1:2, 2:3,))) == "BlockRange(1:2, 2:3)"
-        @test sprint(show, BlockRange((1:2, 2:3))) == "BlockRange(1:2, 2:3)"
+        @test sprint(show, "text/plain", BlockRange(())) == "BlockRange(())"
+        @test sprint(show, "text/plain", BlockRange((1:2,))) == "BlockRange((1:2,))"
+        @test sprint(show, "text/plain", BlockRange((2,))) == "BlockRange((2,))"
+        @test sprint(show, "text/plain", BlockRange((Base.OneTo(2),))) == "BlockRange((2,))"
+        @test sprint(show, "text/plain", BlockRange((1:2, 2:3,))) == "BlockRange((1:2, 2:3))"
+        @test sprint(show, "text/plain", BlockRange((2, 3,))) == "BlockRange((2, 3))"
+        @test sprint(show, "text/plain", BlockRange(Base.OneTo.((2, 3)))) == "BlockRange((2, 3))"
+        @test sprint(show, BlockRange((1:2, 2:3))) == "BlockRange((1:2, 2:3))"
     end
 end
 
