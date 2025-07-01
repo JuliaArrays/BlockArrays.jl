@@ -170,16 +170,16 @@ Return `true` if `Block.(index)` is within the bounds of `inds`.
 
 # Examples
 ```jldoctest
-julia> BlockArrays.blockcheckindex(Bool, BlockRange(1:2), 1)
+julia> BlockArrays.blockcheckindex(Bool, BlockRange((1:2,)), 1)
 true
 
-julia> BlockArrays.blockcheckindex(Bool, BlockRange(1:2), 3)
+julia> BlockArrays.blockcheckindex(Bool, BlockRange((1:2,)), 3)
 false
 
-julia> BlockArrays.blockcheckindex(Bool, BlockRange(1:3), 2:3)
+julia> BlockArrays.blockcheckindex(Bool, BlockRange((1:3,)), 2:3)
 true
 
-julia> BlockArrays.blockcheckindex(Bool, BlockRange(1:3), 2:4)
+julia> BlockArrays.blockcheckindex(Bool, BlockRange((1:3,)), 2:4)
 false
 ```
 """
