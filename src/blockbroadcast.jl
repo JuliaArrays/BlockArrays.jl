@@ -15,10 +15,15 @@ BlockStyle(::Val{N}) where {N} = BlockStyle{N}()
 BlockedStyle(::Val{N}) where {N} = BlockedStyle{N}()
 BlockStyle{M}(::Val{N}) where {N,M} = BlockStyle{N}()
 BlockedStyle{M}(::Val{N}) where {N,M} = BlockedStyle{N}()
-BroadcastStyle(::Type{<:BlockArray{<:Any,N}}) where {N} = BlockStyle{N}()
-BroadcastStyle(::Type{<:BlockedArray{<:Any,N}}) where {N} = BlockedStyle{N}()
-BroadcastStyle(::Type{<:AdjOrTrans{<:Any,<:BlockArray{<:Any,N}}}) where {N} = BlockStyle{2}()
-BroadcastStyle(::Type{<:AdjOrTrans{<:Any,<:BlockedArray{<:Any,N}}}) where {N} = BlockedStyle{2}()
+blockbroadcaststyle(::AbstractArrayStyle{N}) where {N} = BlockStyle{N}()
+blockedbroadcaststyle(::AbstractArrayStyle{N}) where {N} = BlockedStyle{N}()
+
+BroadcastStyle(::Type{<:BlockArray{<:Any,N,Blocks}}) where {N,Blocks} = blockbroadcaststyle(BroadcastStyle(Blocks))
+BroadcastStyle(::Type{<:BlockedArray{<:Any,N,Blocks}}) where {N,Blocks} = blockedbroadcaststyle(BroadcastStyle(Blocks))
+BroadcastStyle(::Type{<:Adjoint{T,<:BlockArray{<:Any,N,Blocks}}}) where {T,N,Blocks} = blockbroadcaststyle(BroadcastStyle(Adjoint{T,Blocks}))
+BroadcastStyle(::Type{<:Transpose{T,<:BlockArray{<:Any,N,Blocks}}}) where {T,N,Blocks} = blockbroadcaststyle(BroadcastStyle(Transpose{T,Blocks}))
+BroadcastStyle(::Type{<:Adjoint{T,<:BlockedArray{<:Any,N,Blocks}}}) where {T,N,Blocks} = blockedbroadcaststyle(BroadcastStyle(Adjoint{T,Blocks}))
+BroadcastStyle(::Type{<:Transpose{T,<:BlockedArray{<:Any,N,Blocks}}}) where {T,N,Blocks} = blockedbroadcaststyle(BroadcastStyle(Transpose{T,Blocks}))
 
 BroadcastStyle(::DefaultArrayStyle{N}, b::AbstractBlockStyle{M}) where {M,N} = typeof(b)(Val(max(M,N)))
 BroadcastStyle(a::AbstractBlockStyle{N}, ::DefaultArrayStyle{M}) where {M,N} = typeof(a)(Val(max(M,N)))
@@ -271,3 +276,13 @@ for op in (:*, :\)
         broadcasted(::AbstractBlockStyle, ::typeof($op), a::AbstractArray{T}, b::Ones{V}) where {T,V} = LinearAlgebra.copy_oftype(a, Base.promote_op(*, T, V))
     end
 end
+
+
+
+###
+# Ranges
+###
+
+broadcasted(::DefaultArrayStyle{1}, ::typeof(+), r::AbstractBlockedUnitRange, x::Integer) = _BlockedUnitRange(first(r) + x, blocklasts(r) .+ x)
+broadcasted(::DefaultArrayStyle{1}, ::typeof(+), x::Integer, r::AbstractBlockedUnitRange) = _BlockedUnitRange(x + first(r), x .+ blocklasts(r))
+broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::AbstractBlockedUnitRange, x::Integer) = _BlockedUnitRange(first(r) - x, blocklasts(r) .- x)
