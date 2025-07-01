@@ -11,7 +11,7 @@ function unblock(A, inds, I)
 end
 
 _blockslice(B, a::AbstractUnitRange) = BlockSlice(B, a)
-_blockslice(B, a) = a # drop block structure
+_blockslice(B, a) = BlockedSlice(B, a)
 
 # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
 # similar to `ones(2)[1:1, 1:1]`.
@@ -166,10 +166,11 @@ block(A::Block) = A
 @inline view(block_arr::AbstractBlockArray{<:Any,N}, blocks::Vararg{BlockSlice1, N}) where N =
     view(block_arr, map(block,blocks)...)
 
-const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}}}
+const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}},BlockedSlice}
 # view(V::SubArray{<:Any,N,NTuple{N,BlockSlices}},
 
 _block_reindex(b::BlockSlice, i::Block{1}) = b.block[Int(i)]
+_block_reindex(b::BlockedSlice, i::Block{1}) = b.blocks[Int(i)]
 _block_reindex(b::Slice, i::Block{1}) = i
 
 @inline view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlices}}, block::Block{N}) where N =
