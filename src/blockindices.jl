@@ -5,7 +5,18 @@ A `Block` is simply a wrapper around a set of indices or enums so that it can be
 indexing a `AbstractBlockArray` with a `Block` the a block at that block index will be returned instead of
 a single element.
 
+It can be constructed and used to index into `BlockArrays` in the following manner:
+
 ```jldoctest
+julia> Block(1)
+Block(1)
+
+julia> Block(1, 2)
+Block(1, 2)
+
+julia> Block((Block(1), Block(2)))
+Block(1, 2)
+
 julia> A = BlockArray(ones(2,3), [1, 1], [2, 1])
 2×2-blocked 2×3 BlockMatrix{Float64}:
  1.0  1.0  │  1.0
@@ -119,9 +130,21 @@ end
 A `BlockIndex` is an index which stores a global index in two parts: the block
 and the offset index into the block.
 
-It can be used to index into `BlockArrays` in the following manner:
+It can be constructed and used to index into `BlockArrays` in the following manner:
 
 ```jldoctest
+julia> BlockIndex((1,2), (3,4))
+Block(1, 2)[3, 4]
+
+julia> Block(1)[3] === BlockIndex((1), (3))
+true
+
+julia> Block(1,2)[3,4] === BlockIndex((1,2), (3,4))
+true
+
+julia> BlockIndex((Block(1)[3], Block(2)[4]))
+Block(1, 2)[3, 4]
+
 julia> arr = Array(reshape(1:25, (5,5)));
 
 julia> a = BlockedArray(arr, [3,2], [1,4])
@@ -133,10 +156,10 @@ julia> a = BlockedArray(arr, [3,2], [1,4])
  4  │   9  14  19  24
  5  │  10  15  20  25
 
-julia> a[BlockIndex((1,2), (1,2))]
+julia> a[Block(1,2)[1,2]]
 11
 
-julia> a[BlockIndex((2,2), (2,3))]
+julia> a[Block(2,2)[2,3]]
 20
 ```
 """
@@ -196,12 +219,53 @@ end
 """
     BlockIndexRange(block, startind:stopind)
 
-represents a cartesian range inside a block.
+Represents a cartesian range inside a block.
+
+It can be constructed and used to index into `BlockArrays` in the following manner:
+
+```jldoctest
+julia> BlockIndexRange(Block(1,2), (2:3,3:4))
+Block(1, 2)[2:3, 3:4]
+
+julia> Block(1)[2:3] === BlockIndexRange(Block(1), 2:3)
+true
+
+julia> Block(1,2)[2:3,3:4] === BlockIndexRange(Block(1,2), (2:3,3:4))
+true
+
+julia> BlockIndexRange((Block(1)[2:3], Block(2)[3:4]))
+Block(1, 2)[2:3, 3:4]
+
+julia> arr = Array(reshape(1:25, (5,5)));
+
+julia> a = BlockedArray(arr, [3,2], [1,4])
+2×2-blocked 5×5 BlockedMatrix{Int64}:
+ 1  │   6  11  16  21
+ 2  │   7  12  17  22
+ 3  │   8  13  18  23
+ ───┼────────────────
+ 4  │   9  14  19  24
+ 5  │  10  15  20  25
+
+julia> a[Block(1,2)[1:2,2:3]]
+2×2 Matrix{Int64}:
+ 11  16
+ 12  17
+
+julia> a[Block(2,2)[1:2,3:4]]
+2×2 Matrix{Int64}:
+ 19  24
+ 20  25
+```
 """
 BlockIndexRange
 
 BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where {N} =
     BlockIndexRange(block,inds)
+
+function BlockIndexRange(inds::Tuple{BlockIndexRange{1},Vararg{BlockIndexRange{1}}})
+    BlockIndexRange(Block(block.(inds)), map(ind -> ind.indices[1], inds))
+end
 
 block(R::BlockIndexRange) = R.block
 
@@ -359,6 +423,12 @@ julia> BlockRange((2, 2)) |> collect # number of elements, starting at 1
 
 julia> Block(1):Block(2)
 BlockRange((1:2,))
+
+julia> Block.(1:2)
+BlockRange((1:2,))
+
+julia> BlockRange((Block.(1:2), Block.(3:4)))
+BlockRange((1:2, 3:4))
 ```
 """
 BlockRange
