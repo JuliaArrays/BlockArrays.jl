@@ -2,7 +2,7 @@ module TestBlockIndices
 
 using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
-import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
+import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, BlockedSlice
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -90,6 +90,8 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
+        @test Block(1,1)[2:4,2:4][2:3,2:3] == BlockIndexRange(Block(1,1),(3:4,3:4))
+        @test BlockIndexRange(Block(),())[] == BlockIndex()
         @test BlockIndex((2,2,2),(2,)) == BlockIndex((2,2,2),(2,1,)) == BlockIndex((2,2,2),(2,1,1))
         @test BlockIndex(2,(2,)) === BlockIndex((2,),(2,))
         @test BlockIndex(UInt(2),(2,)) === BlockIndex((UInt(2),),(2,))
@@ -157,10 +159,14 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test sprint(show, "text/plain", BlockIndex((1,2), (3,4))) == "Block(1, 2)[3, 4]"
         @test sprint(show, "text/plain", BlockArrays.BlockIndexRange(Block(1), 3:4)) == "Block(1)[3:4]"
 
-        @test sprint(show, "text/plain", BlockRange()) == "BlockRange()"
-        @test sprint(show, "text/plain", BlockRange(1:2)) == "BlockRange(1:2)"
-        @test sprint(show, "text/plain", BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
-        @test sprint(show, BlockRange(1:2, 2:3)) == "BlockRange(1:2, 2:3)"
+        @test sprint(show, "text/plain", BlockRange(())) == "BlockRange(())"
+        @test sprint(show, "text/plain", BlockRange((1:2,))) == "BlockRange((1:2,))"
+        @test sprint(show, "text/plain", BlockRange((2,))) == "BlockRange((2,))"
+        @test sprint(show, "text/plain", BlockRange((Base.OneTo(2),))) == "BlockRange((2,))"
+        @test sprint(show, "text/plain", BlockRange((1:2, 2:3,))) == "BlockRange((1:2, 2:3))"
+        @test sprint(show, "text/plain", BlockRange((2, 3,))) == "BlockRange((2, 3))"
+        @test sprint(show, "text/plain", BlockRange(Base.OneTo.((2, 3)))) == "BlockRange((2, 3))"
+        @test sprint(show, BlockRange((1:2, 2:3))) == "BlockRange((1:2, 2:3))"
     end
 end
 
@@ -218,7 +224,7 @@ end
         b = BlockRange(OffsetArrays.IdOffsetRange.((2:4, 3:5), 2))
         @test b[axes(b)...] === b
 
-        b = BlockRange(3)
+        b = BlockRange((3,))
         for i in 1:3
             @test b[i] == Block(i)
         end
@@ -408,6 +414,14 @@ end
         @test !checkbounds(Bool, b, Block(3)[4])
         @test !checkbounds(Bool, b, Block(0)[1])
         @test !checkbounds(Bool, b, Block(1)[0])
+        @test checkbounds(Bool, b, Block(1))
+        @test checkbounds(Bool, b, Block(2))
+        @test checkbounds(Bool, b, Block(3))
+        @test !checkbounds(Bool, b, Block(4))
+        @test checkbounds(Bool, b, Block.(1:3))
+        @test !checkbounds(Bool, b, Block.(1:4))
+        @test_throws BlockBoundsError checkbounds(b, Block(4))
+        @test_throws BlockBoundsError checkbounds(b, Block.(1:4))
         # treat b as the axis
         @test checkindex(Bool, b, Block(1)[1])
         @test checkindex(Bool, b, Block(1)[1:1])
@@ -497,7 +511,7 @@ end
         b = BlockRange(OffsetArrays.IdOffsetRange.((2:4, 3:5), 2))
         @test b[axes(b)...] === b
 
-        b = BlockRange(3)
+        b = BlockRange((3,))
         for i in 1:3
             @test b[i] == Block(i)
         end
@@ -863,6 +877,16 @@ end
         C = CartesianIndices((1:3, 1:3))
         @test view(C, b, b) === view(C, r, r)
     end
+end
+
+@testset "BlockedSlice" begin
+    b = BlockedSlice([Block(2), Block(1)], mortar([3:5, 1:2]))
+    @test length(b) == 5
+    for i in eachindex(b.indices)
+        @test b[i] === b.indices[i]
+    end
+    @test b[Block(1)] === BlockSlice(Block(2), 3:5)
+    @test b[Block(2)] === BlockSlice(Block(1), 1:2)
 end
 
 #=

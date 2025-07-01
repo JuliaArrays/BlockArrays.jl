@@ -309,7 +309,7 @@ julia> A = BlockArray([1,2,3],[2,1])
  3
 
 julia> blockaxes(A)
-(BlockRange(Base.OneTo(2)),)
+(BlockRange((2,)),)
 
 julia> B = BlockArray(zeros(3,4), [1,2], [1,2,1])
 2×3-blocked 3×4 BlockMatrix{Float64}:
@@ -319,7 +319,7 @@ julia> B = BlockArray(zeros(3,4), [1,2], [1,2,1])
  0.0  │  0.0  0.0  │  0.0
 
 julia> blockaxes(B)
-(BlockRange(Base.OneTo(2)), BlockRange(Base.OneTo(3)))
+(BlockRange((2,)), BlockRange((3,)))
 ```
 """
 blockaxes(b::AbstractBlockedUnitRange) = _blockaxes(blocklasts(b))
@@ -342,7 +342,7 @@ julia> A = BlockArray([1,2,3], [2,1])
  3
 
 julia> blockaxes(A,1)
-BlockRange(Base.OneTo(2))
+BlockRange((2,))
 
 julia> blockaxes(A,1) |> collect
 2-element Vector{Block{1, Int64}}:

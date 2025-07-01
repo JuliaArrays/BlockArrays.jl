@@ -151,7 +151,7 @@ julia> view(A, Block(2)) .= [3,4]; A[Block(2)]
  4.0
 
 julia> view(A, Block.(1:2))
-3-element view(::BlockVector{Float64, Vector{Vector{Float64}}, Tuple{BlockedOneTo{Int64, ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}}}, BlockSlice(BlockRange(1:2),1:1:3)) with eltype Float64 with indices BlockedOneTo([1, 3]):
+3-element view(::BlockVector{Float64, Vector{Vector{Float64}}, Tuple{BlockedOneTo{Int64, ArrayLayouts.RangeCumsum{Int64, UnitRange{Int64}}}}}, BlockSlice(BlockRange((1:2,)),1:1:3)) with eltype Float64 with indices BlockedOneTo([1, 3]):
  1.0
  3.0
  4.0
