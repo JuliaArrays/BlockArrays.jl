@@ -307,7 +307,6 @@ _indices(B) = B
 """
     NoncontiguousBlockSlice(blocks, indices)
 
-<<<<<<< HEAD
 Represents an AbstractVector of indices attached to a (potentially non-contiguous) subblock,
 set of blocks, or set of subblocks. This is the generalization of `BlockSlice` to
 non-contiguous slices.
