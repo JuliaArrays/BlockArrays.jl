@@ -139,7 +139,7 @@ end
 # this is loosely based on Slice reindex in subarray.jl
 @propagate_inbounds reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
-    (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
+    (BlockSlice(BlockRange((idxs[1].block.indices[1][Int.(subidxs[1].block)],)),
                                             idxs[1].indices[subidxs[1].block]),
                                 reindex(tail(idxs), tail(subidxs))...)
 

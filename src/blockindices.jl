@@ -164,6 +164,7 @@ end
 
 block(b::BlockIndex) = Block(b.I...)
 blockindex(b::BlockIndex{1}) = b.α[1]
+blockindex(b::BlockIndex) = CartesianIndex(b.α)
 
 BlockIndex(indcs::Tuple{Vararg{BlockIndex{1},N}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
 
@@ -172,15 +173,16 @@ BlockIndex(indcs::Tuple{Vararg{BlockIndex{1},N}}) where N = BlockIndex(block.(in
 ##
 
 @inline checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::Block{N}) where N = blockcheckbounds(Bool, A, I.n...)
+
 @inline function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndex{N}) where N
     bl = block(I)
     checkbounds(Bool, A, bl) || return false
-    B = A[bl]
-    checkbounds(Bool, B, blockindex(I)...)
+    # TODO: Replace with `eachblockaxes(A)[bl]` once that is defined.
+    binds = map(Base.axes1 ∘ getindex, axes(A), Tuple(bl))
+    Base.checkbounds_indices(Bool, binds, (blockindex(I),))
 end
-
-checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractVector{<:BlockIndex{N}}) where N =
-    all(checkbounds.(Bool, Ref(A), I))
+checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractArray{<:BlockIndex{N}}) where N =
+    all(i -> checkbounds(Bool, A, i), I)
 
 struct BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}},I<:Tuple{Vararg{Integer,N}},BI<:Integer} <: AbstractArray{BlockIndex{N,NTuple{N,BI},I},N}
     block::Block{N,BI}
@@ -243,6 +245,17 @@ length(iter::BlockIndexRange) = prod(size(iter))
 
 Block(bs::BlockIndexRange) = bs.block
 
+##
+# checkindex
+##
+
+function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndexRange{N}) where N
+    bl = block(I)
+    checkbounds(Bool, A, bl) || return false
+    # TODO: Replace with `eachblockaxes(A)[bl]` once that is defined.
+    binds = map(Base.axes1 ∘ getindex, axes(A), Tuple(bl))
+    Base.checkbounds_indices(Bool, binds, I.indices)
+end
 
 # #################
 # # support for pointers
@@ -324,8 +337,8 @@ end
 
 # deleted code that isn't used, such as 0-dimensional case
 """
-    BlockRange(axes::Tuple{AbstractUnitRange{Int}})
-    BlockRange(sizes::Vararg{Integer})
+    BlockRange(axes::Tuple{Vararg{AbstractUnitRange{<:Integer}}})
+    BlockRange(sizes::Tuple{Vararg{Integer}})
 
 Represent a Cartesian range of blocks.
 
@@ -334,18 +347,18 @@ The relationship between `Block` and `BlockRange` mimics the relationship betwee
 
 # Examples
 ```jldoctest
-julia> BlockRange(2:3, 3:4) |> collect
+julia> BlockRange((2:3, 3:4)) |> collect
 2×2 Matrix{Block{2, Int64}}:
  Block(2, 3)  Block(2, 4)
  Block(3, 3)  Block(3, 4)
 
-julia> BlockRange(2, 2) |> collect # number of elements, starting at 1
+julia> BlockRange((2, 2)) |> collect # number of elements, starting at 1
 2×2 Matrix{Block{2, Int64}}:
  Block(1, 1)  Block(1, 2)
  Block(2, 1)  Block(2, 2)
 
 julia> Block(1):Block(2)
-BlockRange(1:2)
+BlockRange((1:2,))
 ```
 """
 BlockRange
@@ -360,11 +373,8 @@ end
 
 BlockRange(inds::Tuple{Vararg{AbstractUnitRange{<:Integer}}}) =
     BlockRange{length(inds),typeof(inds)}(inds)
-BlockRange(inds::Vararg{AbstractUnitRange{<:Integer}}) = BlockRange(inds)
 
-BlockRange() = BlockRange(())
 BlockRange(sizes::Tuple{Integer, Vararg{Integer}}) = BlockRange(map(oneto, sizes))
-BlockRange(sizes::Vararg{Integer}) = BlockRange(sizes)
 
 BlockRange(B::AbstractArray) = BlockRange(blockaxes(B))
 
@@ -433,13 +443,29 @@ _in(b, ::Tuple{}, ::Tuple{}, ::Tuple{}) = b
 @inline _in(b, i, start, stop) = _in(b & (start[1] <= i[1] <= stop[1]), tail(i), tail(start), tail(stop))
 
 # We sometimes need intersection of BlockRange to return a BlockRange
-intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange(intersect(a.indices[1], b.indices[1]))
+intersect(a::BlockRange{1}, b::BlockRange{1}) = BlockRange((intersect(a.indices[1], b.indices[1]),))
+
+##
+# checkindex
+##
+
+# Used to ensure a `BlockBoundsError` is thrown instead of a `BoundsError`,
+# see https://github.com/JuliaArrays/BlockArrays.jl/issues/458
+checkbounds(A::AbstractArray{<:Any,N}, I::BlockRange{N}) where N = blockcheckbounds(A, I)
+checkbounds(A::AbstractArray, I1::BlockRange{1}, Irest::BlockRange{1}...) =
+    blockcheckbounds(A, I1, Irest...)
+
+# Convert Block inputs to integers.
+checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockRange{N}) where N =
+    blockcheckbounds(Bool, A, I.indices...)
+checkbounds(::Type{Bool}, A::AbstractArray, I1::AbstractVector{<:Block{1}}, Irest::AbstractVector{<:Block{1}}...) =
+    blockcheckbounds(Bool, A, map(I -> Int.(I), (I1, Irest...))...)
 
 # needed for scalar-like broadcasting
 
 BlockSlice{Block{1,BT},T,RT}(a::Base.OneTo) where {BT,T,RT<:AbstractUnitRange} =
     BlockSlice(Block(convert(BT, 1)), convert(RT, a))::BlockSlice{Block{1,BT},T,RT}
 BlockSlice{BlockRange{1,Tuple{BT}},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange} =
-    BlockSlice(BlockRange(convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},T,RT}
+    BlockSlice(BlockRange((convert(BT, Base.OneTo(1)),)), convert(RT, a))::BlockSlice{BlockRange{1,Tuple{BT}},T,RT}
 BlockSlice{BlockIndexRange{1,Tuple{BT},I,BI},T,RT}(a::Base.OneTo) where {BT<:AbstractUnitRange,T,RT<:AbstractUnitRange,I,BI} =
     BlockSlice(BlockIndexRange(Block(BI(1)), convert(BT, Base.OneTo(1))), convert(RT, a))::BlockSlice{BlockIndexRange{1,Tuple{BT},I,BI},T,RT}
