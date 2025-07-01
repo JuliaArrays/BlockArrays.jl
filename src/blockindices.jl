@@ -291,6 +291,27 @@ _indices(B) = B
 
 Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
 
+"""
+    BlockedSlice(blocks, indices)
+
+Represents blocked indices attached to a collection of corresponding blocks.
+
+Upon calling `to_indices()`, a collection of blocks are converted to BlockedSlice objects to represent
+the indices over which the blocks span.
+
+This mimics the relationship between `Colon` and `Base.Slice`, `Block` and `BlockSlice`, etc.
+"""
+struct BlockedSlice{BB,T<:Integer,INDS<:AbstractVector{T}} <: AbstractVector{T}
+    blocks::BB
+    indices::INDS
+end
+
+for f in (:axes, :size)
+    @eval $f(S::BlockedSlice) = $f(S.indices)
+end
+
+@propagate_inbounds getindex(S::BlockedSlice, i::Integer) = getindex(S.indices, i)
+@propagate_inbounds getindex(S::BlockedSlice, k::Block{1}) = BlockSlice(S.blocks[Int(k)], getindex(S.indices, k))
 
 struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{<:Integer}}} <: AbstractArray{Block{N,Int},N}
     indices::R

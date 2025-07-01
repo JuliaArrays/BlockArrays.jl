@@ -2,7 +2,7 @@ module TestBlockIndices
 
 using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
-import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
+import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, BlockedSlice
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -831,6 +831,16 @@ end
         C = CartesianIndices((1:3, 1:3))
         @test view(C, b, b) === view(C, r, r)
     end
+end
+
+@testset "BlockedSlice" begin
+    b = BlockedSlice([Block(2), Block(1)], mortar([3:5, 1:2]))
+    @test length(b) == 5
+    for i in eachindex(b.indices)
+        @test b[i] === b.indices[i]
+    end
+    @test b[Block(1)] === BlockSlice(Block(2), 3:5)
+    @test b[Block(2)] === BlockSlice(Block(1), 1:2)
 end
 
 #=
