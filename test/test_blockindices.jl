@@ -2,7 +2,7 @@ module TestBlockIndices
 
 using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
-import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
+import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, BlockedSlice
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -90,6 +90,8 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
+        @test Block(1,1)[2:4,2:4][2:3,2:3] == BlockIndexRange(Block(1,1),(3:4,3:4))
+        @test BlockIndexRange(Block(),())[] == BlockIndex()
         @test BlockIndex((2,2,2),(2,)) == BlockIndex((2,2,2),(2,1,)) == BlockIndex((2,2,2),(2,1,1))
         @test BlockIndex(2,(2,)) === BlockIndex((2,),(2,))
         @test BlockIndex(UInt(2),(2,)) === BlockIndex((UInt(2),),(2,))
@@ -833,6 +835,16 @@ end
         C = CartesianIndices((1:3, 1:3))
         @test view(C, b, b) === view(C, r, r)
     end
+end
+
+@testset "BlockedSlice" begin
+    b = BlockedSlice([Block(2), Block(1)], mortar([3:5, 1:2]))
+    @test length(b) == 5
+    for i in eachindex(b.indices)
+        @test b[i] === b.indices[i]
+    end
+    @test b[Block(1)] === BlockSlice(Block(2), 3:5)
+    @test b[Block(2)] === BlockSlice(Block(1), 1:2)
 end
 
 #=

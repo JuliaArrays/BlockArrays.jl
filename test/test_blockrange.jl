@@ -29,6 +29,15 @@ using BlockArrays, Test
     @test view(A, Block.(1:2)) == [1,2,3]
     @test A[Block.(1:2)] == [1,2,3]
 
+    V = view(A, [Block(3), Block(2)])
+    @test V == [4, 5, 6, 2, 3]
+    I = parentindices(V)[1]
+    @test I isa BlockArrays.BlockedSlice{<:Vector{<:Block{1}}}
+    @test V[Block(1)] == 4:6
+    @test V[Block(2)] == 2:3
+    @test view(V, Block(1)) === view(A, Block(3))
+    @test view(V, Block(2)) === view(A, Block(2))
+
     A = BlockArray(reshape(collect(1:(6*12)),6,12), 1:3, 3:5)
 
     @test view(A, Block.(1:2), Block.(1:2)) == A[1:3,1:7]
