@@ -178,10 +178,10 @@ end
 function getindex(r::Base.OneTo{T}, s::BlockedOneTo) where T
     @inline
     @boundscheck checkbounds(r, s)
-    return BlockedOneTo(T.(blocklasts(s)))
+    return BlockedOneTo(convert(AbstractVector{T}, blocklasts(s)))
 end
 function getindex(r::BlockedOneTo{T}, s::BlockedOneTo) where T
-    return Base.OneTo(r)[s]
+    return Base.oneto(r)[s]
 end
 
 """
