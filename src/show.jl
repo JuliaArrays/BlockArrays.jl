@@ -212,7 +212,13 @@ end
 
 # BlockRange
 
-Base.show(io::IO, br::BlockRange) = print(io, "BlockRange(", join(br.indices, ", "), ")")
+function Base.show(io::IO, br::BlockRange)
+    print(io, "BlockRange(")
+    show(io, map(_xform_index, br.indices))
+    print(io, ")")
+end
+_xform_index(i) = i
+_xform_index(i::Base.OneTo) = i.stop
 Base.show(io::IO, ::MIME"text/plain", br::BlockRange) = show(io, br)
 
 # AbstractBlockedUnitRange
