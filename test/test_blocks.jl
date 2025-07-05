@@ -1,6 +1,7 @@
 module TestBlocks
 
-using Test, BlockArrays
+using Test, BlockArrays, FillArrays, LinearAlgebra
+import BlockArrays: BlockView
 
 @testset "blocks" begin
     @testset "blocks(::BlockVector)" begin
@@ -89,17 +90,29 @@ using Test, BlockArrays
     @testset "blocks(::Vector)" begin
         v = rand(3)
         @test size(blocks(v)) == (1,)
+        @test blocks(v)[1] ≡ v
+        @test blocks(v) isa BlockView{Float64,1,Vector{Float64}}
+        @test blocks(v')[1, 1] ≡ v'
+        @test blocks(v') isa Adjoint{Adjoint{Float64,Vector{Float64}},<:BlockView{Float64,1,Vector{Float64}}}
+        @test blocks(view(v, 1:2))[1, 1] ≡ view(v, 1:2)
+        @test blocks(view(v, 1:2)) isa BlockView{Float64,1,<:SubArray{Float64,1,Vector{Float64}}}
         blocks(v)[1][1] = 123
         @test v[1] == 123
-        @test parent(blocks(v)[1]) === v
     end
 
     @testset "blocks(::Matrix)" begin
         m = rand(2, 4)
         @test size(blocks(m)) == (1, 1)
+        @test blocks(m)[1] ≡ m
+        @test blocks(m)[1, 1] ≡ m
+        @test blocks(m) isa BlockView{Float64,2,Matrix{Float64}}
+        @test blocks(m')[1, 1] ≡ m'
+        @test blocks(m') isa Adjoint{Adjoint{Float64,Matrix{Float64}},BlockView{Float64,2,Matrix{Float64}}}
+        @test blocks(view(m, 1:2, 1:2))[1, 1] ≡ view(m, 1:2, 1:2)
+        @test blocks(view(m, 1:2, 1:2)) isa BlockView{Float64,2,<:SubArray{Float64,2,Matrix{Float64}}}
+        @test blocks(m)[1, 1] ≡ m
         blocks(m)[1, 1][1, 1] = 123
         @test m[1, 1] == 123
-        @test parent(blocks(m)[1, 1]) === m
     end
 
     @testset "blocks(::Adjoint|Transpose)" begin

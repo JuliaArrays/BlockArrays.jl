@@ -49,6 +49,7 @@ blocks(a::AbstractArray) = BlocksView(a)
 blocks(a::BlockArray) = a.blocks
 blocks(A::Adjoint) = adjoint(blocks(parent(A)))
 blocks(A::Transpose) = transpose(blocks(parent(A)))
+blocks(A::StridedArray) = BlockView(A)
 
 # convert a tuple of BlockRange to a tuple of `AbstractUnitRange{Int}`
 _block2int(B::Block{1}) = Int(B):Int(B)
@@ -63,7 +64,7 @@ struct BlocksView{
     S,                            # eltype(eltype(BlocksView(...)))
     N,                            # ndims
     T<:AbstractArray{S,N},        # eltype(BlocksView(...)), i.e., block type
-    B<:AbstractArray{S,N},   # array to be wrapped
+    B<:AbstractArray{S,N},        # array to be wrapped
 } <: AbstractArray{T,N}
     array::B
 end
@@ -78,17 +79,35 @@ Base.IteratorEltype(::Type{<:BlocksView}) = Base.EltypeUnknown()
 Base.size(a::BlocksView) = blocksize(a.array)
 Base.axes(a::BlocksView) = map(br -> Int.(br), blockaxes(a.array))
 
-#=
-This is broken for now. See: https://github.com/JuliaArrays/BlockArrays.jl/issues/120
-# IndexLinear implementations
-@propagate_inbounds getindex(a::BlocksView, i::Int) = view(a.array, Block(i))
-@propagate_inbounds setindex!(a::BlocksView, b, i::Int) = copyto!(a[i], b)
-=#
-
 # IndexCartesian implementations
 @propagate_inbounds getindex(a::BlocksView{T,N}, i::Vararg{Int,N}) where {T,N} =
     view(a.array, Block.(i)...)
 @propagate_inbounds function setindex!(a::BlocksView{T,N}, b, i::Vararg{Int,N}) where {T,N}
+    copyto!(a[i...], b)
+    a
+end
+
+# Like `BlocksView` but specialized for a single block
+# in order to avoid unnecessary wrappers when accessing the block.
+# Note that it does not check the array being wrapped actually
+# only has a single block, and will interpret it as if it just has one block.
+# By default, this is what gets constructed when calling `blocks(::StridedArray)`.
+struct BlockView{
+    S,                            # eltype(eltype(BlockView(...)))
+    N,                            # ndims
+    T<:AbstractArray{S,N},        # array to be wrapped
+} <: AbstractArray{T,N}
+    array::T
+end
+
+Base.size(a::BlockView) = map(one, size(a.array))
+
+# IndexCartesian implementations
+@propagate_inbounds function getindex(a::BlockView{T,N}, i::Vararg{Int,N}) where {T,N}
+    @boundscheck checkbounds(a, i...)
+    a.array
+end
+@propagate_inbounds function setindex!(a::BlockView{T,N}, b, i::Vararg{Int,N}) where {T,N}
     copyto!(a[i...], b)
     a
 end
