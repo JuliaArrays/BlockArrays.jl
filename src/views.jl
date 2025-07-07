@@ -83,6 +83,12 @@ end
 # which isn't defined.
 collect(I::BlockedLogicalIndex) = collect(I.blocks)
 
+# Iteration of BlockedLogicalIndex is just iteration over the underlying
+# LogicalIndex, which is implemented here:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L840-L890
+@inline iterate(I::BlockedLogicalIndex) = iterate(I.blocks)
+@inline iterate(I::BlockedLogicalIndex, s) = iterate(I.blocks, s)
+
 ## Boundscheck for BlockLogicalindex
 # Like for LogicalIndex, map all calls to mask:
 # https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L892-L897
