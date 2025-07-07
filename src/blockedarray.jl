@@ -193,6 +193,10 @@ AbstractArray{T,N}(A::BlockedArray) where {T,N} = BlockedArray(AbstractArray{T,N
 
 copy(A::BlockedArray) = BlockedArray(copy(A.blocks), A.axes)
 
+# Blocked version of `collect(::AbstractArray)` that preserves the
+# block structure.
+blockcollect(a::AbstractArray) = BlockedArray(collect(a), axes(a))
+
 Base.dataids(A::BlockedArray) = Base.dataids(A.blocks)
 
 ###########################

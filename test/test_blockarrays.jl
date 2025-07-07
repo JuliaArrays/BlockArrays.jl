@@ -1,7 +1,7 @@
 module TestBlockArrays
 
 using SparseArrays, BlockArrays, FillArrays, LinearAlgebra, Test, OffsetArrays, Images
-import BlockArrays: _BlockArray
+import BlockArrays: _BlockArray, blockcollect
 
 const Fill = FillArrays.Fill
 
@@ -253,6 +253,32 @@ end
 
             b = BlockVector([1,2,3,4,5,6,7,8,9,10], (BlockedOneTo(5:5:10),))
             @test zero(b) isa typeof(b)
+        end
+
+        @testset "blockcollect" begin
+            a = randn(6, 6)
+            @test blockcollect(a) == a
+            @test blockcollect(a) ≢ a
+            @test blockcollect(a).blocks ≢ a
+            # TODO: Maybe special case this to call `collect` and return a `Matrix`?
+            @test blockcollect(a) isa BlockedMatrix{Float64,Matrix{Float64}}
+            @test blockisequal(axes(blockcollect(a)), axes(a))
+            @test blocksize(blockcollect(a)) == (1, 1)
+
+            b = BlockedArray(randn(6, 6), [3, 3], [3, 3])
+            @test blockcollect(b) == b
+            @test blockcollect(b) ≢ b
+            @test blockcollect(b).blocks ≢ b
+            @test blockcollect(b) isa BlockedMatrix{Float64,Matrix{Float64}}
+            @test blockisequal(axes(blockcollect(b)), axes(b))
+            @test blocksize(blockcollect(b)) == (2, 2)
+
+            c = BlockArray(randn(6, 6), [3, 3], [3, 3])
+            @test blockcollect(c) == c
+            @test blockcollect(c) ≢ c
+            @test blockcollect(c) isa BlockedMatrix{Float64,Matrix{Float64}}
+            @test blockisequal(axes(blockcollect(c)), axes(c))
+            @test blocksize(blockcollect(c)) == (2, 2)
         end
 
         @test_throws DimensionMismatch BlockArray([1,2,3],[1,1])

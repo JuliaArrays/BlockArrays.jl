@@ -353,6 +353,15 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test MemoryLayout(v) == MemoryLayout(a)
         @test v[Block(1)] == a[Block(1)]
     end
+
+    @testset "BlockedLogicalIndex" begin
+        a = randn(6, 6)
+        mask = [true, true, false, false, true, false]
+        I = BlockedVector(mask, [3, 3])
+        v = view(a, I, I)
+        @test size(v) == (3, 3)
+        @test blocklengths.(axes(v)) == ([2, 1], [2, 1])
+    end
 end
 
 end # module
