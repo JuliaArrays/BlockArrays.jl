@@ -358,20 +358,21 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
     @testset "BlockedLogicalIndex" begin
         a = randn(6, 6)
-        mask = [true, true, false, false, true, false]
-        I = BlockedVector(mask, [3, 3])
-        @test to_indices(a, (I, I)) == to_indices(a, (mask, mask))
-        @test to_indices(a, (I, I)) == (BlockedVector(LogicalIndex(mask), [2, 1]), BlockedVector(LogicalIndex(mask), [2, 1]))
-        @test to_indices(a, (I, I)) isa Tuple{BlockedLogicalIndex{Int},BlockedLogicalIndex{Int}}
-        @test blocklengths.(Base.axes1.(to_indices(a, (I, I)))) == ([2, 1], [2, 1])
-        for b in (view(a, I, I), a[I, I])
-            @test size(b) == (3, 3)
-            @test blocklengths.(axes(b)) == ([2, 1], [2, 1])
-            @test b == a[mask, mask]
+        for mask in ([true, true, false, false, true, false], BitVector([true, true, false, false, true, false]))
+            I = BlockedVector(mask, [3, 3])
+            @test to_indices(a, (I, I)) == to_indices(a, (mask, mask))
+            @test to_indices(a, (I, I)) == (BlockedVector(LogicalIndex(mask), [2, 1]), BlockedVector(LogicalIndex(mask), [2, 1]))
+            @test to_indices(a, (I, I)) isa Tuple{BlockedLogicalIndex{Int},BlockedLogicalIndex{Int}}
+            @test blocklengths.(Base.axes1.(to_indices(a, (I, I)))) == ([2, 1], [2, 1])
+            for b in (view(a, I, I), a[I, I])
+                @test size(b) == (3, 3)
+                @test blocklengths.(axes(b)) == ([2, 1], [2, 1])
+                @test b == a[mask, mask]
+            end
+            @test parentindices(view(a, I, I)) == (BlockedVector([1, 2, 5], [2, 1]), BlockedVector([1, 2, 5], [2, 1]))
+            @test parentindices(view(a, I, I)) isa Tuple{BlockedVector{Int,Vector{Int}},BlockedVector{Int,Vector{Int}}}
+            @test blocklengths.(Base.axes1.(parentindices(view(a, I, I)))) == ([2, 1], [2, 1])
         end
-        @test parentindices(view(a, I, I)) == (BlockedVector([1, 2, 5], [2, 1]), BlockedVector([1, 2, 5], [2, 1]))
-        @test parentindices(view(a, I, I)) isa Tuple{BlockedVector{Int,Vector{Int}},BlockedVector{Int,Vector{Int}}}
-        @test blocklengths.(Base.axes1.(parentindices(view(a, I, I)))) == ([2, 1], [2, 1])
     end
 end
 
