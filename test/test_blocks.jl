@@ -209,8 +209,12 @@ end
     @test @inferred(eltype(bas2)) ≡ Base.OneTo{Int}
     @test @inferred(bas2[1]) ≡ Base.OneTo(3)
     @test @inferred(bas2[2]) ≡ Base.OneTo(1)
-
     @test @inferred((x -> eachblockaxes(x, 3))(A)) == [Base.OneTo(1)]
+
+    V = mortar([[2, 3], [4, 5, 6]])
+    @test @inferred(eachblockaxes(V)) == [(Base.OneTo(2),), (Base.OneTo(3),)]
+    @test @inferred((x -> eachblockaxes(x, 1))(V)) == [Base.OneTo(2), Base.OneTo(3)]
+    @test @inferred((x -> eachblockaxes(x, 2))(V)) == [Base.OneTo(1)]
 end
 
 @testset "eachblockaxes1" begin
@@ -224,6 +228,7 @@ end
     @test @inferred(bas[1]) ≡ Base.OneTo(2)
     @test @inferred(bas[2]) ≡ Base.OneTo(3)
 
+    @test @inferred(eachblockaxes1(mortar([[2, 3], [4, 5, 6]]))) == [Base.OneTo(2), Base.OneTo(3)]
     @test @inferred(eachblockaxes1(fill(2))) == [Base.OneTo(1)]
 end
 

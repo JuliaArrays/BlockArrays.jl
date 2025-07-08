@@ -198,8 +198,8 @@ julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
 
 julia> eachblockaxes(A)
 2×3 BlockArrays.ProductArray{Tuple{Base.OneTo{Int64}, Base.OneTo{Int64}}, 2, Tuple{Vector{Base.OneTo{Int64}}, Vector{Base.OneTo{Int64}}}}:
- (Base.OneTo(2), Base.OneTo(1))  (Base.OneTo(2), Base.OneTo(1))  (Base.OneTo(2), Base.OneTo(1))
- (Base.OneTo(1), Base.OneTo(1))  (Base.OneTo(1), Base.OneTo(1))  (Base.OneTo(1), Base.OneTo(1))
+ (Base.OneTo(2), Base.OneTo(1))  …  (Base.OneTo(2), Base.OneTo(1))
+ (Base.OneTo(1), Base.OneTo(1))     (Base.OneTo(1), Base.OneTo(1))
 
 julia> eachblockaxes(A)[1,2]
 (Base.OneTo(2), Base.OneTo(1))
@@ -213,5 +213,6 @@ julia> eachblockaxes(A,2)
 """
 eachblockaxes(A::AbstractArray) =
     ProductArray(map(ax -> map(Base.axes1, blocks(ax)), axes(A))...)
+eachblockaxes(A::AbstractVector) = map(axes, blocks(Base.axes1(A)))
 eachblockaxes(A::AbstractArray, d::Integer) = map(Base.axes1, blocks(axes(A, d)))
 eachblockaxes1(A::AbstractArray) = map(Base.axes1, blocks(Base.axes1(A)))
