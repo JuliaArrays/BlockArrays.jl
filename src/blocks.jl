@@ -93,6 +93,21 @@ This is broken for now. See: https://github.com/JuliaArrays/BlockArrays.jl/issue
     a
 end
 
+# AbstractArray version of `Iterators.product`.
+# https://en.wikipedia.org/wiki/Cartesian_product
+# https://github.com/lazyLibraries/ProductArrays.jl
+# https://github.com/JuliaData/SplitApplyCombine.jl#productviewf-a-b
+# https://github.com/JuliaArrays/MappedArrays.jl/pull/42
+struct ProductArray{T,N,V<:Tuple{Vararg{AbstractVector,N}}} <: AbstractArray{T,N}
+    vectors::V
+end
+ProductArray(vectors::Vararg{AbstractVector,N}) where {N} =
+    ProductArray{Tuple{map(eltype, vectors)...},N,typeof(vectors)}(vectors)
+Base.size(p::ProductArray) = map(length, p.vectors)
+Base.axes(p::ProductArray) = map(Base.axes1, p.vectors)
+@propagate_inbounds getindex(p::ProductArray{T,N}, I::Vararg{Int,N}) where {T,N} =
+    map((v, i) -> v[i], p.vectors, I)
+
 """
     blocksizes(A::AbstractArray)
     blocksizes(A::AbstractArray, d::Integer)
@@ -110,7 +125,7 @@ julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
  1.0  │  1.0  │  1.0
 
 julia> blocksizes(A)
-2×3 BlockArrays.BlockSizes{Tuple{Int64, Int64}, 2, BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedOneTo{Int64, Vector{Int64}}, BlockedOneTo{Int64, Vector{Int64}}}}}:
+2×3 BlockArrays.ProductArray{Tuple{Int64, Int64}, 2, Tuple{Vector{Int64}, Vector{Int64}}}:
  (2, 1)  (2, 1)  (2, 1)
  (1, 1)  (1, 1)  (1, 1)
 
@@ -124,16 +139,79 @@ julia> blocksizes(A,2)
  1
 ```
 """
-blocksizes(A::AbstractArray) = BlockSizes(A)
+blocksizes(A::AbstractArray) = ProductArray(map(blocklengths, axes(A))...)
 @inline blocksizes(A::AbstractArray, d::Integer) = blocklengths(axes(A, d))
 
-struct BlockSizes{T,N,A<:AbstractArray{<:Any,N}} <: AbstractArray{T,N}
+"""
+    blocklengths(A::AbstractArray)
+
+Return an iterator over the lengths of each block.
+See also blocksizes.
+
+# Examples
+```jldoctest
+julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
+2×3-blocked 3×3 BlockMatrix{Float64}:
+ 1.0  │  1.0  │  1.0
+ 1.0  │  1.0  │  1.0
+ ─────┼───────┼─────
+ 1.0  │  1.0  │  1.0
+
+julia> blocklengths(A)
+2×3 BlockArrays.BlockLengths{Int64, 2, BlockMatrix{Float64, Matrix{Matrix{Float64}}, Tuple{BlockedOneTo{Int64, Vector{Int64}}, BlockedOneTo{Int64, Vector{Int64}}}}}:
+ 2  2  2
+ 1  1  1
+
+julia> blocklengths(A)[1,2]
+2
+```
+"""
+blocklengths(A::AbstractArray) = BlockLengths(A)
+blocklengths(A::AbstractVector) = map(length, blocks(A))
+
+struct BlockLengths{T,N,A<:AbstractArray{<:Any,N}} <: AbstractArray{T,N}
     array::A
 end
-BlockSizes(a::AbstractArray{<:Any,N}) where {N} =
-    BlockSizes{Tuple{eltype.(axes(a))...},N,typeof(a)}(a)
+BlockLengths(a::AbstractArray{<:Any,N}) where {N} =
+    BlockLengths{typeof(length(a)),N,typeof(a)}(a)
 
-size(bs::BlockSizes) = blocksize(bs.array)
-axes(bs::BlockSizes) = map(br -> Int.(br), blockaxes(bs.array))
-@propagate_inbounds getindex(a::BlockSizes{T,N}, i::Vararg{Int,N}) where {T,N} =
-    size(view(a.array, Block.(i)...))
+size(bs::BlockLengths) = blocksize(bs.array)
+axes(bs::BlockLengths) = map(br -> Int.(br), blockaxes(bs.array))
+@propagate_inbounds getindex(a::BlockLengths{T,N}, i::Vararg{Int,N}) where {T,N} =
+    length(view(a.array, Block.(i)...))
+
+"""
+    eachblockaxes(A::AbstractArray)
+    eachblockaxes(A::AbstractArray, d::Integer)
+
+Return an iterator over the axes of each block.
+See also blocksizes and blocklengths.
+
+# Examples
+```jldoctest
+julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
+2×3-blocked 3×3 BlockMatrix{Float64}:
+ 1.0  │  1.0  │  1.0
+ 1.0  │  1.0  │  1.0
+ ─────┼───────┼─────
+ 1.0  │  1.0  │  1.0
+
+julia> eachblockaxes(A)
+2×3 BlockArrays.ProductArray{Tuple{Base.OneTo{Int64}, Base.OneTo{Int64}}, 2, Tuple{Vector{Base.OneTo{Int64}}, Vector{Base.OneTo{Int64}}}}:
+ (Base.OneTo(2), Base.OneTo(1))  (Base.OneTo(2), Base.OneTo(1))  (Base.OneTo(2), Base.OneTo(1))
+ (Base.OneTo(1), Base.OneTo(1))  (Base.OneTo(1), Base.OneTo(1))  (Base.OneTo(1), Base.OneTo(1))
+
+julia> eachblockaxes(A)[1,2]
+(Base.OneTo(2), Base.OneTo(1))
+
+julia> eachblockaxes(A,2)
+3-element Vector{Base.OneTo{Int64}}:
+ Base.OneTo(1)
+ Base.OneTo(1)
+ Base.OneTo(1)
+```
+"""
+eachblockaxes(A::AbstractArray) =
+    ProductArray(map(ax -> map(Base.axes1, blocks(ax)), axes(A))...)
+eachblockaxes(A::AbstractArray, d::Integer) = map(Base.axes1, blocks(axes(A, d)))
+eachblockaxes1(A::AbstractArray) = map(Base.axes1, blocks(Base.axes1(A)))
