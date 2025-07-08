@@ -32,6 +32,8 @@ Block
 BlockIndex
 blockaxes
 blockisequal
+blockequals
+blockisapprox
 blocksize
 blockfirsts
 blocklasts
