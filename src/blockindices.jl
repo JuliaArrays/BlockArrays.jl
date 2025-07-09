@@ -184,72 +184,86 @@ end
 checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractArray{<:BlockIndex{N}}) where N =
     all(i -> checkbounds(Bool, A, i), I)
 
-struct BlockIndexRange{N,R<:Tuple{Vararg{AbstractVector,N}},I<:Tuple{Vararg{Any,N}},BI} <: AbstractArray{BlockIndex{N,NTuple{N,BI},I},N}
+struct BlockIndices{N,R<:Tuple{Vararg{AbstractVector,N}},I<:Tuple{Vararg{Any,N}},BI} <: AbstractArray{BlockIndex{N,NTuple{N,BI},I},N}
     block::Block{N,BI}
     indices::R
-    function BlockIndexRange(block::Block{N,BI}, inds::R) where {N,BI<:Integer,R<:Tuple{Vararg{AbstractVector,N}}}
+    function BlockIndices(block::Block{N,BI}, inds::R) where {N,BI<:Integer,R<:Tuple{Vararg{AbstractVector,N}}}
         I = Tuple{eltype.(inds)...}
         return new{N,R,I,BI}(block,inds)
     end
 end
 
 """
+    BlockIndices(block, startind:stopind)
+
+Represents a cartesian product of indices inside a block.
+"""
+BlockIndices
+
+BlockIndices(block::Block{N}, inds::Vararg{AbstractVector,N}) where {N} =
+    BlockIndices(block,inds)
+
+const BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}},I<:Tuple{Vararg{Any,N}},BI} = BlockIndices{N,R,I,BI}
+
+"""
     BlockIndexRange(block, startind:stopind)
 
-represents a cartesian range inside a block.
+Represents a cartesian range inside a block. Type alias for `BlockIndices` with
+the indices constrained to ranges.
 """
 BlockIndexRange
 
-BlockIndexRange(block::Block{N}, inds::Vararg{AbstractVector,N}) where {N} =
-    BlockIndexRange(block,inds)
+BlockIndexRange(block::Block{N}, inds::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {N} =
+    BlockIndices(block, inds)
+BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where {N} =
+    BlockIndices(block, inds)
 
-block(R::BlockIndexRange) = R.block
+block(R::BlockIndices) = R.block
 
-copy(R::BlockIndexRange) = BlockIndexRange(R.block, map(copy, R.indices))
+copy(R::BlockIndices) = BlockIndices(R.block, map(copy, R.indices))
 
 getindex(::Block{0}) = BlockIndex()
 getindex(B::Block{N}, inds::Vararg{Any,N}) where N = BlockIndex(B,inds)
-getindex(B::Block{N}, inds::Vararg{AbstractVector,N}) where N = BlockIndexRange(B,inds)
+getindex(B::Block{N}, inds::Vararg{AbstractVector,N}) where N = BlockIndices(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
+getindex(B::BlockIndices{0}) = B.block[]
+@propagate_inbounds getindex(B::BlockIndices{N}, kr::Vararg{AbstractVector,N}) where N = BlockIndices(B.block, map(getindex, B.indices, kr))
+@propagate_inbounds getindex(B::BlockIndices{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
-getindex(B::BlockIndexRange{0}) = B.block[]
-@propagate_inbounds getindex(B::BlockIndexRange{N}, kr::Vararg{AbstractVector,N}) where N = BlockIndexRange(B.block, map(getindex, B.indices, kr))
-@propagate_inbounds getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
-
-eltype(R::BlockIndexRange) = eltype(typeof(R))
-eltype(::Type{BlockIndexRange{N}}) where {N} = BlockIndex{N}
-eltype(::Type{BlockIndexRange{N,R,I,BI}}) where {N,R,I,BI} = BlockIndex{N,NTuple{N,BI},I}
-IteratorSize(::Type{<:BlockIndexRange}) = Base.HasShape{1}()
+eltype(R::BlockIndices) = eltype(typeof(R))
+eltype(::Type{BlockIndices{N}}) where {N} = BlockIndex{N}
+eltype(::Type{BlockIndices{N,R,I,BI}}) where {N,R,I,BI} = BlockIndex{N,NTuple{N,BI},I}
+IteratorSize(::Type{<:BlockIndices}) = Base.HasShape{1}()
 
 
-first(iter::BlockIndexRange) = BlockIndex(iter.block.n, map(first, iter.indices))
-last(iter::BlockIndexRange)  = BlockIndex(iter.block.n, map(last, iter.indices))
+first(iter::BlockIndices) = BlockIndex(iter.block.n, map(first, iter.indices))
+last(iter::BlockIndices)  = BlockIndex(iter.block.n, map(last, iter.indices))
 
-@inline function iterate(iter::BlockIndexRange)
+@inline function iterate(iter::BlockIndices)
     iterfirst, iterlast = first(iter), last(iter)
     if any(map(>, iterfirst.α, iterlast.α))
         return nothing
     end
     iterfirst, iterfirst
 end
-@inline function iterate(iter::BlockIndexRange, state)
+@inline function iterate(iter::BlockIndices, state)
     nextstate = BlockIndex(state.I, inc(state.α, first(iter).α, last(iter).α))
     nextstate.α[end] > last(iter.indices[end]) && return nothing
     nextstate, nextstate
 end
 
-size(iter::BlockIndexRange) = map(dimlength, first(iter).α, last(iter).α)
-length(iter::BlockIndexRange) = prod(size(iter))
+size(iter::BlockIndices) = map(dimlength, first(iter).α, last(iter).α)
+length(iter::BlockIndices) = prod(size(iter))
 
 
-Block(bs::BlockIndexRange) = bs.block
+Block(bs::BlockIndices) = bs.block
 
 ##
 # checkindex
 ##
 
-function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndexRange{N}) where N
+function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndices{N}) where N
     bl = block(I)
     checkbounds(Bool, A, bl) || return false
     # TODO: Replace with `eachblockaxes(A)[bl]` once that is defined.
@@ -284,7 +298,7 @@ struct BlockSlice{BB,T<:Integer,INDS<:AbstractUnitRange{T}} <: AbstractUnitRange
 end
 
 Block(bs::BlockSlice{<:Block}) = bs.block
-Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
+Block(bs::BlockSlice{<:BlockIndices}) = Block(bs.block)
 
 
 for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
@@ -298,7 +312,7 @@ _indices(B) = B
 @propagate_inbounds getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
 @propagate_inbounds getindex(S::BlockSlice{<:Block{1}}, k::AbstractUnitRange{<:Integer}) =
     BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
-@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1,<:Tuple{AbstractUnitRange{<:Integer}}}}, k::AbstractUnitRange{<:Integer}) =
+@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1}}, k::AbstractUnitRange{<:Integer}) =
     BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
 
 # Avoid creating a SubArray wrapper in certain non-allocating cases
@@ -322,7 +336,7 @@ struct NoncontiguousBlockSlice{BB,T,INDS<:AbstractVector{T}} <: AbstractVector{T
 end
 
 Block(bs::NoncontiguousBlockSlice{<:Block}) = bs.block
-Block(bs::NoncontiguousBlockSlice{<:BlockIndexRange}) = Block(bs.block)
+Block(bs::NoncontiguousBlockSlice{<:BlockIndices}) = Block(bs.block)
 
 for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
           :unsafe_length, :start)
@@ -334,7 +348,7 @@ _indices(B::NoncontiguousBlockSlice) = B.indices
 @propagate_inbounds getindex(S::NoncontiguousBlockSlice, i::Integer) = getindex(S.indices, i)
 @propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:Block{1}}, k::AbstractVector{<:Integer}) =
     NoncontiguousBlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
-@propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:BlockIndexRange{1,<:Tuple{AbstractVector}}}, k::AbstractVector{<:Integer}) =
+@propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:BlockIndices{1,<:Tuple{AbstractVector}}}, k::AbstractVector{<:Integer}) =
     NoncontiguousBlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
 @propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:AbstractVector{<:Block{1}}}, k::Block{1}) =
     BlockSlice(S.block[Int(k)], getindex(S.indices, k))
