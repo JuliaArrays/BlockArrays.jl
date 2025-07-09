@@ -220,11 +220,50 @@ end
     BlockIndices(block, startind:stopind)
 
 Represents a cartesian product of indices inside a block.
+
+It can be constructed and used to index into `BlockArrays` in the following manner:
+
+```jldoctest
+julia> BlockIndices(Block(1,2), ([1,3],[2,4]))
+Block(1, 2)[[1, 3], [2, 4]]
+
+julia> Block(1)[[1,3]] == BlockIndices(Block(1), [1,3])
+true
+
+julia> Block(1,2)[[1,3],[2,4]] == BlockIndices(Block(1,2), ([1,3],[2,4]))
+true
+
+julia> BlockIndices((Block(1)[[1,3]], Block(2)[[2,4]]))
+Block(1, 2)[[1, 3], [2, 4]]
+
+julia> arr = Array(reshape(1:25, (5,5)));
+
+julia> a = BlockedArray(arr, [3,2], [1,4])
+2×2-blocked 5×5 BlockedMatrix{Int64}:
+ 1  │   6  11  16  21
+ 2  │   7  12  17  22
+ 3  │   8  13  18  23
+ ───┼────────────────
+ 4  │   9  14  19  24
+ 5  │  10  15  20  25
+
+julia> a[Block(1,2)[[1,3],[2,4]]]
+2×2 Matrix{Int64}:
+ 11  21
+ 13  23
+
+julia> a[Block(2,2)[[2],[2,4]]]
+1×2 Matrix{Int64}:
+ 15  25
+```
 """
 BlockIndices
 
 BlockIndices(block::Block{N}, inds::Vararg{AbstractVector,N}) where {N} =
     BlockIndices(block,inds)
+function BlockIndices(inds::Tuple{BlockIndices{1},Vararg{BlockIndices{1}}})
+    BlockIndices(Block(block.(inds)), map(ind -> ind.indices[1], inds))
+end
 
 const BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}},I<:Tuple{Vararg{Any,N}},BI} = BlockIndices{N,R,I,BI}
 

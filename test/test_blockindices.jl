@@ -93,6 +93,7 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockIndices, BlockSlice, Nonco
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
         @test Block(1,1)[[1,3],1:2] == BlockIndices(Block(1,1),([1,3],1:2))
         @test BlockIndexRange((Block(1)[1:2],Block(1)[1:2])) == BlockIndexRange(Block(1,1),(1:2,1:2))
+        @test BlockIndices((Block(1)[[1,3]],Block(1)[[2,4]])) == BlockIndices(Block(1,1),([1,3],[2,4]))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
         @test Block(1)[[1,3,5]][[1,3]] == BlockIndices(Block(1),[1,5])
         @test Block(1)[[1,3,5]][2:3] == BlockIndices(Block(1),[3,5])
