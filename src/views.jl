@@ -119,7 +119,7 @@ end
 end
 
 
-# AnyBlockSlice map the blocks and the indices
+# BlockSlices map the blocks and the indices
 # this is loosely based on Slice reindex in subarray.jl
 @propagate_inbounds reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
@@ -150,18 +150,18 @@ block(A::Block) = A
 @inline view(block_arr::AbstractBlockArray{<:Any,N}, blocks::Vararg{BlockSlice1, N}) where N =
     view(block_arr, map(block,blocks)...)
 
-const AnyBlockSlice = Union{Base.Slice,BlockSlice{<:BlockRange{1}},NoncontiguousBlockSlice{<:AbstractVector{<:Block{1}}}}
-# view(V::SubArray{<:Any,N,NTuple{N,AnyBlockSlice}},
+const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}},NoncontiguousBlockSlice{<:AbstractVector{<:Block{1}}}}
+# view(V::SubArray{<:Any,N,NTuple{N,BlockSlices}},
 
 _block_reindex(b::BlockSlice, i::Block{1}) = b.block[Int(i)]
 _block_reindex(b::NoncontiguousBlockSlice, i::Block{1}) = b.block[Int(i)]
 _block_reindex(b::Slice, i::Block{1}) = i
 
-@inline view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,AnyBlockSlice}}, block::Block{N}) where N =
+@inline view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlices}}, block::Block{N}) where N =
     view(parent(V), _block_reindex.(parentindices(V), Block.(block.n))...)
-@inline view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,AnyBlockSlice}}, block::Vararg{Block{1},N}) where N =
+@inline view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlices}}, block::Vararg{Block{1},N}) where N =
     view(parent(V), _block_reindex.(parentindices(V), block)...)
-@inline view(V::SubArray{<:Any,1,<:AbstractBlockArray,<:Tuple{AnyBlockSlice}}, block::Block{1}) =
+@inline view(V::SubArray{<:Any,1,<:AbstractBlockArray,<:Tuple{BlockSlices}}, block::Block{1}) =
     view(parent(V), _block_reindex(parentindices(V)[1], block))
 
 
