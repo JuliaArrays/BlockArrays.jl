@@ -961,9 +961,12 @@ end
     @testset "Blockindex" begin
         a = BlockedArray(randn(3), [1,2])
         @test a[Block(1)[1]] == a[1]
+        @test view(a, Block(1)[1]) ≡ view(a, 1)
         @test a[Block(1)[1:1]] == a[1:1]
         A = BlockedArray(randn(3,3), [1,2], [1,2])
         @test A[Block(1)[1], Block(1)[1]] == A[Block(1,1)[1,1]] == A[1,1]
+        # Regression test for #442
+        @test view(A, Block(1)[1], Block(1)[1]) ≡ view(A, Block(1,1)[1,1]) ≡ view(A, 1, 1)
         @test A[Block(1)[1:1], Block(1)[1:1]] == A[Block(1,1)[1:1,1:1]] == A[1:1,1:1]
         @test A[Block(1)[1:1], Block(1)[1]] == BlockArray(A)[Block(1)[1:1], Block(1)[1]] == A[1:1,1]
         @test A[Block(1)[1], Block(1)[1:1]] == BlockArray(A)[Block(1)[1], Block(1)[1:1]] == A[1,1:1]

@@ -62,13 +62,13 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
     to_indices(A, inds, (BlockIndexRange.(Block.(I[1].block.n), tuple.(I[1].indices))..., tail(I)...))
 
 # In 0.7, we need to override to_indices to avoid calling linearindices
+@inline to_indices(A, I::Tuple{BlockIndexRange, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{BlockIndex, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{Block, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{BlockRange, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{AbstractVector{<:Block{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{AbstractVector{<:BlockRange{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{AbstractVector{<:AbstractVector{<:Block{1}}}, Vararg{Any}}) = to_indices(A, axes(A), I)
-@inline to_indices(A, I::Tuple{BlockIndex, Vararg{Any}}) = to_indices(A, axes(A), I)
-@inline to_indices(A, I::Tuple{BlockIndexRange, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{AbstractVector{<:BlockIndex{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{AbstractVector{<:BlockIndexRange{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{AbstractVector{<:AbstractVector{<:BlockIndex{1}}}, Vararg{Any}}) = to_indices(A, axes(A), I)
