@@ -1,6 +1,7 @@
 module TestBlocks
 
 using Test, BlockArrays
+import BlockArrays: eachblockaxes1
 
 @testset "blocks" begin
     @testset "blocks(::BlockVector)" begin
@@ -143,18 +144,18 @@ end
         @test @inferred(size(bs)) == (2, 2)
         @test @inferred(length(bs)) == 4
         @test @inferred(axes(bs)) == (1:2, 1:2)
-        @test @inferred(eltype(bs)) === Tuple{Int,Int}
+        @test @inferred(eltype(bs)) ≡ Tuple{Int,Int}
         @test bs == [(2, 3) (2, 1); (3, 3) (3, 1)]
-        @test @inferred(bs[1, 1]) == (2, 3)
-        @test @inferred(bs[2, 1]) == (3, 3)
-        @test @inferred(bs[1, 2]) == (2, 1)
-        @test @inferred(bs[2, 2]) == (3, 1)
-        @test @inferred(bs[1]) == (2, 3)
-        @test @inferred(bs[2]) == (3, 3)
-        @test @inferred(bs[3]) == (2, 1)
-        @test @inferred(bs[4]) == (3, 1)
-        @test blocksizes(A, 1) == [2, 3]
-        @test blocksizes(A, 2) == [3, 1]
+        @test @inferred(bs[1, 1]) ≡ (2, 3)
+        @test @inferred(bs[2, 1]) ≡ (3, 3)
+        @test @inferred(bs[1, 2]) ≡ (2, 1)
+        @test @inferred(bs[2, 2]) ≡ (3, 1)
+        @test @inferred(bs[1]) ≡ (2, 3)
+        @test @inferred(bs[2]) ≡ (3, 3)
+        @test @inferred(bs[3]) ≡ (2, 1)
+        @test @inferred(bs[4]) ≡ (3, 1)
+        @test @inferred((x -> blocksizes(x, 1))(A)) == [2, 3]
+        @test @inferred((x -> blocksizes(x, 2))(A)) == [3, 1]
     end
 
     @testset "Inference: issue #425" begin
@@ -164,6 +165,71 @@ end
         bs4 = @inferred (x -> blocksizes(x, 4))(x)
         @test bs4 == 1:1
     end
+end
+
+@testset "blocklengths" begin
+    v = Array(reshape(1:20, (5, 4)))
+    A = BlockArray(v, [2, 3], [3, 1])
+    bls = @inferred(blocklengths(A))
+    @test bls == [6 2; 9 3]
+    @test @inferred(length(bls)) ≡ 4
+    @test @inferred(size(bls)) ≡ (2, 2)
+    @test @inferred(eltype(bls)) ≡ Int
+    @test @inferred(bls[1, 1]) ≡ 6
+    @test @inferred(bls[2, 1]) ≡ 9
+    @test @inferred(bls[1, 2]) ≡ 2
+    @test @inferred(bls[2, 2]) ≡ 3
+    @test @inferred(bls[1]) ≡ 6
+    @test @inferred(bls[2]) ≡ 9
+    @test @inferred(bls[3]) ≡ 2
+    @test @inferred(bls[4]) ≡ 3
+end
+
+@testset "eachblockaxes" begin
+    v = Array(reshape(1:20, (5, 4)))
+    A = BlockArray(v, [2, 3], [3, 1])
+    bas = @inferred(eachblockaxes(A))
+    @test bas == [(Base.OneTo(2), Base.OneTo(3)) (Base.OneTo(2), Base.OneTo(1)); (Base.OneTo(3), Base.OneTo(3)) (Base.OneTo(3), Base.OneTo(1))]
+    @test @inferred(length(bas)) ≡ 4
+    @test @inferred(size(bas)) ≡ (2, 2)
+    @test @inferred(eltype(bas)) ≡ Tuple{Base.OneTo{Int},Base.OneTo{Int}}
+    @test @inferred(bas[1, 1]) ≡ (Base.OneTo(2), Base.OneTo(3))
+    @test @inferred(bas[2, 1]) ≡ (Base.OneTo(3), Base.OneTo(3))
+    @test @inferred(bas[1, 2]) ≡ (Base.OneTo(2), Base.OneTo(1))
+    @test @inferred(bas[2, 2]) ≡ (Base.OneTo(3), Base.OneTo(1))
+    @test @inferred(bas[1]) ≡ (Base.OneTo(2), Base.OneTo(3))
+    @test @inferred(bas[2]) ≡ (Base.OneTo(3), Base.OneTo(3))
+    @test @inferred(bas[3]) ≡ (Base.OneTo(2), Base.OneTo(1))
+    @test @inferred(bas[4]) ≡ (Base.OneTo(3), Base.OneTo(1))
+
+    bas2 = @inferred (x -> eachblockaxes(x, 2))(A)
+    @test bas2 == [Base.OneTo(3), Base.OneTo(1)]
+    @test length(bas2) ≡ 2
+    @test size(bas2) ≡ (2,)
+    @test @inferred(eltype(bas2)) ≡ Base.OneTo{Int}
+    @test @inferred(bas2[1]) ≡ Base.OneTo(3)
+    @test @inferred(bas2[2]) ≡ Base.OneTo(1)
+    @test @inferred((x -> eachblockaxes(x, 3))(A)) == [Base.OneTo(1)]
+
+    V = mortar([[2, 3], [4, 5, 6]])
+    @test @inferred(eachblockaxes(V)) == [(Base.OneTo(2),), (Base.OneTo(3),)]
+    @test @inferred((x -> eachblockaxes(x, 1))(V)) == [Base.OneTo(2), Base.OneTo(3)]
+    @test @inferred((x -> eachblockaxes(x, 2))(V)) == [Base.OneTo(1)]
+end
+
+@testset "eachblockaxes1" begin
+    v = Array(reshape(1:20, (5, 4)))
+    A = BlockArray(v, [2, 3], [3, 1])
+    bas = @inferred(eachblockaxes1(A))
+    @test bas == [Base.OneTo(2), Base.OneTo(3)]
+    @test @inferred(length(bas)) ≡ 2
+    @test @inferred(size(bas)) ≡ (2,)
+    @test @inferred(eltype(bas)) ≡ Base.OneTo{Int}
+    @test @inferred(bas[1]) ≡ Base.OneTo(2)
+    @test @inferred(bas[2]) ≡ Base.OneTo(3)
+
+    @test @inferred(eachblockaxes1(mortar([[2, 3], [4, 5, 6]]))) == [Base.OneTo(2), Base.OneTo(3)]
+    @test @inferred(eachblockaxes1(fill(2))) == [Base.OneTo(1)]
 end
 
 end # module
