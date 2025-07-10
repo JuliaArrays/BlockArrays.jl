@@ -96,6 +96,8 @@ import BlockArrays: BlockView, eachblockaxes1
         @test blocks(v') isa Adjoint{Adjoint{Float64,Vector{Float64}},<:BlockView{Float64,1,Vector{Float64}}}
         @test blocks(view(v, 1:2))[1, 1] ≡ view(v, 1:2)
         @test blocks(view(v, 1:2)) isa BlockView{Float64,1,<:SubArray{Float64,1,Vector{Float64}}}
+        blocks(v)[1] = zeros(3)
+        @test iszero(v[1])
         blocks(v)[1][1] = 123
         @test v[1] == 123
     end
@@ -111,6 +113,8 @@ import BlockArrays: BlockView, eachblockaxes1
         @test blocks(view(m, 1:2, 1:2))[1, 1] ≡ view(m, 1:2, 1:2)
         @test blocks(view(m, 1:2, 1:2)) isa BlockView{Float64,2,<:SubArray{Float64,2,Matrix{Float64}}}
         @test blocks(m)[1, 1] ≡ m
+        blocks(m)[1, 1] = zeros(2, 4)
+        @test iszero(m[1, 1])
         blocks(m)[1, 1][1, 1] = 123
         @test m[1, 1] == 123
     end
