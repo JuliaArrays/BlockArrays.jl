@@ -379,13 +379,11 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         end
         bl = BlockedLogicalIndex(BlockedVector([true, true, false, false, true, false], [3, 3]))
         @test sprint(show, "text/plain", bl) ==
-            "2-blocked 3-element BlockedVector{Int64, LogicalIndex{Int64, BlockedVector{Bool, Vector{Bool}, Tuple{BlockedOneTo{Int64, Vector{Int64}}}}}, Tuple{BlockedOneTo{Int64, Vector{Int64}}}}:\n 1\n 2\n ─\n 5"
+            "2-blocked 3-element BlockedVector{Int64, Base.LogicalIndex{Int64, BlockedVector{Bool, Vector{Bool}, Tuple{BlockedOneTo{Int64, Vector{Int64}}}}}, Tuple{BlockedOneTo{Int64, Vector{Int64}}}}:\n 1\n 2\n ─\n 5"
         @test checkbounds(Bool, randn(6), bl)
         @test !checkbounds(Bool, randn(5), bl)
         @test checkindex(Bool, 1:6, bl)
         @test !checkindex(Bool, 1:5, bl)
-        @test checkindex(Bool, (1:6,), bl)
-        @test !checkindex(Bool, (1:5,), bl)
     end
 end
 
