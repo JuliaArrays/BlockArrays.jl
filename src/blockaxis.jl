@@ -105,6 +105,16 @@ function Base.AbstractUnitRange{T}(r::BlockedUnitRange) where {T}
     return _BlockedUnitRange(convert(T,first(r)), convert.(T,blocklasts(r)))
 end
 
+# See: https://github.com/JuliaLang/julia/blob/b06d26075bf7b3f4e7f1b64b120f5665d8ed76f9/base/range.jl#L991-L1004
+function Base.getindex(r::AbstractUnitRange, s::AbstractBlockedUnitRange{T}) where {T<:Integer}
+    @boundscheck checkbounds(r, s)
+
+    f = first(r)
+    start = oftype(f, f + first(s) - firstindex(r))
+    lens = map(Base.Fix1(oftype, f), blocklengths(s))
+    return blockedrange(start, lens)
+end
+
 """
     BlockedOneTo{T, <:Union{AbstractVector{T}, NTuple{<:Any,T}}} where {T}
 
@@ -162,6 +172,16 @@ axes(b::BlockedOneTo) = (b,)
 
 function Base.AbstractUnitRange{T}(r::BlockedOneTo) where {T}
     return BlockedOneTo(convert.(T,blocklasts(r)))
+end
+
+# See: https://github.com/JuliaLang/julia/blob/b06d26075bf7b3f4e7f1b64b120f5665d8ed76f9/base/range.jl#L1006-L1010
+function getindex(r::Base.OneTo{T}, s::BlockedOneTo) where T
+    @inline
+    @boundscheck checkbounds(r, s)
+    return BlockedOneTo(convert(AbstractVector{T}, blocklasts(s)))
+end
+function getindex(r::BlockedOneTo{T}, s::BlockedOneTo) where T
+    return Base.oneto(r)[s]
 end
 
 """
@@ -406,9 +426,13 @@ end
 @propagate_inbounds getindex(b::AbstractBlockedUnitRange, KR::BlockSlice) = b[KR.block]
 
 getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:Block{1}}) = mortar([b[K] for K in KR])
-getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndexRange{1}}) = mortar([b[K] for K in KR])
-getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndex{1}}) = [b[K] for K in KR]
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:Block{1}}}) = mortar([b[K] for K in KR])
 getindex(b::AbstractBlockedUnitRange, Kkr::BlockIndexRange{1}) =  b[block(Kkr)][Kkr.indices...]
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndex{1}}) = [b[K] for K in KR]
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndexRange{1}}) = mortar([b[K] for K in KR])
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:BlockIndex{1}}}) = mortar([b[K] for K in KR])
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:BlockIndexRange{1}}}) = mortar([b[K] for K in KR])
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:AbstractVector{<:BlockIndex{1}}}}) = mortar([b[K] for K in KR])
 
 _searchsortedfirst(a::AbstractVector, k) = searchsortedfirst(a, k)
 function _searchsortedfirst(a::Tuple, k)
