@@ -60,6 +60,50 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
 @inline to_indices(A, I::Tuple{AbstractVector{<:BlockIndex{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{AbstractVector{<:BlockIndexRange{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
 
+## BlockedLogicalIndex
+# Blocked version of `LogicalIndex`:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L819-L831
+const BlockedLogicalIndex{T,R<:LogicalIndex{T},BS<:Tuple{AbstractUnitRange{<:Integer}}} = BlockedVector{T,R,BS}
+function BlockedLogicalIndex(I::AbstractVector{Bool})
+    blocklengths = map(b -> count(view(I, b)), BlockRange(I))
+    return BlockedVector(LogicalIndex(I), blocklengths)
+end
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L838-L839
+show(io::IO, r::BlockedLogicalIndex) = print(io, blockcollect(r))
+print_array(io::IO, X::BlockedLogicalIndex) = print_array(io, blockcollect(X))
+
+# Blocked version of `to_index(::AbstractArray{Bool})`:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/indices.jl#L309
+function to_index(I::AbstractBlockVector{Bool})
+    return BlockedLogicalIndex(I)
+end
+
+# Blocked version of `collect(::LogicalIndex)`:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L837
+# Without this definition, `collect` will try to call `getindex` on the `LogicalIndex`
+# which isn't defined.
+collect(I::BlockedLogicalIndex) = collect(I.blocks)
+
+# Iteration of BlockedLogicalIndex is just iteration over the underlying
+# LogicalIndex, which is implemented here:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L840-L890
+@inline iterate(I::BlockedLogicalIndex) = iterate(I.blocks)
+@inline iterate(I::BlockedLogicalIndex, s) = iterate(I.blocks, s)
+
+## Boundscheck for BlockLogicalindex
+# Like for LogicalIndex, map all calls to mask:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L892-L897
+checkbounds(::Type{Bool}, A::AbstractArray, i::BlockedLogicalIndex) = checkbounds(Bool, A, i.blocks.mask)
+# `checkbounds_indices` has been handled via `I::AbstractArray` fallback
+checkindex(::Type{Bool}, inds::AbstractUnitRange, i::BlockedLogicalIndex) = checkindex(Bool, inds, i.blocks.mask)
+checkindex(::Type{Bool}, inds::Tuple, i::BlockedLogicalIndex) = checkindex(Bool, inds, i.blocks.mask)
+
+# Instantiate the BlockedLogicalIndex when constructing a SubArray, similar to
+# `ensure_indexable(I::Tuple{LogicalIndex,Vararg{Any}})`:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L918
+@inline ensure_indexable(I::Tuple{BlockedLogicalIndex,Vararg{Any}}) =
+    (blockcollect(I[1]), ensure_indexable(tail(I))...)
+
 @propagate_inbounds reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
     (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
