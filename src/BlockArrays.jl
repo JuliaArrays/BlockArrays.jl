@@ -5,7 +5,7 @@ using LinearAlgebra, ArrayLayouts, FillArrays
 export AbstractBlockArray, AbstractBlockMatrix, AbstractBlockVector, AbstractBlockVecOrMat
 export Block, getblock, getblock!, setblock!, eachblock, blocks
 export blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, BlockIndex, BlockIndexRange
-export blocksizes, blocklengths, blocklasts, blockfirsts, blockisequal
+export blocksizes, blocklengths, eachblockaxes, blocklasts, blockfirsts, blockisequal
 export BlockRange, blockedrange, BlockedUnitRange, BlockedOneTo
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
@@ -20,16 +20,16 @@ export blockappend!, blockpush!, blockpushfirst!, blockpop!, blockpopfirst!
 import Base: @propagate_inbounds, Array, AbstractArray, to_indices, to_index,
             unsafe_indices, first, last, size, length, unsafe_length,
             unsafe_convert,
-            getindex, setindex!, ndims, show, view,
+            getindex, setindex!, ndims, show, print_array, view,
             step,
-            broadcast, eltype, convert, similar,
+            broadcast, eltype, convert, similar, collect,
             tail, reindex,
             RangeIndex, Int, Integer, Number, Tuple,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
-            BroadcastStyle, checkbounds,
+            BroadcastStyle, checkbounds, checkindex, ensure_indexable,
             oneunit, ones, zeros, intersect, Slice, resize!
 
-using Base: ReshapedArray, dataids, oneto
+using Base: ReshapedArray, LogicalIndex, dataids, oneto
 
 import Base: (:), IteratorSize, iterate, axes1, strides, isempty
 import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, broadcastable
