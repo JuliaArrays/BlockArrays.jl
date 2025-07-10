@@ -1095,6 +1095,21 @@ end
         @test a[[Block(1)[1:2], Block(2)[1:2]], [Block(1)[1:2], Block(2)[1:2]]] == [a[Block(1,1)[1:2,1:2]] a[Block(1,2)[1:2,1:2]]; a[Block(2,1)[1:2,1:2]] a[Block(2,2)[1:2,1:2]]]
         @test a[[Block(1)[1], Block(2)[2]], [Block(1)[1:2], Block(2)[1:2]]] == [a[Block(1)[1],Block(1)[1:2]]' a[Block(1)[1], Block(2)[1:2]]'; a[Block(2)[2],Block(1)[1:2]]' a[Block(2)[2], Block(2)[1:2]]']
     end
+    @testset "Blocked block-vector indexing (#359)" begin
+        for a in (BlockArray(randn(14, 14), 2:5, 2:5), BlockedArray(randn(14, 14), 2:5, 2:5))
+            for I in (
+                [Block.(1:2), Block.(3:4)],
+                [[Block(1), Block(3)], [Block(2), Block(4)]],
+                [[Block(1)[1:2], Block(3)[1:2]], [Block(2)[1:2], Block(4)[1:2]]],
+                [[[Block(1)[1], Block(1)[2]], [Block(3)[1], Block(3)[2]]], [[Block(2)[1], Block(2)[2]], [Block(4)[1], Block(4)[2]]]],
+            )
+                b = a[I, I]
+                for (i, j) in Iterators.product(1:length(I), 1:length(I))
+                    @test a[I[i], I[j]] == b[Block(i), Block(j)]
+                end
+            end
+        end
+    end
 end
 
 end # module

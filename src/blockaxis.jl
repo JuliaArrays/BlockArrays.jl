@@ -426,9 +426,13 @@ end
 @propagate_inbounds getindex(b::AbstractBlockedUnitRange, KR::BlockSlice) = b[KR.block]
 
 getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:Block{1}}) = mortar([b[K] for K in KR])
-getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndexRange{1}}) = mortar([b[K] for K in KR])
-getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndex{1}}) = [b[K] for K in KR]
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:Block{1}}}) = mortar([b[K] for K in KR])
 getindex(b::AbstractBlockedUnitRange, Kkr::BlockIndexRange{1}) =  b[block(Kkr)][Kkr.indices...]
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndex{1}}) = [b[K] for K in KR]
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndexRange{1}}) = mortar([b[K] for K in KR])
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:BlockIndex{1}}}) = mortar([b[K] for K in KR])
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:BlockIndexRange{1}}}) = mortar([b[K] for K in KR])
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:AbstractVector{<:BlockIndex{1}}}}) = mortar([b[K] for K in KR])
 
 _searchsortedfirst(a::AbstractVector, k) = searchsortedfirst(a, k)
 function _searchsortedfirst(a::Tuple, k)
