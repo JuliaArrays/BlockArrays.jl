@@ -948,15 +948,49 @@ end
     @test B[1,2] == 0
 end
 
-@testset "blockisequal" begin
-    B = BlockArray(rand(4,4), [1,3], [1,3])
+@testset "blockisequal, blockequals" begin
+    A = rand(4,4)
+    B = BlockArray(A, [1,3], [1,3])
+    B2 = BlockArray(A, [1,3], [2,2])
+    B3 = BlockArray(randn(4,4), [1,3], [1,3])
     v = BlockArray(rand(4), [1,3])
     axB = axes(B)
+    axB2 = axes(B2)
     axv = axes(v)
     @test blockisequal(axB, axB)
+    @test blockisequal(axB[1], axB[1])
+    @test blockequals(axB[1], axB[1])
+    @test !blockisequal(axB[2], axB2[2])
+    @test !blockequals(axB[2], axB2[2])
+    @test !blockisequal(axB2[2], axB[2])
+    @test !blockequals(axB2[2], axB[2])
     @test blockisequal(axv, axv)
     @test !blockisequal(axB, axv)
     @test !blockisequal(axv, axB)
+
+    @test blockisequal(A, A)
+    @test blockisequal(B, B)
+    @test !blockisequal(B, A)
+    @test !blockisequal(A, B)
+    @test !blockisequal(B, B2)
+    @test !blockisequal(B2, B)
+    @test !blockisequal(B, B3)
+    @test !blockisequal(B3, B)
+end
+
+@testset "blockisapprox" begin
+    A1 = reshape([1:16;], (4,4))
+    A2 = A1 .+ 1e-10
+    B1 = BlockArray(A1, [1,3], [1,3])
+    B2 = BlockArray(A2, [1,3], [1,3])
+    B12 = BlockArray(A1, [1,3], [2,2])
+    @test !blockisapprox(A1, A2; rtol=0)
+    @test blockisapprox(A1, A2; rtol=1e-9)
+    @test !blockisapprox(A1, B1; rtol=1e-9)
+    @test !blockisapprox(B1, B2; rtol=0)
+    @test blockisapprox(B1, B2; rtol=1e-9)
+    @test !blockisapprox(B1, B12; rtol=0)
+    @test !blockisapprox(B1, B12; rtol=1e-9)
 end
 
 @testset "BlockIndices" begin
