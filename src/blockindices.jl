@@ -177,7 +177,7 @@ end
 @inline BlockIndex() = BlockIndex((), ())
 
 @inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
-@inline BlockIndex(a::Block, b) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Block, b::Integer) = BlockIndex(a, (b,))
 
 @inline function BlockIndex(I::Tuple{Vararg{Integer,N}}, α::Tuple{Vararg{Integer,M}}) where {M,N}
     M <= N || throw(ArgumentError("number of indices must not exceed the number of blocks"))
@@ -261,7 +261,8 @@ julia> a[Block(2,2)[1:2,3:4]]
 BlockIndexRange
 
 BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where {N} =
-    BlockIndexRange(block, inds)
+    BlockIndexRange(block,inds)
+
 function BlockIndexRange(inds::Tuple{BlockIndexRange{1},Vararg{BlockIndexRange{1}}})
     BlockIndexRange(Block(block.(inds)), map(ind -> ind.indices[1], inds))
 end
@@ -275,8 +276,9 @@ getindex(B::Block{N}, inds::Vararg{Integer,N}) where N = BlockIndex(B,inds)
 getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndexRange(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
+
 getindex(B::BlockIndexRange{0}) = B.block[]
-@propagate_inbounds getindex(B::BlockIndexRange{N}, kr::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndexRange(B.block, map(getindex, B.indices, kr))
+@propagate_inbounds getindex(B::BlockIndexRange{N}, kr::Vararg{AbstractUnitRange{<:Integer},N}) where {N} = BlockIndexRange(B.block, map(getindex, B.indices, kr))
 @propagate_inbounds getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
 eltype(R::BlockIndexRange) = eltype(typeof(R))
@@ -405,6 +407,7 @@ struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{<:Integer}}} <: AbstractArray{
     indices::R
     BlockRange{N,R}(inds::R) where {N,R} = new{N,R}(inds)
 end
+
 
 # The following is adapted from Julia v0.7 base/multidimensional.jl
 # definition of CartesianRange
