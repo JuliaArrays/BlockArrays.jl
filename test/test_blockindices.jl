@@ -2,7 +2,7 @@ module TestBlockIndices
 
 using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
-import BlockArrays: BlockIndex, BlockIndexRange, BlockIndices, BlockSlice, NoncontiguousBlockSlice
+import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, NoncontiguousBlockSlice
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
