@@ -39,6 +39,7 @@ blockfirsts
 blocklasts
 blocklengths
 blocksizes
+eachblockaxes
 blocks
 eachblock
 blockcheckbounds
