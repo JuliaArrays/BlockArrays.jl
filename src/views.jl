@@ -111,7 +111,6 @@ collect(I::BlockedLogicalIndex) = collect(I.blocks)
 checkbounds(::Type{Bool}, A::AbstractArray, i::BlockedLogicalIndex) = checkbounds(Bool, A, i.blocks.mask)
 # `checkbounds_indices` has been handled via `I::AbstractArray` fallback
 checkindex(::Type{Bool}, inds::AbstractUnitRange, i::BlockedLogicalIndex) = checkindex(Bool, inds, i.blocks.mask)
-checkindex(::Type{Bool}, inds::Tuple, i::BlockedLogicalIndex) = checkindex(Bool, inds, i.blocks.mask)
 
 # Instantiate the BlockedLogicalIndex when constructing a SubArray, similar to
 # `ensure_indexable(I::Tuple{LogicalIndex,Vararg{Any}})`:
