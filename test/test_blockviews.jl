@@ -376,6 +376,9 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         a = randn(6, 6)
         for mask in ([true, true, false, false, true, false], BitVector([true, true, false, false, true, false]))
             I = BlockedVector(mask, [3, 3])
+            @test Base.to_index(I) == BlockedLogicalIndex(I)
+            @test Base.to_index(I) == [1, 2, 5]
+            @test Base.to_index(I) isa BlockedLogicalIndex
             @test to_indices(a, (I, I)) == to_indices(a, (mask, mask))
             @test to_indices(a, (I, I)) == (BlockedVector(LogicalIndex(mask), [2, 1]), BlockedVector(LogicalIndex(mask), [2, 1]))
             @test to_indices(a, (I, I)) isa Tuple{BlockedLogicalIndex{Int},BlockedLogicalIndex{Int}}
@@ -388,7 +391,15 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
             @test parentindices(view(a, I, I)) == (BlockedVector([1, 2, 5], [2, 1]), BlockedVector([1, 2, 5], [2, 1]))
             @test parentindices(view(a, I, I)) isa Tuple{BlockedVector{Int,Vector{Int}},BlockedVector{Int,Vector{Int}}}
             @test blocklengths.(Base.axes1.(parentindices(view(a, I, I)))) == ([2, 1], [2, 1])
+            @test sprint(show, BlockedLogicalIndex(I)) == "[1, 2, 5]"
         end
+        bl = BlockedLogicalIndex(BlockedVector([true, true, false, false, true, false], [3, 3]))
+        @test sprint(show, "text/plain", bl) ==
+            "2-blocked 3-element BlockedVector{Int64, Base.LogicalIndex{Int64, BlockedVector{Bool, Vector{Bool}, Tuple{BlockedOneTo{Int64, Vector{Int64}}}}}, Tuple{BlockedOneTo{Int64, Vector{Int64}}}}:\n 1\n 2\n ─\n 5"
+        @test checkbounds(Bool, randn(6), bl)
+        @test !checkbounds(Bool, randn(5), bl)
+        @test checkindex(Bool, 1:6, bl)
+        @test !checkindex(Bool, 1:5, bl)
     end
 end
 

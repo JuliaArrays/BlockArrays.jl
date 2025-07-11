@@ -225,9 +225,12 @@ end
 length(a::AbstractBlockedUnitRange) = isempty(blocklasts(a)) ? zero(eltype(a)) : Integer(last(blocklasts(a))-first(a)+oneunit(eltype(a)))
 
 """
+    blockisequal(a::AbstractArray, b::AbstractArray)
     blockisequal(a::AbstractUnitRange{<:Integer}, b::AbstractUnitRange{<:Integer})
 
-Check if `a` and `b` have the same block structure.
+Check if `a` and `b` have the same values (compared with `isequal`) and block structure.
+
+See also blockequals and blockisapprox.
 
 # Examples
 ```jldoctest
@@ -251,6 +254,29 @@ true
 
 julia> blockisequal(b1, b2)
 false
+
+julia> A = reshape([1:6;], 2, 3)
+2×3 Matrix{Int64}:
+ 1  3  5
+ 2  4  6
+
+julia> B1 = BlockedMatrix(A, [1,1], [1,2])
+2×2-blocked 2×3 BlockedMatrix{Int64}:
+ 1  │  3  5
+ ───┼──────
+ 2  │  4  6
+
+julia> B2 = BlockedMatrix(A, [1,1], [2,1])
+2×2-blocked 2×3 BlockedMatrix{Int64}:
+ 1  3  │  5
+ ──────┼───
+ 2  4  │  6
+
+julia> blockisequal(B1, B1)
+true
+
+julia> blockisequal(B1, B2)
+false
 ```
 """
 blockisequal(a::AbstractUnitRange{<:Integer}, b::AbstractUnitRange{<:Integer}) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
@@ -265,6 +291,92 @@ blockisequal(::Tuple{}, ::Tuple{}) = true
 blockisequal(::Tuple, ::Tuple{}) = false
 blockisequal(::Tuple{}, ::Tuple) = false
 
+blockisequal(a::AbstractArray, b::AbstractArray) =
+    blockisequal(axes(a), axes(b)) && isequal(a, b)
+
+"""
+    blockequals(a::AbstractArray, b::AbstractArray)
+
+Check if `a` and `b` have the same values (compared with `==`) and block structure.
+
+See also blockisequal and blockisapprox.
+
+# Examples
+```jldoctest
+julia> A = reshape([1:6;], 2, 3)
+2×3 Matrix{Int64}:
+ 1  3  5
+ 2  4  6
+
+julia> B1 = BlockedMatrix(A, [1,1], [1,2])
+2×2-blocked 2×3 BlockedMatrix{Int64}:
+ 1  │  3  5
+ ───┼──────
+ 2  │  4  6
+
+julia> B2 = BlockedMatrix(A, [1,1], [2,1])
+2×2-blocked 2×3 BlockedMatrix{Int64}:
+ 1  3  │  5
+ ──────┼───
+ 2  4  │  6
+
+julia> blockequals(B1, B1)
+true
+
+julia> blockequals(B1, B2)
+false
+```
+"""
+blockequals(a::AbstractArray, b::AbstractArray) =
+    blockisequal(axes(a), axes(b)) && (a == b)
+
+"""
+    blockisapprox(a::AbstractArray, b::AbstractArray; kwargs...)
+
+Check if `a` and `b` have the same block structure and approximately the same
+values, compared with `isapprox`. Accepts the same keyword arguments as `isapprox`.
+
+See also blockisequal and blockequals.
+
+# Examples
+```jldoctest
+julia> A1 = reshape([1:6;], 2, 3)
+2×3 Matrix{Int64}:
+ 1  3  5
+ 2  4  6
+
+julia> A2 = A1 .+ 1e-5
+2×3 Matrix{Float64}:
+ 1.00001  3.00001  5.00001
+ 2.00001  4.00001  6.00001
+
+julia> B1 = BlockedMatrix(A1, [1,1], [1,2])
+2×2-blocked 2×3 BlockedMatrix{Int64}:
+ 1  │  3  5
+ ───┼──────
+ 2  │  4  6
+
+julia> B2 = BlockedMatrix(A2, [1,1], [1,2])
+2×2-blocked 2×3 BlockedMatrix{Float64}:
+ 1.00001  │  3.00001  5.00001
+ ─────────┼──────────────────
+ 2.00001  │  4.00001  6.00001
+
+julia> B3 = BlockedMatrix(A2, [1,1], [2,1])
+2×2-blocked 2×3 BlockedMatrix{Float64}:
+ 1.00001  3.00001  │  5.00001
+ ──────────────────┼─────────
+ 2.00001  4.00001  │  6.00001
+
+julia> blockisapprox(B1, B2; atol=1e-4)
+true
+
+julia> blockisapprox(B1, B3; atol=1e-4)
+false
+```
+"""
+blockisapprox(a::AbstractArray, b::AbstractArray; kwargs...) =
+    blockisequal(axes(a), axes(b)) && isapprox(a, b; kwargs...)
 
 _shift_blocklengths(::AbstractBlockedUnitRange, bl, f) = bl
 _shift_blocklengths(::Any, bl, f) = bl .+ (f - 1)
