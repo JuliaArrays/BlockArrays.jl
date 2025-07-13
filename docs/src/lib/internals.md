@@ -24,6 +24,7 @@ BlockedUnitRange
 BlockRange
 BlockIndexRange
 BlockSlice
+NoncontiguousBlockSlice
 unblock
 SubBlockIterator
 blockcheckbounds_indices
