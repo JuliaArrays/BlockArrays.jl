@@ -223,13 +223,18 @@ It can be constructed and used to index into `BlockArrays` in the following mann
 ```jldoctest
 julia> BlockIndices(Block(1,2), ([1,3],[2,4]))
 Block(1, 2)[[1, 3], [2, 4]]
+
 julia> Block(1)[[1,3]] == BlockIndices(Block(1), [1,3])
 true
+
 julia> Block(1,2)[[1,3],[2,4]] == BlockIndices(Block(1,2), ([1,3],[2,4]))
 true
+
 julia> BlockIndices((Block(1)[[1,3]], Block(2)[[2,4]]))
 Block(1, 2)[[1, 3], [2, 4]]
+
 julia> arr = Array(reshape(1:25, (5,5)));
+
 julia> a = BlockedArray(arr, [3,2], [1,4])
 2×2-blocked 5×5 BlockedMatrix{Int64}:
  1  │   6  11  16  21
@@ -238,10 +243,12 @@ julia> a = BlockedArray(arr, [3,2], [1,4])
  ───┼────────────────
  4  │   9  14  19  24
  5  │  10  15  20  25
+
 julia> a[Block(1,2)[[1,3],[2,4]]]
 2×2 Matrix{Int64}:
  11  21
  13  23
+
 julia> a[Block(2,2)[[2],[2,4]]]
 1×2 Matrix{Int64}:
  15  25
@@ -322,7 +329,7 @@ getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
 getindex(B::BlockIndices{0}) = B.block[]
-@propagate_inbounds getindex(B::BlockIndices{N}, kr::Vararg{AbstractUnitRange{<:Integer},N}) where {N} = BlockIndices(B.block, map(getindex, B.indices, kr))
+@propagate_inbounds getindex(B::BlockIndices{N}, kr::Vararg{AbstractVector,N}) where {N} = BlockIndices(B.block, map(getindex, B.indices, kr))
 @propagate_inbounds getindex(B::BlockIndices{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
 eltype(R::BlockIndices) = eltype(typeof(R))

@@ -87,10 +87,18 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, BlockedSlice
         @test Block()[] == BlockIndex()
         @test Block(1)[1] == BlockIndex((1,),(1,))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
+        @test Block(1)[[1,3]] == BlockIndices(Block(1),([1,3],))
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
+        @test Block(1,1)[[1,3],1:2] == BlockIndices(Block(1,1),([1,3],1:2))
         @test BlockIndexRange((Block(1)[1:2],Block(1)[1:2])) == BlockIndexRange(Block(1,1),(1:2,1:2))
+        @test BlockIndices((Block(1)[[1,3]],Block(1)[[2,4]])) == BlockIndices(Block(1,1),([1,3],[2,4]))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
+        @test Block(1)[[1,3,5]][[1,3]] == BlockIndices(Block(1),[1,5])
+        @test Block(1)[[1,3,5]][2:3] == BlockIndices(Block(1),[3,5])
+        @test Block(1)[2:4][[1,3]] == BlockIndices(Block(1),[2,4])
+        @test Block(1,1)[1:3,1:3][1:2,1:2] == BlockIndexRange(Block(1,1),1:2,1:2)
+        @test Block(1,1)[1:3,1:3][1:2,[1,3]] == BlockIndices(Block(1,1),1:2,[1,3])
         @test Block(1,1)[2:4,2:4][2:3,2:3] == BlockIndexRange(Block(1,1),(3:4,3:4))
         @test BlockIndexRange(Block(),())[] == BlockIndex()
         @test BlockIndex((2,2,2),(2,)) == BlockIndex((2,2,2),(2,1,)) == BlockIndex((2,2,2),(2,1,1))
@@ -99,6 +107,8 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, BlockedSlice
         @test BlockIndex(Block(2),2) === BlockIndex(Block(2),(2,))
         @test BlockIndex(Block(2),UInt(2)) === BlockIndex(Block(2),(UInt(2),))
         @test copy(Block(1)[1:2]) === BlockIndexRange(Block(1),1:2)
+        @test copy(Block(1)[[1,3]]) == BlockIndices(Block(1),[1,3])
+        @test copy(Block(1)[[1,3]]) ≢ BlockIndices(Block(1),[1,3])
     end
 
     @testset "BlockRange" begin
@@ -615,6 +625,7 @@ end
         b = blockedrange([1,2,3])
         @test b[Block(3)[2]] == b[Block(3)][2] == 5
         @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
+        @test b[Block(3)[[3,2]]] == b[Block(3)][[3,2]] == [6,5]
     end
 
     @testset "BlockRange indexing" begin
