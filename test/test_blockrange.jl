@@ -32,7 +32,7 @@ using BlockArrays, Test
     V = view(A, [Block(3), Block(2)])
     @test V == [4, 5, 6, 2, 3]
     I = parentindices(V)[1]
-    @test I isa BlockArrays.BlockedSlice{<:Vector{<:Block{1}}}
+    @test I isa BlockArrays.NoncontiguousBlockSlice{<:Vector{<:Block{1}}}
     @test V[Block(1)] == 4:6
     @test V[Block(2)] == 2:3
     @test view(V, Block(1)) === view(A, Block(3))
