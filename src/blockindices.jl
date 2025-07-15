@@ -188,7 +188,7 @@ end
 block(b::BlockIndex) = Block(b.I...)
 blockindices(b::BlockIndex) = b.α
 blockindex(b::BlockIndex{1}) = blockindices(b)[1]
-blockindex(b::BlockIndex) = _merge_indices(blockindices(b))
+blockindex(b::BlockIndex) = merge_indices(blockindices(b))
 
 BlockIndex(indcs::Tuple{Vararg{BlockIndex{1},N}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
 
@@ -269,18 +269,19 @@ function BlockIndexRange(inds::Tuple{BlockIndexRange{1},Vararg{BlockIndexRange{1
 end
 
 block(R::BlockIndexRange) = R.block
+blockindices(b::BlockIndexRange) = b.indices
 
 copy(R::BlockIndexRange) = BlockIndexRange(R.block, map(copy, R.indices))
 
-_split_index(i::CartesianIndex) = Tuple(i)
-_split_index(i::Block) = Tuple(i)
-_split_index(i::BlockIndex) = map(BlockIndex, Tuple(block(i)), blockindices(i))
-_split_index(i::BlockIndexRange) = map(BlockIndexRange, Tuple(block(i)), blockindices(i))
+split_index(i::CartesianIndex) = Tuple(i)
+split_index(i::Block) = Tuple(i)
+split_index(i::BlockIndex) = map(BlockIndex, Tuple(block(i)), blockindices(i))
+split_index(i::BlockIndexRange) = map(BlockIndexRange, Tuple(block(i)), blockindices(i))
 
-_merge_indices(i::Tuple{Vararg{Integer}}) = CartesianIndex(i)
-_merge_indices(i::Tuple{Vararg{Block{1}}}) = Block(i)
-_merge_indices(i::Tuple{Vararg{BlockIndex{1}}}) = BlockIndex(i)
-_merge_indices(i::Tuple{Vararg{BlockIndexRange{1}}}) = BlockIndexRange(i)
+merge_indices(i::Tuple{Vararg{Integer}}) = CartesianIndex(i)
+merge_indices(i::Tuple{Vararg{Block{1}}}) = Block(i)
+merge_indices(i::Tuple{Vararg{BlockIndex{1}}}) = BlockIndex(i)
+merge_indices(i::Tuple{Vararg{BlockIndexRange{1}}}) = BlockIndexRange(i)
 
 getindex(::Block{0}) = BlockIndex()
 getindex(B::Block{N}, inds::Vararg{Any,N}) where N = BlockIndex(B,inds)
@@ -288,11 +289,11 @@ getindex(B::Block{1}, inds) = BlockIndex(B,inds)
 getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndexRange(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
-getindex(B::Block{N}, inds::Block{N}) where N = B[_split_index(inds)...]
+getindex(B::Block{N}, inds::Block{N}) where N = B[split_index(inds)...]
 getindex(B::Block{1}, inds::Block{1}) = BlockIndex(B,inds)
-getindex(B::Block{N}, inds::BlockIndex{N}) where N = B[_split_index(inds)...]
+getindex(B::Block{N}, inds::BlockIndex{N}) where N = B[split_index(inds)...]
 getindex(B::Block{1}, inds::BlockIndex{1}) = BlockIndex(B,inds)
-getindex(B::Block{N}, inds::BlockIndexRange{N}) where N = B[_split_index(inds)...]
+getindex(B::Block{N}, inds::BlockIndexRange{N}) where N = B[split_index(inds)...]
 getindex(B::Block{1}, inds::BlockIndexRange{1}) = BlockIndex(B,inds)
 
 getindex(B::BlockIndexRange{0}) = B.block[]

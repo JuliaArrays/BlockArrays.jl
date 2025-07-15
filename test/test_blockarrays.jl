@@ -1006,6 +1006,7 @@ end
         V = mortar([va,vb])
         @test V[Block(2)[Block(1)]] == view(V, Block(2)[Block(1)]) == V[Block(2)][Block(1)] == vb[Block(1)]
         @test V[Block(2)[Block(1)[2]]] == view(V, Block(2)[Block(1)[2]])[] == V[Block(2)][Block(1)[2]] == vb[Block(1)[2]]
+        @test V[Block(2)[Block(1)[1:2]]] == view(V, Block(2)[Block(1)[1:2]]) == V[Block(2)][Block(1)[1:2]] == vb[Block(1)[1:2]]
 
         ma = BlockedArray(randn(4,4), [2,2], [2,2])
         mb = BlockedArray(randn(4,4), [2,2], [2,2])
@@ -1013,7 +1014,8 @@ end
         md = BlockedArray(randn(4,4), [2,2], [2,2])
         M = mortar([[ma] [mc]; [mb] [md]])
         @test M[Block(2,2)[Block(1,1)]] == view(M, Block(2,2)[Block(1,1)]) == M[Block(2,2)][Block(1,1)] == md[Block(1,1)]
-        #@test V[Block(2)[Block(1)[2]]] == view(V, Block(2)[Block(1)[2]])[] == V[Block(2)][Block(1)[2]] == vb[Block(1)[2]]
+        @test M[Block(2,2)[Block(1,1)[2,2]]] == view(M, Block(2,2)[Block(1,1)[2,2]])[] == M[Block(2,2)][Block(1,1)[2,2]] == md[Block(1,1)[2,2]]
+        @test M[Block(2,2)[Block(1,1)[1:2,2:2]]] == view(M, Block(2,2)[Block(1,1)[1:2,2:2]]) == M[Block(2,2)][Block(1,1)[1:2,2:2]] == md[Block(1,1)[1:2,2:2]]
     end
 
     @testset "BlockIndexRange blocks" begin
