@@ -317,7 +317,7 @@ copy(R::BlockIndices) = BlockIndices(R.block, map(copy, R.indices))
 
 getindex(::Block{0}) = BlockIndex()
 getindex(B::Block{N}, inds::Vararg{Integer,N}) where N = BlockIndex(B,inds)
-getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndices(B,inds)
+getindex(B::Block{N}, inds::Vararg{AbstractVector,N}) where N = BlockIndices(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
@@ -405,7 +405,7 @@ _indices(B) = B
 @propagate_inbounds getindex(S::BlockSlice, i::Integer) = getindex(S.indices, i)
 @propagate_inbounds getindex(S::BlockSlice{<:Block{1}}, k::AbstractUnitRange{<:Integer}) =
     BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
-@propagate_inbounds getindex(S::BlockSlice{<:BlockIndices{1}}, k::AbstractUnitRange{<:Integer}) =
+@propagate_inbounds getindex(S::BlockSlice{<:BlockIndexRange{1}}, k::AbstractUnitRange{<:Integer}) =
     BlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
 
 # Avoid creating a SubArray wrapper in certain non-allocating cases
