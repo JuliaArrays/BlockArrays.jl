@@ -87,6 +87,7 @@ import BlockArrays: split_index, merge_indices
     @testset "BlockIndex" begin
         @test Block()[] == BlockIndex()
         @test Block(1)[1] == BlockIndex((1,),(1,))
+        @test Block(1)[Block(1)] == BlockIndex((1,),(Block(1),))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
@@ -99,6 +100,7 @@ import BlockArrays: split_index, merge_indices
         @test BlockIndex(UInt(2),(2,)) === BlockIndex((UInt(2),),(2,))
         @test BlockIndex(Block(2),2) === BlockIndex(Block(2),(2,))
         @test BlockIndex(Block(2),UInt(2)) === BlockIndex(Block(2),(UInt(2),))
+        @test BlockIndex(Block(2),Block(2)) === BlockIndex(Block(2),(Block(2),))
         @test copy(Block(1)[1:2]) === BlockIndexRange(Block(1),1:2)
     end
 
