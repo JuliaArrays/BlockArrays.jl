@@ -998,6 +998,14 @@ end
         @test A[Block(1)[1], Block(1)[1:1]] == BlockArray(A)[Block(1)[1], Block(1)[1:1]] == A[1,1:1]
     end
 
+    @testset "BlockIndices" begin
+        a = BlockedArray(randn(5), [2,3])
+        @test a[Block(2)[[1,3]]] == a[[3,5]]
+        A = BlockedArray(randn(5,5), [2,3], [2,3])
+        @test A[Block(2,2)[[1,3],[2,3]]] == A[[3,5],[4,5]]
+        @test A[Block(2,2)[[1,3],1:2]] == A[[3,5],3:4]
+    end
+
     @testset "BlockIndexRange blocks" begin
         a = mortar([Block(1)[1:2], Block(3)[2:3]])
         @test a[Block(1)] === Block(1)[1:2]
