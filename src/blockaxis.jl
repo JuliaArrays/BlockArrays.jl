@@ -7,9 +7,9 @@
 @propagate_inbounds getindex(b::AbstractArray, K::BlockIndex{1}, J::BlockIndex{1}...) =
     b[BlockIndex(tuple(K, J...))]
 
-@propagate_inbounds getindex(b::AbstractArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
-@propagate_inbounds getindex(b::LayoutArray{T,N}, K::BlockIndexRange{N}) where {T,N} = b[block(K)][K.indices...]
-@propagate_inbounds getindex(b::LayoutArray{T,1}, K::BlockIndexRange{1}) where {T} = b[block(K)][K.indices...]
+@propagate_inbounds getindex(b::AbstractArray{T,N}, K::BlockIndices{N}) where {T,N} = b[block(K)][K.indices...]
+@propagate_inbounds getindex(b::LayoutArray{T,N}, K::BlockIndices{N}) where {T,N} = b[block(K)][K.indices...]
+@propagate_inbounds getindex(b::LayoutArray{T,1}, K::BlockIndices{1}) where {T} = b[block(K)][K.indices...]
 
 function findblockindex(b::AbstractVector, k::Integer)
     @boundscheck k in b || throw(BoundsError())
@@ -539,11 +539,11 @@ end
 
 getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:Block{1}}) = mortar([b[K] for K in KR])
 getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:Block{1}}}) = mortar([b[K] for K in KR])
-getindex(b::AbstractBlockedUnitRange, Kkr::BlockIndexRange{1}) =  b[block(Kkr)][Kkr.indices...]
+getindex(b::AbstractBlockedUnitRange, Kkr::BlockIndices{1}) =  b[block(Kkr)][Kkr.indices...]
 getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndex{1}}) = [b[K] for K in KR]
-getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndexRange{1}}) = mortar([b[K] for K in KR])
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:BlockIndices{1}}) = mortar([b[K] for K in KR])
 getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:BlockIndex{1}}}) = mortar([b[K] for K in KR])
-getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:BlockIndexRange{1}}}) = mortar([b[K] for K in KR])
+getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:BlockIndices{1}}}) = mortar([b[K] for K in KR])
 getindex(b::AbstractBlockedUnitRange, KR::AbstractVector{<:AbstractVector{<:AbstractVector{<:BlockIndex{1}}}}) = mortar([b[K] for K in KR])
 
 _searchsortedfirst(a::AbstractVector, k) = searchsortedfirst(a, k)
@@ -567,7 +567,7 @@ Base.dataids(b::AbstractBlockedUnitRange) = Base.dataids(blocklasts(b))
 Base.checkindex(::Type{Bool}, b::BlockRange, K::Integer) = checkindex(Bool, Integer.(b), K)
 Base.checkindex(::Type{Bool}, b::AbstractUnitRange{<:Integer}, K::Block{1}) = checkindex(Bool, blockaxes(b,1), Integer(K))
 
-function Base.checkindex(::Type{Bool}, axis::AbstractBlockedUnitRange, ind::BlockIndexRange{1})
+function Base.checkindex(::Type{Bool}, axis::AbstractBlockedUnitRange, ind::BlockIndices{1})
     checkindex(Bool, axis, first(ind)) && checkindex(Bool, axis, last(ind))
 end
 function Base.checkindex(::Type{Bool}, axis::AbstractBlockedUnitRange, ind::BlockIndex{1})
