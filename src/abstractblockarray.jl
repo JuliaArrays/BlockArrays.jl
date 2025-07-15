@@ -218,6 +218,10 @@ end
 @inline view(block_arr::AbstractBlockVector, block::Block{1}) = viewblock(block_arr, block)
 @propagate_inbounds view(block_arr::AbstractBlockArray, block::Block{1}...) = view(block_arr, Block(block))
 
+@inline view(block_arr::AbstractBlockArray{<:Any,N}, b::BlockIndex{N}) where N = view(view(block_arr, block(b)), blockindices(b)...)
+@inline view(block_arr::AbstractBlockVector, b::BlockIndex{1}) = view(view(block_arr, block(b)), blockindices(b)...)
+@propagate_inbounds view(block_arr::AbstractBlockArray{<:Any,N}, b::Vararg{BlockIndex{1},N}) where N = view(block_arr, BlockIndex(b))
+
 """
     eachblock(A::AbstractBlockArray)
 
