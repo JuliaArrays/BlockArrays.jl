@@ -38,8 +38,6 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
     (inds[1][I[1]], to_indices(A, _maybetail(inds), tail(I))...)
 @inline to_indices(A, inds, I::Tuple{BlockIndices{1}, Vararg{Any}}) =
     (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
-@inline to_indices(A, inds, I::Tuple{AbstractVector{Block{1,R}}, Vararg{Any}}) where R =
-    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
 @inline to_indices(A, inds, I::Tuple{AbstractVector{<:BlockIndex{1}}, Vararg{Any}}) =
     (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
 @inline to_indices(A, inds, I::Tuple{AbstractVector{<:BlockIndices{1}}, Vararg{Any}}) =
