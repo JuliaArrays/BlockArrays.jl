@@ -248,6 +248,13 @@ end
 
 view(A::AdjOrTrans{<:Any,<:BlockArray}, K::Block{1}, J::Block{1}) = view(A, Block(Int(K), Int(J)))
 
+# PseudoBlockArray
+
+function view(A::PseudoBlockArray, inds::Union{Int, AbstractArray{Int}, Colon}...)
+    indsparent = to_indices(A, inds)
+    view(A.blocks, indsparent...)
+end
+
 @propagate_inbounds getindex(v::LinearAlgebra.AdjOrTransAbsVec, ::Colon, is::AbstractArray{<:Block{1}}) = LinearAlgebra.wrapperop(v)(v.parent[is])
 
 
