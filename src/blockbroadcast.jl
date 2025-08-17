@@ -131,8 +131,8 @@ end
 @inline function Broadcast.materialize!(dest, bc::Broadcasted{BS}) where {NDims, BS<:AbstractBlockStyle{NDims}}
     dest_reshaped = ndims(dest) == NDims ? dest : reshape(dest, size(bc))
     bc2 = Broadcast.instantiate(
-            Broadcast.Broadcasted{BS}(bc.f, bc.args,
-                map(combine_blockaxes, axes(dest_reshaped), axes(bc))))
+            Broadcast.flatten(Broadcast.Broadcasted{BS}(bc.f, bc.args,
+                map(combine_blockaxes, axes(dest_reshaped), axes(bc)))))
     copyto!(dest_reshaped, bc2)
     return dest
 end
