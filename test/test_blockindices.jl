@@ -713,7 +713,8 @@ end
         @test blockaxes(S) == blockaxes(b)
         @test S[Block(2)] == 2:3
         @test S[Block.(1:2)] == 1:3
-        @test axes(S) == axes(b)
+        @test axes(S) ≡ axes(b) ≡ (b,)
+        @test Base.axes1(S) ≡ b
 
 
         bs = BlockSlice(Block.(1:3), 1:6)
