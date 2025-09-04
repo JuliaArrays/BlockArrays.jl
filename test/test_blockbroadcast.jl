@@ -67,10 +67,26 @@ using StaticArrays
         @test A .+ 1 .+ B == Vector(A) .+ 1 .+ B == Vector(A) .+ 1 .+ Matrix(B)
 
         @testset "preserve structure" begin
-             x = BlockedArray(1:6, Fill(3,2))
-             @test x + x isa BlockedVector{Int,<:AbstractRange}
-             @test 2x + x isa BlockedVector{Int,<:AbstractRange}
-             @test 2 .* (x .+ 1) isa BlockedVector{Int,<:AbstractRange}
+            x = BlockedArray(1:6, Fill(3,2))
+            @test x + x isa BlockedVector{Int,<:AbstractRange}
+            @test 2x + x isa BlockedVector{Int,<:AbstractRange}
+            @test 2 .* (x .+ 1) isa BlockedVector{Int,<:AbstractRange}
+        end
+
+        @testset "nested in-place broadcast" begin
+            x = BlockedVector(randn(4), [2, 2])
+            y = BlockedVector(randn(4), [2, 2])
+            dest = copy(x)
+            dest .+= 2 .* y
+            @test dest ≈ x + 2y
+        end
+
+        @testset "0-dim nested in-place broadcast" begin
+            x = BlockedArray(randn(()))
+            y = BlockedArray(randn(()))
+            dest = copy(x)
+            dest .+= 2 .* y
+            @test dest ≈ x + 2y
         end
     end
 
