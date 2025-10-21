@@ -238,8 +238,14 @@ end
             @test similar(ret, Float64, (blockedrange(1:3),)) isa BlockedArray
 
             ret = BlockArray{Float64}(undef, 1:3, 1:3)
-            @test similar(typeof(ret), axes(ret)) isa BlockArray
-            @test similar(typeof(ret), (Base.OneTo(6),axes(ret,2))) isa BlockArray
+            @test similar(typeof(ret), axes(ret)) isa BlockMatrix
+            @test similar(typeof(ret), (Base.OneTo(6),axes(ret,2))) isa BlockMatrix
+            @test similar(typeof(ret), (1,axes(ret,2))) isa BlockMatrix
+            @test similar(typeof(ret), (1,2,axes(ret,2))) isa BlockArray{<:Any,3}
+            @test similar(ret, axes(ret)) isa BlockMatrix
+            @test similar(ret, (Base.OneTo(6),axes(ret,2))) isa BlockMatrix
+            @test similar(ret, (1,axes(ret,2))) isa BlockMatrix
+            @test similar(ret, (1,2,axes(ret,2))) isa BlockArray{<:Any,3}
             @test similar(Array{Float64}, axes(ret)) isa BlockedArray
             @test similar(Vector{Float64}, axes(ret)) isa BlockedArray
             @test similar(Array{Float64}, (Base.OneTo(5), axes(ret,2))) isa BlockedArray
@@ -248,6 +254,7 @@ end
 
             @test similar(randn(6,5), Float64, (blockedrange(1:3),3)) isa BlockedMatrix
             @test similar(randn(6,5), Float64, (3,blockedrange(1:3))) isa BlockedMatrix
+            @test similar(randn(6,5), Float64, (3,4,blockedrange(1:3))) isa BlockedArray{<:Any,3}
             @test similar(typeof(view(randn(5),1:3)), (blockedrange(1:3),)) isa BlockedVector
             @test similar(view(randn(5),1:3), Int, (blockedrange(1:3),)) isa BlockedVector{Int}
 

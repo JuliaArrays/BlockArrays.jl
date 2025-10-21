@@ -443,12 +443,16 @@ end
     BlockArray{T}(undef, map(to_axes,axes))
 @inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{Union{AbstractUnitRange{<:Integer},Integer},AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{Union{AbstractUnitRange{<:Integer},Integer},Union{AbstractUnitRange{<:Integer},Integer},AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
+    BlockArray{T}(undef, map(to_axes,axes))
 
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{Union{AbstractUnitRange{<:Integer},Integer},AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
+    BlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{Union{AbstractUnitRange{<:Integer},Integer},Union{AbstractUnitRange{<:Integer},Integer},AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 
 @inline Base.similar(B::BlockArray, ::Type{T}) where {T} = _BlockArray(similar.(blocks(B), T), axes(B))
