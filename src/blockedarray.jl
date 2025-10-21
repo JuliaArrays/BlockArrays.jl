@@ -237,6 +237,8 @@ const IntegerOrUnitRange = Union{Integer,AbstractUnitRange{<:Integer}}
     BlockedArray{T}(undef, map(to_axes,axes))
 @inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{IntegerOrUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
+    BlockedArray{T}(undef, map(to_axes,axes))    
 @inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{IntegerOrUnitRange,IntegerOrUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
 

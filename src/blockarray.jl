@@ -443,6 +443,8 @@ end
     BlockArray{T}(undef, map(to_axes,axes))
 @inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{Union{AbstractUnitRange{<:Integer},Integer},AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
+    BlockArray{T}(undef, map(to_axes,axes))
 @inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{Union{AbstractUnitRange{<:Integer},Integer},Union{AbstractUnitRange{<:Integer},Integer},AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 
