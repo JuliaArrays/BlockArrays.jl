@@ -213,25 +213,33 @@ Base.similar(::BlockedArray, ::Type{T}, ::Tuple{}) where {T} = BlockedArray{T}(u
 to_axes(r::AbstractUnitRange) = r
 to_axes(n::Integer) = Base.oneto(n)
 
-@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+const IntegerOrUnitRange = Union{Integer,AbstractUnitRange{<:Integer}}
+
+@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{Union{Integer,AbstractUnitRange{<:Integer}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{IntegerOrUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
 
-@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{<:Integer}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{IntegerOrUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
+    BlockedArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::StridedArray, ::Type{T}, axes::Tuple{IntegerOrUnitRange,IntegerOrUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
 
-@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
-@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{Union{Integer,AbstractUnitRange{<:Integer}},AbstractBlockedUnitRange,Vararg{Union{Integer,AbstractUnitRange{<:Integer}}}}) where T =
+@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{IntegerOrUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
+    BlockedArray{T}(undef, map(to_axes,axes))
+@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
+    BlockedArray{T}(undef, map(to_axes,axes))    
+@inline Base.similar(block_array::BlockedArray, ::Type{T}, axes::Tuple{IntegerOrUnitRange,IntegerOrUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
 
 @propagate_inbounds getindex(block_arr::BlockedArray{T, N}, i::Vararg{Integer, N}) where {T,N} = block_arr.blocks[i...]

@@ -2,7 +2,7 @@ module TestBlockIndices
 
 using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
-import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, BlockedSlice
+import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, NoncontiguousBlockSlice
 import BlockArrays: split_index, merge_indices
 
 @testset "Blocks" begin
@@ -885,6 +885,9 @@ end
     @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
     @test Block(b) ≡ Block(5)
 
+    bi = BlockSlice(Block(2)[2:4],3:5)
+    @test Block(bi) ≡ Block(2)
+    @test bi[2:3] ≡ BlockSlice(Block(2)[3:4],4:5)
     @test Block(BlockSlice(Block(2)[1:2], 3:4)) ≡ Block(2)
 
     @testset "OneTo converts" begin
@@ -904,14 +907,24 @@ end
     end
 end
 
-@testset "BlockedSlice" begin
-    b = BlockedSlice([Block(2), Block(1)], mortar([3:5, 1:2]))
-    @test length(b) == 5
-    for i in eachindex(b.indices)
-        @test b[i] === b.indices[i]
+@testset "NoncontiguousBlockSlice" begin
+    bs = NoncontiguousBlockSlice([Block(2),Block(1)], mortar([3:5,1:2]))
+    @test length(bs) ≡ 5
+    for i in eachindex(bs.indices)
+        @test bs[i] ≡ bs.indices[i]
     end
-    @test b[Block(1)] === BlockSlice(Block(2), 3:5)
-    @test b[Block(2)] === BlockSlice(Block(1), 1:2)
+    @test bs[Block(1)] ≡ BlockSlice(Block(2), 3:5)
+    @test bs[Block(2)] ≡ BlockSlice(Block(1), 1:2)
+    @test BlockArrays._indices(bs) == mortar([3:5,1:2])
+
+    b = NoncontiguousBlockSlice(Block(3), 2:4)
+    @test b[2:3] ≡ NoncontiguousBlockSlice(Block(3)[2:3], 3:4)
+    @test Block(b) ≡ Block(3)
+    @test BlockArrays._indices(b) ≡ 2:4
+
+    bir = NoncontiguousBlockSlice(Block(3)[3:5], 4:6)
+    @test Block(bir) ≡ Block(3)
+    @test bir[2:3] ≡ NoncontiguousBlockSlice(Block(3)[4:5], 5:6)
 end
 
 #=
