@@ -207,19 +207,68 @@ end
 checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractArray{<:BlockIndex{N}}) where N =
     all(i -> checkbounds(Bool, A, i), I)
 
-struct BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}},I<:Tuple{Vararg{Integer,N}},BI<:Integer} <: AbstractArray{BlockIndex{N,NTuple{N,BI},I},N}
+struct BlockIndices{N,R<:Tuple{Vararg{AbstractVector,N}},I<:Tuple{Vararg{Any,N}},BI} <: AbstractArray{BlockIndex{N,NTuple{N,BI},I},N}
     block::Block{N,BI}
     indices::R
-    function BlockIndexRange(block::Block{N,BI}, inds::R) where {N,BI<:Integer,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}}
+    function BlockIndices(block::Block{N,BI}, inds::R) where {N,BI<:Integer,R<:Tuple{Vararg{AbstractVector,N}}}
         I = Tuple{eltype.(inds)...}
         return new{N,R,I,BI}(block,inds)
     end
 end
 
 """
+    BlockIndices(block, startind:stopind)
+Represents a cartesian product of indices inside a block.
+It can be constructed and used to index into `BlockArrays` in the following manner:
+```jldoctest
+julia> BlockIndices(Block(1,2), ([1,3],[2,4]))
+Block(1, 2)[[1, 3], [2, 4]]
+
+julia> Block(1)[[1,3]] == BlockIndices(Block(1), [1,3])
+true
+
+julia> Block(1,2)[[1,3],[2,4]] == BlockIndices(Block(1,2), ([1,3],[2,4]))
+true
+
+julia> BlockIndices((Block(1)[[1,3]], Block(2)[[2,4]]))
+Block(1, 2)[[1, 3], [2, 4]]
+
+julia> arr = Array(reshape(1:25, (5,5)));
+
+julia> a = BlockedArray(arr, [3,2], [1,4])
+2×2-blocked 5×5 BlockedMatrix{Int64}:
+ 1  │   6  11  16  21
+ 2  │   7  12  17  22
+ 3  │   8  13  18  23
+ ───┼────────────────
+ 4  │   9  14  19  24
+ 5  │  10  15  20  25
+
+julia> a[Block(1,2)[[1,3],[2,4]]]
+2×2 Matrix{Int64}:
+ 11  21
+ 13  23
+
+julia> a[Block(2,2)[[2],[2,4]]]
+1×2 Matrix{Int64}:
+ 15  25
+```
+"""
+BlockIndices
+
+BlockIndices(block::Block{N}, inds::Vararg{AbstractVector,N}) where {N} =
+    BlockIndices(block,inds)
+function BlockIndices(inds::Tuple{BlockIndices{1},Vararg{BlockIndices{1}}})
+    BlockIndices(Block(block.(inds)), map(ind -> ind.indices[1], inds))
+end
+
+const BlockIndexRange{N,R<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}},I<:Tuple{Vararg{Any,N}},BI} = BlockIndices{N,R,I,BI}
+
+"""
     BlockIndexRange(block, startind:stopind)
 
-Represents a cartesian range inside a block.
+Represents a cartesian range inside a block. Type alias for `BlockIndices` with
+the indices constrained to ranges.
 
 It can be constructed and used to index into `BlockArrays` in the following manner:
 
@@ -260,60 +309,62 @@ julia> a[Block(2,2)[1:2,3:4]]
 """
 BlockIndexRange
 
+BlockIndexRange(block::Block{N}, inds::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {N} =
+    BlockIndices(block, inds)
 BlockIndexRange(block::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where {N} =
-    BlockIndexRange(block,inds)
+    BlockIndices(block,inds)
 
 function BlockIndexRange(inds::Tuple{BlockIndexRange{1},Vararg{BlockIndexRange{1}}})
     BlockIndexRange(Block(block.(inds)), map(ind -> ind.indices[1], inds))
 end
 
-block(R::BlockIndexRange) = R.block
+block(R::BlockIndices) = R.block
 
-copy(R::BlockIndexRange) = BlockIndexRange(R.block, map(copy, R.indices))
+copy(R::BlockIndices) = BlockIndices(R.block, map(copy, R.indices))
 
 getindex(::Block{0}) = BlockIndex()
 getindex(B::Block{N}, inds::Vararg{Integer,N}) where N = BlockIndex(B,inds)
-getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndexRange(B,inds)
+getindex(B::Block{N}, inds::Vararg{AbstractVector,N}) where N = BlockIndices(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
 
-getindex(B::BlockIndexRange{0}) = B.block[]
-@propagate_inbounds getindex(B::BlockIndexRange{N}, kr::Vararg{AbstractUnitRange{<:Integer},N}) where {N} = BlockIndexRange(B.block, map(getindex, B.indices, kr))
-@propagate_inbounds getindex(B::BlockIndexRange{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
+getindex(B::BlockIndices{0}) = B.block[]
+@propagate_inbounds getindex(B::BlockIndices{N}, kr::Vararg{AbstractVector,N}) where {N} = BlockIndices(B.block, map(getindex, B.indices, kr))
+@propagate_inbounds getindex(B::BlockIndices{N}, inds::Vararg{Int,N}) where N = B.block[Base.reindex(B.indices, inds)...]
 
-eltype(R::BlockIndexRange) = eltype(typeof(R))
-eltype(::Type{BlockIndexRange{N}}) where {N} = BlockIndex{N}
-eltype(::Type{BlockIndexRange{N,R,I,BI}}) where {N,R,I,BI} = BlockIndex{N,NTuple{N,BI},I}
-IteratorSize(::Type{<:BlockIndexRange}) = Base.HasShape{1}()
+eltype(R::BlockIndices) = eltype(typeof(R))
+eltype(::Type{BlockIndices{N}}) where {N} = BlockIndex{N}
+eltype(::Type{BlockIndices{N,R,I,BI}}) where {N,R,I,BI} = BlockIndex{N,NTuple{N,BI},I}
+IteratorSize(::Type{<:BlockIndices}) = Base.HasShape{1}()
 
 
-first(iter::BlockIndexRange) = BlockIndex(iter.block.n, map(first, iter.indices))
-last(iter::BlockIndexRange)  = BlockIndex(iter.block.n, map(last, iter.indices))
+first(iter::BlockIndices) = BlockIndex(iter.block.n, map(first, iter.indices))
+last(iter::BlockIndices)  = BlockIndex(iter.block.n, map(last, iter.indices))
 
-@inline function iterate(iter::BlockIndexRange)
+@inline function iterate(iter::BlockIndices)
     iterfirst, iterlast = first(iter), last(iter)
     if any(map(>, iterfirst.α, iterlast.α))
         return nothing
     end
     iterfirst, iterfirst
 end
-@inline function iterate(iter::BlockIndexRange, state)
+@inline function iterate(iter::BlockIndices, state)
     nextstate = BlockIndex(state.I, inc(state.α, first(iter).α, last(iter).α))
     nextstate.α[end] > last(iter.indices[end]) && return nothing
     nextstate, nextstate
 end
 
-size(iter::BlockIndexRange) = map(dimlength, first(iter).α, last(iter).α)
-length(iter::BlockIndexRange) = prod(size(iter))
+size(iter::BlockIndices) = map(dimlength, first(iter).α, last(iter).α)
+length(iter::BlockIndices) = prod(size(iter))
 
 
-Block(bs::BlockIndexRange) = bs.block
+Block(bs::BlockIndices) = bs.block
 
 ##
 # checkindex
 ##
 
-function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndexRange{N}) where N
+function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndices{N}) where N
     bl = block(I)
     checkbounds(Bool, A, bl) || return false
     # TODO: Replace with `eachblockaxes(A)[bl]` once that is defined.
@@ -348,8 +399,7 @@ struct BlockSlice{BB,T<:Integer,INDS<:AbstractUnitRange{T}} <: AbstractUnitRange
 end
 
 Block(bs::BlockSlice{<:Block}) = bs.block
-Block(bs::BlockSlice{<:BlockIndexRange}) = Block(bs.block)
-
+Block(bs::BlockSlice{<:BlockIndices}) = Block(bs.block)
 
 for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
           :unsafe_length, :start)

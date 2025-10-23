@@ -23,6 +23,7 @@ BlockedOneTo
 BlockedUnitRange
 BlockRange
 BlockIndexRange
+BlockIndices
 BlockSlice
 NoncontiguousBlockSlice
 unblock
