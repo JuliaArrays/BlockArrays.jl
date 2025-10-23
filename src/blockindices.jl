@@ -419,26 +419,39 @@ _indices(B) = B
 @propagate_inbounds view(C::CartesianIndices{N}, bs::Vararg{BlockSlice,N}) where {N} = view(C, map(x->x.indices, bs)...)
 
 """
-    BlockedSlice(blocks, indices)
+    NoncontiguousBlockSlice(blocks, indices)
 
-Represents blocked indices attached to a collection of corresponding blocks.
+Represents an AbstractVector of indices attached to a (potentially non-contiguous) subblock,
+set of blocks, or set of subblocks. This is the generalization of `BlockSlice` to
+non-contiguous slices.
 
-Upon calling `to_indices()`, a collection of blocks are converted to BlockedSlice objects to represent
+Upon calling `to_indices()`, a collection of blocks are converted to NoncontiguousBlockSlice objects to represent
 the indices over which the blocks span.
 
 This mimics the relationship between `Colon` and `Base.Slice`, `Block` and `BlockSlice`, etc.
 """
-struct BlockedSlice{BB,T<:Integer,INDS<:AbstractVector{T}} <: AbstractVector{T}
-    blocks::BB
+struct NoncontiguousBlockSlice{BB,T,INDS<:AbstractVector{T}} <: AbstractVector{T}
+    block::BB
     indices::INDS
 end
 
-for f in (:axes, :size)
-    @eval $f(S::BlockedSlice) = $f(S.indices)
+Block(bs::NoncontiguousBlockSlice{<:Block}) = bs.block
+Block(bs::NoncontiguousBlockSlice{<:BlockIndexRange}) = Block(bs.block)
+
+for f in (:axes, :unsafe_indices, :axes1, :first, :last, :size, :length,
+          :unsafe_length, :start)
+    @eval $f(S::NoncontiguousBlockSlice) = $f(S.indices)
 end
 
-@propagate_inbounds getindex(S::BlockedSlice, i::Integer) = getindex(S.indices, i)
-@propagate_inbounds getindex(S::BlockedSlice, k::Block{1}) = BlockSlice(S.blocks[Int(k)], getindex(S.indices, k))
+_indices(B::NoncontiguousBlockSlice) = B.indices
+
+@propagate_inbounds getindex(S::NoncontiguousBlockSlice, i::Integer) = getindex(S.indices, i)
+@propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:Block{1}}, k::AbstractVector{<:Integer}) =
+    NoncontiguousBlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
+@propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:BlockIndexRange{1,<:Tuple{AbstractVector}}}, k::AbstractVector{<:Integer}) =
+    NoncontiguousBlockSlice(S.block[_indices(k)], S.indices[_indices(k)])
+@propagate_inbounds getindex(S::NoncontiguousBlockSlice{<:AbstractVector{<:Block{1}}}, k::Block{1}) =
+    BlockSlice(S.block[Int(k)], getindex(S.indices, k))
 
 struct BlockRange{N,R<:NTuple{N,AbstractUnitRange{<:Integer}}} <: AbstractArray{Block{N,Int},N}
     indices::R
