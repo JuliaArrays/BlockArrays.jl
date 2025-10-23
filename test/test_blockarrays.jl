@@ -236,6 +236,8 @@ end
 
             ret = BlockedArray{Float64}(undef, 1:3)
             @test similar(ret, Float64, (blockedrange(1:3),)) isa BlockedArray
+            @test similar(ret, Float64, 1, blockedrange(1:3)) isa BlockedArray
+            @test similar(ret, Float64, 1, 2, blockedrange(1:3)) isa BlockedArray
 
             ret = BlockArray{Float64}(undef, 1:3, 1:3)
             @test similar(typeof(ret), axes(ret)) isa BlockMatrix
