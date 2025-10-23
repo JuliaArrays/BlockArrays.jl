@@ -336,6 +336,7 @@ merge_indices(i::Tuple{Vararg{BlockIndexRange{1}}}) = BlockIndexRange(i)
 
 getindex(::Block{0}) = BlockIndex()
 getindex(B::Block{N}, inds::Vararg{Integer,N}) where N = BlockIndex(B,inds)
+getindex(B::Block{N}, inds::Vararg{AbstractVector,N}) where N = BlockIndices(B,inds)
 getindex(B::Block{1}, inds) = BlockIndex(B,inds)
 getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndices(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
