@@ -89,10 +89,19 @@ import BlockArrays: split_index, merge_indices
         @test Block(1)[1] == BlockIndex((1,),(1,))
         @test Block(1)[Block(1)] == BlockIndex((1,),(Block(1),))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
+        @test Block(1)[[1,3]] == BlockIndices(Block(1),([1,3],))
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
         @test Block(1,1)[1:2,1:2] == BlockIndexRange(Block(1,1),(1:2,1:2))
+        @test Block(1,1)[[1,3],1:2] == BlockIndices(Block(1,1),([1,3],1:2))
         @test BlockIndexRange((Block(1)[1:2],Block(1)[1:2])) == BlockIndexRange(Block(1,1),(1:2,1:2))
+        @test BlockIndices((Block(1)[[1,3]],Block(1)[[2,4]])) == BlockIndices(Block(1,1),([1,3],[2,4]))
         @test Block(1)[1:3][1:2] == BlockIndexRange(Block(1),1:2)
+        @test Block(1)[[1,3,5]][[1,3]] == BlockIndices(Block(1),[1,5])
+        @test Block(1,2)[[1,3,5],[2,4,6]][2,3] == BlockIndex(Block(1,2),(3,6))
+        @test Block(1)[[1,3,5]][2:3] == BlockIndices(Block(1),[3,5])
+        @test Block(1)[2:4][[1,3]] == BlockIndices(Block(1),[2,4])
+        @test Block(1,1)[1:3,1:3][1:2,1:2] == BlockIndexRange(Block(1,1),1:2,1:2)
+        @test Block(1,1)[1:3,1:3][1:2,[1,3]] == BlockIndices(Block(1,1),1:2,[1,3])
         @test Block(1,1)[2:4,2:4][2:3,2:3] == BlockIndexRange(Block(1,1),(3:4,3:4))
         @test BlockIndexRange(Block(),())[] == BlockIndex()
         @test BlockIndex((2,2,2),(2,)) == BlockIndex((2,2,2),(2,1,)) == BlockIndex((2,2,2),(2,1,1))
@@ -102,6 +111,14 @@ import BlockArrays: split_index, merge_indices
         @test BlockIndex(Block(2),UInt(2)) === BlockIndex(Block(2),(UInt(2),))
         @test BlockIndex(Block(2),Block(2)) === BlockIndex(Block(2),(Block(2),))
         @test copy(Block(1)[1:2]) === BlockIndexRange(Block(1),1:2)
+        @test copy(Block(1)[[1,3]]) == BlockIndices(Block(1),[1,3])
+        @test copy(Block(1)[[1,3]]) ≢ BlockIndices(Block(1),[1,3])
+    end
+
+    @testset "BlockIndices" begin
+        @test eltype(BlockIndices{3}) ≡ BlockIndex{3}
+        @test Base.IteratorSize(BlockIndices{3}) ≡ Base.HasShape{1}()
+        @test isnothing(iterate(Block(3,3)[[1,3],[3,1]]))
     end
 
     @testset "BlockRange" begin
@@ -618,6 +635,7 @@ end
         b = blockedrange([1,2,3])
         @test b[Block(3)[2]] == b[Block(3)][2] == 5
         @test b[Block(3)[2:3]] == b[Block(3)][2:3] == 5:6
+        @test b[Block(3)[[3,2]]] == b[Block(3)][[3,2]] == [6,5]
     end
 
     @testset "BlockRange indexing" begin
@@ -716,7 +734,8 @@ end
         @test blockaxes(S) == blockaxes(b)
         @test S[Block(2)] == 2:3
         @test S[Block.(1:2)] == 1:3
-        @test axes(S) == axes(b)
+        @test axes(S) ≡ axes(b) ≡ (b,)
+        @test Base.axes1(S) ≡ b
 
 
         bs = BlockSlice(Block.(1:3), 1:6)
@@ -866,6 +885,8 @@ end
     @test b[1:2] ≡ b[1:2][1:2] ≡ BlockSlice(Block(5)[1:2],1:2)
     @test Block(b) ≡ Block(5)
 
+    @test Block(BlockSlice(Block(2)[1:2], 3:4)) ≡ Block(2)
+
     @testset "OneTo converts" begin
         for b in (BlockSlice(Block(1), 1:1), BlockSlice(Block.(1:1), 1:1), BlockSlice(Block(1)[1:1], 1:1))
             @test convert(typeof(b), Base.OneTo(1)) ≡ b
@@ -985,7 +1006,7 @@ end
     @test !blockisapprox(B1, B12; rtol=1e-9)
 end
 
-@testset "BlockIndices" begin
+@testset "Vector{<:Block{1}}" begin
     a = BlockedOneTo(1:3)
     @test a[[Block(1),Block(3)]] == a[Block.(1:2:3)] == [1,3]
 end
@@ -1002,6 +1023,13 @@ end
     @test merge_indices((Block(1), Block(2))) ≡ Block(1, 2)
     @test merge_indices((Block(1)[3], Block(2)[4])) ≡ Block(1, 2)[3, 4]
     @test merge_indices((Block(1)[3:4], Block(2)[4:5])) ≡ Block(1, 2)[3:4, 4:5]
+end
+@testset "to_index" begin
+    @test_throws ArgumentError Base.to_index(Block(3))
+    @test_throws ArgumentError Base.to_index(Block(3)[2])
+    @test_throws ArgumentError Base.to_index(Block(3)[1:2])
+    @test_throws ArgumentError Base.to_index(Block(3)[[1,3]])
+    @test_throws ArgumentError Base.to_index(Block.(2:3))
 end
 
 end # module

@@ -138,9 +138,10 @@ end
 end
 
 function _generic_blockbroadcast_copyto!(dest::AbstractArray,
-                            bc::Broadcasted{<:AbstractBlockStyle{NDims}, <:Any, <:Any, Args}) where {NDims, Args <: Tuple}
+                            bc1::Broadcasted{<:AbstractBlockStyle{NDims}}) where {NDims}
 
-    NArgs = fieldcount(Args)
+    bc = Broadcast.flatten(bc1)
+    NArgs = length(bc.args)
 
     bs = axes(bc)
     if !blockisequal(axes(dest), bs)
