@@ -34,10 +34,11 @@ jobs:
         julia-version: ['1']
         os: [ubuntu-latest]
         package:
-          - {repo: BlockBandedMatrices.jl, group: JuliaLinearAlgebra}
           - {repo: ApproxFunBase.jl, group: JuliaApproximation}
           - {repo: ContinuumArrays.jl, group: JuliaApproximation}
+          - {repo: MultivariateOrthogonalPolynomials.jl, group: JuliaApproximation}
           - {repo: LazyArrays.jl, group: JuliaArrays}
+          - {repo: BlockBandedMatrices.jl, group: JuliaLinearAlgebra}
           - {repo: LazyBandedMatrices.jl, group: JuliaLinearAlgebra}
           - {repo: InfiniteLinearAlgebra.jl, group: JuliaLinearAlgebra}
 
