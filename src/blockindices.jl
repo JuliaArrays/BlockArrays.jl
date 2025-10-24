@@ -163,7 +163,7 @@ julia> a[Block(2,2)[2,3]]
 20
 ```
 """
-struct BlockIndex{N,TI<:Tuple{Vararg{Integer,N}},Tα<:Tuple{Vararg{Integer,N}}}
+struct BlockIndex{N,TI<:Tuple{Vararg{Integer,N}},Tα<:Tuple{Vararg{Any,N}}}
     I::TI
     α::Tα
 end
@@ -171,23 +171,24 @@ end
 @inline BlockIndex(a::NTuple{N,Block{1}}, b::Tuple) where N = BlockIndex(Int.(a), b)
 @inline BlockIndex(::Tuple{}, b::Tuple{}) = BlockIndex{0,Tuple{},Tuple{}}((), ())
 
-@inline BlockIndex(a::Integer, b::Integer) = BlockIndex((a,), (b,))
-@inline BlockIndex(a::Tuple, b::Integer) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Integer, b) = BlockIndex((a,), (b,))
+@inline BlockIndex(a::Tuple, b) = BlockIndex(a, (b,))
 @inline BlockIndex(a::Integer, b::Tuple) = BlockIndex((a,), b)
 @inline BlockIndex() = BlockIndex((), ())
 
 @inline BlockIndex(a::Block, b::Tuple) = BlockIndex(a.n, b)
-@inline BlockIndex(a::Block, b::Integer) = BlockIndex(a, (b,))
+@inline BlockIndex(a::Block, b) = BlockIndex(a, (b,))
 
-@inline function BlockIndex(I::Tuple{Vararg{Integer,N}}, α::Tuple{Vararg{Integer,M}}) where {M,N}
+@inline function BlockIndex(I::Tuple{Vararg{Integer,N}}, α::Tuple{Vararg{Any,M}}) where {M,N}
     M <= N || throw(ArgumentError("number of indices must not exceed the number of blocks"))
     α2 = ntuple(k -> k <= M ? α[k] : 1, N)
     BlockIndex(I, α2)
 end
 
 block(b::BlockIndex) = Block(b.I...)
-blockindex(b::BlockIndex{1}) = b.α[1]
-blockindex(b::BlockIndex) = CartesianIndex(b.α)
+blockindices(b::BlockIndex) = b.α
+blockindex(b::BlockIndex{1}) = blockindices(b)[1]
+blockindex(b::BlockIndex) = merge_indices(blockindices(b))
 
 BlockIndex(indcs::Tuple{Vararg{BlockIndex{1},N}}) where N = BlockIndex(block.(indcs), blockindex.(indcs))
 
@@ -318,15 +319,34 @@ function BlockIndexRange(inds::Tuple{BlockIndexRange{1},Vararg{BlockIndexRange{1
     BlockIndexRange(Block(block.(inds)), map(ind -> ind.indices[1], inds))
 end
 
+blockindices(b::BlockIndices) = b.indices
 block(R::BlockIndices) = R.block
 
 copy(R::BlockIndices) = BlockIndices(R.block, map(copy, R.indices))
 
+split_index(i::CartesianIndex) = Tuple(i)
+split_index(i::Block) = Tuple(i)
+split_index(i::BlockIndex) = map(BlockIndex, Tuple(block(i)), blockindices(i))
+split_index(i::BlockIndexRange) = map(BlockIndexRange, Tuple(block(i)), blockindices(i))
+
+merge_indices(i::Tuple{Vararg{Integer}}) = CartesianIndex(i)
+merge_indices(i::Tuple{Vararg{Block{1}}}) = Block(i)
+merge_indices(i::Tuple{Vararg{BlockIndex{1}}}) = BlockIndex(i)
+merge_indices(i::Tuple{Vararg{BlockIndexRange{1}}}) = BlockIndexRange(i)
+
 getindex(::Block{0}) = BlockIndex()
-getindex(B::Block{N}, inds::Vararg{Integer,N}) where N = BlockIndex(B,inds)
+getindex(B::Block{N}, inds::Vararg{Any,N}) where N = BlockIndex(B,inds)
 getindex(B::Block{N}, inds::Vararg{AbstractVector,N}) where N = BlockIndices(B,inds)
+getindex(B::Block{1}, inds) = BlockIndex(B,inds)
+getindex(B::Block{N}, inds::Vararg{AbstractUnitRange{<:Integer},N}) where N = BlockIndices(B,inds)
 getindex(B::Block{1}, inds::Colon) = B
 getindex(B::Block{1}, inds::Base.Slice) = B
+getindex(B::Block{N}, inds::Block{N}) where N = B[split_index(inds)...]
+getindex(B::Block{1}, inds::Block{1}) = BlockIndex(B,inds)
+getindex(B::Block{N}, inds::BlockIndex{N}) where N = B[split_index(inds)...]
+getindex(B::Block{1}, inds::BlockIndex{1}) = BlockIndex(B,inds)
+getindex(B::Block{N}, inds::BlockIndexRange{N}) where N = B[split_index(inds)...]
+getindex(B::Block{1}, inds::BlockIndexRange{1}) = BlockIndex(B,inds)
 
 getindex(B::BlockIndices{0}) = B.block[]
 @propagate_inbounds getindex(B::BlockIndices{N}, kr::Vararg{AbstractVector,N}) where {N} = BlockIndices(B.block, map(getindex, B.indices, kr))

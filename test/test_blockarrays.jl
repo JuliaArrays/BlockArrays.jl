@@ -996,17 +996,36 @@ end
     @testset "Blockindex" begin
         a = BlockedArray(randn(3), [1,2])
         @test a[Block(1)[1]] == a[1]
-        @test view(a, Block(1)[1]) ≡ view(a, 1)
+        @test view(a, Block(1)[1]) ≡ view(parent(a), 1)
+        @test view(a, Block(1)[1]) == view(a, 1)
         @test a[Block(1)[1:1]] == a[1:1]
+
         A = BlockedArray(randn(3,3), [1,2], [1,2])
         @test A[Block(1)[1], Block(1)[1]] == A[Block(1,1)[1,1]] == A[1,1]
         # Regression test for #442
-        @test view(A, Block(1)[1], Block(1)[1]) ≡ view(A, Block(1,1)[1,1]) ≡ view(A, 1, 1)
+        @test view(A, Block(1)[1], Block(1)[1]) ≡ view(A, Block(1,1)[1,1]) ≡ view(parent(A), 1, 1)
         @test A[Block(1)[1:1], Block(1)[1:1]] == A[Block(1,1)[1:1,1:1]] == A[1:1,1:1]
         @test A[Block(1)[1:1], Block(1)[1]] == BlockArray(A)[Block(1)[1:1], Block(1)[1]] == A[1:1,1]
         @test A[Block(1)[1], Block(1)[1:1]] == BlockArray(A)[Block(1)[1], Block(1)[1:1]] == A[1,1:1]
     end
 
+    @testset "Nested block indexing" begin
+        va = BlockedArray(randn(4), [2,2])
+        vb = BlockedArray(randn(4), [2,2])
+        V = mortar([va,vb])
+        @test V[Block(2)[Block(1)]] == view(V, Block(2)[Block(1)]) == V[Block(2)][Block(1)] == vb[Block(1)]
+        @test V[Block(2)[Block(1)[2]]] == view(V, Block(2)[Block(1)[2]])[] == V[Block(2)][Block(1)[2]] == vb[Block(1)[2]]
+        @test V[Block(2)[Block(1)[1:2]]] == view(V, Block(2)[Block(1)[1:2]]) == V[Block(2)][Block(1)[1:2]] == vb[Block(1)[1:2]]
+
+        ma = BlockedArray(randn(4,4), [2,2], [2,2])
+        mb = BlockedArray(randn(4,4), [2,2], [2,2])
+        mc = BlockedArray(randn(4,4), [2,2], [2,2])
+        md = BlockedArray(randn(4,4), [2,2], [2,2])
+        M = mortar([[ma] [mc]; [mb] [md]])
+        @test M[Block(2,2)[Block(1,1)]] == view(M, Block(2,2)[Block(1,1)]) == M[Block(2,2)][Block(1,1)] == md[Block(1,1)]
+        @test M[Block(2,2)[Block(1,1)[2,2]]] == view(M, Block(2,2)[Block(1,1)[2,2]])[] == M[Block(2,2)][Block(1,1)[2,2]] == md[Block(1,1)[2,2]]
+        @test M[Block(2,2)[Block(1,1)[1:2,2:2]]] == view(M, Block(2,2)[Block(1,1)[1:2,2:2]]) == M[Block(2,2)][Block(1,1)[1:2,2:2]] == md[Block(1,1)[1:2,2:2]]
+    end
     @testset "BlockIndices" begin
         a = BlockedArray(randn(5), [2,3])
         @test a[Block(2)[[1,3]]] == a[[3,5]]

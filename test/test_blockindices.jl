@@ -3,6 +3,7 @@ module TestBlockIndices
 using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, NoncontiguousBlockSlice
+import BlockArrays: split_index, merge_indices
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -86,6 +87,7 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, NoncontiguousBlockS
     @testset "BlockIndex" begin
         @test Block()[] == BlockIndex()
         @test Block(1)[1] == BlockIndex((1,),(1,))
+        @test Block(1)[Block(1)] == BlockIndex((1,),(Block(1),))
         @test Block(1)[1:2] == BlockIndexRange(Block(1),(1:2,))
         @test Block(1)[[1,3]] == BlockIndices(Block(1),([1,3],))
         @test Block(1,1)[1,1] == BlockIndex((1,1),(1,1)) == BlockIndex((1,1),(1,))
@@ -107,6 +109,7 @@ import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, NoncontiguousBlockS
         @test BlockIndex(UInt(2),(2,)) === BlockIndex((UInt(2),),(2,))
         @test BlockIndex(Block(2),2) === BlockIndex(Block(2),(2,))
         @test BlockIndex(Block(2),UInt(2)) === BlockIndex(Block(2),(UInt(2),))
+        @test BlockIndex(Block(2),Block(2)) === BlockIndex(Block(2),(Block(2),))
         @test copy(Block(1)[1:2]) === BlockIndexRange(Block(1),1:2)
         @test copy(Block(1)[[1,3]]) == BlockIndices(Block(1),[1,3])
         @test copy(Block(1)[[1,3]]) ≢ BlockIndices(Block(1),[1,3])
@@ -1021,6 +1024,19 @@ end
     @test a[[Block(1),Block(3)]] == a[Block.(1:2:3)] == [1,3]
 end
 
+@testset "split_index" begin
+    @test split_index(CartesianIndex(1, 2)) ≡ (1, 2)
+    @test split_index(Block(1, 2)) ≡ (Block(1), Block(2))
+    @test split_index(Block(1, 2)[3, 4]) ≡ (Block(1)[3], Block(2)[4])
+    @test split_index(Block(1, 2)[3:4, 4:5]) ≡ (Block(1)[3:4], Block(2)[4:5])
+end
+
+@testset "merge_indices" begin
+    @test merge_indices((1, 2)) ≡ CartesianIndex(1, 2)
+    @test merge_indices((Block(1), Block(2))) ≡ Block(1, 2)
+    @test merge_indices((Block(1)[3], Block(2)[4])) ≡ Block(1, 2)[3, 4]
+    @test merge_indices((Block(1)[3:4], Block(2)[4:5])) ≡ Block(1, 2)[3:4, 4:5]
+end
 @testset "to_index" begin
     @test_throws ArgumentError Base.to_index(Block(3))
     @test_throws ArgumentError Base.to_index(Block(3)[2])
