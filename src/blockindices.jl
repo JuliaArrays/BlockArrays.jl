@@ -202,7 +202,7 @@ BlockIndex(indcs::Tuple{Vararg{BlockIndex{1},N}}) where N = BlockIndex(block.(in
     bl = block(I)
     checkbounds(Bool, A, bl) || return false
     # TODO: Replace with `eachblockaxes(A)[bl]` once that is defined.
-    binds = map(Base.axes1 ∘ getindex, axes(A), Tuple(bl))
+    binds = map(axes1 ∘ getindex, axes(A), Tuple(bl))
     Base.checkbounds_indices(Bool, binds, (blockindex(I),))
 end
 checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::AbstractArray{<:BlockIndex{N}}) where N =
@@ -374,8 +374,8 @@ end
     nextstate, nextstate
 end
 
-size(iter::BlockIndices) = map(dimlength, first(iter).α, last(iter).α)
-length(iter::BlockIndices) = prod(size(iter))
+axes(iter::BlockIndices) = map(axes1, iter.indices)
+size(iter::BlockIndices) = map(length, iter.indices)
 
 
 Block(bs::BlockIndices) = bs.block
@@ -388,7 +388,7 @@ function checkbounds(::Type{Bool}, A::AbstractArray{<:Any,N}, I::BlockIndices{N}
     bl = block(I)
     checkbounds(Bool, A, bl) || return false
     # TODO: Replace with `eachblockaxes(A)[bl]` once that is defined.
-    binds = map(Base.axes1 ∘ getindex, axes(A), Tuple(bl))
+    binds = map(axes1 ∘ getindex, axes(A), Tuple(bl))
     Base.checkbounds_indices(Bool, binds, I.indices)
 end
 
