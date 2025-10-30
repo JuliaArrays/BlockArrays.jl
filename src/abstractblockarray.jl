@@ -3,23 +3,29 @@
 ####################################
 
 """
-    abstract AbstractBlockArray{T, N} <: AbstractArray{T, N}
-
-The abstract type that represents a blocked array. Types that implement
-the `AbstractBlockArray` interface should subtype from this type.
-
-** Typealiases **
-
-* `AbstractBlockMatrix{T}` -> `AbstractBlockArray{T, 2}`
-
-* `AbstractBlockVector{T}` -> `AbstractBlockArray{T, 1}`
-
-* `AbstractBlockVecOrMat{T}` -> `Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}`
+    AbstractBlockArray{T, N} <: AbstractArray{T, N}
+Supertype for `N`-dimensional block arrays with elements of type `T`. [`BlockedArray`](@ref), [`BlockArray`](@ref) and other types are subtypes of this. See the manual section on the
+the `AbstractBlockArray` interface.
 """
-abstract type AbstractBlockArray{T, N} <: LayoutArray{T, N} end
-const AbstractBlockMatrix{T} = AbstractBlockArray{T, 2}
-const AbstractBlockVector{T} = AbstractBlockArray{T, 1}
-const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T}, AbstractBlockVector{T}}
+abstract type AbstractBlockArray{T,N} <: LayoutArray{T,N} end
+
+"""
+    AbstractBlockMatrix{T}
+Supertype for two-dimensional block arrays with elements of type `T`. Alias for [`AbstractBlockArray{T,2}`](@ref).
+"""
+const AbstractBlockMatrix{T} = AbstractBlockArray{T,2}
+
+"""
+    AbstractBlockVector{T}
+Supertype for one-dimensional block arrays with elements of type `T`. Alias for [`AbstractBlockArray{T,1}`](@ref).
+"""
+const AbstractBlockVector{T} = AbstractBlockArray{T,1}
+
+"""
+    AbstractVecOrMat{T}
+Union type of [`AbstractBlockMatrix`](@ref) and [`AbstractBlockVector`](@ref).
+"""
+const AbstractBlockVecOrMat{T} = Union{AbstractBlockMatrix{T},AbstractBlockVector{T}}
 
 block2string(b, s) = string(join(map(string,b), '×'), "-blocked ", Base.dims2string(s))
 _block_summary(a) = string(block2string(blocksize(a), size(a)), " ", typeof(a))
