@@ -119,6 +119,13 @@ import BlockArrays: split_index, merge_indices
         @test eltype(BlockIndices{3}) ≡ BlockIndex{3}
         @test Base.IteratorSize(BlockIndices{3}) ≡ Base.HasShape{1}()
         @test isnothing(iterate(Block(3,3)[[1,3],[3,1]]))
+
+        I1 = BlockVector([2,4,7,2,3], (blockedrange([2,3]),))
+        I2 = blockedrange(2, [4,3])
+        b = Block(1,2)[I1,I2]
+        @test blockisequal(axes(b), (blockedrange([2,3]),blockedrange([4,3])))
+        @test size(b) == (5,7)
+        @test length(b) == 35
     end
 
     @testset "BlockRange" begin
