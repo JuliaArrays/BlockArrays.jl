@@ -172,7 +172,7 @@ end
 @inline BlockIndex(::Tuple{}, b::Tuple{}) = BlockIndex{0,Tuple{},Tuple{}}((), ())
 
 @inline BlockIndex(a::Integer, b) = BlockIndex((a,), (b,))
-@inline BlockIndex(a::Tuple, b) = BlockIndex(a, (b,))
+@inline BlockIndex(a::NTuple{N, Integer}, b) where {N} = BlockIndex(a, (b,))
 @inline BlockIndex(a::Integer, b::Tuple) = BlockIndex((a,), b)
 @inline BlockIndex() = BlockIndex((), ())
 
