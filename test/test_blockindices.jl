@@ -113,6 +113,7 @@ import BlockArrays: split_index, merge_indices
         @test copy(Block(1)[1:2]) === BlockIndexRange(Block(1),1:2)
         @test copy(Block(1)[[1,3]]) == BlockIndices(Block(1),[1,3])
         @test copy(Block(1)[[1,3]]) ≢ BlockIndices(Block(1),[1,3])
+        @test_throws MethodError BlockIndex((1.0, 2.0), (1, 2))
     end
 
     @testset "BlockIndices" begin
