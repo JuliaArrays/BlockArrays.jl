@@ -448,6 +448,8 @@ end
 @inline Base.similar(block_array::AbstractArray, ::Type{T}, axes::Tuple{Union{AbstractUnitRange{<:Integer},Integer},Union{AbstractUnitRange{<:Integer},Integer},AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 
+@inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{AbstractBlockedUnitRange}}) where T =
+    BlockArray{T}(undef, axes)
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =
     BlockArray{T}(undef, map(to_axes,axes))
 @inline Base.similar(block_array::Type{<:AbstractArray{T}}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{Union{AbstractUnitRange{<:Integer},Integer}}}) where T =

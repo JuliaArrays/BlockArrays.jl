@@ -215,6 +215,8 @@ to_axes(n::Integer) = Base.oneto(n)
 
 const IntegerOrUnitRange = Union{Integer,AbstractUnitRange{<:Integer}}
 
+@inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{AbstractBlockedUnitRange}}) where T =
+    BlockedArray{T}(undef, axes)
 @inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
     BlockedArray{T}(undef, map(to_axes,axes))
 @inline Base.similar(block_array::Type{<:StridedArray{T}}, axes::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange,Vararg{IntegerOrUnitRange}}) where T =
