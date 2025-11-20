@@ -260,6 +260,14 @@ end
             @test similar(typeof(view(randn(5),1:3)), (blockedrange(1:3),)) isa BlockedVector
             @test similar(view(randn(5),1:3), Int, (blockedrange(1:3),)) isa BlockedVector{Int}
 
+            # Regression test for method ambiguity.
+            A = Array{Float64}
+            @test similar(A, blockedrange.((1:3,1:3,1:3))) isa BlockedArray{Float64,3}
+            @test similar(A, blockedrange.((1:3,1:3,1:3,1:3))) isa BlockedArray{Float64,4}
+            A = typeof(view(randn(4,4,4),[1,2,4],[1,2,4],[1,2,4]))
+            @test similar(A, blockedrange.((1:3,1:3,1:3))) isa BlockArray{Float64,3}
+            @test similar(A, blockedrange.((1:3,1:3,1:3,1:3))) isa BlockArray{Float64,4}
+
             b = BlockVector([1,2,3,4,5,6,7,8,9,10], (BlockedOneTo(5:5:10),))
             @test zero(b) isa typeof(b)
         end
