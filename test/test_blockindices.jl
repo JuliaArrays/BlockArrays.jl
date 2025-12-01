@@ -181,8 +181,8 @@ import BlockArrays: split_index, merge_indices
         @test sprint(show, "text/plain", Block{1}(1)) == "Block(1)"
         @test sprint(show, "text/plain", Block{2}(1,2)) == "Block(1, 2)"
 
-        @test sprint(show, "text/plain", Block{0,BigInt}()) == "Block{0, BigInt}()"
-        @test sprint(show, "text/plain", Block{1,BigInt}(1)) == "Block{1, BigInt}(1)"
+        @test sprint(show, "text/plain", Block{0,BigInt}()) == "$Block{0, BigInt}()"
+        @test sprint(show, "text/plain", Block{1,BigInt}(1)) == "$Block{1, BigInt}(1)"
         @test sprint(show, "text/plain", Block{2}(1,2)) == "Block(1, 2)"
 
         @test sprint(show, "text/plain", BlockIndex((1,2), (3,4))) == "Block(1, 2)[3, 4]"
@@ -398,7 +398,7 @@ end
         @test Base.dataids(b) == Base.dataids(blocklasts(b))
         @test_throws ArgumentError BlockedUnitRange(b)
 
-        @test summary(b) == "3-blocked 6-element BlockedUnitRange{$Int, Vector{$Int}}"
+        @test summary(b) == "3-blocked 6-element $BlockedUnitRange{$Int, Vector{$Int}}"
     end
 
     @testset "OneTo interface" begin
@@ -680,7 +680,7 @@ end
         @test Base.dataids(b) == Base.dataids(blocklasts(b))
         @test_throws ArgumentError BlockedOneTo(b)
 
-        @test summary(b) == "3-blocked 6-element BlockedOneTo{$Int, Vector{$Int}}"
+        @test summary(b) == "3-blocked 6-element $BlockedOneTo{$Int, Vector{$Int}}"
     end
 
     @testset "OneTo interface" begin
