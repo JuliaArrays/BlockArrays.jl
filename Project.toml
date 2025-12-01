@@ -2,6 +2,7 @@ name = "BlockArrays"
 uuid = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
 version = "1.9.3"
 
+
 [deps]
 ArrayLayouts = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
