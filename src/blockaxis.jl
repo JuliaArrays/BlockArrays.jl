@@ -212,6 +212,18 @@ julia> blockedrange(2, (1,2))
 @inline blockedrange(blocks::Union{Tuple,AbstractVector}) = BlockedOneTo(_blocklengths2blocklasts(blocks))
 @inline blockedrange(f::Integer, blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(f, f-oneunit(f) .+ _blocklengths2blocklasts(blocks))
 
+to_blockindex(b::BlockedUnitRange, k::Integer) = BlockIndex(_to_blockindex(b,k)...)
+function _to_blockindex(b::BlockedUnitRange, k::Integer)
+    if isone(b.first)
+        bl = blocklasts(b)
+        prevblocklast = k == firstindex(bl) ? first(b)-1 : bl[k-1]
+        local_index = k - prevblocklast
+        (k, local_index)
+    else
+        _to_blockindex(axes(b,1), k)
+    end
+end
+
 _diff(a::AbstractVector) = diff(a)
 _diff(a::Tuple) = diff(collect(a))
 @inline _blocklengths(a, bl, dbl) = isempty(bl) ? [dbl;] : [first(bl)-first(a)+oneunit(eltype(a)); dbl]
