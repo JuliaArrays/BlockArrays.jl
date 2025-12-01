@@ -27,6 +27,7 @@ FillArrays = "1.11"
 Images = "0.26"
 LinearAlgebra = "1"
 OffsetArrays = "1.0"
+ParallelTestRunner = "2"
 Random = "1"
 SparseArrays = "1"
 StaticArrays = "1"
@@ -40,21 +41,11 @@ BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+ParallelTestRunner = "d3525ed8-44d0-4b2c-a655-542cee43accc"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = [
-    "Adapt",
-    "Aqua",
-    "BandedMatrices",
-    "Documenter",
-    "Images",
-    "OffsetArrays",
-    "SparseArrays",
-    "StaticArrays",
-    "Test",
-    "Random",
-]
+test = ["Adapt", "Aqua", "BandedMatrices", "Documenter", "Images", "OffsetArrays", "ParallelTestRunner", "SparseArrays", "StaticArrays", "Test", "Random"]
