@@ -10,6 +10,13 @@
 @propagate_inbounds getindex(b::LayoutArray{T,N}, K::BlockIndices{N}) where {T,N} = b[block(K)][K.indices...]
 @propagate_inbounds getindex(b::LayoutArray{T,1}, K::BlockIndices{1}) where {T} = b[block(K)][K.indices...]
 
+# Narrow method for non-blocked unit ranges (e.g. Base.OneTo, UnitRange).
+# Unlike getindex(::AbstractArray, ::BlockIndices) which caused 12k+ invalidations,
+# AbstractUnitRange{<:Integer} is narrow enough to avoid mass invalidation.
+# AbstractBlockedUnitRange has its own more-specific method (below), so this only
+# handles plain ranges where block(K) is always Block(1).
+@propagate_inbounds getindex(b::AbstractUnitRange{<:Integer}, K::BlockIndices{1}) = b[block(K)][K.indices...]
+
 function findblockindex(b::AbstractVector, k::Integer)
     @boundscheck k in b || throw(BoundsError())
     bl = blocklasts(b)
