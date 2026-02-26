@@ -7,7 +7,6 @@
 @propagate_inbounds getindex(b::AbstractArray, K::BlockIndex{1}, J::BlockIndex{1}...) =
     b[BlockIndex(tuple(K, J...))]
 
-@propagate_inbounds getindex(b::AbstractArray{T,N}, K::BlockIndices{N}) where {T,N} = b[block(K)][K.indices...]
 @propagate_inbounds getindex(b::LayoutArray{T,N}, K::BlockIndices{N}) where {T,N} = b[block(K)][K.indices...]
 @propagate_inbounds getindex(b::LayoutArray{T,1}, K::BlockIndices{1}) where {T} = b[block(K)][K.indices...]
 
