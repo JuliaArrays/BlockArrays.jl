@@ -18,6 +18,23 @@ _blockslice(B, a) = NoncontiguousBlockSlice(B, a)
 # Need to check the length of I in case its empty
 unblock(A, ::Tuple{}, I) = BlockSlice(first(I),Base.OneTo(length(I[1])))
 
+# For non-blocked axes (e.g. Base.OneTo), decompose BlockIndices into
+# block-level indexing + sub-indexing to avoid the need for
+# getindex(::AbstractArray, ::BlockIndices) which causes invalidations.
+# Block-level indexing on AbstractUnitRange is handled by
+# getindex(::AbstractUnitRange{<:Integer}, ::Block{1}) which returns the range.
+@inline function unblock(A, inds::Tuple{AbstractUnitRange{<:Integer}, Vararg}, I::Tuple{BlockIndices{1}, Vararg})
+    bir = first(I)
+    block_range = inds[1][block(bir)]
+    _blockslice(bir, block_range[bir.indices...])
+end
+# AbstractBlockedUnitRange has its own getindex(::AbstractBlockedUnitRange, ::BlockIndices{1}),
+# so use the default unblock behavior (index axis directly with BlockIndices).
+@inline function unblock(A, inds::Tuple{AbstractBlockedUnitRange, Vararg}, I::Tuple{BlockIndices{1}, Vararg})
+    B = first(I)
+    _blockslice(B, inds[1][B])
+end
+
 to_index(::Block) = throw(ArgumentError("Block must be converted by to_indices(...)"))
 to_index(::BlockIndex) = throw(ArgumentError("BlockIndex must be converted by to_indices(...)"))
 to_index(::BlockIndices) = throw(ArgumentError("BlockIndices must be converted by to_indices(...)"))
