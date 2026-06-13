@@ -327,6 +327,12 @@ using StaticArrays
         @test issorted(w)
         @test w == reverse(v)
     end
+
+    @testset "Ones bug" begin
+        a = Ones((blockedrange([1,2]),))
+        b = BlockArray([1 2 3], [1], [2,1])
+        @test a .* b == Vector(a) .* b == a .* Matrix(b) == Vector(a) .* Matrix(b)
+    end
 end
 
 end # module
