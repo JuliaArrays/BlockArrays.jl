@@ -331,7 +331,7 @@ using StaticArrays
     @testset "Ones bug" begin
         a = Ones((blockedrange([1,2]),))
         b = BlockArray([1 2 3], [1], [2,1])
-        @test a .* b == Vector(a) .* b == a .* Matrix(b) == Vector(a) .* Matrix(b)
+        @test a .* b == Vector(a) .* b == a .* Matrix(b) == Vector(a) .* Matrix(b) == b .* a == Matrix(b) .* a == b .* Vector(a)
     end
 end
 

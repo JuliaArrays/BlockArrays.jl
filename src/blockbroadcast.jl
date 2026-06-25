@@ -142,8 +142,13 @@ function _generic_blockbroadcast_copyto!(dest::AbstractArray,
 
     bc = Broadcast.flatten(bc1)
     NArgs = length(bc.args)
-
     bs = axes(bc)
+
+    if !all(a -> !(a isa AbstractArray) || size(a) == size(dest), bc.args)
+        # code below assumes only scalars and matching sizes. We therefore go back to default.
+        return copyto!(dest, Broadcasted{DefaultArrayStyle{NDims}}(bc.f, bc.args, bs))
+    end
+
     if !blockisequal(axes(dest), bs)
         copyto!(BlockedArray(dest, bs), bc)
         return dest
@@ -267,14 +272,12 @@ BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{A
 for op in (:*, :/)
     @eval begin
         broadcasted(::AbstractBlockStyle, ::typeof($op), a::Zeros, b::AbstractArray) = FillArrays._broadcasted_zeros($op, a, b)
-        broadcasted(::AbstractBlockStyle, ::typeof($op), a::Ones{T}, b::AbstractArray{V}) where {T,V} = LinearAlgebra.copy_oftype(b, Base.promote_op(*, T, V))
     end
 end
 
 for op in (:*, :\)
     @eval begin
         broadcasted(::AbstractBlockStyle, ::typeof($op), a::AbstractArray, b::Zeros) = FillArrays._broadcasted_zeros($op, a, b)
-        broadcasted(::AbstractBlockStyle, ::typeof($op), a::AbstractArray{T}, b::Ones{V}) where {T,V} = LinearAlgebra.copy_oftype(a, Base.promote_op(*, T, V))
     end
 end
 
