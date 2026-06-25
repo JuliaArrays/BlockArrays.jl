@@ -1,10 +1,12 @@
+module TestBlockReduce
+
 using BlockArrays, Test
 
 @testset "foldl" begin
     x = mortar([rand(3), rand(2)])
     @test foldl(push!, x; init = []) == collect(x)
 
-    x = PseudoBlockVector(rand(3), [1, 2])
+    x = BlockedVector(rand(3), [1, 2])
     @test foldl(push!, x; init = []) == collect(x)
 end
 
@@ -12,7 +14,7 @@ end
     x = mortar([rand(Int, 3), rand(Int, 2)])
     @test reduce(+, x) == sum(collect(x))
 
-    x = PseudoBlockVector(rand(Int, 3), [1, 2])
+    x = BlockedVector(rand(Int, 3), [1, 2])
     @test reduce(+, x) == sum(collect(x))
 end
 
@@ -25,3 +27,5 @@ end
     @test blockisequal(axes(A,2), axes(sum(A; dims=1),2))
     @test blockisequal(axes(A,1), axes(sum(A; dims=2),1))
 end
+
+end # module

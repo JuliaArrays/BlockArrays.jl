@@ -32,20 +32,29 @@ Block
 BlockIndex
 blockaxes
 blockisequal
+blockequals
+blockisapprox
 blocksize
 blockfirsts
 blocklasts
 blocklengths
 blocksizes
+eachblockaxes
 blocks
 eachblock
 blockcheckbounds
+blockcolsupport
+blockrowsupport
+blockedrange
 ```
 
 ## BlockArray
 
 ```@docs
 BlockArray
+BlockArray(::UndefBlocksInitializer, ::Type{R}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N, R<:AbstractArray{T,N}}
+BlockArray{T}(::UndefBlocksInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N}
+BlockArray{T}(::UndefInitializer, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N}
 undef_blocks
 UndefBlocksInitializer
 mortar
@@ -62,10 +71,12 @@ Base.popfirst!
 ```
 
 
-## PseudoBlockArray
+## BlockedArray
 
 ```@docs
-PseudoBlockArray
+BlockedArray
+BlockedVector
+BlockedMatrix
 Base.resize!
 ```
 

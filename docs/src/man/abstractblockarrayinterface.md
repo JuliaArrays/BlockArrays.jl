@@ -1,8 +1,8 @@
 # The block axis interface
 
-A block array's block structure is dictated by its axes, which
-are typically a `BlockedUnitRange` but may also be a `UnitRange`, 
-which is assumed to be a single block, or other type that implements
+A block array's block structure is dictated by its axes. These
+are typically `BlockedOneTo`s, but may also be standard and non-blocked `AbstractUnitRange`s
+(which are assumed to correspond to a single block), or other type that implements
 the block axis interface.
 
 

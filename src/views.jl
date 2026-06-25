@@ -7,47 +7,137 @@ Returns the indices associated with a block as a `BlockSlice`.
 """
 function unblock(A, inds, I)
     B = first(I)
-    BlockSlice(B,inds[1][B])
+    _blockslice(B, inds[1][B])
 end
+
+_blockslice(B, a::AbstractUnitRange) = BlockSlice(B, a)
+_blockslice(B, a) = NoncontiguousBlockSlice(B, a)
+
 # Allow `ones(2)[Block(1)[1:1], Block(1)[1:1]]` which is
 # similar to `ones(2)[1:1, 1:1]`.
 # Need to check the length of I in case its empty
 unblock(A, ::Tuple{}, I) = BlockSlice(first(I),Base.OneTo(length(I[1])))
 
+# For non-blocked axes (e.g. Base.OneTo), decompose BlockIndices into
+# block-level indexing + sub-indexing to avoid the need for
+# getindex(::AbstractArray, ::BlockIndices) which causes invalidations.
+# Block-level indexing on AbstractUnitRange is handled by
+# getindex(::AbstractUnitRange{<:Integer}, ::Block{1}) which returns the range.
+@inline function unblock(A, inds::Tuple{AbstractUnitRange{<:Integer}, Vararg}, I::Tuple{BlockIndices{1}, Vararg})
+    bir = first(I)
+    block_range = inds[1][block(bir)]
+    _blockslice(bir, block_range[bir.indices...])
+end
+# AbstractBlockedUnitRange has its own getindex(::AbstractBlockedUnitRange, ::BlockIndices{1}),
+# so use the default unblock behavior (index axis directly with BlockIndices).
+@inline function unblock(A, inds::Tuple{AbstractBlockedUnitRange, Vararg}, I::Tuple{BlockIndices{1}, Vararg})
+    B = first(I)
+    _blockslice(B, inds[1][B])
+end
+
 to_index(::Block) = throw(ArgumentError("Block must be converted by to_indices(...)"))
 to_index(::BlockIndex) = throw(ArgumentError("BlockIndex must be converted by to_indices(...)"))
-to_index(::BlockIndexRange) = throw(ArgumentError("BlockIndexRange must be converted by to_indices(...)"))
+to_index(::BlockIndices) = throw(ArgumentError("BlockIndices must be converted by to_indices(...)"))
 to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to_indices(...)"))
 
 
 @inline to_indices(A, inds, I::Tuple{Block{1}, Vararg{Any}}) =
     (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
-@inline to_indices(A, inds, I::Tuple{BlockRange{1,R}, Vararg{Any}}) where R =
+@inline to_indices(A, inds, I::Tuple{BlockRange{1}, Vararg{Any}}) =
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+@inline to_indices(A, inds, I::Tuple{AbstractVector{<:Block{1}}, Vararg{Any}}) =
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+@inline to_indices(A, inds, I::Tuple{AbstractVector{<:BlockRange{1}}, Vararg{Any}}) =
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+@inline to_indices(A, inds, I::Tuple{AbstractVector{<:AbstractVector{<:Block{1}}}, Vararg{Any}}) =
     (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
 @inline to_indices(A, inds, I::Tuple{BlockIndex{1}, Vararg{Any}}) =
     (inds[1][I[1]], to_indices(A, _maybetail(inds), tail(I))...)
-@inline to_indices(A, inds, I::Tuple{BlockIndexRange{1,R}, Vararg{Any}}) where R =
+@inline to_indices(A, inds, I::Tuple{BlockIndices{1}, Vararg{Any}}) =
     (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+@inline to_indices(A, inds, I::Tuple{AbstractVector{<:BlockIndex{1}}, Vararg{Any}}) =
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+@inline to_indices(A, inds, I::Tuple{AbstractVector{<:BlockIndices{1}}, Vararg{Any}}) =
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+@inline to_indices(A, inds, I::Tuple{AbstractVector{<:AbstractVector{<:BlockIndex{1}}}, Vararg{Any}}) =
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+@inline to_indices(A, inds, I::Tuple{AbstractVector{<:AbstractVector{<:BlockIndices{1}}}, Vararg{Any}}) =
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+@inline to_indices(A, inds, I::Tuple{AbstractVector{<:AbstractVector{<:AbstractVector{<:BlockIndex{1}}}}, Vararg{Any}}) =
+    (unblock(A, inds, I), to_indices(A, _maybetail(inds), tail(I))...)
+
 
 # splat out higher dimensional blocks
 # this mimics view of a CartesianIndex
 @inline to_indices(A, inds, I::Tuple{Block, Vararg{Any}}) =
     to_indices(A, inds, (Block.(I[1].n)..., tail(I)...))
-@inline to_indices(A, inds, I::Tuple{BlockIndex, Vararg{Any}}) =
-    to_indices(A, inds, (BlockIndex.(I[1].I, I[1].α)..., tail(I)...))
-@inline to_indices(A, inds, I::Tuple{BlockIndexRange, Vararg{Any}}) =
-    to_indices(A, inds, (BlockIndexRange.(Block.(I[1].block.n), tuple.(I[1].indices))..., tail(I)...))
 @inline to_indices(A, inds, I::Tuple{BlockRange, Vararg{Any}}) =
     to_indices(A, inds, (BlockRange.(tuple.(I[1].indices))..., tail(I)...))
+@inline to_indices(A, inds, I::Tuple{BlockIndex, Vararg{Any}}) =
+    to_indices(A, inds, (BlockIndex.(I[1].I, I[1].α)..., tail(I)...))
+@inline to_indices(A, inds, I::Tuple{BlockIndices, Vararg{Any}}) =
+    to_indices(A, inds, (BlockIndices.(Block.(I[1].block.n), tuple.(I[1].indices))..., tail(I)...))
 
 # In 0.7, we need to override to_indices to avoid calling linearindices
-@inline to_indices(A, I::Tuple{BlockIndexRange, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{BlockIndices, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{BlockIndex, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{Block, Vararg{Any}}) = to_indices(A, axes(A), I)
 @inline to_indices(A, I::Tuple{BlockRange, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{AbstractVector{<:Block{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{AbstractVector{<:BlockRange{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{AbstractVector{<:AbstractVector{<:Block{1}}}, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{AbstractVector{<:BlockIndex{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{AbstractVector{<:BlockIndices{1}}, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{AbstractVector{<:AbstractVector{<:BlockIndex{1}}}, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{AbstractVector{<:AbstractVector{<:BlockIndices{1}}}, Vararg{Any}}) = to_indices(A, axes(A), I)
+@inline to_indices(A, I::Tuple{AbstractVector{<:AbstractVector{<:AbstractVector{<:BlockIndex{1}}}}, Vararg{Any}}) = to_indices(A, axes(A), I)
+
+## BlockedLogicalIndex
+# Blocked version of `LogicalIndex`:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L819-L831
+const BlockedLogicalIndex{T,R<:LogicalIndex{T},BS<:Tuple{AbstractUnitRange{<:Integer}}} = BlockedVector{T,R,BS}
+function BlockedLogicalIndex(I::AbstractVector{Bool})
+    blocklengths = map(b -> count(view(I, b)), BlockRange(I))
+    return BlockedVector(LogicalIndex(I), blocklengths)
+end
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L838-L839
+show(io::IO, r::BlockedLogicalIndex) = print(io, blockcollect(r))
+print_array(io::IO, X::BlockedLogicalIndex) = print_array(io, blockcollect(X))
+
+# Blocked version of `to_index(::AbstractArray{Bool})`:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/indices.jl#L309
+function to_index(I::AbstractBlockVector{Bool})
+    return BlockedLogicalIndex(I)
+end
+
+# Blocked version of `collect(::LogicalIndex)`:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L837
+# Without this definition, `collect` will try to call `getindex` on the `LogicalIndex`
+# which isn't defined.
+collect(I::BlockedLogicalIndex) = collect(I.blocks)
+
+# Iteration of BlockedLogicalIndex is just iteration over the underlying
+# LogicalIndex, which is implemented here:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L840-L890
+@inline iterate(I::BlockedLogicalIndex) = iterate(I.blocks)
+@inline iterate(I::BlockedLogicalIndex, s) = iterate(I.blocks, s)
+
+## Boundscheck for BlockLogicalindex
+# Like for LogicalIndex, map all calls to mask:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L892-L897
+checkbounds(::Type{Bool}, A::AbstractArray, i::BlockedLogicalIndex) = checkbounds(Bool, A, i.blocks.mask)
+# `checkbounds_indices` has been handled via `I::AbstractArray` fallback
+checkindex(::Type{Bool}, inds::AbstractUnitRange, i::BlockedLogicalIndex) = checkindex(Bool, inds, i.blocks.mask)
+
+# Instantiate the BlockedLogicalIndex when constructing a SubArray, similar to
+# `ensure_indexable(I::Tuple{LogicalIndex,Vararg{Any}})`:
+# https://github.com/JuliaLang/julia/blob/3e2f90fbb8f6b0651f2601d7599c55d4e3efd496/base/multidimensional.jl#L918
+@inline ensure_indexable(I::Tuple{BlockedLogicalIndex,Vararg{Any}}) =
+    (blockcollect(I[1]), ensure_indexable(tail(I))...)
 
 @propagate_inbounds reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
-        subidxs::Tuple{BlockSlice{<:BlockIndexRange}, Vararg{Any}}) =
-    (BlockSlice(BlockIndexRange(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
+        subidxs::Tuple{BlockSlice{<:BlockIndices}, Vararg{Any}}) =
+    (BlockSlice(BlockIndices(Block(idxs[1].block.indices[1][Int(subidxs[1].block.block)]),
                                                             subidxs[1].block.indices),
                                             idxs[1].indices[subidxs[1].indices]),
                                 reindex(tail(idxs), tail(subidxs))...)
@@ -57,7 +147,7 @@ to_index(::BlockRange) = throw(ArgumentError("BlockRange must be converted by to
                                             idxs[1].indices[subidxs[1].indices]),
                                 reindex(tail(idxs), tail(subidxs))...)
 
-@propagate_inbounds reindex(idxs::Tuple{BlockedUnitRange, Vararg{Any}},
+@propagate_inbounds reindex(idxs::Tuple{AbstractBlockedUnitRange, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:Block}, Vararg{Any}}) =
     (BlockSlice(subidxs[1].block,
                                             idxs[1][subidxs[1].block]),
@@ -70,32 +160,36 @@ _splatmap(f, t::Tuple) = (f(t[1])..., _splatmap(f, tail(t))...)
 # path in `AbstractBlockStyle` broadcasting.
 @propagate_inbounds function Base.unsafe_view(
         A::BlockArray{<:Any, N},
-        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+        I::Vararg{BlockSlice{<:BlockIndices{1}}, N}) where {N}
     B = view(A, map(block, I)...)
     return view(B, _splatmap(x -> x.block.indices, I)...)
 end
 
 @propagate_inbounds function Base.unsafe_view(
-        A::PseudoBlockArray{<:Any, N},
-        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+        A::BlockedArray{<:Any, N},
+        I::Vararg{BlockSlice{<:BlockIndices{1}}, N}) where {N}
     return view(A.blocks, map(x -> x.indices, I)...)
 end
 
 @propagate_inbounds  function Base.unsafe_view(
         A::ReshapedArray{<:Any, N, <:AbstractBlockArray{<:Any, M}},
-        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N, M}
+        I::Vararg{BlockSlice{<:BlockIndices{1}}, N}) where {N, M}
     # Note: assuming that I[M+1:end] are verified to be singletons
     return reshape(view(A.parent, I[1:M]...), Val(N))
 end
 
-@propagate_inbounds  function Base.unsafe_view(
-        A::Array{<:Any, N},
-        I::Vararg{BlockSlice{<:BlockIndexRange{1}}, N}) where {N}
+@propagate_inbounds function Base.unsafe_view(
+    A::Array,
+    I1::BlockSlice{<:BlockIndices{1}},
+    Is::Vararg{BlockSlice{<:BlockIndices{1}}},
+)
+    I = (I1, Is...)
+    @assert ndims(A) == length(I)
     return view(A, map(x -> x.indices, I)...)
 end
 
-# make sure we reindex correctrly
-@inline function Base._maybe_reindex(V, I::Tuple{BlockSlice{<:BlockIndexRange{1}}, Vararg{Any}}, ::Tuple{})
+# make sure we reindex correctly
+@inline function Base._maybe_reindex(V, I::Tuple{BlockSlice{<:BlockIndices{1}}, Vararg{Any}}, ::Tuple{})
     @inbounds idxs = to_indices(V.parent, reindex(V.indices, I))
     view(V.parent, idxs...)
 end
@@ -105,7 +199,7 @@ end
 # this is loosely based on Slice reindex in subarray.jl
 @propagate_inbounds reindex(idxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}},
         subidxs::Tuple{BlockSlice{<:BlockRange}, Vararg{Any}}) =
-    (BlockSlice(BlockRange(idxs[1].block.indices[1][Int.(subidxs[1].block)]),
+    (BlockSlice(BlockRange((idxs[1].block.indices[1][Int.(subidxs[1].block)],)),
                                             idxs[1].indices[subidxs[1].block]),
                                 reindex(tail(idxs), tail(subidxs))...)
 
@@ -132,10 +226,11 @@ block(A::Block) = A
 @inline view(block_arr::AbstractBlockArray{<:Any,N}, blocks::Vararg{BlockSlice1, N}) where N =
     view(block_arr, map(block,blocks)...)
 
-const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}}}
+const BlockSlices = Union{Base.Slice,BlockSlice{<:BlockRange{1}},NoncontiguousBlockSlice{<:AbstractVector{<:Block{1}}}}
 # view(V::SubArray{<:Any,N,NTuple{N,BlockSlices}},
 
 _block_reindex(b::BlockSlice, i::Block{1}) = b.block[Int(i)]
+_block_reindex(b::NoncontiguousBlockSlice, i::Block{1}) = b.block[Int(i)]
 _block_reindex(b::Slice, i::Block{1}) = i
 
 @inline view(V::SubArray{<:Any,N,<:AbstractBlockArray,<:NTuple{N,BlockSlices}}, block::Block{N}) where N =
@@ -173,7 +268,7 @@ view(A::AdjOrTrans{<:Any,<:BlockArray}, K::Block{1}, J::Block{1}) = view(A, Bloc
 @propagate_inbounds getindex(v::LinearAlgebra.AdjOrTransAbsVec, ::Colon, is::AbstractArray{<:Block{1}}) = LinearAlgebra.wrapperop(v)(v.parent[is])
 
 
-unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,PseudoBlockArray{T,N,AT},<:Tuple{Vararg{BlockOrRangeIndex}}}) where {T,N,AT} =
+unsafe_convert(::Type{Ptr{T}}, V::SubArray{T,N,BlockedArray{T,N,AT},<:Tuple{Vararg{BlockOrRangeIndex}}}) where {T,N,AT} =
     unsafe_convert(Ptr{T}, V.parent) + (Base.first_index(V)-1)*sizeof(T)
 
 # support for strided array interface for subblocks. Typically

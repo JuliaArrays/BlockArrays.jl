@@ -88,25 +88,41 @@ ERROR: BlockBoundsError: attempt to access 2×2-blocked 2×3 BlockMatrix{Float64
 """
 @inline function blockcheckbounds(A::AbstractArray, i...)
     blockcheckbounds(Bool, A, i...) || throw(BlockBoundsError(A, i))
+    nothing
 end
 
 # linear block indexing
 @inline function blockcheckbounds(::Type{Bool}, A::AbstractArray, i)
-    blockcheckindex(Bool, BlockRange(blocklength(A)), i)
+    blockcheckindex(Bool, BlockRange((blocklength(A),)), i)
 end
 # cartesian block indexing
 @inline function blockcheckbounds(::Type{Bool}, A::AbstractArray, i...)
     blockcheckbounds_indices(Bool, blockaxes(A), i)
 end
 
-blockcheckbounds(A::AbstractArray{T, N}, i::Block{N}) where {T,N} = blockcheckbounds(A, i.n...)
-blockcheckbounds(A::AbstractArray{T, N}, i::Vararg{Block{1},N}) where {T,N} = blockcheckbounds(A, Int.(i)...)
-blockcheckbounds(A::AbstractVector{T}, i::Block{1}) where {T} = blockcheckbounds(A, Int(i))
+# Used to ensure a `BlockBoundsError` is thrown instead of a `BoundsError`,
+# see https://github.com/JuliaArrays/BlockArrays.jl/issues/458
+checkbounds(A::AbstractArray{T, N}, I::Block{N}) where {T,N} = blockcheckbounds(A, I)
+checkbounds(A::AbstractArray{T}, I1::Block{1}, Irest::Block{1}...) where {T} = blockcheckbounds(A, I1, Irest...)
+checkbounds(A::AbstractArray{T}, I1::AbstractVector{<:Block{1}}, Irest::AbstractVector{<:Block{1}}...) where {T} =
+    blockcheckbounds(A, I1, Irest...)
+
+blockcheckbounds(::Type{Bool}, A::AbstractArray{T, N}, I::Block{N}) where {T,N} = blockcheckbounds(Bool, A, Int.(Tuple(I))...)
+blockcheckbounds(::Type{Bool}, A::AbstractArray{T, N}, I::Vararg{Block{1},N}) where {T,N} =
+    blockcheckbounds(Bool, A, Int.(I)...)
+blockcheckbounds(::Type{Bool}, ::AbstractArray{T, 0}) where {T} = true
+blockcheckbounds(::Type{Bool}, A::AbstractVector{T}, I::Block{1}) where {T} = blockcheckbounds(Bool, A, Int(I))
+blockcheckbounds(::Type{Bool}, A::AbstractArray{T,N}, I::Vararg{AbstractVector{<:Block{1}},N}) where {T,N} =
+    blockcheckbounds(Bool, A, map(i -> Int.(i), I)...)
+
+blockcheckbounds(::Type{Bool}, A::AbstractArray{T,N}, I::Vararg{BlockRange{1},N}) where {T,N} =
+    blockcheckbounds(Bool, A, map(i -> Int.(i), I)...)
+blockcheckbounds(::Type{Bool}, A::AbstractArray{T,N}, I::BlockRange{N}) where {T,N} = blockcheckbounds(Bool, A, I.indices...)
 
 """
-    blockcheckbounds_indices(Bool, IA::Tuple{Vararg{BlockRange{1}}}, I::Tuple{Vararg{Integer}})
+    blockcheckbounds_indices(Bool, IA::Tuple{Vararg{BlockRange{1}}}, I::Tuple)
 
-Return true if the "requested" indices in the tuple `Block.(I)` fall within the bounds of the "permitted"
+Return true if the "requested" indices in the tuple `map(i -> Block.(i), I)` fall within the bounds of the "permitted"
 indices specified by the tuple `IA`. This function recursively consumes elements of these tuples
 in a 1-for-1 fashion.
 
@@ -117,12 +133,18 @@ The actual bounds-checking is performed by [`blockcheckindex`](@ref).
 julia> B = BlockArray(zeros(6,6), 1:3, 1:3);
 
 julia> blockaxes(B)
-(BlockRange(Base.OneTo(3)), BlockRange(Base.OneTo(3)))
+(BlockRange((3,)), BlockRange((3,)))
 
 julia> BlockArrays.blockcheckbounds_indices(Bool, blockaxes(B), (1,2))
 true
 
 julia> BlockArrays.blockcheckbounds_indices(Bool, blockaxes(B), (4,1))
+false
+
+julia> BlockArrays.blockcheckbounds_indices(Bool, blockaxes(B), (1:2,2:3))
+true
+
+julia> BlockArrays.blockcheckbounds_indices(Bool, blockaxes(B), (1:2,2:4))
 false
 ```
 """
@@ -142,24 +164,30 @@ end
 end
 
 """
-    blockcheckindex(Bool, inds::BlockRange{1}, index::Integer)
+    blockcheckindex(Bool, inds::BlockRange{1}, index)
 
-Return `true` if `Block(index)` is within the bounds of `inds`.
+Return `true` if `Block.(index)` is within the bounds of `inds`.
 
 # Examples
 ```jldoctest
-julia> BlockArrays.blockcheckindex(Bool, BlockRange(1:2), 1)
+julia> BlockArrays.blockcheckindex(Bool, BlockRange((1:2,)), 1)
 true
 
-julia> BlockArrays.blockcheckindex(Bool, BlockRange(1:2), 3)
+julia> BlockArrays.blockcheckindex(Bool, BlockRange((1:2,)), 3)
+false
+
+julia> BlockArrays.blockcheckindex(Bool, BlockRange((1:3,)), 2:3)
+true
+
+julia> BlockArrays.blockcheckindex(Bool, BlockRange((1:3,)), 2:4)
 false
 ```
 """
-@inline blockcheckindex(::Type{Bool}, inds::BlockRange{1}, i::Integer) = Block(i) in inds
+@inline blockcheckindex(::Type{Bool}, inds::BlockRange{1}, i) = checkindex(Bool, Int.(inds), i)
 
 @propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Block{N}) where {T,N} =
     setindex!(block_arr, v, Block.(block.n)...)
-@inline @propagate_inbounds function setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N}
+@propagate_inbounds function setindex!(block_arr::AbstractBlockArray{T,N}, v, block::Vararg{Block{1}, N}) where {T,N}
     blockcheckbounds(block_arr, block...)
     dest = view(block_arr, block...)
     size(dest) == size(v) || throw(DimensionMismatch(string("tried to assign $(size(v)) array to $(size(dest)) block")))
@@ -167,12 +195,18 @@ false
     block_arr
 end
 
-@inline @propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N} =
+@propagate_inbounds function setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::BlockIndex{N}) where {T,N}
     view(block_arr, block(blockindex))[blockindex.α...] = v
-@inline @propagate_inbounds setindex!(block_arr::AbstractBlockVector{T}, v, blockindex::BlockIndex{1}) where {T} =
+    block_arr
+end
+@propagate_inbounds function setindex!(block_arr::AbstractBlockVector{T}, v, blockindex::BlockIndex{1}) where {T}
     view(block_arr, block(blockindex))[blockindex.α...] = v
-@inline @propagate_inbounds setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N} =
+    block_arr
+end
+@propagate_inbounds function setindex!(block_arr::AbstractBlockArray{T,N}, v, blockindex::Vararg{BlockIndex{1},N}) where {T,N}
     block_arr[BlockIndex(blockindex)] = v
+    block_arr
+end
 
 viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block_arr, block)
 @inline view(block_arr::AbstractBlockArray{<:Any,N}, block::Block{N}) where N = viewblock(block_arr, block)
@@ -180,8 +214,13 @@ viewblock(block_arr, block) = Base.invoke(view, Tuple{AbstractArray, Any}, block
     blkind = BlockRange(blocksize(block_arr))[Int(block)]
     view(block_arr, blkind)
 end
+@inline view(zerodim::AbstractBlockArray{<:Any,0}) = view(zerodim.blocks[])
 @inline view(block_arr::AbstractBlockVector, block::Block{1}) = viewblock(block_arr, block)
-@inline @propagate_inbounds view(block_arr::AbstractBlockArray, block::Block{1}...) = view(block_arr, Block(block))
+@propagate_inbounds view(block_arr::AbstractBlockArray, block::Block{1}...) = view(block_arr, Block(block))
+
+@inline view(block_arr::AbstractBlockArray{<:Any,N}, b::BlockIndex{N}) where N = view(view(block_arr, block(b)), blockindices(b)...)
+@inline view(block_arr::AbstractBlockVector, b::BlockIndex{1}) = view(view(block_arr, block(b)), blockindices(b)...)
+@propagate_inbounds view(block_arr::AbstractBlockArray{<:Any,N}, b::Vararg{BlockIndex{1},N}) where N = view(block_arr, BlockIndex(b))
 
 """
     eachblock(A::AbstractBlockArray)
@@ -228,6 +267,7 @@ end
 
 getindex(A::Adjoint{<:Any,<:LayoutMatrix}, kr::BlockRange{1}, jr::BlockRange{1}) = parent(A)[jr,kr]'
 getindex(A::Transpose{<:Any,<:LayoutMatrix}, kr::BlockRange{1}, jr::BlockRange{1}) = transpose(parent(A)[jr,kr])
+getindex(A::AdjOrTrans{<:Any,<:LayoutVector}, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
 
 ###
 # permutedims

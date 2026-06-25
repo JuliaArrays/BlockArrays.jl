@@ -6,7 +6,7 @@
 
 A block array is a partition of an array into multiple blocks or subarrays, see [wikipedia](https://en.wikipedia.org/wiki/Block_matrix) for a more extensive description. This package has two purposes. Firstly, it defines an interface for an `AbstractBlockArray` block arrays that can be shared among types representing different types of block arrays. The advantage to this is that it provides a consistent API for block arrays.
 
-Secondly, it also implements two concrete types of block arrays that follow the `AbstractBlockArray` interface.  The type `BlockArray` stores each single block contiguously, by wrapping an `AbstractArray{<:AbstractArray{T,N},N}` to concatenate all blocks – the complete array is thus not stored contiguously.  Conversely, a `PseudoBlockArray` stores the full matrix contiguously (by wrapping only one `AbstractArray{T, N}`) and only superimposes a block structure.  This means that `BlockArray` supports fast non copying extraction and insertion of blocks, while `PseudoBlockArray` supports fast access to the full matrix to use in, for example, a linear solver.
+Secondly, it also implements two concrete types of block arrays that follow the `AbstractBlockArray` interface.  The type `BlockArray` stores each single block contiguously, by wrapping an `AbstractArray{<:AbstractArray{T,N},N}` to concatenate all blocks – the complete array is thus not stored contiguously.  Conversely, a `BlockedArray` stores the full matrix contiguously (by wrapping only one `AbstractArray{T, N}`) and only superimposes a block structure.  This means that `BlockArray` supports fast non copying extraction and insertion of blocks, while `BlockedArray` supports fast access to the full matrix to use in, for example, a linear solver.
 
 
 ## Terminology
@@ -39,7 +39,7 @@ A block array layout is specified its _block sizes_ – a tuple of `AbstractArra
 ## Manual Outline
 
 ```@contents
-Pages = ["man/abstractblockarrayinterface.md", "man/blockarrays.md", "man/pseudoblockarrays.md"]
+Pages = ["man/abstractblockarrayinterface.md", "man/blockarrays.md", "man/blockedarrays.md"]
 Depth = 2
 ```
 

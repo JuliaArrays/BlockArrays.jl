@@ -19,12 +19,13 @@ Pages = ["internals.md"]
 ## Internals
 
 ```@docs
-blockcolsupport
-blockrowsupport
+BlockedOneTo
 BlockedUnitRange
 BlockRange
 BlockIndexRange
+BlockIndices
 BlockSlice
+NoncontiguousBlockSlice
 unblock
 SubBlockIterator
 blockcheckbounds_indices
