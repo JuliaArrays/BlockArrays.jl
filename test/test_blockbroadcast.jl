@@ -319,7 +319,7 @@ using StaticArrays
     @testset "broadcast bug" begin
         X = randn(5,5)
         Y = similar(X)
-        B = PseudoBlockArray(randn(5,5), [2,3], [2,3])
+        B = BlockedArray(randn(5,5), [2,3], [2,3])
         Y .= X .- B ./ 2
         @test Y == X - B/2
     end
