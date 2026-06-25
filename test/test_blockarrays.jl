@@ -1066,6 +1066,9 @@ end
         @test (a')[:,Block.(1:2)] == transpose(a)[:,Block.(1:2)] == [1 2 3]
         @test (a')[:,Block.(1:2)] isa Adjoint
         @test transpose(a)[:,Block.(1:2)] isa Transpose
+
+        @test a'[Block.(1:1),  Block.(2:3)] == a'[Block.(1:1),  3:4] == a'[Block(1),  Block.(2:3)] == a'[Block(1)[1:1],  Block.(2:3)] == [3 4]
+        @test a'[Block.(1:1),  Block(2)[1:1]] == a'[Block(1),  Block(2)[1:1]] == [3;;]
     end
 
     @testset "empty blocklengths" begin
