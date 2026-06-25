@@ -267,6 +267,7 @@ end
 
 getindex(A::Adjoint{<:Any,<:LayoutMatrix}, kr::BlockRange{1}, jr::BlockRange{1}) = parent(A)[jr,kr]'
 getindex(A::Transpose{<:Any,<:LayoutMatrix}, kr::BlockRange{1}, jr::BlockRange{1}) = transpose(parent(A)[jr,kr])
+getindex(A::AdjOrTrans{<:Any,<:LayoutVector}, kr::BlockRange{1}, jr::BlockRange{1}) = ArrayLayouts.layout_getindex(A, kr, jr)
 
 ###
 # permutedims
