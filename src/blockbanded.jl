@@ -14,10 +14,10 @@ sizes_from_blocks(A::Diagonal, _) = (size.(A.diag, 1), size.(A.diag,2))
 
 function sizes_from_blocks(A::Tridiagonal, _)
     for k = 1:length(A.du)
-        size(A.du[k],1) == size(A.d[k],1) || throw(ArgumentError("block sizes of upper diagonal inconsisent with diagonal"))
-        size(A.du[k],2) == size(A.d[k+1],2) || throw(ArgumentError("block sizes of upper diagonal inconsisent with diagonal"))
-        size(A.dl[k],1) == size(A.d[k+1],1) || throw(ArgumentError("block sizes of lower diagonal inconsisent with diagonal"))
-        size(A.dl[k],2) == size(A.d[k],2) || throw(ArgumentError("block sizes of lower diagonal inconsisent with diagonal"))
+        size(A.du[k],1) == size(A.d[k],1) || throw(ArgumentError("block sizes of upper diagonal inconsistent with diagonal"))
+        size(A.du[k],2) == size(A.d[k+1],2) || throw(ArgumentError("block sizes of upper diagonal inconsistent with diagonal"))
+        size(A.dl[k],1) == size(A.d[k+1],1) || throw(ArgumentError("block sizes of lower diagonal inconsistent with diagonal"))
+        size(A.dl[k],2) == size(A.d[k],2) || throw(ArgumentError("block sizes of lower diagonal inconsistent with diagonal"))
     end
     (size.(A.d, 1), size.(A.d,2))
 end
@@ -25,13 +25,13 @@ end
 function sizes_from_blocks(A::Bidiagonal, _)
     if A.uplo == 'U'
         for k = 1:length(A.ev)
-            size(A.ev[k],1) == size(A.dv[k],1) || throw(ArgumentError("block sizes of upper diagonal inconsisent with diagonal"))
-            size(A.ev[k],2) == size(A.dv[k+1],2) || throw(ArgumentError("block sizes of upper diagonal inconsisent with diagonal"))
+            size(A.ev[k],1) == size(A.dv[k],1) || throw(ArgumentError("block sizes of upper diagonal inconsistent with diagonal"))
+            size(A.ev[k],2) == size(A.dv[k+1],2) || throw(ArgumentError("block sizes of upper diagonal inconsistent with diagonal"))
         end
     else
         for k = 1:length(A.ev)
-            size(A.ev[k],1) == size(A.dv[k+1],1) || throw(ArgumentError("block sizes of lower diagonal inconsisent with diagonal"))
-            size(A.ev[k],2) == size(A.dv[k],2) || throw(ArgumentError("block sizes of lower diagonal inconsisent with diagonal"))
+            size(A.ev[k],1) == size(A.dv[k+1],1) || throw(ArgumentError("block sizes of lower diagonal inconsistent with diagonal"))
+            size(A.ev[k],2) == size(A.dv[k],2) || throw(ArgumentError("block sizes of lower diagonal inconsistent with diagonal"))
         end
     end
     (size.(A.dv, 1), size.(A.dv,2))
