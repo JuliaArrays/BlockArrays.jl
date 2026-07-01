@@ -137,6 +137,8 @@ import BlockArrays: split_index, merge_indices
         @test Int.(b) === 2:5
         @test Base.OneTo.(1:5) isa Vector{Base.OneTo{Int}} #98
         @test Base.OneTo(5)[Block.(1:1)] === Base.OneTo(5)
+        @test Base.OneTo(1)[[Block(1)]] == [Base.OneTo(1)]
+        @test Base.OneTo(1)[[Block(1),Block(1)]] == [Base.OneTo(1),Base.OneTo(1)]
         @test_throws BlockBoundsError Base.OneTo(5)[Block.(1:3)]
 
         @test intersect(Block.(2:5), Block.(3:6)) ≡ Block.(3:5)
