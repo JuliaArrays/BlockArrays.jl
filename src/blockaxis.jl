@@ -590,6 +590,8 @@ end
     b
 end
 
+getindex(b::AbstractUnitRange{<:Integer}, K::AbstractVector{<:Block{1}}) = [b[k] for k in K]
+
 blockaxes(b::AbstractUnitRange{T}) where {T<:Integer} = (Block.(Base.OneTo(one(T))),)
 
 function findblock(b::AbstractUnitRange{<:Integer}, k::Integer)
