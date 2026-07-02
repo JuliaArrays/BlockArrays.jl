@@ -144,7 +144,7 @@ julia> A = BlockArray(ones(3,3),[2,1],[1,1,1])
  1.0  │  1.0  │  1.0
 
 julia> blocksizes(A)
-2×3 BlockArrays.ProductArray{Tuple{Int64, Int64}, 2, Tuple{Vector{Int64}, Vector{Int64}}}:
+2×3 BlockArrays.ProductArray{Tuple{Int64, Int64}, 2, Tuple{BlockedUnitRangeLengths{Int64, Vector{Int64}}, BlockedUnitRangeLengths{Int64, Vector{Int64}}}}:
  (2, 1)  (2, 1)  (2, 1)
  (1, 1)  (1, 1)  (1, 1)
 
@@ -152,7 +152,7 @@ julia> blocksizes(A)[1,2]
 (2, 1)
 
 julia> blocksizes(A,2)
-3-element Vector{Int64}:
+3-element BlockedUnitRangeLengths{Int64, Vector{Int64}}:
  1
  1
  1

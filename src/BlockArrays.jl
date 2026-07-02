@@ -8,6 +8,7 @@ export blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, Bl
 export blocksizes, blocklengths, blocklasts, blockfirsts, blockisequal, blockequals, blockisapprox
 export eachblockaxes
 export BlockRange, blockedrange, BlockedUnitRange, BlockedOneTo
+export BlockedUnitRangeFirsts, BlockedUnitRangeLengths
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
 export BlockedArray, BlockedMatrix, BlockedVector, BlockedVecOrMat

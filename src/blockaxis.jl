@@ -625,7 +625,7 @@ julia> b = blockedrange([1,2,3])
  6
 
 julia> blockfirsts(b)
-3-element Vector{Int64}:
+3-element BlockedUnitRangeFirsts{Int64, Vector{Int64}}:
  1
  2
  4
@@ -685,7 +685,7 @@ julia> b = blockedrange([1,2,3])
  6
 
 julia> blocklengths(b)
-3-element Vector{Int64}:
+3-element BlockedUnitRangeLengths{Int64, Vector{Int64}}:
  1
  2
  3
