@@ -234,6 +234,8 @@ end
     end
 end
 
+cumsum(b::BlockedUnitRangeLengths) = b.lasts .+ b.offset
+
 
 length(a::AbstractBlockedUnitRange) = isempty(blocklasts(a)) ? zero(eltype(a)) : Integer(last(blocklasts(a))-first(a)+oneunit(eltype(a)))
 
