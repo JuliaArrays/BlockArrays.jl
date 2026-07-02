@@ -206,17 +206,17 @@ julia> blockedrange(2, (1,2))
 @inline blockedrange(f::Integer, blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(f, f-oneunit(f) .+ _blocklengths2blocklasts(blocks))
 
 
-struct BlockedUnitRangeLengths{T<:Integer, LASTS} <: AbstractVector{T}
+struct BlockedUnitRangeLengths{T<:Integer, LASTS<:AbstractVector{T}} <: AbstractVector{T}
     offset::T
     lasts::LASTS
 end
 
-struct BlockedUnitRangeFirsts{T<:Integer, LASTS} <: AbstractVector{T}
+struct BlockedUnitRangeFirsts{T<:Integer, LASTS<:AbstractVector{T}} <: AbstractVector{T}
     first::T
     lasts::LASTS
 end
 
-size(b::Union{BlockedUnitRangeLengths,BlockedUnitRangeFirsts}) = (length(b.lasts),)
+size(b::Union{BlockedUnitRangeLengths,BlockedUnitRangeFirsts}) = size(b.lasts)
 
 @propagate_inbounds function getindex(b::BlockedUnitRangeLengths, k::Integer)
     if isone(k)
@@ -230,7 +230,7 @@ end
     if isone(k)
         b.first
     else
-        b.lasts[k-1] + one(T)
+        b.lasts[k-1] + oneunit(T)
     end
 end
 
@@ -607,7 +607,7 @@ function findblock(b::AbstractUnitRange{<:Integer}, k::Integer)
 end
 
 """
-    blockfirsts(a::AbstractUnitRange{<:Integer})
+    blockfirsts(a::AbstractUnitRange)
 
 Return the first index of each block of `a`.
 
@@ -631,12 +631,16 @@ julia> blockfirsts(b)
  4
 ```
 """
-@inline blockfirsts(a::AbstractUnitRange{<:Integer}) = Fill(first(a), 1)
+@inline blockfirsts(a::AbstractUnitRange) = Fill(first(a), 1)
+@inline blockfirsts(a::AbstractBlockedUnitRange) = BlockedUnitRangeFirsts(first(a), blocklasts(a))
 
-@inline blockfirsts(a::AbstractBlockedUnitRange{<:Integer}) = BlockedUnitRangeFirsts(first(a), blocklasts(a))
+# special support for tuple indexing
+@inline function blockfirsts(a::AbstractBlockedUnitRange{<:Any,<:Tuple})
+    return (first(a), (blocklasts(a)[oneto(end-1)] .+ oneunit(eltype(a)))...)
+end
 
 """
-    blocklasts(a::AbstractUnitRange{<:Integer})
+    blocklasts(a::AbstractUnitRange)
 
 Return the last index of each block of `a`.
 
@@ -660,10 +664,10 @@ julia> blocklasts(b)
  6
 ```
 """
-blocklasts(a::AbstractUnitRange{<:Integer}) = Fill(eltype(a)(length(a)),1)
+blocklasts(a::AbstractUnitRange) = Fill(eltype(a)(length(a)),1)
 
 """
-    blocklengths(a::AbstractUnitRange{<:Integer})
+    blocklengths(a::AbstractUnitRange)
 
 Return the length of each block of `a`.
 
@@ -687,8 +691,13 @@ julia> blocklengths(b)
  3
 ```
 """
-@inline blocklengths(a::AbstractUnitRange{<:Integer}) = blocklasts(a)
-@inline blocklengths(a::AbstractBlockedUnitRange{<:Integer}) = BlockedUnitRangeLengths(first(a)-1, blocklasts(a))
+@inline blocklengths(a::AbstractUnitRange) = blocklasts(a)
+@inline blocklengths(a::AbstractBlockedUnitRange{T}) where T = BlockedUnitRangeLengths(first(a)-oneunit(T), blocklasts(a))
+# special support for tuple indexing
+@inline function blocklengths(a::AbstractBlockedUnitRange{<:Any,<:Tuple})
+    return (first(blocklasts(a)) - first(a) + oneunit(eltype(a)), (blocklasts(a)[2:end] .- blocklasts(a)[1:end-1])...)
+end
+blocklengths(a::AbstractBlockedUnitRange{<:Any,Tuple{}}) = ()
 
 Base.summary(io::IO, a::AbstractBlockedUnitRange) =  _block_summary(io, a)
 
