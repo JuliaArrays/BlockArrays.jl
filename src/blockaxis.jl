@@ -17,8 +17,8 @@
 # handles plain ranges where block(K) is always Block(1).
 @propagate_inbounds getindex(b::AbstractUnitRange{<:Integer}, K::BlockIndices{1}) = b[block(K)][K.indices...]
 
-function findblockindex(b::AbstractVector, k::Integer)
-    @boundscheck k in b || throw(BoundsError())
+@propagate_inbounds function findblockindex(b::AbstractVector, k::Integer)
+    @boundscheck k in b || throw(BoundsError(b, k))
     bl = blocklasts(b)
     blockidx = _searchsortedfirst(bl, k)
     @assert blockindex != lastindex(bl) + 1 # guaranteed by the @boundscheck above
@@ -93,19 +93,6 @@ first(b::BlockedUnitRange) = b.first
 BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
 # Use `accumulate` instead of `cumsum` because it preserves the element type of the block lengths
 _blocklengths2blocklasts(blocks) = accumulate(+, blocks) # extra level to allow changing default accumulate behaviour
-
-@inline blockfirsts(a::AbstractBlockedUnitRange) = [first(a); @views(blocklasts(a)[1:end-1]) .+ oneunit(eltype(a))]
-
-# optimize common cases
-@inline function blockfirsts(a::AbstractBlockedUnitRange{<:Any,<:Union{Vector, RangeCumsum{<:Any, <:UnitRange}}})
-    v = Vector{eltype(a)}(undef, length(blocklasts(a)))
-    v[1] = first(a)
-    v[2:end] .= @views(blocklasts(a)[oneto(end-1)]) .+ oneunit(eltype(a))
-    return v
-end
-@inline function blockfirsts(a::AbstractBlockedUnitRange{<:Any,<:Tuple})
-    return (first(a), (blocklasts(a)[oneto(end-1)] .+ oneunit(eltype(a)))...)
-end
 
 function Base.AbstractUnitRange{T}(r::BlockedUnitRange) where {T}
     return _BlockedUnitRange(convert(T,first(r)), convert.(T,blocklasts(r)))
@@ -218,15 +205,35 @@ julia> blockedrange(2, (1,2))
 @inline blockedrange(blocks::Union{Tuple,AbstractVector}) = BlockedOneTo(_blocklengths2blocklasts(blocks))
 @inline blockedrange(f::Integer, blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(f, f-oneunit(f) .+ _blocklengths2blocklasts(blocks))
 
-_diff(a::AbstractVector) = diff(a)
-_diff(a::Tuple) = diff(collect(a))
-@inline _blocklengths(a, bl, dbl) = isempty(bl) ? [dbl;] : [first(bl)-first(a)+oneunit(eltype(a)); dbl]
-@inline function _blocklengths(a::BlockedOneTo, bl::RangeCumsum, ::OrdinalRange)
-    # the 1:0 is hardcoded here to enable conversions to a Base.OneTo
-    isempty(bl) ? oftype(bl.range, 1:0) : bl.range
+
+struct BlockedUnitRangeLengths{T<:Integer, LASTS} <: AbstractVector{T}
+    offset::T
+    lasts::LASTS
 end
-@inline _blocklengths(a, bl) = _blocklengths(a, bl, _diff(bl))
-@inline blocklengths(a::AbstractBlockedUnitRange) = _blocklengths(a, blocklasts(a))
+
+struct BlockedUnitRangeFirsts{T<:Integer, LASTS} <: AbstractVector{T}
+    first::T
+    lasts::LASTS
+end
+
+size(b::Union{BlockedUnitRangeLengths,BlockedUnitRangeFirsts}) = (length(b.lasts),)
+
+@propagate_inbounds function getindex(b::BlockedUnitRangeLengths, k::Integer)
+    if isone(k)
+        first(b.lasts) - b.offset
+    else
+        b.lasts[k] - b.lasts[k-1]
+    end
+end
+
+@propagate_inbounds function getindex(b::BlockedUnitRangeFirsts{T}, k::Integer) where T
+    if isone(k)
+        b.first
+    else
+        b.lasts[k-1] + one(T)
+    end
+end
+
 
 length(a::AbstractBlockedUnitRange) = isempty(blocklasts(a)) ? zero(eltype(a)) : Integer(last(blocklasts(a))-first(a)+oneunit(eltype(a)))
 
@@ -624,7 +631,10 @@ julia> blockfirsts(b)
  4
 ```
 """
-blockfirsts(a::AbstractUnitRange{<:Integer}) = Ones{eltype(a)}(1)
+@inline blockfirsts(a::AbstractUnitRange{<:Integer}) = Fill(first(a), 1)
+
+@inline blockfirsts(a::AbstractBlockedUnitRange{<:Integer}) = BlockedUnitRangeFirsts(first(a), blocklasts(a))
+
 """
     blocklasts(a::AbstractUnitRange{<:Integer})
 
@@ -651,6 +661,7 @@ julia> blocklasts(b)
 ```
 """
 blocklasts(a::AbstractUnitRange{<:Integer}) = Fill(eltype(a)(length(a)),1)
+
 """
     blocklengths(a::AbstractUnitRange{<:Integer})
 
@@ -676,7 +687,8 @@ julia> blocklengths(b)
  3
 ```
 """
-blocklengths(a::AbstractUnitRange{<:Integer}) = blocklasts(a) .- blockfirsts(a) .+ oneunit(eltype(a))
+@inline blocklengths(a::AbstractUnitRange{<:Integer}) = blocklasts(a)
+@inline blocklengths(a::AbstractBlockedUnitRange{<:Integer}) = BlockedUnitRangeLengths(first(a)-1, blocklasts(a))
 
 Base.summary(io::IO, a::AbstractBlockedUnitRange) =  _block_summary(io, a)
 
@@ -718,18 +730,6 @@ end
 function blocklengths(a::AbstractBlockedUnitRange{<:Any,<:Base.OneTo{<:Integer}})
     first(a) == 1 || error("Offset axes not supported")
     Ones{eltype(a)}(length(blocklasts(a)))
-end
-function blockfirsts(a::AbstractBlockedUnitRange{<:Any,<:AbstractRange})
-    st = step(blocklasts(a))
-    first(a) == 1 || error("Offset axes not supported")
-    @assert first(blocklasts(a))-first(a)+oneunit(eltype(a)) == st
-    range(oneunit(eltype(a)); step=st, length=eltype(a)(length(blocklasts(a))))
-end
-function blocklengths(a::AbstractBlockedUnitRange{<:Any,<:AbstractRange})
-    st = step(blocklasts(a))
-    first(a) == 1 || error("Offset axes not supported")
-    @assert first(blocklasts(a))-first(a)+oneunit(eltype(a)) == st
-    Fill(st,length(blocklasts(a)))
 end
 
 

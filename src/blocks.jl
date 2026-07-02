@@ -186,7 +186,7 @@ julia> blocklengths(A)[1,2]
 ```
 """
 blocklengths(A::AbstractArray) = BlockLengths(A)
-blocklengths(A::AbstractVector) = map(length, blocks(A))
+blocklengths(A::AbstractVector) = blocklengths(axes(A,1))
 
 struct BlockLengths{T,N,A<:AbstractArray{<:Any,N}} <: AbstractArray{T,N}
     array::A
