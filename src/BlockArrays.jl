@@ -29,7 +29,7 @@ import Base: @propagate_inbounds, Array, AbstractArray, to_indices, to_index,
             RangeIndex, Int, Integer, Number, Tuple,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
             BroadcastStyle, checkbounds, checkindex, ensure_indexable,
-            oneunit, ones, zeros, intersect, Slice, resize!, cumsum
+            oneunit, ones, zeros, intersect, Slice, resize!, accumulate, cumsum
 
 using Base: ReshapedArray, LogicalIndex, dataids, oneto
 

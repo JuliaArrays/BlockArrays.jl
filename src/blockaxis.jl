@@ -234,6 +234,7 @@ end
     end
 end
 
+accumulate(::typeof(+), b::BlockedUnitRangeLengths) = cumsum(b)
 cumsum(b::BlockedUnitRangeLengths) = b.lasts .+ b.offset
 
 
