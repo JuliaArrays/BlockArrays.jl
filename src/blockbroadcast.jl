@@ -40,7 +40,7 @@ sortedunion(a,b) = maybeinplacesort!(union(a,b))
 sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
-combine_blockaxes(a::AbstractBlockedOneTo, b::AbstractBlockedOneTo) = blockedoneto(sortedunion(blocklasts(a), blocklasts(b)))
+combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
 
 Base.Broadcast.axistype(a::AbstractBlockedUnitRange, b::AbstractBlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 Base.Broadcast.axistype(a::AbstractBlockedUnitRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)

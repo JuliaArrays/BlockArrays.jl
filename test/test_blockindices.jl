@@ -4,6 +4,7 @@ using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, NoncontiguousBlockSlice
 import BlockArrays: split_index, merge_indices
+using BlockArrays.FirstStepRange
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -564,7 +565,7 @@ end
 
         f = blockedrange(Fill(2,5))
         @test @inferred(blockfirsts(f)) == 1:2:9
-        @test @inferred(blocklasts(f)) ≡ StepRangeLen(2,2,5)
+        @test @inferred(blocklasts(f)) ≡ FirstStepRangeLen(2,5)
         @test @inferred(blocklengths(f)) == Fill(2,5)
 
         f = blockedrange(Zeros{Int}(2))
@@ -593,7 +594,7 @@ end
 
         b = blockedrange(Fill(2,3))
         c = blockedrange([2,2,2])
-        @test convert(BlockArrays.AbstractBlockedOneTo, b) === b
+        @test convert(BlockedOneTo, b) === b
         @test convert(BlockedOneTo, b) === BlockedOneTo(b.lasts)
         @test convert(typeof(b), b) === b
         @test convert(BlockedOneTo, c) === c

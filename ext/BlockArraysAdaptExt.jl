@@ -2,7 +2,7 @@ module BlockArraysAdaptExt
 
 using Adapt
 using BlockArrays
-using BlockArrays: _BlockArray, _BlockedUnitRange
+using BlockArrays: _BlockArray, _BlockedUnitRange, BlockedOneTo
 import Adapt: adapt_structure
 
 adapt_structure(to, r::BlockedUnitRange) = _BlockedUnitRange(adapt(to, r.first), map(adapt(to), r.lasts))
