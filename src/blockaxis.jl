@@ -108,6 +108,8 @@ function Base.getindex(r::AbstractUnitRange, s::AbstractBlockedUnitRange{T}) whe
     return blockedrange(start, lens)
 end
 
+abstract type AbstractBlockedOneTo{T,CS} <: AbstractBlockedUnitRange{T,CS} end
+
 """
     BlockedOneTo{T, <:Union{AbstractVector{T}, NTuple{<:Any,T}}} where {T}
 
@@ -117,7 +119,7 @@ This parallels `Base.OneTo` in that the first value is guaranteed
 to be `1`.
 
 Construction is typically via `blockedrange` which converts
-a vector of block lengths to a `BlockedUnitRange`.
+a vector of block lengths to a `AbstractBlockedUnitRange`.
 
 # Examples
 ```jldoctest
@@ -136,7 +138,7 @@ julia> blockedrange([2,2,3]) # block lengths
 
 See also [`BlockedUnitRange`](@ref).
 """
-struct BlockedOneTo{T<:Integer,CS} <: AbstractBlockedUnitRange{T,CS}
+struct BlockedOneTo{T<:Integer,CS} <: AbstractBlockedOneTo{T,CS}
     lasts::CS
     # assume that lasts is sorted, no checks carried out here
     function BlockedOneTo(lasts::CS) where {T<:Integer, CS<:AbstractVector{T}}
@@ -154,28 +156,78 @@ end
 _throw_if_bool(_) = nothing
 _throw_if_bool(::Type{Bool}) = throw(ArgumentError("a Bool collection is not allowed as blocklasts"))
 
+"""
+    FillBlockedOneTo{T, <: AbstractRange{T}} where {T}
+
+Define an `AbstractUnitRange{T}` that has been divided
+into equally sized blocks, which is used to represent `axes` of block arrays.
+This parallels `Base.OneTo` in that the first value is guaranteed
+to be `1`.
+
+Construction is typically via `blockedrange` with a `AbstractFill` which converts
+a vector of block lengths to a `AbstractBlockedUnitRange`.
+
+# Examples
+```jldoctest
+julia> blockedrange(Fill(2,3))
+3-blocked 6-element BlockArrays.FillBlockedOneTo{Int64, StepRangeLen{Int64, Int64, Int64, Int64}}:
+ 1
+ 2
+ ─
+ 3
+ 4
+ ─
+ 5
+ 6
+```
+
+See also [`BlockedUnitRange`](@ref).
+"""
+struct FillBlockedOneTo{T<:Integer,CS<:AbstractRange} <: AbstractBlockedOneTo{T,CS}
+    lasts::CS
+    # assume that lasts is sorted, no checks carried out here
+    function FillBlockedOneTo(lasts::CS) where {T<:Integer, CS<:AbstractRange{T}}
+        _throw_if_bool(T)
+        Base.require_one_based_indexing(lasts)
+        isempty(lasts) || first(lasts) >= 0 || throw(ArgumentError("blocklasts must be >= 0"))
+        first(lasts) == step(lasts) || throw(ArgumentError("first block length must match others"))
+        new{T,CS}(lasts)
+    end
+end
+
 const DefaultBlockAxis = BlockedOneTo{Int, Vector{Int}}
 
-first(b::BlockedOneTo) = oneunit(eltype(b))
-@inline blocklasts(a::BlockedOneTo) = a.lasts
+first(b::AbstractBlockedOneTo) = oneunit(eltype(b))
+@inline blocklasts(a::AbstractBlockedOneTo) = a.lasts
 
-BlockedOneTo(::BlockedOneTo) = throw(ArgumentError("Forbidden due to ambiguity"))
+BlockedOneTo(::AbstractBlockedOneTo) = throw(ArgumentError("Forbidden due to ambiguity"))
+FillBlockedOneTo(::AbstractBlockedOneTo) = throw(ArgumentError("Forbidden due to ambiguity"))
 
-axes(b::BlockedOneTo) = (b,)
+# we know if lasts are OneTo its all block-lengths == 1
+blockedoneto(lasts) = BlockedOneTo(lasts)
+blockedoneto(lasts::Base.OneTo) = FillBlockedOneTo(lasts)
 
-function Base.AbstractUnitRange{T}(r::BlockedOneTo) where {T}
-    return BlockedOneTo(convert.(T,blocklasts(r)))
+axes(b::AbstractBlockedOneTo) = (b,)
+
+for BlockOne2 in (:BlockedOneTo, :FillBlockedOneTo)
+    @eval begin
+        function Base.AbstractUnitRange{T}(r::$BlockOne2) where {T}
+            return $BlockOne2(convert.(T,blocklasts(r)))
+        end
+        # See: https://github.com/JuliaLang/julia/blob/b06d26075bf7b3f4e7f1b64b120f5665d8ed76f9/base/range.jl#L1006-L1010
+        function getindex(r::Base.OneTo{T}, s::$BlockOne2) where T
+            @inline
+            @boundscheck checkbounds(r, s)
+            return $BlockOne2(convert(AbstractVector{T}, blocklasts(s)))
+        end
+    end
 end
 
-# See: https://github.com/JuliaLang/julia/blob/b06d26075bf7b3f4e7f1b64b120f5665d8ed76f9/base/range.jl#L1006-L1010
-function getindex(r::Base.OneTo{T}, s::BlockedOneTo) where T
-    @inline
-    @boundscheck checkbounds(r, s)
-    return BlockedOneTo(convert(AbstractVector{T}, blocklasts(s)))
-end
-function getindex(r::BlockedOneTo{T}, s::BlockedOneTo) where T
+function getindex(r::AbstractBlockedOneTo{T}, s::AbstractBlockedOneTo) where T
     return Base.oneto(r)[s]
 end
+
+
 
 """
     blockedrange(blocklengths::Union{Tuple, AbstractVector})
@@ -204,7 +256,8 @@ julia> blockedrange(2, (1,2))
 """
 @inline blockedrange(blocks::Union{Tuple,AbstractVector}) = BlockedOneTo(_blocklengths2blocklasts(blocks))
 @inline blockedrange(f::Integer, blocks::Union{Tuple,AbstractVector}) = _BlockedUnitRange(f, f-oneunit(f) .+ _blocklengths2blocklasts(blocks))
-
+@inline blockedrange(blocks::AbstractFillVector) = FillBlockedOneTo(_blocklengths2blocklasts(blocks))
+@inline blockedrange(blocks::ZerosVector) = BlockedOneTo(_blocklengths2blocklasts(blocks)) # Zero-steps not supported in FillBlockedOneTo
 
 struct BlockedUnitRangeLengths{T<:Integer, LASTS<:AbstractVector{T}} <: AbstractVector{T}
     offset::T
@@ -636,6 +689,7 @@ julia> blockfirsts(b)
 """
 @inline blockfirsts(a::AbstractUnitRange) = Fill(first(a), 1)
 @inline blockfirsts(a::AbstractBlockedUnitRange) = BlockedUnitRangeFirsts(first(a), blocklasts(a))
+@inline blockfirsts(a::FillBlockedOneTo) = blocklasts(a) .- first(blocklasts(a)) .+ oneunit(eltype(a))
 
 # special support for tuple indexing
 @inline function blockfirsts(a::AbstractBlockedUnitRange{<:Any,<:Tuple})
@@ -667,7 +721,7 @@ julia> blocklasts(b)
  6
 ```
 """
-blocklasts(a::AbstractUnitRange) = Fill(eltype(a)(length(a)),1)
+@inline blocklasts(a::AbstractUnitRange) = Fill(eltype(a)(length(a)),1)
 
 """
     blocklengths(a::AbstractUnitRange)
@@ -701,6 +755,8 @@ julia> blocklengths(b)
     return (first(blocklasts(a)) - first(a) + oneunit(eltype(a)), (blocklasts(a)[2:end] .- blocklasts(a)[1:end-1])...)
 end
 blocklengths(a::AbstractBlockedUnitRange{<:Any,Tuple{}}) = ()
+@inline blocklengths(a::FillBlockedOneTo) = Fill(step(blocklasts(a)), length(blocklasts(a)))
+@inline blocklengths(a::FillBlockedOneTo{T,<:AbstractUnitRange}) where T<:Integer = Ones{T}(length(blocklasts(a)))
 
 Base.summary(io::IO, a::AbstractBlockedUnitRange) =  _block_summary(io, a)
 

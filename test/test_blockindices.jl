@@ -593,7 +593,8 @@ end
 
         b = blockedrange(Fill(2,3))
         c = blockedrange([2,2,2])
-        @test convert(BlockedOneTo, b) === b
+        @test convert(BlockArrays.AbstractBlockedOneTo, b) === b
+        @test convert(BlockedOneTo, b) === BlockedOneTo(b.lasts)
         @test convert(typeof(b), b) === b
         @test convert(BlockedOneTo, c) === c
         @test convert(typeof(c), c) === c

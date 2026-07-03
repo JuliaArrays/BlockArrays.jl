@@ -26,11 +26,7 @@ Random.seed!(0)
     D_T = Matrix(D)
 
     #Test on nonsymmetric matrix
-    if VERSION < v"1.8-"
-        @test_throws MethodError cholesky(nsym)
-    else
-        @test_throws DimensionMismatch cholesky(nsym)
-    end
+    @test_throws DimensionMismatch cholesky(nsym)
 
     #Tests on A
     @test cholesky(A).U ≈ cholesky(A_T).U
