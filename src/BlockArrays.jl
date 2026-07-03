@@ -13,6 +13,8 @@ export BlockedUnitRangeFirsts, BlockedUnitRangeLengths
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
 export BlockedArray, BlockedMatrix, BlockedVector, BlockedVecOrMat
 
+export FirstStepRangeLen
+
 export undef_blocks, undef, findblock, findblockindex
 
 export khatri_rao, blockkron, BlockKron
