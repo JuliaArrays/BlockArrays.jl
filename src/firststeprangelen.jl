@@ -40,7 +40,10 @@ FirstStepRangeLen{S}(step::S, len::Integer) where {S} =
 FirstStepRangeLen(step::S, len::Integer) where {S} =
     FirstStepRangeLen{S,typeof(len)}(step, len)
 
-firststeprangelen(a...) = FirstStepRangeLen(a...)
+
+# temporarily reduce to steprangelen for back-support of InfiniteArrays
+firststeprangelen(step, len::Int) = FirstStepRangeLen(step, len)
+firststeprangelen(step, len) = steprangelen(step, step, len)
 
 
 isempty(r::FirstStepRangeLen) = length(r) == 0
