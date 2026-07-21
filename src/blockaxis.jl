@@ -93,7 +93,7 @@ first(b::BlockedUnitRange) = b.first
 BlockedUnitRange(::BlockedUnitRange) = throw(ArgumentError("Forbidden due to ambiguity"))
 # Use `accumulate` instead of `cumsum` because it preserves the element type of the block lengths
 _blocklengths2blocklasts(blocks) = accumulate(+, blocks) # extra level to allow changing default accumulate behaviour
-_blocklengths2blocklasts(blocks::AbstractFillVector) = FirstStepRangeLen(getindex_value(blocks), length(blocks)) # encode that the first is the same as step
+_blocklengths2blocklasts(blocks::AbstractFillVector) = firststeprangelen(getindex_value(blocks), length(blocks)) # encode that the first is the same as step
 _blocklengths2blocklasts(blocks::Union{AbstractOnesVector,AbstractZerosVector}) = accumulate(+, blocks) # cumsum of Ones/Zeros gets more precise structure
 
 function Base.AbstractUnitRange{T}(r::BlockedUnitRange) where {T}
