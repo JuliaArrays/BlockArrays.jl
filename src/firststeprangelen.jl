@@ -54,8 +54,23 @@ length(r::FirstStepRangeLen) = r.len
 first(r::FirstStepRangeLen) = unsafe_getindex(r, 1)
 last(r::FirstStepRangeLen) = unsafe_getindex(r, length(r))
 
-StepRangeLen(r::FirstStepRangeLen{T}) where T = StepRangeLen{T}(first(r), step(r), length(r))
+StepRangeLen(r::FirstStepRangeLen{T}) where T = StepRangeLen{T}(r)
+StepRangeLen{T}(r::FirstStepRangeLen) where T = StepRangeLen{T,T}(r)
+StepRangeLen{T,S}(r::FirstStepRangeLen{<:Any,L}) where {T,S,L} = StepRangeLen{T,S,L}(r)
+StepRangeLen{T,S,L}(r::FirstStepRangeLen) where {T,S,L} = StepRangeLen{T,S,L}(first(r), step(r), length(r))
 steprangelen(r::FirstStepRangeLen) = steprangelen(first(r), step(r), length(r))
+
+FirstStepRangeLen(r::StepRangeLen{T}) where T = FirstStepRange{T}(r)
+FirstStepRangeLen{T}(r::StepRangeLen{<:Any,<:Any,L}) where {T,L} = FirstStepRange{T,L}(r)
+function FirstStepRangeLen{T,L}(r::StepRangeLen) where {T,L}
+    if length(r) ≤ 1 # always a FirstStepRangeLen
+        FirstStepRangeLen{T,L}(first(r), length(r))
+    else
+        first(r) == step(r) || throw(ArgumentError("First in $r is not equal to step"))
+        FirstStepRangeLen{T,L}(step(r), length(r))
+    end
+end
+
 
 iterate(r::FirstStepRangeLen, i...) = iterate(StepRangeLen(r), i...)
 unsafe_getindex(r::FirstStepRangeLen{T}, i::Integer) where T = T(step(r)i)
