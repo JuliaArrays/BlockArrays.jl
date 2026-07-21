@@ -567,6 +567,11 @@ end
         @test @inferred(blockfirsts(f)) == 1:2:9
         @test @inferred(blocklasts(f)) ≡ FirstStepRangeLen(2,5)
         @test @inferred(blocklengths(f)) == Fill(2,5)
+        struct NonIntegralInteger <: Integer
+            x::Float64
+        end
+        Base.:+(a::NonIntegralInteger, b::NonIntegralInteger) = a.x + b.x
+        @test_throws ArgumentError FirstStepRangeLen(NonIntegralInteger(0.25), 5)
 
         f = blockedrange(Zeros{Int}(2))
         @test @inferred(blockfirsts(f)) == [1,1]
