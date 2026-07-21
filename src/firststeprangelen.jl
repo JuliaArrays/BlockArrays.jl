@@ -55,9 +55,10 @@ first(r::FirstStepRangeLen) = unsafe_getindex(r, 1)
 last(r::FirstStepRangeLen) = unsafe_getindex(r, length(r))
 
 StepRangeLen(r::FirstStepRangeLen{T}) where T = StepRangeLen{T}(r)
-StepRangeLen{T}(r::FirstStepRangeLen) where T = StepRangeLen{T,T}(r)
-StepRangeLen{T,S}(r::FirstStepRangeLen{<:Any,L}) where {T,S,L} = StepRangeLen{T,S,L}(r)
-StepRangeLen{T,S,L}(r::FirstStepRangeLen) where {T,S,L} = StepRangeLen{T,S,L}(first(r), step(r), length(r))
+StepRangeLen{T}(r::FirstStepRangeLen{R}) where {T,R} = StepRangeLen{T,R}(r)
+StepRangeLen{T,R}(r::FirstStepRangeLen{S}) where {T,R,S} = StepRangeLen{T,R,S}(r)
+StepRangeLen{T,R,S}(r::FirstStepRangeLen{<:Any,L}) where {T,R,S,L} = StepRangeLen{T,R,S,L}(r)
+StepRangeLen{T,R,S,L}(r::FirstStepRangeLen) where {T,R,S,L} = StepRangeLen{T,R,S,L}(first(r), step(r), length(r))
 steprangelen(r::FirstStepRangeLen) = steprangelen(first(r), step(r), length(r))
 
 FirstStepRangeLen(r::StepRangeLen{T}) where T = FirstStepRange{T}(r)
