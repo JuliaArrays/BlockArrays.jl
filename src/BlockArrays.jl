@@ -8,9 +8,12 @@ export blockaxes, blocksize, blocklength, blockcheckbounds, BlockBoundsError, Bl
 export blocksizes, blocklengths, blocklasts, blockfirsts, blockisequal, blockequals, blockisapprox
 export eachblockaxes
 export BlockRange, blockedrange, BlockedUnitRange, BlockedOneTo
+export BlockedUnitRangeFirsts, BlockedUnitRangeLengths
 
 export BlockArray, BlockMatrix, BlockVector, BlockVecOrMat, mortar
 export BlockedArray, BlockedMatrix, BlockedVector, BlockedVecOrMat
+
+export FirstStepRangeLen
 
 export undef_blocks, undef, findblock, findblockindex
 
@@ -28,9 +31,10 @@ import Base: @propagate_inbounds, Array, AbstractArray, to_indices, to_index,
             RangeIndex, Int, Integer, Number, Tuple,
             +, -, *, /, \, min, max, isless, in, copy, copyto!, axes, @deprecate,
             BroadcastStyle, checkbounds, checkindex, ensure_indexable,
-            oneunit, ones, zeros, intersect, Slice, resize!
+            oneunit, ones, zeros, intersect, Slice, resize!, accumulate, cumsum,
+            promote_rule
 
-using Base: ReshapedArray, LogicalIndex, dataids, oneto
+using Base: ReshapedArray, LogicalIndex, dataids, oneto, OneTo
 
 import Base: (:), IteratorSize, iterate, axes1, strides, isempty
 import Base.Broadcast: broadcasted, DefaultArrayStyle, AbstractArrayStyle, Broadcasted, broadcastable
@@ -39,7 +43,7 @@ import ArrayLayouts: MatLdivVec, MatLmulVec, MatMulMatAdd, MatMulVecAdd, MemoryL
                      conjlayout, rowsupport, sub_materialize, sub_materialize_axes, sublayout, transposelayout,
                      triangulardata, triangularlayout, zero!, materialize!
 
-import FillArrays: axes_print_matrix_row
+import FillArrays: axes_print_matrix_row, AbstractFillVector, AbstractZerosVector, AbstractOnesVector, getindex_value
 
 import LinearAlgebra: AbstractTriangular, AdjOrTrans, HermOrSym, RealHermSymComplexHerm, StructuredMatrixStyle,
                       lmul!, rmul!
@@ -56,6 +60,9 @@ end
 
 _maybetail(::Tuple{}) = ()
 _maybetail(t::Tuple) = tail(t)
+
+include("firststeprangelen.jl")
+using .FirstStepRange
 
 include("blockindices.jl")
 include("blockaxis.jl")

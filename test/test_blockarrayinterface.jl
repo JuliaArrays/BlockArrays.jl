@@ -146,14 +146,14 @@ end
     @test axes(D) isa NTuple{2,BlockedOneTo}
     @test blockisequal(axes(D, 1), axes(parent(D), 1))
     @test D == Diagonal(Vector(parent(D)))
-    @test MemoryLayout(D) isa BlockArrays.DiagonalLayout{<:BlockArrays.BlockLayout}
+    @test MemoryLayout(D) isa ArrayLayouts.DiagonalLayout{<:BlockArrays.BlockLayout}
 end
 
 @testset "non-standard block axes" begin
     A = BlockArray([1 2; 3 4], Fill(1, 2), Fill(1, 2))
-    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:NTuple{2,BlockedOneTo{Int,<:AbstractRange}}}
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:NTuple{2,BlockedOneTo{Int,<:BlockArrays.FirstStepRangeLen}}}
     A = BlockArray([1 2; 3 4], Fill(1, 2), [1, 1])
-    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:Tuple{BlockedOneTo{Int,<:AbstractRange},BlockedOneTo{Int,Vector{Int}}}}
+    @test A isa BlockMatrix{Int,Matrix{Matrix{Int}},<:Tuple{BlockedOneTo{Int,<:BlockArrays.FirstStepRangeLen},BlockedOneTo{Int,Vector{Int}}}}
 end
 
 @testset "block Fill" begin

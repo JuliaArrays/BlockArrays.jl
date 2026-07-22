@@ -4,6 +4,7 @@ using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
 using OffsetArrays
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, NoncontiguousBlockSlice
 import BlockArrays: split_index, merge_indices
+using BlockArrays.FirstStepRange
 
 @testset "Blocks" begin
     @test Int(Block(2)) === Integer(Block(2)) === Number(Block(2)) === 2
@@ -276,9 +277,9 @@ end
         @test @inferred(blocklengths(o)) == Ones{Int}(10)
 
         f = blockedrange(1, Fill(2,5))
-        @test @inferred(blockfirsts(f)) ≡ 1:2:9
+        @test @inferred(blockfirsts(f)) == 1:2:9
         @test @inferred(blocklasts(f)) ≡ StepRangeLen(2,2,5)
-        @test @inferred(blocklengths(f)) ≡ Fill(2,5)
+        @test @inferred(blocklengths(f)) == Fill(2,5)
 
         f = blockedrange(1, Zeros{Int}(2))
         @test @inferred(blockfirsts(f)) == [1,1]
@@ -490,7 +491,7 @@ end
         # we support Tuples in addition to SVectors for InfiniteArrays.jl, which has
         # infinite block sizes
         s = blockedrange(1, (5,big(100_000_000)^2))
-        @test blocklengths(s) == [5,big(100_000_000)^2]
+        @test blocklengths(s) == (5,big(100_000_000)^2)
         @test blockaxes(s) == (Block.(1:2),)
         @test findblock(s,3) == Block(1)
         @test findblock(s,big(100_000_000)) == Block(2)
@@ -563,9 +564,14 @@ end
         @test @inferred(blocklengths(o)) == Ones{Int}(10)
 
         f = blockedrange(Fill(2,5))
-        @test @inferred(blockfirsts(f)) ≡ 1:2:9
-        @test @inferred(blocklasts(f)) ≡ StepRangeLen(2,2,5)
-        @test @inferred(blocklengths(f)) ≡ Fill(2,5)
+        @test @inferred(blockfirsts(f)) == 1:2:9
+        @test @inferred(blocklasts(f)) ≡ FirstStepRangeLen(2,5)
+        @test @inferred(blocklengths(f)) == Fill(2,5)
+        struct NonIntegralInteger <: Integer
+            x::Float64
+        end
+        Base.:+(a::NonIntegralInteger, b::NonIntegralInteger) = a.x + b.x
+        @test_throws ArgumentError FirstStepRangeLen(NonIntegralInteger(0.25), 5)
 
         f = blockedrange(Zeros{Int}(2))
         @test @inferred(blockfirsts(f)) == [1,1]
@@ -594,6 +600,7 @@ end
         b = blockedrange(Fill(2,3))
         c = blockedrange([2,2,2])
         @test convert(BlockedOneTo, b) === b
+        @test convert(BlockedOneTo, b) === BlockedOneTo(b.lasts)
         @test convert(typeof(b), b) === b
         @test convert(BlockedOneTo, c) === c
         @test convert(typeof(c), c) === c
@@ -764,7 +771,7 @@ end
         @test eltype(s) === BigInt
         @test first(s) isa BigInt
         @test last(s) isa BigInt
-        @test blocklengths(s) == [5,big(100_000_000)^2]
+        @test blocklengths(s) == (5,big(100_000_000)^2)
         @test eltype(blocklengths(s)) === BigInt
         @test blockaxes(s) == (Block.(1:2),)
         @test findblock(s,3) == Block(1)
@@ -777,7 +784,7 @@ end
         @test length(r) === 6
         @test blockfirsts(r) === (1, 3, 5)
         @test blocklasts(r) === (2, 4, 6)
-        @test blocklengths(r) == [2, 2, 2]
+        @test blocklengths(r) == (2, 2, 2)
     end
 
     @testset "Empty Tuple" begin
@@ -788,7 +795,7 @@ end
         @test length(r) === 0
         @test blockfirsts(r) === (1,)
         @test blocklasts(r) === ()
-        @test blocklengths(r) == []
+        @test blocklengths(r) == ()
     end
 
     @testset "General element types" begin
@@ -815,15 +822,15 @@ end
         @test eltype(blockedrange(one(elt), Base.OneTo(elt(3)))) === elt
         @test eltype(blockedrange(one(elt), elt(1):elt(3))) === elt
 
-        if VERSION >= v"1.7"
-          # `cumsum(::Fill)` doesn't preserve element types properly.
-          # That issue was fixed by this fix to `StepRangeLen`:
-          # https://github.com/JuliaLang/julia/pull/41619
-          # which is only available in Julia v1.7 and higher.
-          r = blockedrange(one(elt), Fill(elt(2), 3))
-          @test r isa BlockedUnitRange{elt,<:StepRangeLen{elt}}
-          @test eltype(r) === elt
-        end
+        
+        # `cumsum(::Fill)` doesn't preserve element types properly.
+        # That issue was fixed by this fix to `StepRangeLen`:
+        # https://github.com/JuliaLang/julia/pull/41619
+        # which is only available in Julia v1.7 and higher.
+        r = blockedrange(one(elt), Fill(elt(2), 3))
+        @test r isa BlockedUnitRange{elt,<:StepRangeLen{elt}}
+        @test eltype(r) === elt
+        
 
         r = blockedrange(one(elt), Ones(elt, 3))
         @test r isa BlockedUnitRange{elt}
@@ -871,7 +878,7 @@ end
         @test last(r) === UInt16(5)
         @test blockfirsts(r) === (UInt16(1), UInt16(3))
         @test blocklasts(r) === (UInt16(2), UInt16(5))
-        @test blocklengths(r) == [UInt16(2), UInt16(3)]
+        @test blocklengths(r) === (UInt16(2), UInt16(3))
         @test eltype(blocklengths(r)) === UInt16
     end
 

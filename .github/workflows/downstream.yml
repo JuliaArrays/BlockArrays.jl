@@ -40,6 +40,7 @@ jobs:
           - {repo: LazyArrays.jl, group: JuliaArrays}
           - {repo: BlockBandedMatrices.jl, group: JuliaLinearAlgebra}
           - {repo: LazyBandedMatrices.jl, group: JuliaLinearAlgebra}
+          - {repo: InfiniteArrays.jl, group: JuliaArrays}
           - {repo: InfiniteLinearAlgebra.jl, group: JuliaLinearAlgebra}
 
     steps:

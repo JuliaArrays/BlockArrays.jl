@@ -126,6 +126,11 @@ end
         @test bi == collect(bi)
         @test size(bi) == (2,2)
     end
+
+    @testset "BlockedOneTo(::AbstractRange)" begin
+        @test blocklengths(BlockedOneTo(2:5)) == [2,1,1,1]
+        @test blockfirsts(BlockedOneTo(2:5)) == [1,3,4,5]
+    end
 end
 
 end # module
