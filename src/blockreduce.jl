@@ -17,7 +17,6 @@ Base.mapfoldl(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
 Base.mapreduce(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
     mapreduce(f, op, B.blocks; kw...)
 
-Base.sum(B::BlockArray; dims=:, kw...) = mapreduce(identity, Base.add_sum, B; dims, kw...)
 function Base.mapreduce(f::F, op::typeof(Base.add_sum), B::BlockArray;
                         dims=:, kw...) where F
     if dims isa Colon && !isempty(B.blocks)
@@ -28,8 +27,6 @@ end
 Base.mapreduce(f::F, op::typeof(Base.add_sum), B::BlockVector;
                dims=:, kw...) where F =
     invoke(mapreduce, Tuple{F,typeof(op),BlockArray}, f, op, B; dims, kw...)
-
-Base.sum(f, B::BlockArray; dims=:, kw...) = mapreduce(f, Base.add_sum, B; dims, kw...)
 
 function LinearAlgebra.norm2(B::BlockArray)
     isempty(B.blocks) && return float(norm(zero(eltype(B))))
