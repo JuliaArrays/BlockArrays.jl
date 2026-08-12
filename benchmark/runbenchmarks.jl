@@ -11,6 +11,7 @@ g_size = addgroup!(SUITE, "size")
 g_metadata = addgroup!(SUITE, "metadata")
 g_product = addgroup!(SUITE, "product")
 g_broadcast = addgroup!(SUITE, "broadcast")
+g_reduction = addgroup!(SUITE, "reduction")
 
 for n = (5,)
     for BT in (BlockArray, BlockedArray)
@@ -61,6 +62,12 @@ broadcast_block_b = BlockArray(randn(128, 128), broadcast_block_sizes, broadcast
 broadcast_block_dest = similar(broadcast_block_a)
 g_broadcast["in-place", "BlockArray", "matching"] =
     @benchmarkable $broadcast_block_dest .= $broadcast_block_a .+ $broadcast_block_b
+
+reduction_block_sizes = fill(4, 32)
+reduction_block_array = BlockArray(randn(128, 128), reduction_block_sizes, reduction_block_sizes)
+g_reduction["sum", "BlockArray", "matrix"] = @benchmarkable sum($reduction_block_array)
+g_reduction["sum(abs2)", "BlockArray", "matrix"] =
+    @benchmarkable sum(abs2, $reduction_block_array)
 
 
 function run_benchmarks(name, tagfilter = @tagged ALL)

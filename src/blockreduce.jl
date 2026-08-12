@@ -17,5 +17,13 @@ Base.mapfoldl(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
 Base.mapreduce(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
     mapreduce(f, op, B.blocks; kw...)
 
+Base.sum(B::BlockArray; dims=:, kw...) = sum(identity, B; dims, kw...)
+function Base.sum(f, B::BlockArray; dims=:, kw...)
+    if dims isa Colon && !isempty(B.blocks)
+        return mapreduce(block -> sum(f, block), Base.add_sum, B.blocks; kw...)
+    end
+    return invoke(sum, Tuple{Any,AbstractArray}, f, B; dims, kw...)
+end
+
 # support sum, need to return something analogous to Base.OneTo(1) but same type
 Base.reduced_index(::BR) where BR<:AbstractBlockedUnitRange = convert(BR, Base.OneTo(1))
