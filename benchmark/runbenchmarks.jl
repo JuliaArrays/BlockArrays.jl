@@ -10,6 +10,7 @@ g = addgroup!(SUITE, "indexing")
 g_size = addgroup!(SUITE, "size")
 g_metadata = addgroup!(SUITE, "metadata")
 g_product = addgroup!(SUITE, "product")
+g_broadcast = addgroup!(SUITE, "broadcast")
 
 for n = (5,)
     for BT in (BlockArray, BlockedArray)
@@ -47,6 +48,13 @@ khatri_a = BlockArray(randn(20, 20), khatri_block_sizes, khatri_block_sizes)
 khatri_b = BlockArray(randn(20, 20), khatri_block_sizes, khatri_block_sizes)
 g_product["khatri_rao", "10x10", "2x2 blocks"] =
     @benchmarkable khatri_rao($khatri_a, $khatri_b)
+
+broadcast_block_sizes = fill(4, 32)
+broadcast_blocked_a = BlockedArray(randn(128, 128), broadcast_block_sizes, broadcast_block_sizes)
+broadcast_blocked_b = BlockedArray(randn(128, 128), broadcast_block_sizes, broadcast_block_sizes)
+broadcast_blocked_dest = similar(broadcast_blocked_a)
+g_broadcast["in-place", "BlockedArray", "matching"] =
+    @benchmarkable $broadcast_blocked_dest .= $broadcast_blocked_a .+ $broadcast_blocked_b
 
 
 function run_benchmarks(name, tagfilter = @tagged ALL)

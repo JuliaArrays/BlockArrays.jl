@@ -81,6 +81,19 @@ using StaticArrays
             @test dest ≈ x + 2y
         end
 
+        @testset "matrix in-place broadcast" begin
+            x = BlockedMatrix(randn(6, 6), [2, 4], [3, 3])
+            y = BlockedMatrix(randn(6, 6), [1, 2, 3], [2, 4])
+            dest = similar(x)
+            @test (dest .= x .+ 2 .* y) === dest
+            @test parent(dest) ≈ parent(x) .+ 2 .* parent(y)
+            @test axes(x .+ x) === axes(x)
+
+            expected = parent(x) .+ parent(y)
+            x .+= y
+            @test parent(x) ≈ expected
+        end
+
         @testset "0-dim nested in-place broadcast" begin
             x = BlockedArray(randn(()))
             y = BlockedArray(randn(()))

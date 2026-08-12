@@ -62,8 +62,8 @@ function sortedunion(a::StridedVector{<:Integer}, b::StridedVector{<:Integer})
 end
 sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
-combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
-combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
+combine_blockaxes(a, b) = blockisequal(a, b) ? a : _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
+combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = blockisequal(a, b) ? a : BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
 
 Base.Broadcast.axistype(a::AbstractBlockedUnitRange, b::AbstractBlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 Base.Broadcast.axistype(a::AbstractBlockedUnitRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
@@ -237,6 +237,13 @@ _removeblocks(a::Adjoint) = _removeblocks(parent(a))'
 _removeblocks(a::Transpose) = transpose(_removeblocks(parent(a)))
 _removeblocks(a::SubArray{<:Any,N,<:BlockedArray}) where N = view(_removeblocks(parent(a)), map(_removeblocks, parentindices(a))...)
 _removeblocks(a) = a
+
+function copyto!(dest::BlockedArray{<:Any,N},
+        bc::Broadcasted{BlockedStyle{N},<:Any,<:Any,Args}) where {N,Args<:Tuple}
+    copyto!(parent(dest), _removeblocks(bc))
+    return dest
+end
+
 copy(bc::Broadcasted{BlockedStyle{N}}) where N = BlockedArray(Broadcast.materialize(_removeblocks(bc)), axes(bc))
 
 for op in (:+, :-, :*)
