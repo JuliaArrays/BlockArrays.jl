@@ -56,6 +56,12 @@ broadcast_blocked_dest = similar(broadcast_blocked_a)
 g_broadcast["in-place", "BlockedArray", "matching"] =
     @benchmarkable $broadcast_blocked_dest .= $broadcast_blocked_a .+ $broadcast_blocked_b
 
+broadcast_block_a = BlockArray(randn(128, 128), broadcast_block_sizes, broadcast_block_sizes)
+broadcast_block_b = BlockArray(randn(128, 128), broadcast_block_sizes, broadcast_block_sizes)
+broadcast_block_dest = similar(broadcast_block_a)
+g_broadcast["in-place", "BlockArray", "matching"] =
+    @benchmarkable $broadcast_block_dest .= $broadcast_block_a .+ $broadcast_block_b
+
 
 function run_benchmarks(name, tagfilter = @tagged ALL)
     paramspath = joinpath(@__DIR__, "params.json")

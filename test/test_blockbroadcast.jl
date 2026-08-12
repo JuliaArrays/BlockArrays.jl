@@ -28,6 +28,15 @@ using StaticArrays
         @test axes(A + A) == axes(A .+ A) == axes(A)
         @test axes(A .+ 1) == axes(A)
 
+        dest = similar(A)
+        @test (dest .= A .+ 2 .* A) === dest
+        @test Matrix(dest) ≈ Matrix(A) .+ 2 .* Matrix(A)
+
+        A3 = BlockArray(randn(4, 4, 4), [2, 2], [1, 3], [3, 1])
+        dest3 = similar(A3)
+        @test (dest3 .= A3 .+ A3) === dest3
+        @test Array(dest3) ≈ 2 .* Array(A3)
+
         @testset "mismatched ndims" begin
             u = BlockArray(randn(5), [2,3])
             dest = zeros(size(u)..., 1)
@@ -140,6 +149,10 @@ using StaticArrays
         B = BlockArray(randn(6,6), fill(2,3), fill(3,2))
 
         @test blocksize(A+B) == (5,3)
+
+        dest = similar(A)
+        @test (dest .= A .+ B) === dest
+        @test Matrix(dest) ≈ Matrix(A) .+ Matrix(B)
     end
 
     @testset "sorted block boundary union" begin
