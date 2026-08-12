@@ -17,7 +17,19 @@ Base.mapfoldl(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
 Base.mapreduce(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
     mapreduce(f, op, B.blocks; kw...)
 
-Base.sum(B::BlockArray; dims=:, kw...) = sum(identity, B; dims, kw...)
+Base.sum(B::BlockArray; dims=:, kw...) = mapreduce(identity, Base.add_sum, B; dims, kw...)
+function Base.mapreduce(::typeof(identity), op::typeof(Base.add_sum), B::BlockArray;
+                        dims=:, kw...)
+    if dims isa Colon && !isempty(B.blocks)
+        return mapreduce(block -> mapreduce(identity, op, block), op, B.blocks; kw...)
+    end
+    return invoke(mapreduce, Tuple{Any,Any,AbstractArray}, identity, op, B; dims, kw...)
+end
+Base.mapreduce(::typeof(identity), op::typeof(Base.add_sum), B::BlockVector;
+               dims=:, kw...) =
+    invoke(mapreduce, Tuple{typeof(identity),typeof(op),BlockArray},
+           identity, op, B; dims, kw...)
+
 function Base.sum(f, B::BlockArray; dims=:, kw...)
     if dims isa Colon && !isempty(B.blocks)
         return mapreduce(block -> sum(f, block), Base.add_sum, B.blocks; kw...)

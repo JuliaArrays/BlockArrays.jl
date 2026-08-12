@@ -22,6 +22,9 @@ end
     data = reshape(collect(1:20), 4, 5)
     A = BlockArray(data, [1,3], [2,3])
     @test @inferred(sum(A)) == sum(data)
+    @test @inferred(mapreduce(identity, Base.add_sum, A)) == sum(data)
+    @test mapreduce(identity, Base.add_sum, A; init=10) == sum(data; init=10)
+    @test mapreduce(identity, Base.add_sum, A; dims=1) == sum(data; dims=1)
     @test @inferred(sum(abs2, A)) == sum(abs2, data)
     @test sum(A; init=10) == sum(data; init=10)
     @test sum(A; dims=1) == sum(data; dims=1)
@@ -36,6 +39,10 @@ end
     @test sum(emptyblocks) === 0.0
     @test sum(abs2, emptyblocks) === 0.0
     @test sum(emptyblocks; init=10.0) === 10.0
+
+    v = BlockArray(collect(1:6), [2, 4])
+    @test @inferred(sum(v)) == 21
+    @test @inferred(mapreduce(identity, Base.add_sum, v)) == 21
 end
 
 end # module
