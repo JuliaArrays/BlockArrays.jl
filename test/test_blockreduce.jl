@@ -26,6 +26,9 @@ end
     @test mapreduce(identity, Base.add_sum, A; init=10) == sum(data; init=10)
     @test mapreduce(identity, Base.add_sum, A; dims=1) == sum(data; dims=1)
     @test @inferred(sum(abs2, A)) == sum(abs2, data)
+    @test @inferred(mapreduce(abs2, Base.add_sum, A)) == sum(abs2, data)
+    @test mapreduce(abs2, Base.add_sum, A; init=10) == sum(abs2, data; init=10)
+    @test mapreduce(abs2, Base.add_sum, A; dims=2) == sum(abs2, data; dims=2)
     @test sum(A; init=10) == sum(data; init=10)
     @test sum(A; dims=1) == sum(data; dims=1)
     @test sum(A; dims=2) == sum(data; dims=2)
@@ -43,6 +46,8 @@ end
     v = BlockArray(collect(1:6), [2, 4])
     @test @inferred(sum(v)) == 21
     @test @inferred(mapreduce(identity, Base.add_sum, v)) == 21
+    @test @inferred(sum(abs2, v)) == 91
+    @test @inferred(mapreduce(abs2, Base.add_sum, v)) == 91
 end
 
 end # module
