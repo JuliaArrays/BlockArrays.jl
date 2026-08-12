@@ -25,5 +25,12 @@ function Base.sum(f, B::BlockArray; dims=:, kw...)
     return invoke(sum, Tuple{Any,AbstractArray}, f, B; dims, kw...)
 end
 
+function LinearAlgebra.norm(B::BlockArray, p::Real=2)
+    if p == 2 && !isempty(B.blocks)
+        return mapreduce(norm, hypot, B.blocks)
+    end
+    return invoke(norm, Tuple{Any,Real}, B, p)
+end
+
 # support sum, need to return something analogous to Base.OneTo(1) but same type
 Base.reduced_index(::BR) where BR<:AbstractBlockedUnitRange = convert(BR, Base.OneTo(1))

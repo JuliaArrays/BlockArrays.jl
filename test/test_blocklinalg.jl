@@ -35,6 +35,19 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
     @test a .^ 2 == 4
     end
 
+    @testset "norm" begin
+        data = randn(7, 9)
+        A = BlockArray(data, [1, 2, 4], [3, 1, 5])
+        @test @inferred(norm(A)) ≈ norm(data)
+        @test norm(A, 1) ≈ norm(data, 1)
+
+        extremes = BlockArray([1.0e300 1.0e-300], [1], [1, 1])
+        @test norm(extremes) == norm(Matrix(extremes)) == 1.0e300
+
+        emptyblocks = BlockArray(zeros(0, 0), Int[], Int[])
+        @test norm(emptyblocks) === 0.0
+    end
+
     @testset "BlockArray scalar * matrix" begin
         A = BlockArray{Float64}(randn(6,6), fill(2,3), 1:3)
         @test 2A == A*2 == 2Matrix(A)

@@ -1,5 +1,6 @@
 using BlockArrays
 using BenchmarkTools
+using LinearAlgebra
 
 include("generate_report.jl")
 
@@ -68,6 +69,7 @@ reduction_block_array = BlockArray(randn(128, 128), reduction_block_sizes, reduc
 g_reduction["sum", "BlockArray", "matrix"] = @benchmarkable sum($reduction_block_array)
 g_reduction["sum(abs2)", "BlockArray", "matrix"] =
     @benchmarkable sum(abs2, $reduction_block_array)
+g_reduction["norm", "BlockArray", "matrix"] = @benchmarkable norm($reduction_block_array)
 
 
 function run_benchmarks(name, tagfilter = @tagged ALL)
