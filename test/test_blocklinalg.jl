@@ -46,6 +46,12 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         extremes = BlockArray([1.0e300 1.0e-300], [1], [1, 1])
         @test norm(extremes) == norm(Matrix(extremes)) == 1.0e300
 
+        nonfinite = BlockArray([NaN, Inf], [1, 1])
+        @test isnan(norm(nonfinite)) == isnan(norm(Vector(nonfinite)))
+
+        withmissing = BlockArray(Union{Missing,Float64}[1.0, missing], [1, 1])
+        @test norm(withmissing) === norm(Vector(withmissing)) === missing
+
         emptyblocks = BlockArray(zeros(0, 0), Int[], Int[])
         @test norm(emptyblocks) === 0.0
         @test LinearAlgebra.norm2(emptyblocks) === 0.0

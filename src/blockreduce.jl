@@ -29,9 +29,12 @@ Base.mapreduce(f::F, op::typeof(Base.add_sum), B::BlockVector;
                dims=:, kw...) where F =
     invoke(mapreduce, Tuple{F,typeof(op),BlockArray}, f, op, B; dims, kw...)
 
+_norm_hypot(x, y) = (ismissing(x) || isnan(x)) ? x :
+                    (ismissing(y) || isnan(y)) ? y : hypot(x, y)
+
 function LinearAlgebra.norm2(B::BlockArray)
     isempty(B.blocks) && return float(norm(zero(eltype(B))))
-    return mapreduce(norm, hypot, B.blocks)
+    return mapreduce(norm, _norm_hypot, B.blocks)
 end
 
 # support sum, need to return something analogous to Base.OneTo(1) but same type
