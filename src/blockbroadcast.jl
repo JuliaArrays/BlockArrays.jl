@@ -38,8 +38,18 @@ maybeinplacesort!(v) = sort(v)
 sortedunion(a,b) = maybeinplacesort!(union(a,b))
 sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
-combine_blockaxes(a, b) = blockisequal(a, b) ? a : _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
-combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = blockisequal(a, b) ? a : BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
+combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
+combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
+
+function combine_blockaxes(a::BlockedUnitRange{T,Vector{T}},
+                           b::BlockedUnitRange{T,Vector{T}}) where T
+    return blockisequal(a, b) ? a : _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
+end
+
+function combine_blockaxes(a::BlockedOneTo{T,CS}, b::BlockedOneTo{T,CS}) where
+                           {T<:Integer,CS<:Union{Vector{T},Base.OneTo{T}}}
+    return blockisequal(a, b) ? a : BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
+end
 
 Base.Broadcast.axistype(a::AbstractBlockedUnitRange, b::AbstractBlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 Base.Broadcast.axistype(a::AbstractBlockedUnitRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)

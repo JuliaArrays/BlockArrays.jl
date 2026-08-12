@@ -202,10 +202,18 @@ using StaticArrays
     @testset "special axes" begin
         A = BlockArray(randn(6), Ones{Int}(6))
         B = BlockArray(randn(6), Ones{Int}(6))
+        @test (@inferred BlockArrays.combine_blockaxes(axes(A, 1), axes(B, 1))) === axes(A, 1)
         @test axes(A+B,1) === axes(A,1)
 
         C = BlockArray(randn(6), (BlockArrays._BlockedUnitRange(1,2:6),))
         @test axes(A+C,1) === BlockArrays._BlockedUnitRange(1,1:6)
+
+        a32 = blockedrange(Int32[1, 2, 3])
+        a64 = blockedrange(Int64[1, 2, 3])
+        @test blockisequal(@inferred(BlockArrays.combine_blockaxes(a32, a64)), a64)
+
+        lazy = blockedrange(Fill(4, 32))
+        @test blockisequal(@inferred(BlockArrays.combine_blockaxes(lazy, lazy)), lazy)
     end
 
     @testset "Views" begin
