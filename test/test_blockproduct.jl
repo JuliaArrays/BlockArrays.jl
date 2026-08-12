@@ -27,10 +27,11 @@ using BlockArrays, Test
         A = BlockArray(ones(m, n), mi, ni)
         B = BlockArray(ones(p, q), pi, qi)
 
-        AB = khatri_rao(A, B)
+        AB = @inferred khatri_rao(A, B)
 
         @test blocksize(AB) == blocksize(A)
         @test blocksize(AB) == blocksize(B)
+        @test khatri_rao(BlockedArray(A), BlockedArray(B)) == AB
 
         #Test: Size of resulting blocks
         for i in blockaxes(AB,1)

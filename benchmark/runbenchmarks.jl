@@ -9,6 +9,7 @@ g = addgroup!(SUITE, "indexing")
 # g_block = addgroup!(SUITE, "blockindexing")
 g_size = addgroup!(SUITE, "size")
 g_metadata = addgroup!(SUITE, "metadata")
+g_product = addgroup!(SUITE, "product")
 
 for n = (5,)
     for BT in (BlockArray, BlockedArray)
@@ -40,6 +41,12 @@ blocklasts_a = collect(2:2:20_000)
 blocklasts_b = collect(3:3:30_000)
 g_metadata["sortedunion", "vectors"] =
     @benchmarkable BlockArrays.sortedunion($blocklasts_a, $blocklasts_b)
+
+khatri_block_sizes = fill(2, 10)
+khatri_a = BlockArray(randn(20, 20), khatri_block_sizes, khatri_block_sizes)
+khatri_b = BlockArray(randn(20, 20), khatri_block_sizes, khatri_block_sizes)
+g_product["khatri_rao", "10x10", "2x2 blocks"] =
+    @benchmarkable khatri_rao($khatri_a, $khatri_b)
 
 
 function run_benchmarks(name, tagfilter = @tagged ALL)

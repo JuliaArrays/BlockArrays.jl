@@ -6,23 +6,14 @@ References
 * Khatri, C. G., and Rao, C. Radhakrishna (1968) Solutions to Some Functional Equations and Their Applications to Characterization of Probability Distributions. Sankhya: Indian J. Statistics, Series A 30, 167–180.
 """
 function khatri_rao(A::AbstractBlockMatrix, B::AbstractBlockMatrix)
-    #
-    Ablksize = blocksize(A)
-    Bblksize = blocksize(B)
+    @assert blocksize(A) == blocksize(B) "A and B must have the same blocksize"
 
-    @assert Ablksize == Bblksize "A and B must have the same blocksize"
-
-    kblk = []
-    for iblk in blockaxes(A,1)
-        kblk_j = []
-        for _jblk in blockaxes(A,2)
-            Ablk = A[iblk, _jblk]
-            Bblk = B[iblk, _jblk]
-            push!(kblk_j, kron(Ablk, Bblk))
-        end
-        push!(kblk, tuple(kblk_j...))
+    product = Iterators.product(blockaxes(A)...)
+    result_blocks = map(product) do block_index
+        K, J = block_index
+        kron(view(A, K, J), view(B, K, J))
     end
-    mortar(kblk...)
+    return mortar(result_blocks)
 end
 
 function khatri_rao(A::AbstractMatrix, B::AbstractMatrix)
