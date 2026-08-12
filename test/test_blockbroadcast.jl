@@ -129,6 +129,13 @@ using StaticArrays
         @test blocksize(A+B) == (5,3)
     end
 
+    @testset "sorted block boundary union" begin
+        @test BlockArrays.sortedunion([1, 3, 3, 7], [2, 3, 8]) == [1, 2, 3, 7, 8]
+        @test BlockArrays.sortedunion(Int[], Int[]) == Int[]
+        @test BlockArrays.sortedunion(Int32[1, 3], Int64[2, 3]) == [1, 2, 3]
+        @test eltype(BlockArrays.sortedunion(Int32[1], Int64[2])) == Int64
+    end
+
     @testset "UnitRange" begin
         n = 3
         x = mortar([1:4n, 1:n])

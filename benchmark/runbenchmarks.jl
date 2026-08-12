@@ -36,6 +36,11 @@ blockkron_matrix = Ref(BlockKron(
 g_metadata["BlockKron", "axes", "vector"] = @benchmarkable axes($blockkron_vector[])
 g_metadata["BlockKron", "axes", "matrix"] = @benchmarkable axes($blockkron_matrix[])
 
+blocklasts_a = collect(2:2:20_000)
+blocklasts_b = collect(3:3:30_000)
+g_metadata["sortedunion", "vectors"] =
+    @benchmarkable BlockArrays.sortedunion($blocklasts_a, $blocklasts_b)
+
 
 function run_benchmarks(name, tagfilter = @tagged ALL)
     paramspath = joinpath(@__DIR__, "params.json")
