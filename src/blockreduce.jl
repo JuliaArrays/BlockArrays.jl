@@ -19,8 +19,9 @@ Base.mapreduce(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
 
 function Base.mapreduce(f::F, op::typeof(Base.add_sum), B::BlockArray;
                         dims=:, kw...) where F
-    if dims isa Colon && !isempty(B.blocks)
-        return mapreduce(block -> mapreduce(f, op, block), op, B.blocks; kw...)
+    if dims isa Colon && !isempty(B)
+        nonemptyblocks = Iterators.filter(!isempty, B.blocks)
+        return mapreduce(block -> mapreduce(f, op, block), op, nonemptyblocks; kw...)
     end
     return invoke(mapreduce, Tuple{Any,Any,AbstractArray}, f, op, B; dims, kw...)
 end

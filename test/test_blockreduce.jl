@@ -2,6 +2,11 @@ module TestBlockReduce
 
 using BlockArrays, Test
 
+struct NoZero
+    value::Int
+end
+Base.:+(a::NoZero, b::NoZero) = NoZero(a.value + b.value)
+
 @testset "foldl" begin
     x = mortar([rand(3), rand(2)])
     @test foldl(push!, x; init = []) == collect(x)
@@ -42,6 +47,11 @@ end
     @test sum(emptyblocks) === 0.0
     @test sum(abs2, emptyblocks) === 0.0
     @test sum(emptyblocks; init=10.0) === 10.0
+
+    zeroblocks = BlockArray(collect(1:6), [0, 2, 0, 4])
+    @test sum(zeroblocks) == sum(Vector(zeroblocks))
+    @test sum(abs2, zeroblocks) == sum(abs2, Vector(zeroblocks))
+    @test sum(NoZero, zeroblocks).value == sum(NoZero, Vector(zeroblocks)).value
 
     v = BlockArray(collect(1:6), [2, 4])
     @test @inferred(sum(v)) == 21
