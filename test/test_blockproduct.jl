@@ -116,6 +116,8 @@ using BlockArrays, Test
         c = 6:8
         k̄ = BlockKron(a,b,c)
         @test k̄ == blockkron(a,b,c) == kron(a,b,c)
+        @test @inferred(axes(k̄)) == (blockedrange(fill(length(b) * length(c), length(a))),)
+        @test blocklasts(axes(k̄, 1)) isa FirstStepRangeLen
         @test k̄[Block(1)][Block(1)] == a[1]*b[1]*c
         @test k̄[Block(1)][Block(2)] == a[1]*b[2]*c
         @test k̄[Block(2)][Block(3)] == a[2]*b[3]*c
@@ -133,6 +135,11 @@ using BlockArrays, Test
         C = randn(2,5)
         K̄ = BlockKron(A,B,C)
         @test K̄ ≈ blockkron(A,B,C) ≈ kron(A,B,C)
+        @test @inferred(axes(K̄)) == (
+            blockedrange(fill(size(B, 1) * size(C, 1), size(A, 1))),
+            blockedrange(fill(size(B, 2) * size(C, 2), size(A, 2))),
+        )
+        @test all(ax -> blocklasts(ax) isa FirstStepRangeLen, axes(K̄))
         @test K̄[Block(1,1)][Block(1,1)] ≈ A[1,1]*B[1,1]*C
         @test K̄[Block(2,3)][Block(3,4)] ≈ A[2,3]*B[3,4]*C
 

@@ -8,6 +8,7 @@ const SUITE = BenchmarkGroup()
 g = addgroup!(SUITE, "indexing")
 # g_block = addgroup!(SUITE, "blockindexing")
 g_size = addgroup!(SUITE, "size")
+g_metadata = addgroup!(SUITE, "metadata")
 
 for n = (5,)
     for BT in (BlockArray, BlockedArray)
@@ -27,6 +28,13 @@ for n = (5,)
         g_size[nameof(BT), "rank3", n]  = @benchmarkable size($block_arr)
     end
 end
+
+blockkron_vector = Ref(BlockKron(1:10_000, 1:4, 1:3))
+blockkron_matrix = Ref(BlockKron(
+    reshape(1:800_000, 1_000, 800), reshape(1:20, 4, 5), reshape(1:6, 3, 2),
+))
+g_metadata["BlockKron", "axes", "vector"] = @benchmarkable axes($blockkron_vector[])
+g_metadata["BlockKron", "axes", "matrix"] = @benchmarkable axes($blockkron_matrix[])
 
 
 function run_benchmarks(name, tagfilter = @tagged ALL)

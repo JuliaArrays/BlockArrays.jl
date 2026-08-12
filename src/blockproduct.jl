@@ -51,15 +51,11 @@ size(K::BlockKron, j::Int) = prod(size.(K.args, j))
 size(a::BlockKron{<:Any,1}) = (size(a,1),)
 size(a::BlockKron{<:Any,2}) = (size(a,1), size(a,2))
 
-function axes(K::BlockKron{<:Any,1})
-    A,B = K.args
-    (blockedrange(fill(prod(size.(tail(K.args),1)), size(K.args[1],1))),)
-end
-
-function axes(K::BlockKron{<:Any,2})
-    A,B = K.args
-    blockedrange.((fill(prod(size.(tail(K.args),1)), size(K.args[1],1)),
-                   fill(prod(size.(tail(K.args),2)), size(K.args[1],2))))
+function axes(K::BlockKron{<:Any,N}) where N
+    ntuple(Val(N)) do dim
+        blocklength = prod(size.(tail(K.args), dim))
+        blockedrange(Fill(blocklength, size(K.args[1], dim)))
+    end
 end
 
 kron_getindex((A,)::Tuple{AbstractVector}, k::Integer) = A[k]
