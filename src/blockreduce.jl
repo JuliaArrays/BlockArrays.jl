@@ -31,11 +31,9 @@ Base.mapreduce(f::F, op::typeof(Base.add_sum), B::BlockVector;
 
 Base.sum(f, B::BlockArray; dims=:, kw...) = mapreduce(f, Base.add_sum, B; dims, kw...)
 
-function LinearAlgebra.norm(B::BlockArray, p::Real=2)
-    if p == 2 && !isempty(B.blocks)
-        return mapreduce(norm, hypot, B.blocks)
-    end
-    return invoke(norm, Tuple{Any,Real}, B, p)
+function LinearAlgebra.norm2(B::BlockArray)
+    isempty(B.blocks) && return float(norm(zero(eltype(B))))
+    return mapreduce(norm, hypot, B.blocks)
 end
 
 # support sum, need to return something analogous to Base.OneTo(1) but same type

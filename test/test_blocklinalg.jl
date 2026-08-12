@@ -39,13 +39,16 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         data = randn(7, 9)
         A = BlockArray(data, [1, 2, 4], [3, 1, 5])
         @test @inferred(norm(A)) ≈ norm(data)
+        @test @inferred(LinearAlgebra.norm2(A)) ≈ norm(data)
         @test norm(A, 1) ≈ norm(data, 1)
+        @test norm(A, 3) ≈ norm(data, 3)
 
         extremes = BlockArray([1.0e300 1.0e-300], [1], [1, 1])
         @test norm(extremes) == norm(Matrix(extremes)) == 1.0e300
 
         emptyblocks = BlockArray(zeros(0, 0), Int[], Int[])
         @test norm(emptyblocks) === 0.0
+        @test LinearAlgebra.norm2(emptyblocks) === 0.0
     end
 
     @testset "BlockArray scalar * matrix" begin
