@@ -36,30 +36,6 @@ BroadcastStyle(::BlockedStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(Val(
 maybeinplacesort!(v::StridedVector) = sort!(v)
 maybeinplacesort!(v) = sort(v)
 sortedunion(a,b) = maybeinplacesort!(union(a,b))
-function sortedunion(a::StridedVector{<:Integer}, b::StridedVector{<:Integer})
-    T = promote_type(eltype(a), eltype(b))
-    result = Vector{T}(undef, length(a) + length(b))
-    ia, ib = firstindex(a), firstindex(b)
-    lasta, lastb = lastindex(a), lastindex(b)
-    nresult = 0
-
-    @inbounds while ia <= lasta || ib <= lastb
-        value = if ib > lastb || (ia <= lasta && !isless(b[ib], a[ia]))
-            value = a[ia]
-            ia += 1
-            value
-        else
-            value = b[ib]
-            ib += 1
-            value
-        end
-        if iszero(nresult) || !isequal(result[nresult], value)
-            nresult += 1
-            result[nresult] = value
-        end
-    end
-    return resize!(result, nresult)
-end
 sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = blockisequal(a, b) ? a : _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
