@@ -1,7 +1,5 @@
 using BlockArrays
 using BenchmarkTools
-using FileIO
-using JLD
 
 include("generate_report.jl")
 
@@ -32,29 +30,28 @@ end
 
 
 function run_benchmarks(name, tagfilter = @tagged ALL)
-    paramspath = joinpath(dirname(@__FILE__), "params.jld")
+    paramspath = joinpath(@__DIR__, "params.json")
     if !isfile(paramspath)
         println("Tuning benchmarks...")
         tune!(SUITE, verbose=true)
-        JLD.save(paramspath, "SUITE", params(SUITE))
+        BenchmarkTools.save(paramspath, params(SUITE))
     end
-    loadparams!(SUITE, JLD.load(paramspath, "SUITE"), :evals, :samples)
+    loadparams!(SUITE, only(BenchmarkTools.load(paramspath)), :evals, :samples)
     results = run(SUITE[tagfilter], verbose = true, seconds = 2)
-    JLD.save(joinpath(dirname(@__FILE__), name * ".jld"), "results", results)
+    BenchmarkTools.save(joinpath(@__DIR__, name * ".json"), results)
 end
 
 function generate_report(v1, v2)
-    v1_res = load(joinpath(dirname(@__FILE__), v1 * ".jld"), "results")
-    v2_res = load(joinpath(dirname(@__FILE__), v2 * ".jld"), "results")
-    open(joinpath(dirname(@__FILE__), "results_$(v1)_$(v2).md"), "w") do f
+    v1_res = only(BenchmarkTools.load(joinpath(@__DIR__, v1 * ".json")))
+    v2_res = only(BenchmarkTools.load(joinpath(@__DIR__, v2 * ".json")))
+    open(joinpath(@__DIR__, "results_$(v1)_$(v2).md"), "w") do f
         printreport(f, judge(minimum(v1_res), minimum(v2_res)); iscomparisonjob = true)
     end
 end
 
 function generate_report(v1)
-    v1_res = load(joinpath(dirname(@__FILE__), v1 * ".jld"), "results")
-    open(joinpath(dirname(@__FILE__), "results_$(v1).md"), "w") do f
+    v1_res = only(BenchmarkTools.load(joinpath(@__DIR__, v1 * ".json")))
+    open(joinpath(@__DIR__, "results_$(v1).md"), "w") do f
         printreport(f, minimum(v1_res); iscomparisonjob = false)
     end
 end
-

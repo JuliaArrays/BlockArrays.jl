@@ -40,7 +40,11 @@ function printreport(io::IO, results; iscomparisonjob::Bool = false)
     return nothing
 end
 
-idrepr(id) = (str = repr(id); str[searchindex(str, '['):end])
+function idrepr(id)
+    str = repr(id)
+    firstbracket = findfirst(==('['), str)
+    return isnothing(firstbracket) ? str : str[firstbracket:end]
+end
 intpercent(p) = string(ceil(Int, p * 100), "%")
 resultrow(ids, t::BenchmarkTools.Trial) = resultrow(ids, minimum(t))
 
