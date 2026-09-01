@@ -33,7 +33,6 @@ BroadcastStyle(::BlockStyle{M}, ::BlockedStyle{N}) where {M,N} = BlockStyle(Val(
 BroadcastStyle(::BlockedStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 
 
-# sortedunion can assume inputs are already sorted so this could be improved
 maybeinplacesort!(v::StridedVector) = sort!(v)
 maybeinplacesort!(v) = sort(v)
 sortedunion(a,b) = maybeinplacesort!(union(a,b))
@@ -41,6 +40,16 @@ sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
 combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
+
+function combine_blockaxes(a::BlockedUnitRange{T,Vector{T}},
+                           b::BlockedUnitRange{T,Vector{T}}) where T
+    return blockisequal(a, b) ? a : _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
+end
+
+function combine_blockaxes(a::BlockedOneTo{T,CS}, b::BlockedOneTo{T,CS}) where
+                           {T<:Integer,CS<:Union{Vector{T},Base.OneTo{T}}}
+    return blockisequal(a, b) ? a : BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
+end
 
 Base.Broadcast.axistype(a::AbstractBlockedUnitRange, b::AbstractBlockedUnitRange) = length(b) == 1 ? a : combine_blockaxes(a, b)
 Base.Broadcast.axistype(a::AbstractBlockedUnitRange, b) = length(b) == 1 ? a : combine_blockaxes(a, b)
@@ -176,31 +185,26 @@ copyto!(dest::AbstractArray,
     _generic_blockbroadcast_copyto!(dest, bc)
 
 # type-stable version of _bview.(args, K)
-__bview(args::Tuple{}, K) = ()
-__bview(args::Tuple, K) = tuple(_bview(args[1],K), __bview(tail(args), K)...)
+__bview(args::Tuple{}, K...) = ()
+__bview(args::Tuple, K...) = tuple(_bview(args[1], K...), __bview(tail(args), K...)...)
 
-function _fast_blockbradcast_copyto!(dest, bc)
-    @inbounds for K in blockaxes(bc)[1]
-        broadcast!(bc.f, view(dest,K), __bview(bc.args, K)...)
+function _fast_blockbroadcast_copyto!(dest, bc)
+    @inbounds for K in Iterators.product(blockaxes(bc)...)
+        broadcast!(bc.f, view(dest, K...), __bview(bc.args, K...)...)
     end
     dest
 end
 
-_hasscalarlikevec() = false
-_hasscalarlikevec(a, b...) = _hasscalarlikevec(b...)
-_hasscalarlikevec(a::AbstractVector, b...) = size(a,1) == 1 || _hasscalarlikevec(b...)
+blockisequalorscalar(ax::Tuple, ::Number) = true
+blockisequalorscalar(ax::Tuple, a) = blockisequal(ax, axes(a))
 
-blockisequalorscalar(ax, ::Number) = true
-blockisequalorscalar(ax, a) = blockisequal(ax, Base.axes1(a))
-
-function copyto!(dest::AbstractVector,
-        bc::Broadcasted{<:AbstractBlockStyle{1}, <:Any, <:Any, Args}) where {Args <: Tuple}
-    _hasscalarlikevec(bc.args...) && return _generic_blockbroadcast_copyto!(dest, bc)
-    ax = axes(dest,1)
+function copyto!(dest::AbstractArray{<:Any,N},
+        bc::Broadcasted{<:AbstractBlockStyle{N},<:Any,<:Any,Args}) where {N,Args<:Tuple}
+    ax = axes(dest)
     for a in bc.args
         blockisequalorscalar(ax, a) || return _generic_blockbroadcast_copyto!(dest, bc)
     end
-    return _fast_blockbradcast_copyto!(dest, bc)
+    return _fast_blockbroadcast_copyto!(dest, bc)
 end
 @inline function Broadcast.instantiate(bc::Broadcasted{Style}) where {Style <:BlockStyle}
     bcf = Broadcast.instantiate(Broadcast.flatten(Broadcasted{Nothing}(bc.f, bc.args, bc.axes)))
@@ -214,6 +218,13 @@ _removeblocks(a::Adjoint) = _removeblocks(parent(a))'
 _removeblocks(a::Transpose) = transpose(_removeblocks(parent(a)))
 _removeblocks(a::SubArray{<:Any,N,<:BlockedArray}) where N = view(_removeblocks(parent(a)), map(_removeblocks, parentindices(a))...)
 _removeblocks(a) = a
+
+function copyto!(dest::BlockedArray{<:Any,N},
+        bc::Broadcasted{BlockedStyle{N},<:Any,<:Any,Args}) where {N,Args<:Tuple}
+    copyto!(parent(dest), _removeblocks(bc))
+    return dest
+end
+
 copy(bc::Broadcasted{BlockedStyle{N}}) where N = BlockedArray(Broadcast.materialize(_removeblocks(bc)), axes(bc))
 
 for op in (:+, :-, :*)

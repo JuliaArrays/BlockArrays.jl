@@ -17,5 +17,25 @@ Base.mapfoldl(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
 Base.mapreduce(f::F, op::OP, B::BlockedArray; kw...) where {F, OP} =
     mapreduce(f, op, B.blocks; kw...)
 
+function Base.mapreduce(f::F, op::typeof(Base.add_sum), B::BlockArray;
+                        dims=:, kw...) where F
+    if dims isa Colon && !isempty(B)
+        nonemptyblocks = Iterators.filter(!isempty, B.blocks)
+        return mapreduce(block -> mapreduce(f, op, block), op, nonemptyblocks; kw...)
+    end
+    return invoke(mapreduce, Tuple{Any,Any,AbstractArray}, f, op, B; dims, kw...)
+end
+Base.mapreduce(f::F, op::typeof(Base.add_sum), B::BlockVector;
+               dims=:, kw...) where F =
+    invoke(mapreduce, Tuple{F,typeof(op),BlockArray}, f, op, B; dims, kw...)
+
+_norm_hypot(x, y) = (ismissing(x) || isnan(x)) ? x :
+                    (ismissing(y) || isnan(y)) ? y : hypot(x, y)
+
+function LinearAlgebra.norm2(B::BlockArray)
+    isempty(B.blocks) && return float(norm(zero(eltype(B))))
+    return mapreduce(norm, _norm_hypot, B.blocks)
+end
+
 # support sum, need to return something analogous to Base.OneTo(1) but same type
 Base.reduced_index(::BR) where BR<:AbstractBlockedUnitRange = convert(BR, Base.OneTo(1))

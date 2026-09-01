@@ -735,6 +735,34 @@ Base.BroadcastStyle(::Type{<:AbstractBlockedUnitRange{<:Any,R}}) where R = _broa
 ###
 
 const OneToCumsum{T<:Integer} = RangeCumsum{T,Base.OneTo{T}}
+
+# Base has no public vector merge that exploits sorted inputs, so merge block
+# boundaries directly instead of hashing and then sorting them with `union`.
+function sortedunion(a::StridedVector{<:Integer}, b::StridedVector{<:Integer})
+    T = promote_type(eltype(a), eltype(b))
+    result = Vector{T}(undef, length(a) + length(b))
+    ia, ib = firstindex(a), firstindex(b)
+    lasta, lastb = lastindex(a), lastindex(b)
+    nresult = 0
+
+    @inbounds while ia <= lasta || ib <= lastb
+        value = if ib > lastb || (ia <= lasta && !isless(b[ib], a[ia]))
+            value = a[ia]
+            ia += 1
+            value
+        else
+            value = b[ib]
+            ib += 1
+            value
+        end
+        if iszero(nresult) || !isequal(result[nresult], value)
+            nresult += 1
+            result[nresult] = value
+        end
+    end
+    return resize!(result, nresult)
+end
+
 sortedunion(a::OneToCumsum, ::OneToCumsum) = a
 function sortedunion(a::RangeCumsum{<:Any,<:AbstractRange}, b::RangeCumsum{<:Any,<:AbstractRange})
     @assert a == b

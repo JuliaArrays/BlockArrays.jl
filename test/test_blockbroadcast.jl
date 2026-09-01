@@ -28,6 +28,15 @@ using StaticArrays
         @test axes(A + A) == axes(A .+ A) == axes(A)
         @test axes(A .+ 1) == axes(A)
 
+        dest = similar(A)
+        @test (dest .= A .+ 2 .* A) === dest
+        @test Matrix(dest) ≈ Matrix(A) .+ 2 .* Matrix(A)
+
+        A3 = BlockArray(randn(4, 4, 4), [2, 2], [1, 3], [3, 1])
+        dest3 = similar(A3)
+        @test (dest3 .= A3 .+ A3) === dest3
+        @test Array(dest3) ≈ 2 .* Array(A3)
+
         @testset "mismatched ndims" begin
             u = BlockArray(randn(5), [2,3])
             dest = zeros(size(u)..., 1)
@@ -81,6 +90,19 @@ using StaticArrays
             @test dest ≈ x + 2y
         end
 
+        @testset "matrix in-place broadcast" begin
+            x = BlockedMatrix(randn(6, 6), [2, 4], [3, 3])
+            y = BlockedMatrix(randn(6, 6), [1, 2, 3], [2, 4])
+            dest = similar(x)
+            @test (dest .= x .+ 2 .* y) === dest
+            @test parent(dest) ≈ parent(x) .+ 2 .* parent(y)
+            @test axes(x .+ x) === axes(x)
+
+            expected = parent(x) .+ parent(y)
+            x .+= y
+            @test parent(x) ≈ expected
+        end
+
         @testset "0-dim nested in-place broadcast" begin
             x = BlockedArray(randn(()))
             y = BlockedArray(randn(()))
@@ -127,6 +149,17 @@ using StaticArrays
         B = BlockArray(randn(6,6), fill(2,3), fill(3,2))
 
         @test blocksize(A+B) == (5,3)
+
+        dest = similar(A)
+        @test (dest .= A .+ B) === dest
+        @test Matrix(dest) ≈ Matrix(A) .+ Matrix(B)
+    end
+
+    @testset "sorted block boundary union" begin
+        @test BlockArrays.sortedunion([1, 3, 3, 7], [2, 3, 8]) == [1, 2, 3, 7, 8]
+        @test BlockArrays.sortedunion(Int[], Int[]) == Int[]
+        @test BlockArrays.sortedunion(Int32[1, 3], Int64[2, 3]) == [1, 2, 3]
+        @test eltype(BlockArrays.sortedunion(Int32[1], Int64[2])) == Int64
     end
 
     @testset "UnitRange" begin
@@ -169,10 +202,18 @@ using StaticArrays
     @testset "special axes" begin
         A = BlockArray(randn(6), Ones{Int}(6))
         B = BlockArray(randn(6), Ones{Int}(6))
+        @test (@inferred BlockArrays.combine_blockaxes(axes(A, 1), axes(B, 1))) === axes(A, 1)
         @test axes(A+B,1) === axes(A,1)
 
         C = BlockArray(randn(6), (BlockArrays._BlockedUnitRange(1,2:6),))
         @test axes(A+C,1) === BlockArrays._BlockedUnitRange(1,1:6)
+
+        a32 = blockedrange(Int32[1, 2, 3])
+        a64 = blockedrange(Int64[1, 2, 3])
+        @test blockisequal(@inferred(BlockArrays.combine_blockaxes(a32, a64)), a64)
+
+        lazy = blockedrange(Fill(4, 32))
+        @test blockisequal(@inferred(BlockArrays.combine_blockaxes(lazy, lazy)), lazy)
     end
 
     @testset "Views" begin

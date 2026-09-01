@@ -6,23 +6,14 @@ References
 * Khatri, C. G., and Rao, C. Radhakrishna (1968) Solutions to Some Functional Equations and Their Applications to Characterization of Probability Distributions. Sankhya: Indian J. Statistics, Series A 30, 167–180.
 """
 function khatri_rao(A::AbstractBlockMatrix, B::AbstractBlockMatrix)
-    #
-    Ablksize = blocksize(A)
-    Bblksize = blocksize(B)
+    @assert blocksize(A) == blocksize(B) "A and B must have the same blocksize"
 
-    @assert Ablksize == Bblksize "A and B must have the same blocksize"
-
-    kblk = []
-    for iblk in blockaxes(A,1)
-        kblk_j = []
-        for _jblk in blockaxes(A,2)
-            Ablk = A[iblk, _jblk]
-            Bblk = B[iblk, _jblk]
-            push!(kblk_j, kron(Ablk, Bblk))
-        end
-        push!(kblk, tuple(kblk_j...))
+    product = Iterators.product(blockaxes(A)...)
+    result_blocks = map(product) do block_index
+        K, J = block_index
+        kron(view(A, K, J), view(B, K, J))
     end
-    mortar(kblk...)
+    return mortar(result_blocks)
 end
 
 function khatri_rao(A::AbstractMatrix, B::AbstractMatrix)
@@ -51,15 +42,11 @@ size(K::BlockKron, j::Int) = prod(size.(K.args, j))
 size(a::BlockKron{<:Any,1}) = (size(a,1),)
 size(a::BlockKron{<:Any,2}) = (size(a,1), size(a,2))
 
-function axes(K::BlockKron{<:Any,1})
-    A,B = K.args
-    (blockedrange(fill(prod(size.(tail(K.args),1)), size(K.args[1],1))),)
-end
-
-function axes(K::BlockKron{<:Any,2})
-    A,B = K.args
-    blockedrange.((fill(prod(size.(tail(K.args),1)), size(K.args[1],1)),
-                   fill(prod(size.(tail(K.args),2)), size(K.args[1],2))))
+function axes(K::BlockKron{<:Any,N}) where N
+    ntuple(Val(N)) do dim
+        blocklength = prod(size.(tail(K.args), dim))
+        blockedrange(Fill(blocklength, size(K.args[1], dim)))
+    end
 end
 
 kron_getindex((A,)::Tuple{AbstractVector}, k::Integer) = A[k]

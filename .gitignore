@@ -4,7 +4,8 @@
 docs/build/
 docs/site/
 *.jld
-benchmark/*.md
+benchmark/*.json
+benchmark/results_*.md
 src/.DS_Store
 Manifest.toml
 Manifest-v*.*.toml
