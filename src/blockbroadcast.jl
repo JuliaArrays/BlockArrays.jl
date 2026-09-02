@@ -280,17 +280,11 @@ BroadcastStyle(::Type{<:SubArray{<:Any,N,<:BlockedArray,I}}) where {N,I<:Tuple{A
 # Fill
 ###
 
-for op in (:*, :/)
-    @eval begin
-        broadcasted(::AbstractBlockStyle, ::typeof($op), a::Zeros, b::AbstractArray) = FillArrays._broadcasted_zeros($op, a, b)
-    end
-end
-
-for op in (:*, :\)
-    @eval begin
-        broadcasted(::AbstractBlockStyle, ::typeof($op), a::AbstractArray, b::Zeros) = FillArrays._broadcasted_zeros($op, a, b)
-    end
-end
+# which operations a `Zeros` absorbs is FillArrays' business; whatever it can't simplify comes
+# back carrying our style
+broadcasted(S::AbstractBlockStyle, op, a::AbstractZeros, b::AbstractArray) = FillArrays.simplify_broadcasted(S, op, a, b)
+broadcasted(S::AbstractBlockStyle, op, a::AbstractArray, b::AbstractZeros) = FillArrays.simplify_broadcasted(S, op, a, b)
+broadcasted(S::AbstractBlockStyle, op, a::AbstractZeros, b::AbstractZeros) = FillArrays.simplify_broadcasted(S, op, a, b)
 
 
 
