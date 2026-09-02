@@ -357,6 +357,14 @@ using StaticArrays
         @test C[Block(1)] == 2B[Block(1)]
     end
 
+    @testset "broadcast bug" begin
+        X = randn(5,5)
+        Y = similar(X)
+        B = BlockedArray(randn(5,5), [2,3], [2,3])
+        Y .= X .- B ./ 2
+        @test Y == X - B/2
+    end
+  
     @testset "utilities" begin
         for v in ([2,3,1], 2:4)
             w = BlockArrays.maybeinplacesort!(v)
