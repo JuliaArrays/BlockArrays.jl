@@ -6,15 +6,14 @@ are typically `BlockedOneTo`s, but may also be standard and non-blocked `Abstrac
 the block axis interface.
 
 
-| Methods to implement    | Brief description |
-| :---------------------- | :---------------- |
-| `blockaxes(A)`      | A one-tuple returning a range of blocks specifying the block structure |
-| `getindex(A, K::Block{1})`      | return a unit range of indices in the specified block |
-| `blocklasts(A)`      | Returns the last index of each block |
-| `findblock(A, k)`      | return the block that contains the `k`th entry of `A` 
+| Methods to implement       | Brief description                                                      |
+| :------------------------- | :--------------------------------------------------------------------- |
+| `blockaxes(A)`             | A one-tuple returning a range of blocks specifying the block structure |
+| `getindex(A, K::Block{1})` | Returns a unit range of indices in the specified block                 |
+| `blocklasts(A)`            | Returns the last index of each block                                   |
+| `findblock(A, k)`          | Returns the block that contains the `k`th entry of `A`                 |
 
-
-# The `AbstractBlockArray` interface
+# [The `AbstractBlockArray` interface](@id abstract_block_array_interface)
 
 An arrays block structure is inferred from an axes, and therefore every array
 is in some sense already a block array:
@@ -37,10 +36,9 @@ julia> A[Block(1,1)]
 ```
 It is possible to override additional functions to improve speed, however.
 
-| Methods to implement    | Brief description |
-| :---------------------- | :---------------- |
-| **Optional methods**    |           
-| `BlockArrays.viewblock(A, i::Block)`     | Specialised non-allocating `X[Block(i...)]`, blocked indexing  |
+| Optional methods                     | Default definition                                 | Brief description                                             |
+| :----------------------------------- | :------------------------------------------------- | :------------------------------------------------------------ |
+| `BlockArrays.viewblock(A, i::Block)` | defined in terms `Base.view` and the block indices | Specialised non-allocating `X[Block(i...)]`, blocked indexing |
 
 For a more thorough description of the methods see the public interface documentation.
 
