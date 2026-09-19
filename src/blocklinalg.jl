@@ -134,7 +134,7 @@ sub_materialize_axes(V, axs::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitR
         ret
     end
 sub_materialize_axes(V, axs::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}) =
-    let ret = isempty(V) || isempty(blockaxes(V, 2)) ?
+    let ret = isempty(V) || isempty(axes(V, 1)) || isempty(axes(V, 2)) || isempty(blockaxes(V, 2)) ?
             _sub_materialize_blocks(V, axs) :
             _sub_materialize_blocks(V, axs, _sub_materialize_storage(view(V, axes(V, 1)[begin:begin], first(blockaxes(V, 2)))))
         rowaxis = axes(V, 1)
@@ -144,7 +144,7 @@ sub_materialize_axes(V, axs::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}) 
         ret
     end
 sub_materialize_axes(V, axs::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}) =
-    let ret = isempty(V) || isempty(blockaxes(V, 1)) ?
+    let ret = isempty(V) || isempty(axes(V, 1)) || isempty(axes(V, 2)) || isempty(blockaxes(V, 1)) ?
             _sub_materialize_blocks(V, axs) :
             _sub_materialize_blocks(V, axs, _sub_materialize_storage(view(V, first(blockaxes(V, 1)), axes(V, 2)[begin:begin])))
         colaxis = axes(V, 2)

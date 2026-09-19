@@ -214,10 +214,10 @@ end
     J::UnitRange{<:Integer},
 )
     @boundscheck checkbounds(A, I, J)
-    isempty(J) && return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
+    isempty(J) && return view(view(A, I.block, first(blockaxes(A, 2))), :, 1:0)
     first_j = findblockindex(axes(A, 2), first(J))
     last_j = findblockindex(axes(A, 2), last(J))
-    block(first_j) == block(last_j) || return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
+    block(first_j) == block(last_j) || return invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
     local_J = blockindex(first_j) .+ (J .- first(J))
     view(view(A, I.block, block(first_j)), :, local_J)
 end
@@ -228,10 +228,10 @@ end
     J::BlockSlice{<:Block{1}},
 )
     @boundscheck checkbounds(A, I, J)
-    isempty(I) && return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
+    isempty(I) && return view(view(A, first(blockaxes(A, 1)), J.block), 1:0, :)
     first_i = findblockindex(axes(A, 1), first(I))
     last_i = findblockindex(axes(A, 1), last(I))
-    block(first_i) == block(last_i) || return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
+    block(first_i) == block(last_i) || return invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
     local_I = blockindex(first_i) .+ (I .- first(I))
     view(view(A, block(first_i), J.block), local_I, :)
 end

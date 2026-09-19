@@ -342,11 +342,21 @@ Base.getindex(A::NoScalarMatrix, I...) = getindex(A.data, I...)
         @test isempty(empty_v)
         @test blockisequal(axes(empty_v), (blockedrange(Int[]),))
 
+        empty_cols = @test_nowarn m[:, 1:0]
+        @test empty_cols isa BlockedArray
+        @test isempty(empty_cols)
+        @test blockisequal(axes(empty_cols), (blockedrange([4, 5, 3]), Base.OneTo(0)))
+
         d = NoScalarMatrix(reshape(collect(301:306), 2, 3))
         e = NoScalarMatrix(reshape(collect(401:406), 2, 3))
         f = NoScalarMatrix(reshape(collect(501:506), 2, 3))
         g = NoScalarMatrix(reshape(collect(601:606), 2, 3))
         M = mortar(reshape([d, f, e, g], 2, 2))
+
+        empty_rows = @test_nowarn M[1:0, :]
+        @test empty_rows isa BlockedArray
+        @test isempty(empty_rows)
+        @test blockisequal(axes(empty_rows), (Base.OneTo(0), blockedrange([3, 3])))
 
         r = @test_nowarn M[1, :]
         @test r isa BlockedArray
