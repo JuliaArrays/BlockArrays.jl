@@ -104,9 +104,12 @@ sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
 
 # if it's not a block layout, best to use BlockedArray to take advantage of strideness
 function _sub_materialize_blocks(V, axs, I...)
+    dims = map(length, axs)
+    rep = view(V, I...)
+    storage = rep isa SubArray ? parent(rep) : rep
     blocks = isempty(V) ?
-        Array{eltype(V)}(undef, map(length, axs)) :
-        similar(view(V, I...), eltype(V), map(length, axs))
+        Array{eltype(V)}(undef, dims) :
+        similar(storage, eltype(V), dims)
     BlockedArray(blocks, axs)
 end
 

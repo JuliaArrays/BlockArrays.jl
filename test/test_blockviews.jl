@@ -5,7 +5,7 @@ using FillArrays
 import BlockArrays: BlockedLogicalIndex, NoncontiguousBlockSlice
 import Base: LogicalIndex
 
-# useds to force SubArray return
+# used to force SubArray return
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
 struct NoScalarMatrix{T} <: AbstractMatrix{T}
