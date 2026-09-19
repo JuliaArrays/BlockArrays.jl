@@ -211,6 +211,7 @@ end
     I::BlockSlice{<:Block{1}},
     J::UnitRange{<:Integer},
 )
+    isempty(J) && return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
     first_j = findblockindex(axes(A, 2), first(J))
     last_j = findblockindex(axes(A, 2), last(J))
     block(first_j) == block(last_j) || return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
@@ -222,6 +223,7 @@ end
     I::UnitRange{<:Integer},
     J::BlockSlice{<:Block{1}},
 )
+    isempty(I) && return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
     first_i = findblockindex(axes(A, 1), first(I))
     last_i = findblockindex(axes(A, 1), last(I))
     block(first_i) == block(last_i) || return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
