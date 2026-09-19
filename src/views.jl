@@ -193,6 +193,7 @@ end
     I::BlockSlice{<:Block{1}},
     j::Integer,
 )
+    @boundscheck checkbounds(A, I, j)
     bj = findblockindex(axes(A, 2), j)
     view(view(A, I.block, block(bj)), :, blockindex(bj))
 end
@@ -202,6 +203,7 @@ end
     i::Integer,
     J::BlockSlice{<:Block{1}},
 )
+    @boundscheck checkbounds(A, i, J)
     bi = findblockindex(axes(A, 1), i)
     view(view(A, block(bi), J.block), blockindex(bi), :)
 end
@@ -211,6 +213,7 @@ end
     I::BlockSlice{<:Block{1}},
     J::UnitRange{<:Integer},
 )
+    @boundscheck checkbounds(A, I, J)
     isempty(J) && return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
     first_j = findblockindex(axes(A, 2), first(J))
     last_j = findblockindex(axes(A, 2), last(J))
@@ -223,6 +226,7 @@ end
     I::UnitRange{<:Integer},
     J::BlockSlice{<:Block{1}},
 )
+    @boundscheck checkbounds(A, I, J)
     isempty(I) && return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
     first_i = findblockindex(axes(A, 1), first(I))
     last_i = findblockindex(axes(A, 1), last(I))
