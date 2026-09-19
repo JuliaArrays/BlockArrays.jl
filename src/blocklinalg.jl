@@ -103,7 +103,8 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:AbstractBlockedUnitRan
 sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
 
 # if it's not a block layout, best to use BlockedArray to take advantage of strideness
-_sub_materialize_storage(exemplar) = exemplar isa SubArray ? parent(exemplar) : exemplar
+_sub_materialize_storage(exemplar) = exemplar
+_sub_materialize_storage(exemplar::SubArray) = _sub_materialize_storage(parent(exemplar))
 
 function _sub_materialize_blocks(V, axs, storage)
     dims = map(length, axs)
