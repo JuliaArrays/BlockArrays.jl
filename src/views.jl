@@ -218,7 +218,8 @@ end
     first_j = findblockindex(axes(A, 2), first(J))
     last_j = findblockindex(axes(A, 2), last(J))
     block(first_j) == block(last_j) || return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
-    view(view(A, I.block, block(first_j)), :, blockindex(first_j):blockindex(last_j))
+    local_J = blockindex(first_j) .+ (J .- first(J))
+    view(view(A, I.block, block(first_j)), :, local_J)
 end
 
 @propagate_inbounds function Base.unsafe_view(
@@ -231,7 +232,8 @@ end
     first_i = findblockindex(axes(A, 1), first(I))
     last_i = findblockindex(axes(A, 1), last(I))
     block(first_i) == block(last_i) || return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
-    view(view(A, block(first_i), J.block), blockindex(first_i):blockindex(last_i), :)
+    local_I = blockindex(first_i) .+ (I .- first(I))
+    view(view(A, block(first_i), J.block), local_I, :)
 end
 
 # make sure we reindex correctly
