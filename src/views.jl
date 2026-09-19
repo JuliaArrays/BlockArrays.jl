@@ -188,6 +188,24 @@ end
     return view(A, map(x -> x.indices, I)...)
 end
 
+@propagate_inbounds function Base.unsafe_view(
+    A::AbstractBlockMatrix,
+    I::BlockSlice{<:Block{1}},
+    j::Integer,
+)
+    bj = findblockindex(axes(A, 2), j)
+    view(view(A, I.block, block(bj)), :, blockindex(bj))
+end
+
+@propagate_inbounds function Base.unsafe_view(
+    A::AbstractBlockMatrix,
+    i::Integer,
+    J::BlockSlice{<:Block{1}},
+)
+    bi = findblockindex(axes(A, 1), i)
+    view(view(A, block(bi), J.block), blockindex(bi), :)
+end
+
 # make sure we reindex correctly
 @inline function Base._maybe_reindex(V, I::Tuple{BlockSlice{<:BlockIndices{1}}, Vararg{Any}}, ::Tuple{})
     @inbounds idxs = to_indices(V.parent, reindex(V.indices, I))
@@ -239,6 +257,10 @@ _block_reindex(b::Slice, i::Block{1}) = i
     view(parent(V), _block_reindex.(parentindices(V), block)...)
 @inline view(V::SubArray{<:Any,1,<:AbstractBlockArray,<:Tuple{BlockSlices}}, block::Block{1}) =
     view(parent(V), _block_reindex(parentindices(V)[1], block))
+@inline view(V::SubArray{<:Any,1,<:AbstractBlockMatrix,<:Tuple{BlockSlices,Integer}}, block::Block{1}) =
+    view(parent(V), _block_reindex(parentindices(V)[1], block), parentindices(V)[2])
+@inline view(V::SubArray{<:Any,1,<:AbstractBlockMatrix,<:Tuple{Integer,BlockSlices}}, block::Block{1}) =
+    view(parent(V), parentindices(V)[1], _block_reindex(parentindices(V)[2], block))
 
 
 

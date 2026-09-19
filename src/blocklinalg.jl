@@ -103,10 +103,41 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:AbstractBlockedUnitRan
 sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
 
 # if it's not a block layout, best to use BlockedArray to take advantage of strideness
-sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange}) = BlockedArray(V)
-sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange}) = BlockedArray(V)
-sub_materialize_axes(V, ::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}) = BlockedArray(V)
-sub_materialize_axes(V, ::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}) = BlockedArray(V)
+function _sub_materialize_blocks(V, axs, I...)
+    blocks = isempty(V) ?
+        Array{eltype(V)}(undef, map(length, axs)) :
+        similar(view(V, I...), eltype(V), map(length, axs))
+    BlockedArray(blocks, axs)
+end
+
+sub_materialize_axes(V, axs::Tuple{AbstractBlockedUnitRange}) =
+    let ret = _sub_materialize_blocks(V, axs, first(blockaxes(V, 1)))
+        @inbounds for K in blockaxes(V, 1)
+            copyto!(view(ret, K), view(V, K))
+        end
+        ret
+    end
+sub_materialize_axes(V, axs::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange}) =
+    let ret = _sub_materialize_blocks(V, axs, first(blockaxes(V, 1)), first(blockaxes(V, 2)))
+        @inbounds for J in blockaxes(V, 2), K in blockaxes(V, 1)
+            copyto!(view(ret, K, J), view(V, K, J))
+        end
+        ret
+    end
+sub_materialize_axes(V, axs::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}) =
+    let ret = _sub_materialize_blocks(V, axs, axes(V, 1), first(blockaxes(V, 2)))
+        @inbounds for J in blockaxes(V, 2)
+            copyto!(view(ret, axs[1], J), view(V, axs[1], J))
+        end
+        ret
+    end
+sub_materialize_axes(V, axs::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}) =
+    let ret = _sub_materialize_blocks(V, axs, first(blockaxes(V, 1)), axes(V, 2))
+        @inbounds for K in blockaxes(V, 1)
+            copyto!(view(ret, K, axs[2]), view(V, K, axs[2]))
+        end
+        ret
+    end
 
 # Special for FillArrays.jl
 

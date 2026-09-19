@@ -8,6 +8,16 @@ import Base: LogicalIndex
 # useds to force SubArray return
 bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
 
+struct NoScalarMatrix{T} <: AbstractMatrix{T}
+    data::Matrix{T}
+end
+
+Base.size(A::NoScalarMatrix) = size(A.data)
+Base.axes(A::NoScalarMatrix) = axes(A.data)
+Base.view(A::NoScalarMatrix, I...) = view(A.data, I...)
+Base.getindex(A::NoScalarMatrix, i::Int, j::Int) = error("scalar indexing disallowed")
+Base.getindex(A::NoScalarMatrix, I...) = getindex(A.data, I...)
+
 @testset "Block Views" begin
     @testset "block slice" begin
         A = BlockedArray(1:6,1:3)
@@ -313,6 +323,19 @@ bview(a, b) = Base.invoke(view, Tuple{AbstractArray,Any}, a, b)
         @test B[Block.(1:2),Block.(1:2),Block.(1:2)] isa BlockedArray
         @test A[1:3,Block.(1:2),1:3] isa BlockArray
         @test B[1:3,Block.(1:2),1:3] isa BlockedArray
+    end
+
+    @testset "non-scalar block slice materialization" begin
+        a = NoScalarMatrix(reshape(collect(1:24), 4, 6))
+        b = NoScalarMatrix(reshape(collect(101:130), 5, 6))
+        c = NoScalarMatrix(reshape(collect(201:218), 3, 6))
+        m = mortar((a,), (b,), (c,))
+
+        v = @test_nowarn m[:, 1]
+
+        @test v isa BlockedArray
+        @test blockisequal(axes(v), (blockedrange([4, 5, 3]),))
+        @test v == vcat(a.data[:, 1], b.data[:, 1], c.data[:, 1])
     end
 
     @testset "BlockArray BlockRange view" begin
