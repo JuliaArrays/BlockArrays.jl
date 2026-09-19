@@ -103,35 +103,37 @@ sublayout(BL::BlockLayout{MLAY,BLAY}, ::Type{<:NTuple{N,<:AbstractBlockedUnitRan
 sub_materialize(::AbstractBlockLayout, V, _) = BlockArray(V)
 
 # if it's not a block layout, best to use BlockedArray to take advantage of strideness
-function _sub_materialize_blocks(V, axs)
+_sub_materialize_storage(exemplar) = exemplar isa SubArray ? parent(exemplar) : exemplar
+
+function _sub_materialize_blocks(V, axs, storage)
     dims = map(length, axs)
-    blocks = Array{eltype(V)}(undef, dims)
+    blocks = isempty(V) ? Array{eltype(V)}(undef, dims) : similar(storage, eltype(V), dims)
     BlockedArray(blocks, axs)
 end
 
 sub_materialize_axes(V, axs::Tuple{AbstractBlockedUnitRange}) =
-    let ret = _sub_materialize_blocks(V, axs)
+    let ret = _sub_materialize_blocks(V, axs, _sub_materialize_storage(view(V, first(blockaxes(V, 1)))))
         @inbounds for K in blockaxes(V, 1)
             copyto!(view(ret, K), view(V, K))
         end
         ret
     end
 sub_materialize_axes(V, axs::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitRange}) =
-    let ret = _sub_materialize_blocks(V, axs)
+    let ret = _sub_materialize_blocks(V, axs, _sub_materialize_storage(view(V, first(blockaxes(V, 1)), first(blockaxes(V, 2)))))
         @inbounds for J in blockaxes(V, 2), K in blockaxes(V, 1)
             copyto!(view(ret, K, J), view(V, K, J))
         end
         ret
     end
 sub_materialize_axes(V, axs::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}) =
-    let ret = _sub_materialize_blocks(V, axs)
+    let ret = _sub_materialize_blocks(V, axs, _sub_materialize_storage(view(V, axs[1], first(blockaxes(V, 2)))))
         @inbounds for J in blockaxes(V, 2)
             copyto!(view(ret, axs[1], J), view(V, axs[1], J))
         end
         ret
     end
 sub_materialize_axes(V, axs::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}) =
-    let ret = _sub_materialize_blocks(V, axs)
+    let ret = _sub_materialize_blocks(V, axs, _sub_materialize_storage(view(V, first(blockaxes(V, 1)), axs[2])))
         @inbounds for K in blockaxes(V, 1)
             copyto!(view(ret, K, axs[2]), view(V, K, axs[2]))
         end
