@@ -337,6 +337,11 @@ Base.getindex(A::NoScalarMatrix, I...) = getindex(A.data, I...)
         @test blockisequal(axes(v), (blockedrange([4, 5, 3]),))
         @test v == vcat(a.data[:, 1], b.data[:, 1], c.data[:, 1])
 
+        empty_v = @test_nowarn m[Block.(1:0), 1]
+        @test empty_v isa BlockArray
+        @test isempty(empty_v)
+        @test blockisequal(axes(empty_v), (blockedrange(Int[]),))
+
         d = NoScalarMatrix(reshape(collect(301:306), 2, 3))
         e = NoScalarMatrix(reshape(collect(401:406), 2, 3))
         f = NoScalarMatrix(reshape(collect(501:506), 2, 3))
