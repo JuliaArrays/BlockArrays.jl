@@ -135,7 +135,7 @@ sub_materialize_axes(V, axs::Tuple{AbstractBlockedUnitRange,AbstractBlockedUnitR
 sub_materialize_axes(V, axs::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}) =
     let ret = isempty(V) || isempty(blockaxes(V, 2)) ?
             _sub_materialize_blocks(V, axs) :
-            _sub_materialize_blocks(V, axs, _sub_materialize_storage(view(V, first(axs[1]):first(axs[1]), first(blockaxes(V, 2)))))
+            _sub_materialize_blocks(V, axs, _sub_materialize_storage(view(V, first(axes(V, 1)):first(axes(V, 1)), first(blockaxes(V, 2)))))
         @inbounds for J in blockaxes(V, 2)
             copyto!(view(ret, axs[1], J), view(V, axs[1], J))
         end
@@ -144,7 +144,7 @@ sub_materialize_axes(V, axs::Tuple{AbstractUnitRange,AbstractBlockedUnitRange}) 
 sub_materialize_axes(V, axs::Tuple{AbstractBlockedUnitRange,AbstractUnitRange}) =
     let ret = isempty(V) || isempty(blockaxes(V, 1)) ?
             _sub_materialize_blocks(V, axs) :
-            _sub_materialize_blocks(V, axs, _sub_materialize_storage(view(V, first(blockaxes(V, 1)), first(axs[2]):first(axs[2]))))
+            _sub_materialize_blocks(V, axs, _sub_materialize_storage(view(V, first(blockaxes(V, 1)), first(axes(V, 2)):first(axes(V, 2)))))
         @inbounds for K in blockaxes(V, 1)
             copyto!(view(ret, K, axs[2]), view(V, K, axs[2]))
         end
