@@ -107,7 +107,9 @@ _sub_materialize_storage(exemplar) = exemplar isa SubArray ? parent(exemplar) : 
 
 function _sub_materialize_blocks(V, axs, storage)
     dims = map(length, axs)
-    blocks = isempty(V) ? Array{eltype(V)}(undef, dims) : similar(storage, eltype(V), dims)
+    blocks = isempty(V) || storage === nothing ?
+        Array{eltype(V)}(undef, dims) :
+        similar(storage, eltype(V), dims)
     BlockedArray(blocks, axs)
 end
 _sub_materialize_blocks(V, axs) = _sub_materialize_blocks(V, axs, nothing)
