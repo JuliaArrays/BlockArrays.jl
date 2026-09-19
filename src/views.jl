@@ -206,6 +206,28 @@ end
     view(view(A, block(bi), J.block), blockindex(bi), :)
 end
 
+@propagate_inbounds function Base.unsafe_view(
+    A::AbstractBlockMatrix,
+    I::BlockSlice{<:Block{1}},
+    J::UnitRange{<:Integer},
+)
+    first_j = findblockindex(axes(A, 2), first(J))
+    last_j = findblockindex(axes(A, 2), last(J))
+    block(first_j) == block(last_j) || return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
+    view(view(A, I.block, block(first_j)), :, blockindex(first_j):blockindex(last_j))
+end
+
+@propagate_inbounds function Base.unsafe_view(
+    A::AbstractBlockMatrix,
+    I::UnitRange{<:Integer},
+    J::BlockSlice{<:Block{1}},
+)
+    first_i = findblockindex(axes(A, 1), first(I))
+    last_i = findblockindex(axes(A, 1), last(I))
+    block(first_i) == block(last_i) || return Base.invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
+    view(view(A, block(first_i), J.block), blockindex(first_i):blockindex(last_i), :)
+end
+
 # make sure we reindex correctly
 @inline function Base._maybe_reindex(V, I::Tuple{BlockSlice{<:BlockIndices{1}}, Vararg{Any}}, ::Tuple{})
     @inbounds idxs = to_indices(V.parent, reindex(V.indices, I))
@@ -257,10 +279,14 @@ _block_reindex(b::Slice, i::Block{1}) = i
     view(parent(V), _block_reindex.(parentindices(V), block)...)
 @inline view(V::SubArray{<:Any,1,<:AbstractBlockArray,<:Tuple{BlockSlices}}, block::Block{1}) =
     view(parent(V), _block_reindex(parentindices(V)[1], block))
-@inline view(V::SubArray{<:Any,1,<:AbstractBlockMatrix,<:Tuple{BlockSlices,Integer}}, block::Block{1}) =
+@inline view(V::SubArray{<:Any,1,<:AbstractBlockMatrix,<:Tuple{Base.Slice{<:AbstractBlockedUnitRange},Integer}}, block::Block{1}) =
     view(parent(V), _block_reindex(parentindices(V)[1], block), parentindices(V)[2])
-@inline view(V::SubArray{<:Any,1,<:AbstractBlockMatrix,<:Tuple{Integer,BlockSlices}}, block::Block{1}) =
+@inline view(V::SubArray{<:Any,1,<:AbstractBlockMatrix,<:Tuple{Integer,Base.Slice{<:AbstractBlockedUnitRange}}}, block::Block{1}) =
     view(parent(V), parentindices(V)[1], _block_reindex(parentindices(V)[2], block))
+@inline view(V::SubArray{<:Any,2,<:AbstractBlockMatrix,<:Tuple{Base.Slice{<:AbstractBlockedUnitRange},AbstractUnitRange}}, block::Block{1}, jr::AbstractUnitRange) =
+    view(parent(V), _block_reindex(parentindices(V)[1], block), parentindices(V)[2][jr])
+@inline view(V::SubArray{<:Any,2,<:AbstractBlockMatrix,<:Tuple{AbstractUnitRange,Base.Slice{<:AbstractBlockedUnitRange}}}, ir::AbstractUnitRange, block::Block{1}) =
+    view(parent(V), parentindices(V)[1][ir], _block_reindex(parentindices(V)[2], block))
 
 
 

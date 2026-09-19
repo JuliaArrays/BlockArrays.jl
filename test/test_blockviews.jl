@@ -336,6 +336,27 @@ Base.getindex(A::NoScalarMatrix, I...) = getindex(A.data, I...)
         @test v isa BlockedArray
         @test blockisequal(axes(v), (blockedrange([4, 5, 3]),))
         @test v == vcat(a.data[:, 1], b.data[:, 1], c.data[:, 1])
+
+        d = NoScalarMatrix(reshape(collect(301:306), 2, 3))
+        e = NoScalarMatrix(reshape(collect(401:406), 2, 3))
+        f = NoScalarMatrix(reshape(collect(501:506), 2, 3))
+        g = NoScalarMatrix(reshape(collect(601:606), 2, 3))
+        M = mortar(reshape([d, f, e, g], 2, 2))
+
+        r = @test_nowarn M[1, :]
+        @test r isa BlockedArray
+        @test blockisequal(axes(r), (blockedrange([3, 3]),))
+        @test r == vcat(d.data[1, :], e.data[1, :])
+
+        C = @test_nowarn m[:, 1:2]
+        @test C isa BlockedArray
+        @test blockisequal(axes(C), (blockedrange([4, 5, 3]), Base.OneTo(2)))
+        @test C == vcat(a.data[:, 1:2], b.data[:, 1:2], c.data[:, 1:2])
+
+        R = @test_nowarn M[1:2, :]
+        @test R isa BlockedArray
+        @test blockisequal(axes(R), (Base.OneTo(2), blockedrange([3, 3])))
+        @test R == [d.data[1:2, :] e.data[1:2, :]]
     end
 
     @testset "BlockArray BlockRange view" begin
