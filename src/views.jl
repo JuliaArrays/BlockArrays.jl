@@ -214,7 +214,7 @@ end
     J::UnitRange{<:Integer},
 )
     @boundscheck checkbounds(A, I, J)
-    isempty(J) && return view(view(A, I.block, first(blockaxes(A, 2))), :, 1:0)
+    isempty(J) && return view(Array{eltype(A)}(undef, length(I.indices), 0), :, :)
     first_j = findblockindex(axes(A, 2), first(J))
     last_j = findblockindex(axes(A, 2), last(J))
     block(first_j) == block(last_j) || return invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
@@ -228,7 +228,7 @@ end
     J::BlockSlice{<:Block{1}},
 )
     @boundscheck checkbounds(A, I, J)
-    isempty(I) && return view(view(A, first(blockaxes(A, 1)), J.block), 1:0, :)
+    isempty(I) && return view(Array{eltype(A)}(undef, 0, length(J.indices)), :, :)
     first_i = findblockindex(axes(A, 1), first(I))
     last_i = findblockindex(axes(A, 1), last(I))
     block(first_i) == block(last_i) || return invoke(Base.unsafe_view, Tuple{AbstractArray, Any, Any}, A, I, J)
