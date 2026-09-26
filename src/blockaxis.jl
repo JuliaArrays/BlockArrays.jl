@@ -299,8 +299,15 @@ julia> blockisequal(B1, B2)
 false
 ```
 """
-blockisequal(a::AbstractUnitRange{<:Integer}, b::AbstractUnitRange{<:Integer}) = first(a) == first(b) && blocklasts(a) == blocklasts(b)
+blockisequal(a::AbstractUnitRange{<:Integer}, b::AbstractUnitRange{<:Integer}) = first(a) == first(b) && _blocklasts_isequal(blocklasts(a), blocklasts(b))
 blockisequal(a, b, c, d...) = blockisequal(a,b) && blockisequal(b,c,d...)
+
+# blocklasts may be a Tuple or an AbstractVector, and a Tuple is never == to an AbstractVector
+_blocklasts_isequal(a, b) = a == b
+_blocklasts_isequal(a::Tuple, b::Tuple) = a == b
+_blocklasts_isequal(a::Tuple, b) = _blocklasts_isequal(b, a)
+_blocklasts_isequal(a, b::Tuple) = length(a) == length(b) && a == collect(b)
+
 """
     blockisequal(a::Tuple, b::Tuple)
 

@@ -1011,6 +1011,14 @@ end
     @test !blockisequal(axB, axv)
     @test !blockisequal(axv, axB)
 
+    # tuple-based and vector-based blocklasts
+    @test blockisequal(BlockedOneTo((1,4)), axB[1]) && blockisequal(axB[1], BlockedOneTo((1,4)))
+    @test blockisequal(BlockedOneTo((1,4)), blockedrange((1,3)), BlockedOneTo(SVector(1,4)))
+    @test !blockisequal(BlockedOneTo((1,4)), axB2[2]) && !blockisequal(axB2[2], BlockedOneTo((1,4)))
+    @test !blockisequal(BlockedOneTo((1,4)), BlockedOneTo([1,4,5]))
+    @test !blockisequal(BlockedOneTo((1,4,5)), BlockedOneTo([1,4]))
+    @test blockequals(BlockedOneTo((1,4)), axB[1])
+
     @test blockisequal(A, A)
     @test blockisequal(B, B)
     @test !blockisequal(B, A)
