@@ -306,7 +306,7 @@ blockisequal(a, b, c, d...) = blockisequal(a,b) && blockisequal(b,c,d...)
 _blocklasts_isequal(a, b) = a == b
 _blocklasts_isequal(a::Tuple, b::Tuple) = a == b
 _blocklasts_isequal(a::Tuple, b) = _blocklasts_isequal(b, a)
-_blocklasts_isequal(a, b::Tuple) = length(a) == length(b) && a == collect(b)
+_blocklasts_isequal(a, b::Tuple) = length(a) == length(b) && all(Iterators.map(==, a, b))
 
 """
     blockisequal(a::Tuple, b::Tuple)
