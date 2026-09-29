@@ -558,6 +558,9 @@ end
         @test @inferred(blockfirsts(b)) == [1,2,4]
         @test @inferred(blocklasts(b)) == [1,3,6]
         @test @inferred(blocklengths(b)) == [1,2,3]
+        @test cumsum(blocklengths(b)) == accumulate(+, blocklengths(b)) == [1,3,6]
+        @test blocklengths(BlockedVector(1:6, [1,2,3])) == [1,2,3]
+        @test Base.unsafe_indices(Base.Slice(b)) == (b,)
 
         o = blockedrange(Ones{Int}(10))
         @test @inferred(blocklasts(o)) == @inferred(blockfirsts(o)) == Base.OneTo(10)
