@@ -56,19 +56,20 @@ last(r::FirstStepRangeLen) = unsafe_getindex(r, length(r))
 
 StepRangeLen(r::FirstStepRangeLen{T}) where T = StepRangeLen{T}(r)
 StepRangeLen{T}(r::FirstStepRangeLen{R}) where {T,R} = StepRangeLen{T,R}(r)
+StepRangeLen{Float64}(r::FirstStepRangeLen) = StepRangeLen{Float64}(StepRangeLen(r)) # ambiguity
 StepRangeLen{T,R}(r::FirstStepRangeLen{S}) where {T,R,S} = StepRangeLen{T,R,S}(r)
 StepRangeLen{T,R,S}(r::FirstStepRangeLen{<:Any,L}) where {T,R,S,L} = StepRangeLen{T,R,S,L}(r)
 StepRangeLen{T,R,S,L}(r::FirstStepRangeLen) where {T,R,S,L} = StepRangeLen{T,R,S,L}(first(r), step(r), length(r))
 steprangelen(r::FirstStepRangeLen) = steprangelen(first(r), step(r), length(r))
 
-FirstStepRangeLen(r::StepRangeLen{T}) where T = FirstStepRange{T}(r)
-FirstStepRangeLen{T}(r::StepRangeLen{<:Any,<:Any,L}) where {T,L} = FirstStepRange{T,L}(r)
+FirstStepRangeLen(r::StepRangeLen{T}) where T = FirstStepRangeLen{T}(r)
+FirstStepRangeLen{T}(r::StepRangeLen{<:Any,<:Any,<:Any,L}) where {T,L} = FirstStepRangeLen{T,L}(r)
 function FirstStepRangeLen{T,L}(r::StepRangeLen) where {T,L}
     if length(r) ≤ 1 # always a FirstStepRangeLen
-        FirstStepRangeLen{T,L}(first(r), length(r))
+        FirstStepRangeLen{T,L}(convert(T, first(r)), length(r))
     else
         first(r) == step(r) || throw(ArgumentError("First in $r is not equal to step"))
-        FirstStepRangeLen{T,L}(step(r), length(r))
+        FirstStepRangeLen{T,L}(convert(T, step(r)), length(r))
     end
 end
 
@@ -105,14 +106,16 @@ FirstStepRangeLen{S,L}(r::FirstStepRangeLen) where {S,L} =
 FirstStepRangeLen{T}(r::FirstStepRangeLen) where {T} =
     FirstStepRangeLen(convert(T, r.step), r.len)
 
-promote_rule(a::Type{FirstStepRangeLen{S,L}}, ::Type{OR}) where {S,L,OR<:AbstractRange} =
-    promote_rule(a, FirstStepRangeLen{eltype(OR), eltype(OR), Int})
+# other ranges promote via StepRangeLen
+promote_rule(::Type{FirstStepRangeLen{S,L}}, ::Type{OR}) where {S,L,OR<:AbstractRange} =
+    promote_rule(StepRangeLen{S,S,S,L}, OR)
 
-promote_rule(::Type{LinRange{A,L}}, b::Type{FirstStepRangeLen{S2,L2}}) where {A,L,S2,L2} =
-    promote_rule(FirstStepRangeLen{A,L}, b)
+promote_rule(a::Type{LinRange{A,L}}, ::Type{FirstStepRangeLen{S2,L2}}) where {A,L,S2,L2} =
+    promote_rule(a, StepRangeLen{S2,S2,S2,L2})
 
 
-_reverse(r::FirstStepRangeLen, ::Colon) = typeof(r)(negate(r.step), length(r), offset)
+# the reverse does not start at its step so is not a FirstStepRangeLen
+_reverse(r::FirstStepRangeLen, ::Colon) = reverse(StepRangeLen(r))
 
 function +(r1::FirstStepRangeLen{S}, r2::FirstStepRangeLen{S}) where {S}
     len = length(r1)
@@ -131,7 +134,7 @@ const FirstStepRanges = Union{FirstStepRangeLen, OneTo}
 # from base/broadcast.jl
 ######
 
-broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::FirstStepRangeLen) = FirstStepRangeLen(negate(r.step), length(r))
+broadcasted(::DefaultArrayStyle{1}, ::typeof(-), r::FirstStepRangeLen) = -r
 for op in (:+, :-)
     @eval begin
         broadcasted(::DefaultArrayStyle{1}, ::typeof($op), r::FirstStepRangeLen{T}, x::Number) where T = broadcasted(DefaultArrayStyle{1}(), $op, StepRangeLen(r), x)
