@@ -217,6 +217,7 @@ _removeblocks(a::BlockSlice) = a.indices
 _removeblocks(a::Adjoint) = _removeblocks(parent(a))'
 _removeblocks(a::Transpose) = transpose(_removeblocks(parent(a)))
 _removeblocks(a::SubArray{<:Any,N,<:BlockedArray}) where N = view(_removeblocks(parent(a)), map(_removeblocks, parentindices(a))...)
+_removeblocks(a::ReshapedArray{<:Any,N,<:BlockedArray}) where N = reshape(_removeblocks(parent(a)), size(a))
 _removeblocks(a) = a
 
 function copyto!(dest::BlockedArray{<:Any,N},

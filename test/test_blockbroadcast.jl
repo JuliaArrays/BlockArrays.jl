@@ -228,6 +228,15 @@ using StaticArrays
         @test -V == -A[Block.(2:3)]
     end
 
+    @testset "reshaped BlockedArray" begin
+        A = BlockedMatrix(randn(3,6), [3], 1:3)
+        v = vec(A)
+        @test exp.(v) ≈ exp.(vec(Matrix(A)))
+        @test v .+ 1 ≈ vec(Matrix(A)) .+ 1
+        w = reshape(BlockedVector(randn(6), 1:3), 2, 3)
+        @test exp.(w) ≈ exp.(reshape(Vector(parent(w)), 2, 3))
+    end
+
     @testset "Fill broadcast" begin
         a = BlockArray(randn(6), Ones{Int}(6))
         @test a .+ a == Vector(a) .+ a == Vector(a) .+ Vector(a)
