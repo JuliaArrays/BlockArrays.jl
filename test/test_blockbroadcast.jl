@@ -237,6 +237,14 @@ using StaticArrays
         @test exp.(w) ≈ exp.(reshape(Vector(parent(w)), 2, 3))
     end
 
+    @testset "styles and sortedunion" begin
+        @test BlockArrays.BlockedStyle(Val(2)) == BlockArrays.BlockedStyle{2}()
+        @test Base.IteratorEltype(typeof(blocks(BlockedVector(1:6, [1,2,3])))) == Base.EltypeUnknown()
+        @test BlockArrays.sortedunion(Base.OneTo(3), Base.OneTo(5)) ≡ Base.OneTo(5)
+        a = blocklasts(blockedrange(Base.OneTo(5)))
+        @test BlockArrays.sortedunion(a, a) ≡ a
+    end
+
     @testset "Fill broadcast" begin
         a = BlockArray(randn(6), Ones{Int}(6))
         @test a .+ a == Vector(a) .+ a == Vector(a) .+ Vector(a)
