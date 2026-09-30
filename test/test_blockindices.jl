@@ -713,6 +713,7 @@ end
         r = blockedrange([1,2,2])
         @test sprint(show, "text/plain", r) == "$(summary(r)):\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
         D = Diagonal(blockedrange(1:2))
+        @test axes(D) == (blockedrange(1:2), blockedrange(1:2))
         @test sprint(show, "text/plain", D) == "$(summary(D)):\n 1  │  ⋅  ⋅\n ───┼──────\n ⋅  │  2  ⋅\n ⋅  │  ⋅  3"
     end
 
