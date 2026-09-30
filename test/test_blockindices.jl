@@ -1,6 +1,6 @@
 module TestBlockIndices
 
-using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts
+using BlockArrays, FillArrays, Test, StaticArrays, ArrayLayouts, LinearAlgebra
 using OffsetArrays
 import BlockArrays: BlockIndex, BlockIndexRange, BlockSlice, NoncontiguousBlockSlice
 import BlockArrays: split_index, merge_indices
@@ -712,6 +712,9 @@ end
         @test_throws BoundsError findblock(b,6)
         r = blockedrange([1,2,2])
         @test sprint(show, "text/plain", r) == "$(summary(r)):\n 1\n ─\n 2\n 3\n ─\n 4\n 5"
+        D = Diagonal(blockedrange(1:2))
+        @test axes(D) == (blockedrange(1:2), blockedrange(1:2))
+        @test sprint(show, "text/plain", D) == "$(summary(D)):\n 1  │  ⋅  ⋅\n ───┼──────\n ⋅  │  2  ⋅\n ⋅  │  ⋅  3"
     end
 
     @testset "checkindex" begin
