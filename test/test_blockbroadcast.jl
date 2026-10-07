@@ -48,6 +48,23 @@ using StaticArrays
             @test (dest .= u) isa typeof(dest)
             @test reshape(dest, size(u)) == u
         end
+
+        @testset "broadcast with empty blocks" begin
+            x = mortar([1:3, 1:-1, 2:4])
+            y = ones(6)
+            z = y .+ x
+            @test z == [2, 3, 4, 3, 4, 5]
+            @test size(z) == (6,)
+            @test blocklengths(axes(z, 1)) == [3, 0, 3]
+        end
+        
+        @testset "empty blocks in combined block axes" begin
+            x = mortar([1:3, 1:-1, 2:4])
+            y = ones(6)
+            ax = BlockArrays.combine_blockaxes(axes(x, 1), axes(y, 1))
+            @test blocklengths(ax) == [3, 0, 3]
+        end
+
     end
 
     @testset "BlockedArray" begin

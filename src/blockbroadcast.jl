@@ -35,7 +35,35 @@ BroadcastStyle(::BlockedStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(Val(
 
 maybeinplacesort!(v::StridedVector) = sort!(v)
 maybeinplacesort!(v) = sort(v)
-sortedunion(a,b) = maybeinplacesort!(union(a,b))
+
+
+"""
+this is similar to the merge step of mergesort, but
+* keeping only one copy of indices that are both in `a` and `b`
+* keeping multiple copies of repeated indices in each of `a` and `b`, 
+  that encode for empty blocks.
+"""
+function sortedunion(a,b)
+    ia = ib = 1
+    result = Int[]
+    while ia <= length(a) && ib <= length(b)
+        if a[ia] < b[ib]
+            push!(result, a[ia])
+            ia += 1
+        elseif b[ib] < a[ia]
+            push!(result, b[ib])
+            ib += 1
+        else
+            push!(result, a[ia])
+            ia += 1
+            ib += 1
+        end
+    end
+    @views append!(result, a[ia:end])
+    @views append!(result, b[ib:end])
+    result
+end
+
 sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
