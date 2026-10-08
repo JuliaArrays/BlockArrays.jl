@@ -56,7 +56,20 @@ using StaticArrays
             @test z == [2, 3, 4, 3, 4, 5]
             @test size(z) == (6,)
             @test blocklengths(axes(z, 1)) == [3, 0, 3]
+
+            bss = ([1,0,2],[1,0,0,1,1],[1,0,1,0,1],[0,3],[3,0],[0,3,0,0],[2,0,1],[3]) 
+            for (bsa,bsb,bsc) in Iterators.product(bss, bss, bss)
+                A = BlockArray(zeros(3), bsa)
+                B = BlockArray(zeros(3), bsb)
+                C = BlockArray(zeros(3), bsc)
+                C .= A .+ B
+                D = A .+ B
+                E = collect(A) + collect(B)
+                @test E == D
+                @test E == C
+            end            
         end
+
         
         @testset "empty blocks in combined block axes" begin
             x = mortar([1:3, 1:-1, 2:4])
@@ -173,7 +186,7 @@ using StaticArrays
     end
 
     @testset "sorted block boundary union" begin
-        @test BlockArrays.sortedunion([1, 3, 3, 7], [2, 3, 8]) == [1, 2, 3, 7, 8]
+        @test BlockArrays.sortedunion([1, 3, 3, 7], [2, 3, 8]) == [1, 2, 3, 3, 7, 8]
         @test BlockArrays.sortedunion(Int[], Int[]) == Int[]
         @test BlockArrays.sortedunion(Int32[1, 3], Int64[2, 3]) == [1, 2, 3]
         @test eltype(BlockArrays.sortedunion(Int32[1], Int64[2])) == Int64

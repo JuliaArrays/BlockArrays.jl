@@ -743,31 +743,34 @@ Base.BroadcastStyle(::Type{<:AbstractBlockedUnitRange{<:Any,R}}) where R = _broa
 
 const OneToCumsum{T<:Integer} = RangeCumsum{T,Base.OneTo{T}}
 
-# Base has no public vector merge that exploits sorted inputs, so merge block
-# boundaries directly instead of hashing and then sorting them with `union`.
-function sortedunion(a::StridedVector{<:Integer}, b::StridedVector{<:Integer})
-    T = promote_type(eltype(a), eltype(b))
-    result = Vector{T}(undef, length(a) + length(b))
-    ia, ib = firstindex(a), firstindex(b)
-    lasta, lastb = lastindex(a), lastindex(b)
-    nresult = 0
-
-    @inbounds while ia <= lasta || ib <= lastb
-        value = if ib > lastb || (ia <= lasta && !isless(b[ib], a[ia]))
-            value = a[ia]
+"""
+Merge two sorted blocklasts. This is similar to the merge step of mergesort, but
+with the following caveats:
+* keeps only one copy of indices that are both in `a` and `b` 
+* keeps all copies of repeated indices in each of `a` and `b`
+  (retaining empty blocks)
+So each index is retained with a multiplicity that is the max between the one in
+`a` and in `b`. 
+"""
+function sortedunion(a,b)
+    ia = ib = 1
+    result = Int[]
+    while ia <= length(a) && ib <= length(b)
+        if a[ia] < b[ib]
+            push!(result, a[ia])
             ia += 1
-            value
-        else
-            value = b[ib]
+        elseif b[ib] < a[ia]
+            push!(result, b[ib])
             ib += 1
-            value
-        end
-        if iszero(nresult) || !isequal(result[nresult], value)
-            nresult += 1
-            result[nresult] = value
+        else
+            push!(result, a[ia])
+            ia += 1
+            ib += 1
         end
     end
-    return resize!(result, nresult)
+    @views append!(result, a[ia:end])
+    @views append!(result, b[ib:end])
+    result
 end
 
 sortedunion(a::OneToCumsum, ::OneToCumsum) = a
