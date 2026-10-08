@@ -752,9 +752,11 @@ with the following caveats:
 So each index is retained with a multiplicity that is the max between the one in
 `a` and in `b`. 
 """
-function sortedunion(a,b)
+function sortedunion(a, b)
+    T = promote_type(eltype(a), eltype(b))
+    result = T[]
+    sizehint!(result, length(a) + length(b))
     ia = ib = 1
-    result = Int[]
     while ia <= length(a) && ib <= length(b)
         if a[ia] < b[ib]
             push!(result, a[ia])
@@ -778,6 +780,10 @@ function sortedunion(a::RangeCumsum{<:Any,<:AbstractRange}, b::RangeCumsum{<:Any
     @assert a == b
     a
 end
+
+sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
+sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
+
 
 _blocklengths2blocklasts(blocks::AbstractRange) = RangeCumsum(blocks)
 function blockfirsts(a::AbstractBlockedUnitRange{<:Any,<:Base.OneTo{<:Integer}})

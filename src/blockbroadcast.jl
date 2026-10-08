@@ -38,8 +38,6 @@ maybeinplacesort!(v) = sort(v)
 
 
 
-sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
-sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
 combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
 combine_blockaxes(a::BlockedOneTo, b::Base.OneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
