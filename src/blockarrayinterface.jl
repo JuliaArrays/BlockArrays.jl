@@ -16,6 +16,7 @@ function axes(D::Diagonal{<:Any,<:Union{AbstractBlockVector,AbstractBlockedUnitR
     (a,a)
 end
 ArrayLayouts.diagonallayout(lay::AbstractBlockLayout) = DiagonalLayout{typeof(lay)}()
+ArrayLayouts.diagonaldata(A::BlockedMatrix) = ArrayLayouts.diagonaldata(A.array)
 
 blocksize(A::AbstractTriangular) = blocksize(parent(A))
 blocksize(A::AbstractTriangular, i::Int) = blocksize(parent(A), i)
