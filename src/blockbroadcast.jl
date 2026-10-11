@@ -40,6 +40,8 @@ sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
 sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
 combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
+combine_blockaxes(a::BlockedOneTo, b::Base.OneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
+combine_blockaxes(a::Base.OneTo, b::BlockedOneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
 
 function combine_blockaxes(a::BlockedUnitRange{T,Vector{T}},
                            b::BlockedUnitRange{T,Vector{T}}) where T
