@@ -147,6 +147,10 @@ end
     @test blockisequal(axes(D, 1), axes(parent(D), 1))
     @test D == Diagonal(Vector(parent(D)))
     @test MemoryLayout(D) isa ArrayLayouts.DiagonalLayout{<:BlockArrays.BlockLayout}
+
+    B = BlockedMatrix(Diagonal([1.0, 2, 3]), [1, 2], [1, 2])
+    @test MemoryLayout(B) isa ArrayLayouts.DiagonalLayout
+    @test ArrayLayouts.diagonaldata(B) == [1.0, 2, 3]
 end
 
 @testset "non-standard block axes" begin
