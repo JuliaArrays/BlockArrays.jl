@@ -175,10 +175,22 @@ julia> block_array_sparse = BlockArray(S, [1,3], [2,3])
   ⋅    ⋅   │  1.0   ⋅    ⋅ 
 ```
 
-To get back the underlying sparse array, use `sparse`:
+`sparse` converts to a `BlockedArray` with sparse storage, preserving the block structure:
 
 ```jldoctest repack
 julia> sparse(block_array_sparse)
+2×2-blocked 4×5 BlockedMatrix{Float64, SparseMatrixCSC{Float64, Int64}, Tuple{BlockedOneTo{Int64, Vector{Int64}}, BlockedOneTo{Int64, Vector{Int64}}}}:
+  ⋅   1.0  │   ⋅    ⋅    ⋅ 
+ ──────────┼───────────────
+  ⋅    ⋅   │   ⋅    ⋅    ⋅ 
+  ⋅    ⋅   │   ⋅    ⋅    ⋅ 
+  ⋅    ⋅   │  1.0   ⋅    ⋅ 
+```
+
+To get back a plain sparse array, use `SparseMatrixCSC`:
+
+```jldoctest repack
+julia> SparseMatrixCSC(block_array_sparse)
 4×5 SparseMatrixCSC{Float64, Int64} with 2 stored entries:
   ⋅   1.0   ⋅    ⋅    ⋅ 
   ⋅    ⋅    ⋅    ⋅    ⋅ 
