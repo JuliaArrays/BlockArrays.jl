@@ -214,6 +214,10 @@ using StaticArrays
 
         lazy = blockedrange(Fill(4, 32))
         @test blockisequal(@inferred(BlockArrays.combine_blockaxes(lazy, lazy)), lazy)
+
+        A = fill(1,5)
+        B = mortar([fill(1,2),fill(1,3)])
+        @test typeof(A+B) == typeof(B+A) == typeof(B) # issue #406
     end
 
     @testset "Views" begin
