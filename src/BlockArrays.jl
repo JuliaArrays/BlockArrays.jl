@@ -43,7 +43,7 @@ import ArrayLayouts: MatLdivVec, MatLmulVec, MatMulMatAdd, MatMulVecAdd, MemoryL
                      conjlayout, rowsupport, sub_materialize, sub_materialize_axes, sublayout, transposelayout,
                      triangulardata, triangularlayout, zero!, materialize!
 
-import FillArrays: axes_print_matrix_row, AbstractFillVector, AbstractZerosVector, AbstractOnesVector, getindex_value
+import FillArrays: axes_print_matrix_row, AbstractFillVector, AbstractZeros, AbstractZerosVector, AbstractOnesVector, getindex_value
 
 import LinearAlgebra: AbstractTriangular, AdjOrTrans, HermOrSym, RealHermSymComplexHerm, StructuredMatrixStyle,
                       lmul!, rmul!
