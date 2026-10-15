@@ -1,6 +1,6 @@
 module TestBlockArraysBandedMatrices
 
-using BlockArrays, LinearAlgebra, BandedMatrices, Test
+using BlockArrays, LinearAlgebra, BandedMatrices, FillArrays, Test
 using BlockArrays: BlockDiagonal, BlockBidiagonal, BlockTridiagonal, blockcolsupport, blockrowsupport, BlockLayout
 using BandedMatrices: _BandedMatrix
 
@@ -84,7 +84,11 @@ using BandedMatrices: _BandedMatrix
 
     @testset "Blocked Diagonal" begin
         A = BlockedMatrix(Diagonal(1:5), [2,3], [2,2,1])
-        @test A[Block(2,2)] isa BandedMatrix
+        if isdefined(FillArrays, :OffDiagonal)
+            @test A[Block(2,2)] isa FillArrays.OffDiagonal
+        else
+            @test A[Block(2,2)] isa BandedMatrix
+        end
         @test bandwidths(A[Block(2,2)]) == (0,0)
         @test A[Block.(1:2), Block.(2:3)] isa BandedMatrix
     end
