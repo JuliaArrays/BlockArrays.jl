@@ -752,7 +752,14 @@ with the following caveats:
 So each index is retained with a multiplicity that is the max between the one in
 `a` and in `b`. 
 """
-function sortedunion(a, b)
+sortedunion(a::StridedVector{<:Integer}, b) = _sortedunion(a, b)
+sortedunion(a, b::StridedVector{<:Integer}) = _sortedunion(a, b)
+sortedunion(a::StridedVector{<:Integer}, b::StridedVector{<:Integer}) = _sortedunion(a, b)
+maybeinplacesort!(v::StridedVector) = sort!(v)
+maybeinplacesort!(v) = sort(v)
+sortedunion(a, b) = maybeinplacesort!(union(a, b))
+
+function _sortedunion(a, b)
     T = promote_type(eltype(a), eltype(b))
     result = T[]
     sizehint!(result, length(a) + length(b))

@@ -33,11 +33,6 @@ BroadcastStyle(::BlockStyle{M}, ::BlockedStyle{N}) where {M,N} = BlockStyle(Val(
 BroadcastStyle(::BlockedStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 
 
-maybeinplacesort!(v::StridedVector) = sort!(v)
-maybeinplacesort!(v) = sort(v)
-
-
-
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
 combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
 combine_blockaxes(a::BlockedOneTo, b::Base.OneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
