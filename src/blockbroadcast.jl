@@ -33,11 +33,6 @@ BroadcastStyle(::BlockStyle{M}, ::BlockedStyle{N}) where {M,N} = BlockStyle(Val(
 BroadcastStyle(::BlockedStyle{M}, ::BlockStyle{N}) where {M,N} = BlockStyle(Val(max(M,N)))
 
 
-maybeinplacesort!(v::StridedVector) = sort!(v)
-maybeinplacesort!(v) = sort(v)
-sortedunion(a,b) = maybeinplacesort!(union(a,b))
-sortedunion(a::Base.OneTo, b::Base.OneTo) = Base.OneTo(max(last(a),last(b)))
-sortedunion(a::AbstractUnitRange, b::AbstractUnitRange) = min(first(a),first(b)):max(last(a),last(b))
 combine_blockaxes(a, b) = _BlockedUnitRange(sortedunion(blocklasts(a), blocklasts(b)))
 combine_blockaxes(a::BlockedOneTo, b::BlockedOneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
 combine_blockaxes(a::BlockedOneTo, b::Base.OneTo) = BlockedOneTo(sortedunion(blocklasts(a), blocklasts(b)))
@@ -123,7 +118,7 @@ function Base.iterate(it::SubBlockIterator, (i, j) = (1,1))
     i > length(it.block_lasts) && return nothing
     idx = i == 1 ? (1:it.block_lasts[i]) : (it.block_lasts[i-1]+1:it.block_lasts[i])
     bir = Block(j)[j == 1 ? idx : idx .- it.subblock_lasts[j-1]]
-    if it.subblock_lasts[j] == it.block_lasts[i]
+    if it.subblock_lasts[j] == it.block_lasts[i] && j < length(it.subblock_lasts)
         j += 1
     end
     return (bir, (i + 1, j))
