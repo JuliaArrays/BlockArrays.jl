@@ -17,6 +17,10 @@ function axes(D::Diagonal{<:Any,<:Union{AbstractBlockVector,AbstractBlockedUnitR
 end
 ArrayLayouts.diagonallayout(lay::AbstractBlockLayout) = DiagonalLayout{typeof(lay)}()
 ArrayLayouts.diagonaldata(A::BlockedMatrix) = ArrayLayouts.diagonaldata(A.blocks)
+# a BlockedMatrix has the layout of its blocks, so forward the data accessors that layout needs
+ArrayLayouts.subdiagonaldata(A::BlockedMatrix) = ArrayLayouts.subdiagonaldata(A.blocks)
+ArrayLayouts.supdiagonaldata(A::BlockedMatrix) = ArrayLayouts.supdiagonaldata(A.blocks)
+ArrayLayouts.bidiagonaluplo(A::BlockedMatrix) = ArrayLayouts.bidiagonaluplo(A.blocks)
 
 blocksize(A::AbstractTriangular) = blocksize(parent(A))
 blocksize(A::AbstractTriangular, i::Int) = blocksize(parent(A), i)
