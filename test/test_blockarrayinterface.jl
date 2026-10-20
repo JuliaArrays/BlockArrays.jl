@@ -151,6 +151,30 @@ end
     B = BlockedMatrix(Diagonal([1.0, 2, 3]), [1, 2], [1, 2])
     @test MemoryLayout(B) isa ArrayLayouts.DiagonalLayout
     @test ArrayLayouts.diagonaldata(B) == [1.0, 2, 3]
+
+    @testset "Bidiagonal/Tridiagonal" begin
+        for uplo in (:U, :L)
+            B = BlockedMatrix(Bidiagonal([1.0, 2, 3], [4.0, 5], uplo), [1, 2], [1, 2])
+            @test MemoryLayout(B) isa ArrayLayouts.BidiagonalLayout
+            @test ArrayLayouts.bidiagonaluplo(B) == (uplo == :U ? 'U' : 'L')
+            @test ArrayLayouts.bidiagonaluplo(B') == (uplo == :U ? 'L' : 'U')
+            @test ArrayLayouts.diagonaldata(B) == [1.0, 2, 3]
+            @test (uplo == :U ? ArrayLayouts.supdiagonaldata(B) : ArrayLayouts.subdiagonaldata(B)) == [4.0, 5]
+            @test ArrayLayouts.colsupport(B, 2) == ArrayLayouts.colsupport(B.blocks, 2)
+            @test ArrayLayouts.rowsupport(B', 2) == ArrayLayouts.rowsupport(B.blocks', 2)
+            @test B * B == Matrix(B)^2
+        end
+
+        T = BlockedMatrix(Tridiagonal([1.0, 2], [3.0, 4, 5], [6.0, 7]), [1, 2], [1, 2])
+        @test MemoryLayout(T) isa ArrayLayouts.TridiagonalLayout
+        @test ArrayLayouts.diagonaldata(T) == [3.0, 4, 5]
+        @test ArrayLayouts.subdiagonaldata(T) == [1.0, 2]
+        @test ArrayLayouts.supdiagonaldata(T) == [6.0, 7]
+
+        S = BlockedMatrix(SymTridiagonal([1.0, 2, 3], [4.0, 5]), [1, 2], [1, 2])
+        @test MemoryLayout(S) isa ArrayLayouts.SymTridiagonalLayout
+        @test ArrayLayouts.subdiagonaldata(S) == ArrayLayouts.supdiagonaldata(S) == [4.0, 5]
+    end
 end
 
 @testset "non-standard block axes" begin
