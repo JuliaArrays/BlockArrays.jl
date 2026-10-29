@@ -25,6 +25,15 @@ using BlockArrays, LinearAlgebra, SparseArrays, Test
         @test nnz(s.blocks) == 2
 
         @test SparseMatrixCSC(BlockArray(M, [2,3], [1,4])) isa SparseMatrixCSC
+
+        for d in (blockedrange(1:3), BlockArray([1,0,2,3,0,4], 1:3), BlockedArray([1,0,2,3,0,4], 1:3))
+            D = Diagonal(d)
+            S = sparse(D)
+            @test S isa BlockedMatrix{Int,<:SparseMatrixCSC}
+            @test S == D
+            @test blockisequal(axes(S), axes(D))
+            @test nnz(S.blocks) == count(!iszero, d)
+        end
     end
 
     @testset "linear algebra uses sparse storage" begin

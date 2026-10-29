@@ -13,6 +13,8 @@ _sparse(A::BlockedArray) = sparse(A.blocks)
 _sparse(A::AbstractVector) = sparsevec(A)
 _sparse(A::AbstractMatrix{T}) where T = convert(SparseMatrixCSC{T}, A)
 SparseArrays.sparse(A::AbstractBlockVecOrMat) = BlockedArray(_sparse(A), axes(A))
+SparseArrays.sparse(D::Diagonal{<:Any,<:Union{AbstractBlockVector,AbstractBlockedUnitRange}}) =
+    BlockedArray(SparseMatrixCSC(Diagonal(Vector(D.diag))), axes(D))
 
 # forward linear algebra to the sparse storage, otherwise the generic dense fallbacks are used
 const BlockedSparseMatrix{T} = BlockedMatrix{T,<:AbstractSparseMatrix{T}}
