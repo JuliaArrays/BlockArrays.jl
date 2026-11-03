@@ -453,6 +453,19 @@ end
             a[1] = 3
             @test a == [3,2,3]
             @test a_data == [3,2,3]
+
+            for a in (BlockVector{Float64}(a_data,[1,2]), BlockVector{Float64}(a_data,(blockedrange([1,2]),)))
+                @test a isa BlockVector{Float64}
+                @test a == a_data
+                @test blocklengths(axes(a,1)) == [1,2]
+            end
+            for a in (BlockedVector{Float64}(a_data,[1,2]), BlockedVector{Float64}(a_data,(blockedrange([1,2]),)))
+                @test a isa BlockedVector{Float64}
+                @test a == a_data
+                @test blocklengths(axes(a,1)) == [1,2]
+            end
+            @test BlockVector(a_data) isa BlockVector{Int}
+            @test BlockVector(a_data) == a_data
         end
 
         @testset "BlockMatrix" begin
@@ -473,6 +486,41 @@ end
             a[1] = 3
             @test a == [3 2; 3 4]
             @test a_data == [3 2; 3 4]
+
+            for a in (BlockMatrix{Float64}(a_data,[1,1],[2]), BlockMatrix{Float64}(a_data,blockedrange.(([1,1],[2]))),
+                      BlockArray{Float64,2}(a_data,[1,1],[2]))
+                @test a isa BlockMatrix{Float64}
+                @test a == a_data
+                @test blocksize(a) == (2,1)
+            end
+            for a in (BlockedMatrix{Float64}(a_data,[1,1],[2]), BlockedMatrix{Float64}(a_data,blockedrange.(([1,1],[2]))),
+                      BlockedArray{Float64,2}(a_data,[1,1],[2]))
+                @test a isa BlockedMatrix{Float64}
+                @test a == a_data
+                @test blocksize(a) == (2,1)
+            end
+            @test BlockMatrix(a_data) isa BlockMatrix{Int}
+            @test BlockMatrix(a_data) == a_data
+        end
+
+        @testset "from blocked axes" begin
+            F = Fill(2im, (blockedrange(Ones{Int}(1)), blockedrange(Ones{Int}(10))))
+            for B in (BlockMatrix(F), BlockArray(F))
+                @test B isa BlockMatrix{Complex{Int}}
+                @test B == F
+                @test blocksize(B) == (1,10)
+            end
+            B = BlockMatrix{ComplexF64}(F)
+            @test B isa BlockMatrix{ComplexF64}
+            @test B == F
+            @test blocksize(B) == (1,10)
+
+            v = Fill(2im, (blockedrange(Ones{Int}(10)),))
+            for b in (BlockVector(v), BlockVector{ComplexF64}(v))
+                @test b isa BlockVector
+                @test b == v
+                @test blocksize(b) == (10,)
+            end
         end
 
         @testset "UniformScaling" begin
@@ -826,6 +874,23 @@ end
         @test convert(BlockArray{Float64}, A) === A
         @test convert(BlockMatrix{Float64}, A) === A
         @test convert(BlockMatrix{Float64,Matrix{Matrix{Float64}}}, A) === A
+        @test convert(BlockMatrix, A) === A
+
+        P = BlockedArray(rand(2,3), [1,1], [2,1])
+        @test convert(BlockedMatrix, P) === P
+
+        F = Fill(2.0, (blockedrange([1,1]), blockedrange([2,1])))
+        for (C, T) in ((convert(BlockMatrix, F), BlockMatrix{Float64}), (convert(BlockedMatrix, F), BlockedMatrix{Float64}))
+            @test C isa T
+            @test C == F
+            @test blocksize(C) == (2,2)
+        end
+        v = Fill(2.0, (blockedrange([1,2]),))
+        for (c, T) in ((convert(BlockVector, v), BlockVector{Float64}), (convert(BlockedVector, v), BlockedVector{Float64}))
+            @test c isa T
+            @test c == v
+            @test blocksize(c) == (2,)
+        end
     end
 
     @testset "string" begin
