@@ -121,6 +121,12 @@ BlockedArray(blocks::AbstractArray{T, N}, block_sizes::Vararg{AbstractVector{<:I
 BlockedArray{T}(blocks::AbstractArray{<:Any, N}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
     BlockedArray{T}(blocks, map(blockedrange,block_sizes))
 
+BlockedArray{T, N}(blocks::AbstractArray{<:Any, N}, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T, N} =
+    BlockedArray{T}(blocks, baxes)
+
+BlockedArray{T, N}(blocks::AbstractArray{<:Any, N}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T, N} =
+    BlockedArray{T}(blocks, block_sizes...)
+
 @inline BlockedArray{T,N,R,BS}(::UndefInitializer, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T,N,R,BS<:Tuple{Vararg{AbstractUnitRange{<:Integer},N}}} =
     BlockedArray{T,N,R,BS}(R(undef, length.(baxes)), convert(BS, baxes))
 
@@ -163,6 +169,7 @@ convert(::Type{BlockedArray{T,N,R,BS}}, A::BlockedArray{T,N,R,BS}) where {T,N,R,
 convert(::Type{BlockedArray{T,N,R}}, A::BlockedArray{T,N,R}) where {T,N,R} = A
 convert(::Type{BlockedArray{T,N}}, A::BlockedArray{T,N}) where {T,N} = A
 convert(::Type{BlockedArray{T}}, A::BlockedArray{T}) where {T} = A
+convert(::Type{BlockedArray{<:Any,N}}, A::BlockedArray{<:Any,N}) where {N} = A
 convert(::Type{BlockedArray}, A::BlockedArray) = A
 
 convert(::Type{BlockedArray{T,N,R,BS}}, A::BlockedArray) where {T,N,R,BS} =
@@ -185,6 +192,8 @@ convert(::Type{BlockedArray{T, N}}, A::AbstractArray{T2, N}) where {T,T2,N} =
     BlockedArray(convert(Array{T, N}, A), axes(A))
 convert(::Type{BlockedArray{T1}}, A::AbstractArray{T2, N}) where {T1,T2,N} =
     convert(BlockedArray{T1, N}, A)
+convert(::Type{BlockedArray{<:Any,N}}, A::AbstractArray{T, N}) where {T,N} =
+    convert(BlockedArray{T, N}, A)
 convert(::Type{BlockedArray}, A::AbstractArray{T, N}) where {T,N} =
     convert(BlockedArray{T, N}, A)
 
