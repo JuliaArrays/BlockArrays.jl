@@ -64,6 +64,40 @@ using BandedMatrices: _BandedMatrix
             Q = Eye((a,))[:,Block(2)]
             @test Q isa BandedMatrix
         end
+
+        @testset "empty support" begin
+            # blocks outside blockcolsupport/blockrowsupport must be zero
+            function test_blocksupport(A)
+                for J in blockaxes(A,2)[1], K in blockaxes(A,1)[1]
+                    K in blockcolsupport(A,J) || @test iszero(A[K,J])
+                    J in blockrowsupport(A,K) || @test iszero(A[K,J])
+                end
+            end
+
+            # strictly upper triangular: first column and last row are zero
+            b = blockedrange(1:3)
+            B = _BandedMatrix(BlockedArray(randn(1,length(b)),(Base.OneTo(1),b)), b, -1, 1)
+            @test @inferred(blockcolsupport(B,Block(1))) == Block.(1:0)
+            @test blockcolsupport(B,Block(2)) == Block.(1:2)
+
+            B = BlockedMatrix(BandedMatrix(1 => 1:5), [3,2,1], [1,2,3])
+            @test @inferred(blockcolsupport(B,Block(1))) == Block.(1:0)
+            @test @inferred(blockrowsupport(B,Block(3))) == Block.(1:0)
+            @test [blockcolsupport(B,J) for J in Block.(1:3)] == [Block.(1:0), Block.(1:1), Block.(1:2)]
+            @test [blockrowsupport(B,K) for K in Block.(1:3)] == [Block.(2:3), Block.(3:3), Block.(1:0)]
+            test_blocksupport(B)
+
+            # columns/rows beyond the band of a rectangular matrix are zero
+            W = BlockedMatrix(BandedMatrix((0 => 1:2,), (2,5)), [1,1], [2,3])
+            @test blockcolsupport(W,Block(1)) == Block.(1:2)
+            @test blockcolsupport(W,Block(2)) == Block.(1:0)
+            test_blocksupport(W)
+
+            T = BlockedMatrix(BandedMatrix((0 => 1:2,), (5,2)), [2,3], [1,1])
+            @test blockrowsupport(T,Block(1)) == Block.(1:2)
+            @test blockrowsupport(T,Block(2)) == Block.(1:0)
+            test_blocksupport(T)
+        end
     end
 
     @testset "Banded BlockedMatrix" begin
