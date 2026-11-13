@@ -277,6 +277,11 @@ BlockArray{T}(arr::AbstractArray{<:Any, N}, baxes::Tuple{Vararg{AbstractUnitRang
 BlockArray(arr::AbstractArray{T, N}, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T,N} =
     BlockArray{T}(arr, baxes)
 
+BlockArray{T, N}(arr::AbstractArray{<:Any, N}, block_sizes::Vararg{AbstractVector{<:Integer}, N}) where {T,N} =
+    BlockArray{T}(arr, block_sizes...)
+BlockArray{T, N}(arr::AbstractArray{<:Any, N}, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer},N}}) where {T,N} =
+    BlockArray{T}(arr, baxes)
+
 BlockVector(blocks::AbstractVector, baxes::Tuple{AbstractUnitRange{<:Integer}}) = BlockArray(blocks, baxes)
 BlockVector(blocks::AbstractVector, block_sizes::AbstractVector{<:Integer}) = BlockArray(blocks, block_sizes)
 BlockMatrix(blocks::AbstractMatrix, baxes::Tuple{Vararg{AbstractUnitRange{<:Integer}, 2}}) = BlockArray(blocks, baxes)
@@ -391,17 +396,21 @@ end
 convert(::Type{BlockArray{T,N,R}}, A::BlockArray{T,N,R}) where {T,N,R} = A
 convert(::Type{BlockArray{T,N}}, A::BlockArray{T,N}) where {T,N} = A
 convert(::Type{BlockArray{T}}, A::BlockArray{T}) where {T} = A
+convert(::Type{BlockArray{<:Any,N}}, A::BlockArray{<:Any,N}) where {N} = A
 convert(::Type{BlockArray}, A::BlockArray) = A
 
 BlockArray{T, N}(A::AbstractArray{T2, N}) where {T,T2,N} =
     BlockArray(Array{T, N}(A), axes(A))
 BlockArray{T1}(A::AbstractArray{T2, N}) where {T1,T2,N} = BlockArray{T1, N}(A)
+BlockArray{<:Any,N}(A::AbstractArray{T, N}) where {T,N} = BlockArray{T, N}(A)
 BlockArray(A::AbstractArray{T, N}) where {T,N} = BlockArray{T, N}(A)
 
 convert(::Type{BlockArray{T, N}}, A::AbstractArray{T2, N}) where {T,T2,N} =
     BlockArray(convert(Array{T, N}, A), axes(A))
 convert(::Type{BlockArray{T1}}, A::AbstractArray{T2, N}) where {T1,T2,N} =
     convert(BlockArray{T1, N}, A)
+convert(::Type{BlockArray{<:Any,N}}, A::AbstractArray{T, N}) where {T,N} =
+    convert(BlockArray{T, N}, A)
 convert(::Type{BlockArray}, A::AbstractArray{T, N}) where {T,N} =
     convert(BlockArray{T, N}, A)
 
